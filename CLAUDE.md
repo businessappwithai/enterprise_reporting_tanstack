@@ -438,3 +438,44 @@ Or the full build check:
 ```bash
 bun run build:check  # lint + typecheck + build
 ```
+
+## Gstack Integration
+
+For web browsing and site testing, use the **`/browse` skill** from gstack. Never use `mcp__claude-in-chrome__*` tools.
+
+### Available Gstack Skills
+
+- `/office-hours` - Schedule and manage office hour sessions
+- `/plan-ceo-review` - Plan CEO review structure
+- `/plan-eng-review` - Plan engineering review
+- `/plan-design-review` - Plan design review
+- `/design-consultation` - Get design feedback
+- `/design-shotgun` - Rapid design iteration
+- `/design-html` - Generate and test HTML designs
+- `/review` - Code review
+- `/ship` - Prepare for shipping
+- `/land-and-deploy` - Deploy to production
+- `/canary` - Canary deployment testing
+- `/benchmark` - Performance benchmarking
+- `/browse` - **Primary skill for web browsing and site testing** - navigate pages, interact with elements, verify state, take screenshots
+- `/connect-chrome` - Connect to Chrome browser
+- `/qa` - Full QA testing workflow
+- `/qa-only` - QA testing only
+- `/design-review` - Design review process
+- `/setup-browser-cookies` - Setup browser authentication
+- `/setup-deploy` - Setup deployment pipeline
+- `/setup-gbrain` - Setup G-Brain integration
+- `/retro` - Retrospective planning
+- `/investigate` - Investigation workflow
+- `/document-release` - Document release notes
+- `/codex` - Code documentation
+- `/cso` - Chief Security Officer review
+- `/autoplan` - Automatic planning
+- `/plan-devex-review` - Plan developer experience review
+- `/devex-review` - Developer experience review
+- `/careful` - Careful review mode
+- `/freeze` - Freeze changes
+- `/guard` - Guard against changes
+- `/unfreeze` - Unfreeze changes
+- `/gstack-upgrade` - Upgrade gstack
+- `/learn` - Learning resources
