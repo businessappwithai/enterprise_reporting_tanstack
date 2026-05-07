@@ -1,6 +1,8 @@
-# CLAUDE.md - Enterprise Reporting System
+# CLAUDE.md
 
-## Project Overview
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview - Enterprise Reporting System
 
 Enterprise Reporting and Dashboard System built with **Next.js 14 (App Router)**, **Bun runtime**, **SQLite** (via better-sqlite3/Knex.js), and **shadcn/ui**. Provides data visualization, SQL querying, role-based access control, job scheduling, and multi-format export capabilities.
 
@@ -323,7 +325,7 @@ bun run format:check  # Check only
 - Config: `playwright.config.ts`
 - Browser: Chromium only
 - Workers: 1 (serial execution to prevent session interference)
-- Tests run against a live server (default base URL: `http://148.135.137.110`, override with `BASE_URL` env var)
+- Tests run against a live server (default base URL: `http://localhost:4050`, override with `BASE_URL` env var for deployed testing)
 - Auth helper: `e2e/test-auth.ts` - caches auth cookies
 - Test helpers: `e2e/helpers/test-helpers.ts`
 - Fixtures: `e2e/fixtures/auth.fixture.ts`
