@@ -445,6 +445,15 @@ bun run build:check  # lint + typecheck + build
 
 For web browsing and site testing, use the **`/browse` skill** from gstack. Never use `mcp__claude-in-chrome__*` tools.
 
+### Installing Gstack
+
+To set up gstack, run:
+```bash
+bash .claude/setup-gstack.sh
+```
+
+This will clone and build gstack in `~/.claude/skills/gstack`. It's a one-time setup per machine.
+
 ### Available Gstack Skills
 
 - `/office-hours` - Schedule and manage office hour sessions
