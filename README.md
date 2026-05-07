@@ -1,15 +1,15 @@
 # Enterprise Reporting and Dashboard System
 
-A professional, production-ready enterprise reporting system built with Next.js, featuring real-time data streaming, advanced filtering, automated scheduling, and comprehensive export capabilities.
+A production-ready enterprise reporting system built with **Next.js 14**, **Bun runtime**, **SQLite**, **BullMQ**, and **shadcn/ui**. Provides real-time data visualization, SQL querying, role-based access control, job scheduling, and multi-format export capabilities.
 
 ## 🚀 Key Features
 
 ### Core Reporting Engine
 - **TanStack Table** - Headless data grid with server-side pagination, sorting, and filtering
 - **Knex.js** - SQL query builder for dynamic, secure data access
-- **Row-Level Security** - Built-in RLS implementation at application level
-- **Real-time Updates** - WebSocket-powered live data streaming
+- **Application-Level RLS** - Row-level security at application layer
 - **Advanced Filtering** - Dynamic query builder with multiple operators
+- **SQL Validation** - Query validation to prevent injection and ensure correctness
 
 ### Data Visualization
 - **Recharts Integration** - Professional charts (Bar, Line, Pie, Area)
@@ -19,45 +19,54 @@ A professional, production-ready enterprise reporting system built with Next.js,
 
 ### Export & Delivery
 - **CSV Export** - Fast, formatted CSV generation
-- **Excel Export** - Professional spreadsheets with formatting and formulas
+- **Excel Export** - Professional spreadsheets with formatting
 - **PDF Export** - Publication-ready PDF documents
 - **Email Delivery** - SMTP-based report distribution
+- **Job Queue** - BullMQ-powered asynchronous processing with Redis backend
 - **Scheduled Reports** - Cron-based automated generation and delivery
 
 ### Enterprise Features
-- **Role-Based Access Control (RBAC)** - Fine-grained permissions
-- **Audit Logging** - Complete export and email delivery history
-- **Saved Views** - User-specific report configurations
-- **Multi-Database** - SQLite for metadata, PostgreSQL for business data
-- **Session Management** - Secure iron-session based authentication
+- **Role-Based Access Control (RBAC)** - Fine-grained permissions at resource level
+- **Audit Logging** - Complete audit trail for exports and email delivery
+- **User Management** - Admin panel for users, roles, and permissions
+- **Metadata Management** - Dynamic entity and field management
+- **Natural Language Queries** - AI-powered SQL generation with OpenAI + CopilotKit
+- **Session Management** - Secure NextAuth v5 authentication
 
 ## 📋 Technology Stack
 
-- **Framework**: Next.js 14 (App Router)
-- **UI Library**: shadcn/ui (Radix UI + Tailwind CSS)
-- **Data Management**: TanStack Query + TanStack Table
-- **Database**: 
-  - SQLite (Metadata: users, roles, reports, schedules)
-  - PostgreSQL (Business Data)
-- **Query Builder**: Knex.js
-- **Real-time**: Socket.IO
-- **Scheduling**: node-cron
-- **Export**: ExcelJS, PDFKit, PapaParse
-- **Email**: Nodemailer
-- **Authentication**: iron-session + JWT
+| Layer | Technology |
+|-------|-----------|
+| **Runtime** | Bun >= 1.3.0 |
+| **Framework** | Next.js 14.2+ (App Router) |
+| **Language** | TypeScript (strict mode) |
+| **UI Library** | shadcn/ui (Radix UI + Tailwind CSS 3) |
+| **State Management** | TanStack Query + TanStack Table + TanStack Form |
+| **Database** | SQLite (via better-sqlite3 + Knex.js) |
+| **Authentication** | NextAuth v5 (credentials provider) |
+| **Charts** | Recharts |
+| **Job Queue** | BullMQ + Redis (ioredis) |
+| **AI/NL Query** | OpenAI (via @ai-sdk/openai) + CopilotKit |
+| **Export Formats** | ExcelJS, PDFKit, PapaParse |
+| **Email** | Nodemailer (SMTP) |
+| **Testing** | Playwright (E2E only) |
+| **Styling** | Tailwind CSS with CSS variables (HSL) |
+| **Deployment** | Docker (Bun Alpine), Nginx, Hostinger VPS |
 
 ## 🛠️ Installation
 
 ### Prerequisites
-- Node.js 18+
-- PostgreSQL 14+
-- SMTP Server (for email delivery)
+- **Bun** >= 1.3.0
+- **Redis** (for BullMQ job queue)
+- **SMTP Server** (for email delivery - optional but recommended)
 
 ### Setup Steps
 
 1. **Clone and Install**
 ```bash
-npm install
+git clone <repository>
+cd enterprise_reporting_tanstack
+bun install
 ```
 
 2. **Configure Environment**
@@ -66,129 +75,97 @@ cp .env.example .env
 # Edit .env with your configuration
 ```
 
-3. **Setup Databases**
+3. **Setup Database**
 ```bash
-# Create PostgreSQL database
-createdb enterprise_data
+# Run migrations (creates SQLite database)
+bun run db:migrate
 
-# Run migrations
-npm run db:migrate
-
-# Optional: Seed sample data
-npm run db:seed
+# Seed sample data
+bun run db:sample
 ```
 
-4. **Initialize Application**
+4. **Start Services**
 ```bash
-# Development mode
-npm run dev
+# Terminal 1: Development server (port 4050)
+bun run dev
 
-# Production mode
-npm run build
-npm start
+# Terminal 2: BullMQ worker (in separate terminal)
+bun run jobs:worker
 ```
 
-5. **Start Background Services**
-```bash
-# In separate terminals:
-npm run scheduler:start    # Report scheduling
-npm run websocket:start    # Real-time updates
-```
+5. **Access Application**
+- Application: `http://localhost:4050`
+- Default credentials: `admin@admin.com` / `admin`
 
 ## 📁 Project Structure
 
-```
-enterprise-reporting-system/
-├── src/
-│   ├── app/                      # Next.js App Router
-│   │   ├── (dashboard)/          # Dashboard layouts
-│   │   └── api/                  # API routes
-│   │       ├── reports/          # Report endpoints
-│   │       ├── dashboards/       # Dashboard endpoints
-│   │       └── exports/          # Export endpoints
-│   ├── components/
-│   │   ├── ui/                   # shadcn/ui components
-│   │   ├── reporting/            # Report components
-│   │   │   ├── DataTable.tsx     # TanStack Table wrapper
-│   │   │   ├── ChartView.tsx     # Recharts wrapper
-│   │   │   └── QueryBuilder.tsx  # Filter UI
-│   │   └── dashboard/            # Dashboard components
-│   │       └── DashboardBuilder.tsx
-│   └── lib/
-│       ├── db/                   # Database connections
-│       ├── auth/                 # Authentication
-│       ├── reporting/            # Core engine
-│       │   └── query-builder.ts  # Dynamic SQL builder
-│       └── services/             # Business services
-│           ├── export-service.ts
-│           ├── email-service.ts
-│           ├── scheduling-service.ts
-│           └── websocket-service.ts
-├── migrations/
-│   ├── metadata/                 # SQLite migrations
-│   └── business/                 # PostgreSQL migrations
-├── data/
-│   ├── metadata.db               # SQLite database (auto-created)
-│   └── exports/                  # Generated export files
-└── knexfile.ts                   # Database configuration
-```
+See [CLAUDE.md](CLAUDE.md) for detailed project structure and architecture.
+
+Key directories:
+- `src/app/` - Next.js App Router pages and API routes
+- `src/components/` - React components (UI, features, layouts)
+- `src/lib/` - Core libraries (database, auth, permissions, jobs, security)
+- `src/lib/db/` - Database layer (Knex migrations, seeds, connection)
+- `e2e/` - Playwright E2E test suite
+- `docs/` - Detailed documentation
 
 ## 🔒 Security Features
-
-### Application-Level Row-Level Security
-```typescript
-// Automatic injection based on user context
-if (user.role === 'sales_rep') {
-  query.where('region_id', user.regionId);
-}
-```
 
 ### SQL Injection Prevention
 - Column name whitelisting
 - Parameterized queries via Knex.js
 - Operator validation
+- Query parsing and sanitization
 
-### Authentication
-- Iron-session for secure cookies
-- JWT for WebSocket authentication
-- Bcrypt password hashing (12 rounds)
+### Authentication & Authorization
+- NextAuth v5 with credentials provider
+- Bcrypt password hashing (10 rounds)
+- Role-based access control (RBAC)
+- Resource-level permissions
+- Session management with secure cookies
+
+### Data Protection
+- AES-256-GCM encryption for data source credentials
+- Audit logging for sensitive operations
+- Application-level row-level security
 
 ## 📊 Database Schema
 
-### Metadata Database (SQLite)
-- `users` - User accounts
-- `roles` - Role definitions
-- `permissions` - Permission registry
-- `dashboard_layouts` - Dashboard configurations
-- `report_definitions` - Report metadata
-- `report_widgets` - Dashboard widgets
-- `saved_views` - User preferences
-- `scheduled_reports` - Cron schedules
-- `export_history` - Export logs
-- `email_delivery_log` - Email tracking
+**Single Database Approach**: All configuration and business data in SQLite
 
-### Business Database (PostgreSQL)
-- `sales_transactions` - Sample sales data
-- `financial_metrics` - Financial reports
-- `customer_engagement` - Customer interactions
-- *Custom tables as needed*
+### Core Tables
+- `users` - User accounts and authentication
+- `roles` - Role definitions with permission sets
+- `user_roles` - User-role associations
+- `resource_permissions` - Resource-level access control
+- `data_sources` - External database connections
+- `audit_log` - Audit trail for all sensitive operations
 
-## 🔄 Real-Time Architecture
+### Data Management Tables
+- `report_definitions` - Report configurations
+- `chart_definitions` - Chart configurations
+- `dashboard_layouts` - Dashboard layouts and widgets
+- `saved_queries` - SQL query templates
+- `email_templates` - Email template definitions
 
-### WebSocket Events
-- `subscribe:report` - Subscribe to report updates
-- `unsubscribe:report` - Unsubscribe from updates
-- `request:refresh` - Manual data refresh
-- `dashboard:join` - Join collaborative dashboard
-- `dashboard:layout-update` - Share layout changes
-- `report:data-update` - Receive data updates
+### Job Management Tables
+- `job_definitions` - Job queue definitions
+- `job_executions` - Job execution history
 
-### Monitoring Pattern
-```typescript
-// Automatic change detection every 5 seconds
-// Broadcasts to subscribed clients
-// Unsubscribed reports stop monitoring automatically
-```
+## 🔄 Job Queue Architecture
+
+**BullMQ + Redis** for reliable asynchronous job processing:
+
+### Job Types
+- `export` - Generate data exports (CSV, Excel, PDF)
+- `report` - Generate scheduled reports
+- `email-batch` - Send batch emails
+
+### Features
+- Automatic retry with exponential backoff
+- Job status tracking and monitoring
+- Persistent queue with Redis backend
+- Bull Board UI for monitoring (`/bull-board`)
 
 ## 📧 Email Configuration
 
@@ -202,29 +179,11 @@ SMTP_USER=your-email@gmail.com
 SMTP_PASSWORD=your-app-password
 ```
 
-### Email Templates
-Professional HTML templates with:
-- Branded header
-- Formatted content
-- Attachment indicators
+### Email Features
+- Professional HTML templates
+- Branded headers and footers
 - Responsive design
-
-## 📅 Scheduled Reports
-
-### Cron Expression Examples
-```
-0 9 * * 1       # Every Monday at 9 AM
-0 0 1 * *       # First day of month at midnight
-0 */4 * * *     # Every 4 hours
-0 8-17 * * 1-5  # 8 AM to 5 PM, Monday to Friday
-```
-
-### Scheduler Features
-- Timezone support
-- Automatic retry logic
-- Email delivery tracking
-- Export history logging
-- Manual trigger capability
+- Attachment support
 
 ## 🎨 Dashboard Builder
 
@@ -232,90 +191,147 @@ Professional HTML templates with:
 - Drag-and-drop widget placement
 - Resize widgets
 - Multiple widget types (Table, Chart, Metric)
-- Real-time collaboration
 - Layout persistence
 - User-specific dashboards
 
-### Widget Configuration
-```typescript
-{
-  type: 'chart',
-  reportId: 'sales-report-id',
-  config: {
-    chartType: 'bar',
-    xAxisField: 'month',
-    yAxisField: 'revenue',
-    filters: [{ id: 'region', value: 'US', operator: '=' }]
-  }
-}
+## 🔧 Common Commands
+
+### Development
+```bash
+bun run dev              # Start dev server on port 4050
+bun run build            # Production build
+bun run start            # Start production server
 ```
 
-## 🔧 API Endpoints
+### Quality Checks
+```bash
+bun run lint             # ESLint
+bun run lint:fix         # ESLint with auto-fix
+bun run typecheck        # TypeScript type checking
+bun run format           # Prettier formatting
+bun run precommit        # lint + typecheck + format:check
+```
 
-### Reports
-- `GET /api/reports/[reportId]/data` - Fetch report data
-- `POST /api/reports/[reportId]/export` - Generate export
-- `GET /api/reports/[reportId]/export?exportId=...` - Download export
+### Database
+```bash
+bun run db:migrate       # Run pending migrations
+bun run db:migrate:make  # Create new migration
+bun run db:seed          # Run seeds
+bun run db:rollback      # Rollback last migration
+bun run db:sample        # Seed sample data
+```
 
-### Dashboards
-- `GET /api/dashboards/[dashboardId]` - Get dashboard
-- `PUT /api/dashboards/[dashboardId]` - Update dashboard
-- `POST /api/dashboards/[dashboardId]/widgets` - Add widget
+### Testing
+```bash
+bun run test:setup       # Setup test data
+bun run test:e2e         # Run E2E tests
+bun run test:e2e:ui      # Run with Playwright UI
+bun run test:ci          # Full CI pipeline
+```
 
-### Scheduling
-- `POST /api/schedules` - Create schedule
-- `PUT /api/schedules/[scheduleId]` - Update schedule
-- `POST /api/schedules/[scheduleId]/trigger` - Manual trigger
+### Background Services
+```bash
+bun run jobs:worker      # Start BullMQ worker
+```
+
+See [CLAUDE.md](CLAUDE.md) for complete command reference.
 
 ## 🚦 Performance Optimizations
 
-- **Server-Side Operations**: Pagination, sorting, filtering on database
-- **Query Optimization**: Indexed columns, efficient joins
-- **Caching**: TanStack Query automatic caching
+- **Server-Side Pagination**: All data queries use LIMIT/OFFSET at database level
+- **Query Optimization**: Indexed columns, efficient joins, parameterized queries
+- **Caching**: TanStack Query automatic caching and stale-while-revalidate
 - **Lazy Loading**: Components and data loaded on demand
-- **Aggregation Caching**: Computed metrics cached per query
+- **Virtual Scrolling**: Optional virtual scrolling for large datasets
 
-## 📈 Monitoring & Logging
+## 📈 Testing
 
-### Export History
-Track all exports with:
-- User ID
-- Report definition
-- Export format
-- File size and row count
-- Success/failure status
-- Error messages
+**Playwright E2E Test Suite** with phased test execution:
 
-### Email Delivery Log
-Monitor email delivery:
-- Recipient tracking
-- Delivery status
-- Timestamp logging
-- Error tracking
+```bash
+# Run all tests
+bun run test:e2e
+
+# Run specific phase
+bun run test:phase1      # Authentication
+bun run test:phase2      # Dashboards
+bun run test:phase3      # SQL Editor Basic
+bun run test:phase4      # SQL Editor Advanced
+bun run test:phase5      # Reports
+bun run test:phase6      # Charts
+```
+
+Tests run against live dev server on `http://localhost:4050`.
+
+See [docs/TESTING.md](docs/TESTING.md) and [e2e/SETUP.md](e2e/SETUP.md) for detailed test documentation.
+
+## 📚 Documentation
+
+- **[CLAUDE.md](CLAUDE.md)** - Developer guide for Claude Code instances
+- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** - Technical architecture and design decisions
+- **[docs/TESTING.md](docs/TESTING.md)** - Testing guide and test organization
+- **[e2e/SETUP.md](e2e/SETUP.md)** - E2E test setup and troubleshooting
+- **[docs/DEPLOY.md](docs/DEPLOY.md)** - Deployment guide for production
+- **[docs/FEATURES.md](docs/FEATURES.md)** - Feature descriptions and capabilities
+
+## 🐳 Docker Deployment
+
+### Build Docker Image
+```bash
+docker build -t enterprise-reporting .
+```
+
+### Docker Services (via docker-compose.yml)
+- **Nginx** - Reverse proxy with SSL support
+- **Redis** - Job queue backend
+- **App** - Next.js application
+
+### Environment Variables
+Key variables for deployment:
+- `AUTH_SECRET` - NextAuth secret (min 32 chars)
+- `DATABASE_PATH` - SQLite database file path
+- `REDIS_URL` - Redis connection URL
+- `ENCRYPTION_KEY` - AES-256 encryption key for credentials
+- `OPENAI_API_KEY` - OpenAI API key for NL queries
+- `DEFAULT_PAGE_SIZE` - Server-side pagination size (default: 50)
+- `MAX_PAGE_SIZE` - Max allowed page size (default: 1000)
+
+See [docs/DEPLOY.md](docs/DEPLOY.md) for complete deployment guide.
 
 ## 🤝 Contributing
 
-This is a production-ready enterprise system. For customization:
-1. Add new report definitions in metadata database
-2. Create custom business data tables in PostgreSQL
-3. Extend query builder for special cases
-4. Add new chart types in ChartView component
-5. Implement additional export formats in export-service
+For local development:
+1. Read [CLAUDE.md](CLAUDE.md) for project conventions
+2. Run `bun run precommit` before committing
+3. Ensure tests pass with `bun run test:e2e`
+4. Follow existing code patterns and TypeScript strict mode
 
 ## 📄 License
 
-Copyright © 2024 Enterprise Reporting System
+Copyright © 2024-2025 Enterprise Reporting System
 All rights reserved.
 
-## 🆘 Support
+## 🆘 Support & Troubleshooting
 
-For issues or questions:
-1. Check database migrations are up to date
-2. Verify environment configuration
-3. Review server logs for errors
-4. Check WebSocket and Scheduler status
+### Common Issues
+
+**Tests fail with authentication error**
+```bash
+bun run db:migrate
+bun run db:sample
+```
+
+**Port 4050 already in use**
+```bash
+lsof -ti:4050 | xargs kill -9
+```
+
+**Database locked error**
+- Ensure only one BullMQ worker is running
+- Check that dev server isn't running twice
+
+For detailed troubleshooting, see [e2e/SETUP.md](e2e/SETUP.md).
 
 ---
 
 **Built with precision for enterprise-grade reporting needs.**
-# enterprise_reporting_system

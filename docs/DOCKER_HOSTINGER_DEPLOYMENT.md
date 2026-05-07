@@ -25,9 +25,11 @@ This guide explains how to deploy the Enterprise Reporting System on a Hostinger
 
 | Service | Container Name | Port | Purpose |
 |---------|---------------|------|---------|
-| **PostgreSQL** | ers-postgres | 5432 | Primary database |
-| **Redis** | ers-redis | 6379 | Job queue (BullMQ) |
-| **App** | ers-app | 3000 | Next.js application |
+| **Nginx** | ers-nginx | 80, 443 | Reverse proxy with SSL |
+| **Redis** | ers-redis | 6379 | Job queue backend (BullMQ) |
+| **App** | ers-app | 4050 | Next.js application (Bun runtime) |
+
+**Key Note**: The application uses **SQLite** (embedded database) for all data - no separate database service needed.
 
 ### Data Storage (Bind Mounts)
 
@@ -35,12 +37,13 @@ All data is stored on the **Hostinger VPS filesystem** at:
 
 ```
 /srv/enterprise-reporting-system/
-├── postgres/
-│   └── data/              # PostgreSQL database files
+├── nginx/
+│   ├── ssl/               # SSL certificates (Let's Encrypt)
+│   └── conf/              # Nginx configuration
 ├── redis/
-│   └── data/              # Redis snapshot files
+│   └── data/              # Redis snapshot files (for BullMQ)
 ├── app/
-│   ├── data/              # SQLite, configs
+│   ├── data/              # SQLite database (config.sqlite)
 │   ├── job-outputs/       # Generated reports/exports
 │   ├── uploads/           # User uploaded files
 │   └── logs/              # Application logs
@@ -53,6 +56,7 @@ All data is stored on the **Hostinger VPS filesystem** at:
 ✅ Easy to backup with standard tools (rsync, tar)
 ✅ Compatible with Hostinger VPS snapshots
 ✅ No data loss during Docker updates
+✅ Simple single-database approach (SQLite)
 
 ---
 
@@ -64,12 +68,14 @@ All data is stored on the **Hostinger VPS filesystem** at:
 - **RAM**: Minimum 2GB (4GB recommended)
 - **Storage**: 20GB+ SSD
 - **Access**: SSH root access
+- **Port 80/443**: Open for HTTP/HTTPS (for Nginx)
 
 ### Local Machine Requirements
 
 - Docker & Docker Compose installed (for local testing)
 - SSH client
 - SFTP/SCP tool (for file upload)
+- Bun >= 1.3.0 (for local development)
 
 ---
 
@@ -98,10 +104,20 @@ This will:
 
 ### 2. Upload Application Files
 
+Build locally first (required for production):
+
+```bash
+# On your local machine
+bun run build
+```
+
+Then upload to VPS:
+
 ```bash
 # From your local machine
-scp -r docker-compose.yml root@your-vps-ip:/srv/enterprise-reporting-system/
-scp -r .next/ package.json package-lock.json root@your-vps-ip:/srv/enterprise-reporting-system/
+scp -r docker-compose.yml .env.docker.production root@your-vps-ip:/srv/enterprise-reporting-system/
+scp -r .next/ next.config.js package.json root@your-vps-ip:/srv/enterprise-reporting-system/
+scp -r src/ public/ root@your-vps-ip:/srv/enterprise-reporting-system/
 ```
 
 Or use Git directly on the VPS:
@@ -110,6 +126,9 @@ Or use Git directly on the VPS:
 # On VPS
 cd /srv/enterprise-reporting-system
 git clone https://your-repo-url.git .
+cd /srv/enterprise-reporting-system
+bun install
+bun run build
 ```
 
 ### 3. Configure Environment
@@ -131,13 +150,23 @@ openssl rand -hex 32     # For ENCRYPTION_KEY
 # Update .env with:
 NEXT_PUBLIC_APP_URL=https://your-domain.com
 AUTH_SECRET=<generated-value>
-AUTH_URL=https://your-domain.com
-POSTGRES_PASSWORD=<strong-password>
+AUTH_URL=https://your-domain.com/api/auth
 REDIS_PASSWORD=<strong-password>
 ENCRYPTION_KEY=<generated-value>
+DATABASE_PATH=/srv/enterprise-reporting-system/data/config.sqlite
 ```
 
-### 4. Start Application
+### 4. Run Database Migrations
+
+```bash
+# On VPS (before starting containers)
+cd /srv/enterprise-reporting-system
+bun install
+bun run db:migrate
+bun run db:sample  # Optional: load sample data
+```
+
+### 5. Start Application
 
 ```bash
 # On VPS
@@ -145,7 +174,7 @@ cd /srv/enterprise-reporting-system
 docker compose up -d
 ```
 
-### 5. Verify Deployment
+### 6. Verify Deployment
 
 ```bash
 # Check containers are running
@@ -155,7 +184,7 @@ docker compose ps
 docker compose logs -f
 
 # Check application health
-curl http://localhost:3000/api/health
+curl https://your-domain.com/api/health
 ```
 
 ---
@@ -166,18 +195,13 @@ curl http://localhost:3000/api/health
 
 | VPS Path | Container Path | Contents | Backup Frequency |
 |----------|---------------|----------|------------------|
-| `/srv/.../postgres/data` | `/var/lib/postgresql/data` | Database files | Daily |
-| `/srv/.../redis/data` | `/data` | Redis snapshots | Daily |
-| `/srv/.../app/data` | `/app/data` | SQLite configs | Daily |
-| `/srv/.../app/uploads` | `/app/uploads` | User files | Daily |
+| `/srv/.../redis/data` | `/data` | Redis snapshots (BullMQ) | Daily |
+| `/srv/.../app/data` | `/app/data` | SQLite database | Daily |
+| `/srv/.../app/uploads` | `/app/uploads` | User uploaded files | Daily |
 | `/srv/.../app/job-outputs` | `/app/job-outputs` | Reports/exports | Weekly |
+| `/srv/.../nginx/ssl` | `/etc/letsencrypt` | SSL certificates | Daily |
 
 ### Volume Permissions
-
-**PostgreSQL**: Needs UID 999 (postgres user)
-```bash
-chown -R 999:999 /srv/enterprise-reporting-system/postgres
-```
 
 **Redis**: Needs UID 999 (redis user)
 ```bash
@@ -189,17 +213,22 @@ chown -R 999:999 /srv/enterprise-reporting-system/redis
 chown -R 1000:1000 /srv/enterprise-reporting-system/app
 ```
 
+**Nginx**: Needs appropriate permissions
+```bash
+chown -R 101:101 /srv/enterprise-reporting-system/nginx
+```
+
 ### Accessing Data
 
 ```bash
-# PostgreSQL database files
-ls -lh /srv/enterprise-reporting-system/postgres/data
-
-# Redis snapshot
+# Redis snapshot (for BullMQ)
 ls -lh /srv/enterprise-reporting-system/redis/data/dump.rdb
 
-# Application data
-ls -lh /srv/enterprise-reporting-system/app/data
+# SQLite database
+ls -lh /srv/enterprise-reporting-system/app/data/config.sqlite
+
+# Generated reports and exports
+ls -lh /srv/enterprise-reporting-system/app/job-outputs
 ```
 
 ---
@@ -211,154 +240,179 @@ ls -lh /srv/enterprise-reporting-system/app/data
 ```bash
 # Application
 NEXT_PUBLIC_APP_URL=https://your-domain.com
-APP_PORT=3000
+NODE_ENV=production
 
 # Authentication
 AUTH_SECRET=<32-char random string>
-AUTH_URL=https://your-domain.com
+AUTH_URL=https://your-domain.com/api/auth
 
-# PostgreSQL
-POSTGRES_USER=ersuser
-POSTGRES_PASSWORD=<strong password>
-POSTGRES_DB=enterprise_reporting
-POSTGRES_PORT=5432
+# Database (SQLite - embedded)
+DATABASE_PATH=/srv/enterprise-reporting-system/data/config.sqlite
 
-# Redis
+# Redis (for BullMQ job queue only)
+REDIS_URL=redis://:your-redis-password@localhost:6379
 REDIS_PASSWORD=<strong password>
-REDIS_PORT=6379
 
 # Encryption
 ENCRYPTION_KEY=<32-byte hex>
-```
 
-### Optional Variables
-
-```bash
 # Job Processing
 MAX_CONCURRENT_JOBS=5
+JOB_OUTPUT_PATH=/srv/enterprise-reporting-system/job-outputs
 
 # Pagination
 DEFAULT_PAGE_SIZE=50
 MAX_PAGE_SIZE=1000
 DATA_TABLE_PAGE_SIZE=100
-EXPORT_PAGE_SIZE=1000
 
+# Email (optional)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+
+# OpenAI (optional, for NL Query feature)
+OPENAI_API_KEY=sk-...
+```
+
+### Optional Variables
+
+```bash
 # Error Reporting
-NEXT_PUBLIC_ERROR_REPORTING_EMAIL=admin@yourcompany.com
+NEXT_PUBLIC_ERROR_REPORTING_EMAIL=admin@example.com
+
+# Virtual Scrolling
+VIRTUAL_SCROLL_THRESHOLD=500
+ENABLE_VIRTUAL_SCROLLING=true
 ```
 
 ---
 
 ## Deployment Steps
 
-### Initial Deployment
+### Step-by-Step Guide
 
+#### 1. SSH into VPS
 ```bash
-# 1. Setup VPS
-sudo ./setup-hostinger.sh
+ssh root@your-vps-ip
+```
 
-# 2. Configure environment
+#### 2. Create Directory Structure
+```bash
+mkdir -p /srv/enterprise-reporting-system
+cd /srv/enterprise-reporting-system
+mkdir -p data job-outputs redis/data nginx/ssl nginx/conf
+```
+
+#### 3. Clone Repository
+```bash
+git clone https://your-repo-url.git .
+cd /srv/enterprise-reporting-system
+```
+
+#### 4. Setup Environment
+```bash
 cp .env.docker.production .env
+# Edit .env with your values
 nano .env
+```
 
-# 3. Build and start
-docker compose up -d --build
+#### 5. Build Application
+```bash
+# Install dependencies
+bun install
 
-# 4. Check status
-docker compose ps
+# Run build
+bun run build
+
+# Run migrations
+bun run db:migrate
+bun run db:sample
+```
+
+#### 6. Start Services
+```bash
+docker compose up -d
+```
+
+#### 7. Monitor Startup
+```bash
+# Watch logs
 docker compose logs -f
-```
 
-### Updating the Application
-
-```bash
-# 1. Pull latest code
-git pull
-
-# 2. Rebuild and restart (without data loss)
-docker compose down
-docker compose up -d --build
-
-# 3. Verify
-docker compose ps
-docker compose logs -f app
-```
-
-### Rolling Update (Zero Downtime)
-
-```bash
-# 1. Pull latest code
-git pull
-
-# 2. Build new image
-docker compose build
-
-# 3. Start new container alongside old
-docker compose up -d --no-deps --scale app=2
-
-# 4. Stop old container
-docker compose up -d --no-deps --scale app=1
-
-# 5. Clean up
-docker image prune -f
+# Check health
+curl https://your-domain.com/api/health
 ```
 
 ---
 
 ## Backup & Restore
 
-### Automated Backups
+### Automated Backup Strategy
 
-1. Copy backup script to VPS:
+Create a daily backup script:
 
 ```bash
-scp scripts/backup-hostinger.sh root@your-vps-ip:/usr/local/bin/ers-backup.sh
-chmod +x /usr/local/bin/ers-backup.sh
+#!/bin/bash
+# /root/backup-enterprise-reporting.sh
+
+BACKUP_DIR="/srv/enterprise-reporting-system/backups"
+TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+BACKUP_FILE="$BACKUP_DIR/backup-$TIMESTAMP.tar.gz"
+
+# Create backup directory
+mkdir -p "$BACKUP_DIR"
+
+# Backup application data
+tar -czf "$BACKUP_FILE" \
+  /srv/enterprise-reporting-system/app/data \
+  /srv/enterprise-reporting-system/app/uploads \
+  /srv/enterprise-reporting-system/redis/data \
+  /srv/enterprise-reporting-system/.env
+
+echo "Backup created: $BACKUP_FILE"
+
+# Keep only last 7 days of backups
+find "$BACKUP_DIR" -name "backup-*.tar.gz" -mtime +7 -delete
 ```
 
-2. Add to crontab:
+Make it executable and add to cron:
 
 ```bash
-crontab -e
+chmod +x /root/backup-enterprise-reporting.sh
 
-# Add this line (daily backup at 2 AM)
-0 2 * * * /usr/local/bin/ers-backup.sh >> /var/log/ers-backup.log 2>&1
+# Add to crontab (runs daily at 2 AM)
+crontab -e
+# Add line: 0 2 * * * /root/backup-enterprise-reporting.sh
 ```
 
 ### Manual Backup
 
 ```bash
-# Backup all data
+# Backup everything
 cd /srv/enterprise-reporting-system
-tar -czf backup-$(date +%Y%m%d).tar.gz \
-    postgres/ \
-    redis/ \
-    app/
+tar -czf enterprise-reporting-backup-$(date +%Y%m%d).tar.gz \
+  app/data redis/data .env
 
 # Download to local machine
-scp root@your-vps-ip:/srv/enterprise-reporting-system/backup-*.tar.gz ./
-```
-
-### Database Backup
-
-```bash
-# PostgreSQL dump
-docker exec ers-postgres pg_dump -U ersuser enterprise_reporting > backup.sql
-
-# Restore
-docker exec -i ers-postgres psql -U ersuser enterprise_reporting < backup.sql
+scp root@your-vps-ip:/srv/enterprise-reporting-system/enterprise-reporting-backup-*.tar.gz ./
 ```
 
 ### Restore from Backup
 
 ```bash
-# 1. Stop containers
+# Stop containers
 docker compose down
 
-# 2. Extract backup
-tar -xzf backup-20240101.tar.gz -C /srv/enterprise-reporting-system/
+# Extract backup
+cd /srv/enterprise-reporting-system
+tar -xzf enterprise-reporting-backup-20240501.tar.gz
 
-# 3. Start containers
+# Restore permissions
+chown -R 1000:1000 app
+chown -R 999:999 redis
+
+# Start containers
 docker compose up -d
 ```
 
@@ -366,88 +420,55 @@ docker compose up -d
 
 ## Monitoring & Maintenance
 
-### View Logs
-
-```bash
-# All services
-docker compose logs -f
-
-# Specific service
-docker compose logs -f app
-docker compose logs -f postgres
-docker compose logs -f redis
-
-# Last 100 lines
-docker compose logs --tail=100 app
-```
-
-### Resource Usage
-
-```bash
-# Container stats
-docker stats
-
-# Disk usage
-df -h
-du -sh /srv/enterprise-reporting-system/*
-
-# Memory usage
-free -h
-```
-
 ### Health Checks
 
 ```bash
-# Application health
-curl http://localhost:3000/api/health
+# Check API health
+curl https://your-domain.com/api/health
 
-# PostgreSQL health
-docker exec ers-postgres pg_isready -U ersuser
+# Check container status
+docker compose ps
 
-# Redis health
-docker exec ers-redis redis-cli ping
+# View application logs
+docker compose logs -f app
+
+# Monitor Redis
+docker compose exec redis redis-cli info
 ```
 
 ### Database Maintenance
 
 ```bash
-# Connect to PostgreSQL
-docker exec -it ers-postgres psql -U ersuser enterprise_reporting
+# Run database migrations
+docker compose exec app bun run db:migrate
 
-# Run vacuum/analyze
-VACUUM ANALYZE;
-
-# Check table sizes
-SELECT
-    schemaname,
-    tablename,
-    pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) AS size
-FROM pg_tables
-WHERE schemaname = 'public'
-ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;
-
-# Exit
-\q
+# View database
+docker compose exec app sqlite3 data/config.sqlite "SELECT name FROM sqlite_master WHERE type='table';"
 ```
 
-### Log Rotation
+### Job Queue Management
 
 ```bash
-# Create logrotate config
-cat > /etc/logrotate.d/ers-app << EOF
-/srv/enterprise-reporting-system/app/logs/*.log {
-    daily
-    rotate 14
-    compress
-    delaycompress
-    missingok
-    notifempty
-    create 0644 nextjs nodejs
-}
-EOF
+# View job queue status
+docker compose exec app curl http://localhost:4050/bull-board
 
-# Test configuration
-logrotate -d /etc/logrotate.d/ers-app
+# Restart jobs worker if needed
+docker compose restart app
+```
+
+### Update Application
+
+```bash
+# Pull latest code
+cd /srv/enterprise-reporting-system
+git pull origin main
+
+# Build new version
+bun install
+bun run build
+
+# Rebuild and restart container
+docker compose up -d --build app
 ```
 
 ---
@@ -457,202 +478,101 @@ logrotate -d /etc/logrotate.d/ers-app
 ### Container Won't Start
 
 ```bash
-# Check logs
-docker compose logs <service-name>
+# View detailed logs
+docker compose logs app
 
-# Check container status
-docker compose ps
-
-# Inspect container
-docker inspect ers-app
+# Common issues:
+# - PORT 4050 already in use
+# - Database file permissions
+# - Redis connection refused
 ```
 
-### Permission Issues
+### Database Connection Error
 
 ```bash
-# Fix PostgreSQL permissions
-chown -R 999:999 /srv/enterprise-reporting-system/postgres
+# Check database file exists
+ls -lh /srv/enterprise-reporting-system/app/data/config.sqlite
 
-# Fix Redis permissions
-chown -R 999:999 /srv/enterprise-reporting-system/redis
+# Check permissions
+chown -R 1000:1000 /srv/enterprise-reporting-system/app/data
 
-# Fix app permissions
-chown -R 1000:1000 /srv/enterprise-reporting-system/app
+# Restart container
+docker compose restart app
 ```
 
-### Database Connection Issues
+### Redis Connection Error
 
 ```bash
-# Check if PostgreSQL is running
-docker compose ps postgres
+# Check Redis is running
+docker compose ps redis
 
-# Check PostgreSQL logs
-docker compose logs postgres
+# Check Redis connectivity
+docker compose exec redis redis-cli ping
 
-# Test connection
-docker exec ers-postgres psql -U ersuser -d enterprise_reporting -c "SELECT 1;"
+# Rebuild Redis container
+docker compose down redis
+docker compose up -d redis
 ```
 
-### Out of Disk Space
+### Storage Full
 
 ```bash
 # Check disk usage
 df -h
 
-# Find large files
-du -sh /srv/enterprise-reporting-system/* | sort -hr
+# Clean up old exports
+rm -f /srv/enterprise-reporting-system/app/job-outputs/*.{csv,xlsx,pdf}
 
-# Clean old logs
-find /srv/enterprise-reporting-system/app/logs -name "*.log" -mtime +7 -delete
-
-# Clean Docker images
-docker image prune -a
-
-# Clean Docker volumes (be careful!)
-docker volume prune
-```
-
-### Application Errors
-
-```bash
-# View real-time logs
-docker compose logs -f app
-
-# Restart application
-docker compose restart app
-
-# Rebuild application
-docker compose up -d --build app
-```
-
-### Reset Everything
-
-**⚠️ WARNING: This will delete all data!**
-
-```bash
-# Stop and remove containers
+# Clean up Docker
 docker compose down
+docker system prune
+```
 
-# Remove volumes (bind mounts are NOT removed)
-docker volume rm $(docker volume ls -q)
+### SSL/Certificate Issues
 
-# Remove bind mounts (data is deleted!)
-rm -rf /srv/enterprise-reporting-system/postgres/*
-rm -rf /srv/enterprise-reporting-system/redis/*
-rm -rf /srv/enterprise-reporting-system/app/*
+```bash
+# Renew Let's Encrypt certificate
+docker compose exec nginx certbot renew
 
-# Start fresh
+# Manual certificate request
+docker compose exec nginx certbot certonly --webroot -w /usr/share/nginx/html \
+  -d your-domain.com
+```
+
+---
+
+## Performance Tips
+
+### Optimize for Hostinger VPS
+
+1. **Enable Virtual Scrolling**: Set `ENABLE_VIRTUAL_SCROLLING=true`
+2. **Reduce Page Size**: Set `DEFAULT_PAGE_SIZE=25` for slower connections
+3. **Enable Compression**: Nginx gzip already enabled
+4. **Monitor Memory**: Use `docker stats` to monitor container memory
+5. **Clean Up Jobs**: Archive old job outputs monthly
+
+### Memory Optimization
+
+```bash
+# Monitor container memory
+docker compose stats
+
+# If memory usage is high:
+docker compose down
+docker volume prune
 docker compose up -d
 ```
 
 ---
 
-## Security Best Practices
+## Support & Documentation
 
-### 1. Use Strong Passwords
-
-```bash
-# Generate secure passwords
-openssl rand -base64 32
-```
-
-### 2. Enable Firewall
-
-```bash
-# Allow SSH
-ufw allow 22/tcp
-
-# Allow HTTP/HTTPS
-ufw allow 80/tcp
-ufw allow 443/tcp
-
-# Enable firewall
-ufw enable
-
-# Check status
-ufw status
-```
-
-### 3. Use SSL/TLS
-
-Install Certbot for free Let's Encrypt certificates:
-
-```bash
-apt-get install certbot python3-certbot-nginx
-certbot --nginx -d your-domain.com
-```
-
-### 4. Regular Updates
-
-```bash
-# Update system packages
-apt-get update && apt-get upgrade -y
-
-# Update Docker images
-docker compose pull
-docker compose up -d --build
-```
-
-### 5. Monitor Logs
-
-```bash
-# Failed login attempts
-grep "Failed" /var/log/auth.log
-
-# Application errors
-docker compose logs app | grep -i error
-```
+- **Project Docs**: See [docs/](../docs/) directory
+- **Architecture**: See [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md)
+- **Testing**: See [docs/TESTING.md](../docs/TESTING.md)
+- **Features**: See [docs/FEATURES.md](../docs/FEATURES.md)
+- **Developer Guide**: See [CLAUDE.md](../CLAUDE.md)
 
 ---
 
-## Performance Tuning
-
-### PostgreSQL Performance
-
-Edit `docker-compose.yml` to add PostgreSQL tuning:
-
-```yaml
-postgres:
-  command:
-    - "postgres"
-    - "-c"
-    - "shared_buffers=256MB"
-    - "-c"
-    - "max_connections=200"
-    - "-c"
-    - "work_mem=4MB"
-```
-
-### Redis Performance
-
-```yaml
-redis:
-  command:
-    - "redis-server"
-    - "--appendonly yes"
-    - "--maxmemory 256mb"
-    - "--maxmemory-policy allkeys-lru"
-```
-
-### Application Performance
-
-```yaml
-app:
-  environment:
-    - NODE_OPTIONS=--max-old-space-size=2048
-```
-
----
-
-## Support & Resources
-
-- **Docker Documentation**: https://docs.docker.com/
-- **Docker Compose**: https://docs.docker.com/compose/
-- **PostgreSQL**: https://www.postgresql.org/docs/
-- **Hostinger VPS**: https://support.hostinger.com/
-
----
-
-## License
-
-This deployment configuration is part of the Enterprise Reporting System.
+**Built with Bun, Next.js, SQLite, and BullMQ for enterprise-grade reporting.**

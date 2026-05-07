@@ -2,82 +2,30 @@
 
 Enterprise Reporting System deployment on Hostinger VPS with Docker Compose.
 
-## Prerequisites
+For detailed deployment guide, see [docs/DOCKER_HOSTINGER_DEPLOYMENT.md](DOCKER_HOSTINGER_DEPLOYMENT.md).
 
-- Hostinger VPS with 2GB+ RAM, 20GB+ storage
-- Ubuntu 20.04+ or Debian 11+
+## Quick Deployment Summary
+
+This system uses:
+- **SQLite** for application database (embedded, zero configuration)
+- **Redis** for BullMQ job queue backend
+- **Nginx** for reverse proxy and SSL
+- **Bun** runtime for Next.js application
+
+### Prerequisites
+
+- Hostinger VPS: 2GB+ RAM, 20GB+ storage, Ubuntu 20.04+
 - SSH root access
 - Domain name (optional, for SSL)
+- Docker & Docker Compose installed
 
-## Quick Deploy
+### Quick Steps
 
-### 1. Setup VPS
-
-```bash
-# SSH into your VPS
-ssh root@your-vps-ip
-
-# Install Docker & Docker Compose
-curl -fsSL https://get.docker.com -o get-docker.sh
-sh get-ddocker.sh
-curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-chmod +x /usr/local/bin/docker-compose
-```
-
-### 2. Create Project Directory
-
-```bash
-mkdir -p /srv/enterprise-reporting-system
-cd /srv/enterprise-reporting-system
-```
-
-### 3. Create Environment File
-
-```bash
-cat > .env << 'EOF'
-# Data paths
-DATA_PATH=/srv/enterprise-reporting-system
-DATABASE_PATH=/srv/enterprise-reporting-system/data/config.sqlite
-
-# Application
-NEXT_PUBLIC_APP_URL=https://your-domain.com
-NODE_ENV=production
-
-# Authentication (generate: openssl rand -base64 32)
-AUTH_SECRET=your-random-auth-secret-min-32-chars
-AUTH_URL=https://your-domain.com/api/auth
-
-# Encryption (generate: openssl rand -hex 32)
-ENCRYPTION_KEY=your-32-char-hex-key
-
-# Redis
-REDIS_PASSWORD=your-redis-password
-
-# Pagination
-DEFAULT_PAGE_SIZE=50
-MAX_PAGE_SIZE=1000
-DATA_TABLE_PAGE_SIZE=100
-EOF
-```
-
-### 4. Start Application
-
-```bash
-docker compose up -d
-```
-
-### 5. Verify Deployment
-
-```bash
-# Check containers
-docker compose ps
-
-# Check logs
-docker compose logs -f
-
-# Test application
-curl http://localhost:3000/api/health
-```
+1. **Clone repository** on VPS
+2. **Configure `.env`** with your values
+3. **Run migrations**: `bun run db:migrate && bun run db:sample`
+4. **Start services**: `docker compose up -d`
+5. **Verify**: `curl https://your-domain.com/api/health`
 
 ## Data Storage
 
@@ -85,11 +33,10 @@ All data persists on VPS filesystem at `/srv/enterprise-reporting-system/`:
 
 ```
 /srv/enterprise-reporting-system/
-├── postgres/data/     # Database files
-├── redis/data/        # Redis snapshots
+├── redis/data/        # Redis snapshots (for BullMQ)
 ├── app/
-│   ├── data/          # SQLite configs
-│   ├── job-outputs/   # Generated reports
+│   ├── data/          # SQLite database (config.sqlite)
+│   ├── job-outputs/   # Generated reports/exports
 │   ├── uploads/       # User files
 │   └── logs/          # Application logs
 └── backups/           # Backup archives
