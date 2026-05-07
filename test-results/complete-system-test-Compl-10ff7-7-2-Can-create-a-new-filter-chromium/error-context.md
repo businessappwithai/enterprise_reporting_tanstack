@@ -1,0 +1,182 @@
+# Page snapshot
+
+```yaml
+- generic:
+  - generic:
+    - complementary:
+      - generic:
+        - link:
+          - /url: /
+          - img
+          - generic: Enterprise Reports
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - heading [level=2]: Main
+                - navigation:
+                  - link:
+                    - /url: /
+                    - button:
+                      - img
+                      - generic: Dashboard
+                  - link:
+                    - /url: /sql-editor
+                    - button:
+                      - img
+                      - generic: SQL Editor
+                  - link:
+                    - /url: /queries
+                    - button:
+                      - img
+                      - generic: Saved Queries
+                  - link:
+                    - /url: /reports
+                    - button:
+                      - img
+                      - generic: Reports
+                  - link:
+                    - /url: /charts
+                    - button:
+                      - img
+                      - generic: Charts
+                  - link:
+                    - /url: /dashboards
+                    - button:
+                      - img
+                      - generic: Dashboards
+                  - link:
+                    - /url: /filters
+                    - button:
+                      - img
+                      - generic: Filters
+                  - link:
+                    - /url: /jobs
+                    - button:
+                      - img
+                      - generic: Jobs
+                  - link:
+                    - /url: /nl-query
+                    - button:
+                      - img
+                      - generic: NL Query
+              - generic:
+                - heading [level=2]: Administration
+                - navigation:
+                  - link:
+                    - /url: /data-sources
+                    - button:
+                      - img
+                      - generic: Data Sources
+                  - link:
+                    - /url: /bull-board
+                    - button:
+                      - img
+                      - generic: Queue Management
+                  - link:
+                    - /url: /admin/users
+                    - button:
+                      - img
+                      - generic: Users
+                  - link:
+                    - /url: /admin/roles
+                    - button:
+                      - img
+                      - generic: Roles
+                  - link:
+                    - /url: /admin/permissions
+                    - button:
+                      - img
+                      - generic: Permissions
+                  - link:
+                    - /url: /settings
+                    - button:
+                      - img
+                      - generic: Settings
+      - button:
+        - img
+    - generic:
+      - banner:
+        - generic:
+          - button:
+            - img
+            - generic: SQLite for SQL Tests 1772626809795
+            - generic: sqlite3
+        - generic:
+          - button:
+            - img
+            - generic: Toggle theme
+          - button:
+            - img
+            - generic: Notifications
+          - button:
+            - generic:
+              - generic: A
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - heading [level=1]: Filters
+              - paragraph: Manage reusable filters for reports and charts
+            - button [expanded]:
+              - img
+              - text: Create Filter
+          - generic:
+            - generic:
+              - table:
+                - rowgroup:
+                  - row:
+                    - columnheader: Name
+                    - columnheader: Description
+                    - columnheader: Data Source
+                    - columnheader: Display Fields
+                    - columnheader: Value Field
+                    - columnheader: Query
+                    - columnheader: Actions
+                - rowgroup:
+                  - row:
+                    - cell: No filters found. Create your first filter to get started.
+  - region "Notifications alt+T"
+  - alert
+  - dialog "Create New Filter" [ref=e2]:
+    - generic [ref=e3]:
+      - heading "Create New Filter" [level=2] [ref=e4]
+      - paragraph [ref=e5]: Create a reusable filter for reports and charts.
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - generic [ref=e8]: Filter Name
+        - textbox "Filter Name" [active] [ref=e9]:
+          - /placeholder: e.g., Customer Filter
+      - generic [ref=e10]:
+        - generic [ref=e11]: Description
+        - textbox "Description" [ref=e12]:
+          - /placeholder: Optional description
+      - generic [ref=e13]:
+        - generic [ref=e14]: Field Type
+        - combobox "Field Type" [ref=e15] [cursor=pointer]:
+          - generic: ID (Dropdown from query)
+          - img [ref=e16]
+        - paragraph [ref=e18]: Select a query to populate dropdown options in filter
+      - generic [ref=e19]:
+        - generic [ref=e20]: Saved Query *
+        - combobox "Saved Query *" [ref=e21] [cursor=pointer]:
+          - generic: Select a saved query...
+          - img [ref=e22]
+        - paragraph [ref=e24]: Select a saved query to populate available columns
+      - generic [ref=e25]:
+        - generic [ref=e26]:
+          - generic [ref=e27]: Display Fields (Multiple)
+          - textbox "e.g., firstName, lastName" [ref=e28]
+          - paragraph [ref=e29]: Select multiple fields to display (e.g., firstName + lastName)
+        - generic [ref=e30]:
+          - generic [ref=e31]: Value Field
+          - textbox "e.g., id" [ref=e32]
+          - paragraph [ref=e33]: Field used for filtering (should be unique)
+    - generic [ref=e34]:
+      - button "Cancel" [ref=e35] [cursor=pointer]
+      - button "Create Filter" [ref=e36] [cursor=pointer]
+    - button "Close" [ref=e37] [cursor=pointer]:
+      - img [ref=e38]
+      - generic [ref=e41]: Close
+```

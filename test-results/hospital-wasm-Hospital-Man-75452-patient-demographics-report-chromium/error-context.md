@@ -1,0 +1,322 @@
+# Page snapshot
+
+```yaml
+- generic:
+  - generic:
+    - complementary:
+      - generic:
+        - link:
+          - /url: /
+          - img
+          - generic: Enterprise Reports
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - heading [level=2]: Main
+                - navigation:
+                  - link:
+                    - /url: /
+                    - button:
+                      - img
+                      - generic: Dashboard
+                  - link:
+                    - /url: /sql-editor
+                    - button:
+                      - img
+                      - generic: SQL Editor
+                  - link:
+                    - /url: /queries
+                    - button:
+                      - img
+                      - generic: Saved Queries
+                  - link:
+                    - /url: /reports
+                    - button:
+                      - img
+                      - generic: Reports
+                  - link:
+                    - /url: /charts
+                    - button:
+                      - img
+                      - generic: Charts
+                  - link:
+                    - /url: /dashboards
+                    - button:
+                      - img
+                      - generic: Dashboards
+                  - link:
+                    - /url: /filters
+                    - button:
+                      - img
+                      - generic: Filters
+                  - link:
+                    - /url: /jobs
+                    - button:
+                      - img
+                      - generic: Jobs
+                  - link:
+                    - /url: /nl-query
+                    - button:
+                      - img
+                      - generic: NL Query
+              - generic:
+                - heading [level=2]: Administration
+                - navigation:
+                  - link:
+                    - /url: /data-sources
+                    - button:
+                      - img
+                      - generic: Data Sources
+                  - link:
+                    - /url: /bull-board
+                    - button:
+                      - img
+                      - generic: Queue Management
+                  - link:
+                    - /url: /admin/users
+                    - button:
+                      - img
+                      - generic: Users
+                  - link:
+                    - /url: /admin/roles
+                    - button:
+                      - img
+                      - generic: Roles
+                  - link:
+                    - /url: /admin/permissions
+                    - button:
+                      - img
+                      - generic: Permissions
+                  - link:
+                    - /url: /settings
+                    - button:
+                      - img
+                      - generic: Settings
+      - button:
+        - img
+    - generic:
+      - banner:
+        - generic:
+          - button:
+            - img
+            - generic: E2E DDL DS 1772628737923
+            - generic: sqlite3
+        - generic:
+          - button:
+            - img
+            - generic: Toggle theme
+          - button:
+            - img
+            - generic: Notifications
+          - button:
+            - generic:
+              - generic: A
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - heading [level=1]: Reports
+              - paragraph: Create and manage tabular reports
+            - button [expanded]:
+              - img
+              - text: New Report
+          - generic:
+            - generic:
+              - heading [level=3]:
+                - img
+                - text: All Reports
+            - generic:
+              - generic:
+                - table:
+                  - rowgroup:
+                    - row:
+                      - columnheader: Name
+                      - columnheader: Description
+                      - columnheader: Query
+                      - columnheader: Created
+                      - columnheader: Modified
+                      - columnheader: Actions
+                  - rowgroup:
+                    - row:
+                      - cell:
+                        - generic: E2E Report 1772628605092
+                      - cell: "-"
+                      - cell:
+                        - generic: No Query
+                      - cell: Mar 4, 2026, 12:50 PM
+                      - cell: Mar 4, 2026, 12:50 PM
+                      - cell:
+                        - button:
+                          - img
+                    - row:
+                      - cell:
+                        - generic: Test Report 1772626758137
+                      - cell: Test report for API testing
+                      - cell:
+                        - generic: Linked
+                      - cell: Mar 4, 2026, 12:19 PM
+                      - cell: Mar 4, 2026, 12:19 PM
+                      - cell:
+                        - button:
+                          - img
+                    - row:
+                      - cell:
+                        - generic: Test Report 1772626292889
+                      - cell: Test report for API testing
+                      - cell:
+                        - generic: Linked
+                      - cell: Mar 4, 2026, 12:11 PM
+                      - cell: Mar 4, 2026, 12:11 PM
+                      - cell:
+                        - button:
+                          - img
+                    - row:
+                      - cell:
+                        - generic: Test Report 1772626201456
+                      - cell: Test report for API testing
+                      - cell:
+                        - generic: Linked
+                      - cell: Mar 4, 2026, 12:10 PM
+                      - cell: Mar 4, 2026, 12:10 PM
+                      - cell:
+                        - button:
+                          - img
+                    - row:
+                      - cell:
+                        - generic: Test Report 1772626109122
+                      - cell: Test report for API testing
+                      - cell:
+                        - generic: Linked
+                      - cell: Mar 4, 2026, 12:08 PM
+                      - cell: Mar 4, 2026, 12:08 PM
+                      - cell:
+                        - button:
+                          - img
+                    - row:
+                      - cell:
+                        - generic: Test Report 1772625958392
+                      - cell: Test report for API testing
+                      - cell:
+                        - generic: Linked
+                      - cell: Mar 4, 2026, 12:05 PM
+                      - cell: Mar 4, 2026, 12:05 PM
+                      - cell:
+                        - button:
+                          - img
+                    - row:
+                      - cell:
+                        - generic: Test Report 1772625812353
+                      - cell: Test report for API testing
+                      - cell:
+                        - generic: Linked
+                      - cell: Mar 4, 2026, 12:03 PM
+                      - cell: Mar 4, 2026, 12:03 PM
+                      - cell:
+                        - button:
+                          - img
+                    - row:
+                      - cell:
+                        - generic: Test Report 1772625477919
+                      - cell: Test report for API testing
+                      - cell:
+                        - generic: Linked
+                      - cell: Mar 4, 2026, 11:57 AM
+                      - cell: Mar 4, 2026, 11:57 AM
+                      - cell:
+                        - button:
+                          - img
+                    - row:
+                      - cell:
+                        - generic: Patient Registry - 50K Records
+                      - cell: Comprehensive patient registry with 50,000 records
+                      - cell:
+                        - generic: Linked
+                      - cell: Mar 4, 2026, 09:30 AM
+                      - cell: Mar 4, 2026, 05:01 PM
+                      - cell:
+                        - button:
+                          - img
+                    - row:
+                      - cell:
+                        - generic: E2E Test Report No Query
+                      - cell: "-"
+                      - cell:
+                        - generic: No Query
+                      - cell: Mar 4, 2026, 08:42 AM
+                      - cell: Mar 4, 2026, 08:42 AM
+                      - cell:
+                        - button:
+                          - img
+                    - row:
+                      - cell:
+                        - generic: E2E Test Report
+                      - cell: This is a test report from E2E tests
+                      - cell:
+                        - generic: Linked
+                      - cell: Mar 4, 2026, 08:42 AM
+                      - cell: Mar 4, 2026, 02:21 PM
+                      - cell:
+                        - button:
+                          - img
+                    - row:
+                      - cell:
+                        - generic: patient
+                      - cell: "-"
+                      - cell:
+                        - generic: Linked
+                      - cell: Mar 4, 2026, 08:26 AM
+                      - cell: Mar 4, 2026, 02:16 PM
+                      - cell:
+                        - button:
+                          - img
+                    - row:
+                      - cell:
+                        - generic: E2E Test Report No Query
+                      - cell: "-"
+                      - cell:
+                        - generic: No Query
+                      - cell: Mar 4, 2026, 07:57 AM
+                      - cell: Mar 4, 2026, 07:57 AM
+                      - cell:
+                        - button:
+                          - img
+                    - row:
+                      - cell:
+                        - generic: E2E Test Report
+                      - cell: This is a test report from E2E tests
+                      - cell:
+                        - generic: Linked
+                      - cell: Mar 4, 2026, 07:56 AM
+                      - cell: Mar 4, 2026, 07:56 AM
+                      - cell:
+                        - button:
+                          - img
+  - region "Notifications alt+T"
+  - alert
+  - dialog "Create Report" [ref=e2]:
+    - generic [ref=e3]:
+      - heading "Create Report" [level=2] [ref=e4]
+      - paragraph [ref=e5]: Create a new report from a saved query.
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - text: Name
+        - textbox "Name" [active] [ref=e8]:
+          - /placeholder: My Report
+      - generic [ref=e9]:
+        - text: Description
+        - textbox "Description" [ref=e10]:
+          - /placeholder: Optional description
+      - generic [ref=e11]:
+        - text: Saved Query
+        - combobox [ref=e12] [cursor=pointer]:
+          - generic: Select a query
+          - img [ref=e13]
+    - generic [ref=e15]:
+      - button "Cancel" [ref=e16] [cursor=pointer]
+      - button "Create Report" [disabled]
+    - button "Close" [ref=e17] [cursor=pointer]:
+      - img [ref=e18]
+      - generic [ref=e21]: Close
+```

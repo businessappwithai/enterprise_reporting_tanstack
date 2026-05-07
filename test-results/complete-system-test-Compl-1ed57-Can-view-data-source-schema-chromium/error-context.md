@@ -1,0 +1,1176 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - link "Enterprise Reports" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img [ref=e6]
+        - generic [ref=e8]: Enterprise Reports
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - heading "Main" [level=2] [ref=e14]
+          - navigation [ref=e15]:
+            - link "Dashboard" [ref=e16] [cursor=pointer]:
+              - /url: /
+              - button "Dashboard" [ref=e17]:
+                - img [ref=e18]
+                - generic [ref=e21]: Dashboard
+            - link "SQL Editor" [ref=e22] [cursor=pointer]:
+              - /url: /sql-editor
+              - button "SQL Editor" [ref=e23]:
+                - img [ref=e24]
+                - generic [ref=e26]: SQL Editor
+            - link "Saved Queries" [ref=e27] [cursor=pointer]:
+              - /url: /queries
+              - button "Saved Queries" [ref=e28]:
+                - img [ref=e29]
+                - generic [ref=e33]: Saved Queries
+            - link "Reports" [ref=e34] [cursor=pointer]:
+              - /url: /reports
+              - button "Reports" [ref=e35]:
+                - img [ref=e36]
+                - generic [ref=e39]: Reports
+            - link "Charts" [ref=e40] [cursor=pointer]:
+              - /url: /charts
+              - button "Charts" [ref=e41]:
+                - img [ref=e42]
+                - generic [ref=e44]: Charts
+            - link "Dashboards" [ref=e45] [cursor=pointer]:
+              - /url: /dashboards
+              - button "Dashboards" [ref=e46]:
+                - img [ref=e47]
+                - generic [ref=e52]: Dashboards
+            - link "Filters" [ref=e53] [cursor=pointer]:
+              - /url: /filters
+              - button "Filters" [ref=e54]:
+                - img [ref=e55]
+                - generic [ref=e57]: Filters
+            - link "Jobs" [ref=e58] [cursor=pointer]:
+              - /url: /jobs
+              - button "Jobs" [ref=e59]:
+                - img [ref=e60]
+                - generic [ref=e62]: Jobs
+            - link "NL Query" [ref=e63] [cursor=pointer]:
+              - /url: /nl-query
+              - button "NL Query" [ref=e64]:
+                - img [ref=e65]
+                - generic [ref=e67]: NL Query
+        - generic [ref=e68]:
+          - heading "Administration" [level=2] [ref=e69]
+          - navigation [ref=e70]:
+            - link "Data Sources" [ref=e71] [cursor=pointer]:
+              - /url: /data-sources
+              - button "Data Sources" [ref=e72]:
+                - img [ref=e73]
+                - generic [ref=e77]: Data Sources
+            - link "Queue Management" [ref=e78] [cursor=pointer]:
+              - /url: /bull-board
+              - button "Queue Management" [ref=e79]:
+                - img [ref=e80]
+                - generic [ref=e84]: Queue Management
+            - link "Users" [ref=e85] [cursor=pointer]:
+              - /url: /admin/users
+              - button "Users" [ref=e86]:
+                - img [ref=e87]
+                - generic [ref=e92]: Users
+            - link "Roles" [ref=e93] [cursor=pointer]:
+              - /url: /admin/roles
+              - button "Roles" [ref=e94]:
+                - img [ref=e95]
+                - generic [ref=e97]: Roles
+            - link "Permissions" [ref=e98] [cursor=pointer]:
+              - /url: /admin/permissions
+              - button "Permissions" [ref=e99]:
+                - img [ref=e100]
+                - generic [ref=e102]: Permissions
+            - link "Settings" [ref=e103] [cursor=pointer]:
+              - /url: /settings
+              - button "Settings" [ref=e104]:
+                - img [ref=e105]
+                - generic [ref=e108]: Settings
+      - button [ref=e109] [cursor=pointer]:
+        - img [ref=e110]
+    - generic [ref=e112]:
+      - banner [ref=e113]:
+        - button "SQLite for SQL Tests 1772626809795 sqlite3" [ref=e115] [cursor=pointer]:
+          - img [ref=e116]
+          - generic [ref=e120]: SQLite for SQL Tests 1772626809795
+          - generic [ref=e121]: sqlite3
+        - generic [ref=e122]:
+          - button "Toggle theme" [ref=e123] [cursor=pointer]:
+            - img [ref=e124]
+            - img
+            - generic [ref=e130]: Toggle theme
+          - button "Notifications" [ref=e131] [cursor=pointer]:
+            - img [ref=e132]
+            - generic [ref=e135]: Notifications
+          - button "A" [ref=e136] [cursor=pointer]:
+            - generic [ref=e138]: A
+      - main [ref=e139]:
+        - generic [ref=e140]:
+          - generic [ref=e141]:
+            - generic [ref=e142]:
+              - heading "Data Sources" [level=1] [ref=e143]
+              - paragraph [ref=e144]: Manage database connections for reports and queries
+            - button "New Data Source" [ref=e145] [cursor=pointer]:
+              - img [ref=e146]
+              - text: New Data Source
+          - generic [ref=e147]:
+            - heading "All Data Sources" [level=3] [ref=e149]:
+              - img [ref=e150]
+              - text: All Data Sources
+            - table [ref=e156]:
+              - rowgroup [ref=e157]:
+                - row "Name Type Description Status Created Actions" [ref=e158]:
+                  - columnheader "Name" [ref=e159]
+                  - columnheader "Type" [ref=e160]
+                  - columnheader "Description" [ref=e161]
+                  - columnheader "Status" [ref=e162]
+                  - columnheader "Created" [ref=e163]
+                  - columnheader "Actions" [ref=e164]
+              - rowgroup [ref=e165]:
+                - row "HMS pg - Connected Mar 4, 2026, 07:32 AM" [ref=e166]:
+                  - cell "HMS" [ref=e167]
+                  - cell "pg" [ref=e168]:
+                    - generic [ref=e169]: pg
+                  - cell "-" [ref=e170]
+                  - cell "Connected" [ref=e171]:
+                    - generic [ref=e173]: Connected
+                  - cell "Mar 4, 2026, 07:32 AM" [ref=e174]
+                  - cell [ref=e175]:
+                    - generic [ref=e176]:
+                      - button "Import schema to enable entity metadata" [ref=e177] [cursor=pointer]:
+                        - img [ref=e178]
+                      - link [ref=e183] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=14d7fe07-1c6e-452d-a8b7-86950f261dcd
+                        - button "Manage Entity Metadata" [ref=e184]:
+                          - img [ref=e185]
+                      - button "Edit data source" [ref=e188] [cursor=pointer]:
+                        - img [ref=e189]
+                      - button "Delete data source" [ref=e192] [cursor=pointer]:
+                        - img [ref=e193]
+                - row "SQLite for SQL Tests 1772626801811 sqlite3 - Connected Mar 4, 2026, 12:20 PM" [ref=e196]:
+                  - cell "SQLite for SQL Tests 1772626801811" [ref=e197]
+                  - cell "sqlite3" [ref=e198]:
+                    - generic [ref=e199]: sqlite3
+                  - cell "-" [ref=e200]
+                  - cell "Connected" [ref=e201]:
+                    - generic [ref=e203]: Connected
+                  - cell "Mar 4, 2026, 12:20 PM" [ref=e204]
+                  - cell [ref=e205]:
+                    - generic [ref=e206]:
+                      - button "Import schema to enable entity metadata" [ref=e207] [cursor=pointer]:
+                        - img [ref=e208]
+                      - link [ref=e213] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=5e53d237-9e1b-4623-b323-03b00902db18
+                        - button "Manage Entity Metadata" [ref=e214]:
+                          - img [ref=e215]
+                      - button "Edit data source" [ref=e218] [cursor=pointer]:
+                        - img [ref=e219]
+                      - button "Delete data source" [ref=e222] [cursor=pointer]:
+                        - img [ref=e223]
+                - row "SQLite for SQL Tests 1772626809795 sqlite3 - Connected Mar 4, 2026, 12:20 PM" [ref=e226]:
+                  - cell "SQLite for SQL Tests 1772626809795" [ref=e227]
+                  - cell "sqlite3" [ref=e228]:
+                    - generic [ref=e229]: sqlite3
+                  - cell "-" [ref=e230]
+                  - cell "Connected" [ref=e231]:
+                    - generic [ref=e233]: Connected
+                  - cell "Mar 4, 2026, 12:20 PM" [ref=e234]
+                  - cell [ref=e235]:
+                    - generic [ref=e236]:
+                      - button "Import schema to enable entity metadata" [ref=e237] [cursor=pointer]:
+                        - img [ref=e238]
+                      - link [ref=e243] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=2db93851-de70-4494-9ee4-abee5b5b0289
+                        - button "Manage Entity Metadata" [ref=e244]:
+                          - img [ref=e245]
+                      - button "Edit data source" [ref=e248] [cursor=pointer]:
+                        - img [ref=e249]
+                      - button "Delete data source" [ref=e252] [cursor=pointer]:
+                        - img [ref=e253]
+                - row "Sakila 2 sqlite3 - Connected Feb 28, 2026, 10:59 AM" [ref=e256]:
+                  - cell "Sakila 2" [ref=e257]
+                  - cell "sqlite3" [ref=e258]:
+                    - generic [ref=e259]: sqlite3
+                  - cell "-" [ref=e260]
+                  - cell "Connected" [ref=e261]:
+                    - generic [ref=e263]: Connected
+                  - cell "Feb 28, 2026, 10:59 AM" [ref=e264]
+                  - cell [ref=e265]:
+                    - generic [ref=e266]:
+                      - button "Import schema to enable entity metadata" [ref=e267] [cursor=pointer]:
+                        - img [ref=e268]
+                      - link [ref=e273] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=39c34f1b-6848-49eb-a670-4ab1f85cc4a1
+                        - button "Manage Entity Metadata" [ref=e274]:
+                          - img [ref=e275]
+                      - button "Edit data source" [ref=e278] [cursor=pointer]:
+                        - img [ref=e279]
+                      - button "Delete data source" [ref=e282] [cursor=pointer]:
+                        - img [ref=e283]
+                - row "Sakila 2 sqlite3 - Connected Feb 28, 2026, 11:05 AM" [ref=e286]:
+                  - cell "Sakila 2" [ref=e287]
+                  - cell "sqlite3" [ref=e288]:
+                    - generic [ref=e289]: sqlite3
+                  - cell "-" [ref=e290]
+                  - cell "Connected" [ref=e291]:
+                    - generic [ref=e293]: Connected
+                  - cell "Feb 28, 2026, 11:05 AM" [ref=e294]
+                  - cell [ref=e295]:
+                    - generic [ref=e296]:
+                      - button "Import schema to enable entity metadata" [ref=e297] [cursor=pointer]:
+                        - img [ref=e298]
+                      - link [ref=e303] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=3a13b9f3-fa64-4a20-9576-d94caca0c5c2
+                        - button "Manage Entity Metadata" [ref=e304]:
+                          - img [ref=e305]
+                      - button "Edit data source" [ref=e308] [cursor=pointer]:
+                        - img [ref=e309]
+                      - button "Delete data source" [ref=e312] [cursor=pointer]:
+                        - img [ref=e313]
+                - row "Sakila 2 sqlite3 - Connected Feb 28, 2026, 11:09 AM" [ref=e316]:
+                  - cell "Sakila 2" [ref=e317]
+                  - cell "sqlite3" [ref=e318]:
+                    - generic [ref=e319]: sqlite3
+                  - cell "-" [ref=e320]
+                  - cell "Connected" [ref=e321]:
+                    - generic [ref=e323]: Connected
+                  - cell "Feb 28, 2026, 11:09 AM" [ref=e324]
+                  - cell [ref=e325]:
+                    - generic [ref=e326]:
+                      - button "Import schema to enable entity metadata" [ref=e327] [cursor=pointer]:
+                        - img [ref=e328]
+                      - link [ref=e333] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=6cf41d33-b813-4602-8f6e-7d83e3696a05
+                        - button "Manage Entity Metadata" [ref=e334]:
+                          - img [ref=e335]
+                      - button "Edit data source" [ref=e338] [cursor=pointer]:
+                        - img [ref=e339]
+                      - button "Delete data source" [ref=e342] [cursor=pointer]:
+                        - img [ref=e343]
+                - row "Test DS 1772625455793 sqlite3 - Connected Mar 4, 2026, 11:57 AM" [ref=e346]:
+                  - cell "Test DS 1772625455793" [ref=e347]
+                  - cell "sqlite3" [ref=e348]:
+                    - generic [ref=e349]: sqlite3
+                  - cell "-" [ref=e350]
+                  - cell "Connected" [ref=e351]:
+                    - generic [ref=e353]: Connected
+                  - cell "Mar 4, 2026, 11:57 AM" [ref=e354]
+                  - cell [ref=e355]:
+                    - generic [ref=e356]:
+                      - button "Import schema to enable entity metadata" [ref=e357] [cursor=pointer]:
+                        - img [ref=e358]
+                      - link [ref=e363] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=9b1324f6-c805-4fc4-8ef4-8f9abd6d136a
+                        - button "Manage Entity Metadata" [ref=e364]:
+                          - img [ref=e365]
+                      - button "Edit data source" [ref=e368] [cursor=pointer]:
+                        - img [ref=e369]
+                      - button "Delete data source" [ref=e372] [cursor=pointer]:
+                        - img [ref=e373]
+                - row "Test DS 1772625790412 sqlite3 - Connected Mar 4, 2026, 12:03 PM" [ref=e376]:
+                  - cell "Test DS 1772625790412" [ref=e377]
+                  - cell "sqlite3" [ref=e378]:
+                    - generic [ref=e379]: sqlite3
+                  - cell "-" [ref=e380]
+                  - cell "Connected" [ref=e381]:
+                    - generic [ref=e383]: Connected
+                  - cell "Mar 4, 2026, 12:03 PM" [ref=e384]
+                  - cell [ref=e385]:
+                    - generic [ref=e386]:
+                      - button "Import schema to enable entity metadata" [ref=e387] [cursor=pointer]:
+                        - img [ref=e388]
+                      - link [ref=e393] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=c385036c-5815-47d9-bba2-db96c2f28001
+                        - button "Manage Entity Metadata" [ref=e394]:
+                          - img [ref=e395]
+                      - button "Edit data source" [ref=e398] [cursor=pointer]:
+                        - img [ref=e399]
+                      - button "Delete data source" [ref=e402] [cursor=pointer]:
+                        - img [ref=e403]
+                - row "Test DS 1772625936309 sqlite3 - Connected Mar 4, 2026, 12:05 PM" [ref=e406]:
+                  - cell "Test DS 1772625936309" [ref=e407]
+                  - cell "sqlite3" [ref=e408]:
+                    - generic [ref=e409]: sqlite3
+                  - cell "-" [ref=e410]
+                  - cell "Connected" [ref=e411]:
+                    - generic [ref=e413]: Connected
+                  - cell "Mar 4, 2026, 12:05 PM" [ref=e414]
+                  - cell [ref=e415]:
+                    - generic [ref=e416]:
+                      - button "Import schema to enable entity metadata" [ref=e417] [cursor=pointer]:
+                        - img [ref=e418]
+                      - link [ref=e423] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=a54c52c9-ab70-4444-9a01-083f72636d9e
+                        - button "Manage Entity Metadata" [ref=e424]:
+                          - img [ref=e425]
+                      - button "Edit data source" [ref=e428] [cursor=pointer]:
+                        - img [ref=e429]
+                      - button "Delete data source" [ref=e432] [cursor=pointer]:
+                        - img [ref=e433]
+                - row "Test DS 1772626086825 sqlite3 - Connected Mar 4, 2026, 12:08 PM" [ref=e436]:
+                  - cell "Test DS 1772626086825" [ref=e437]
+                  - cell "sqlite3" [ref=e438]:
+                    - generic [ref=e439]: sqlite3
+                  - cell "-" [ref=e440]
+                  - cell "Connected" [ref=e441]:
+                    - generic [ref=e443]: Connected
+                  - cell "Mar 4, 2026, 12:08 PM" [ref=e444]
+                  - cell [ref=e445]:
+                    - generic [ref=e446]:
+                      - button "Import schema to enable entity metadata" [ref=e447] [cursor=pointer]:
+                        - img [ref=e448]
+                      - link [ref=e453] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=71a04d12-ba30-4703-a147-56995b2bb4c7
+                        - button "Manage Entity Metadata" [ref=e454]:
+                          - img [ref=e455]
+                      - button "Edit data source" [ref=e458] [cursor=pointer]:
+                        - img [ref=e459]
+                      - button "Delete data source" [ref=e462] [cursor=pointer]:
+                        - img [ref=e463]
+                - row "Test DS 1772626179421 sqlite3 - Connected Mar 4, 2026, 12:09 PM" [ref=e466]:
+                  - cell "Test DS 1772626179421" [ref=e467]
+                  - cell "sqlite3" [ref=e468]:
+                    - generic [ref=e469]: sqlite3
+                  - cell "-" [ref=e470]
+                  - cell "Connected" [ref=e471]:
+                    - generic [ref=e473]: Connected
+                  - cell "Mar 4, 2026, 12:09 PM" [ref=e474]
+                  - cell [ref=e475]:
+                    - generic [ref=e476]:
+                      - button "Import schema to enable entity metadata" [ref=e477] [cursor=pointer]:
+                        - img [ref=e478]
+                      - link [ref=e483] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=a4483f7b-92fa-495f-9602-f6145ee7503e
+                        - button "Manage Entity Metadata" [ref=e484]:
+                          - img [ref=e485]
+                      - button "Edit data source" [ref=e488] [cursor=pointer]:
+                        - img [ref=e489]
+                      - button "Delete data source" [ref=e492] [cursor=pointer]:
+                        - img [ref=e493]
+                - row "Test DS 1772626271475 sqlite3 - Connected Mar 4, 2026, 12:11 PM" [ref=e496]:
+                  - cell "Test DS 1772626271475" [ref=e497]
+                  - cell "sqlite3" [ref=e498]:
+                    - generic [ref=e499]: sqlite3
+                  - cell "-" [ref=e500]
+                  - cell "Connected" [ref=e501]:
+                    - generic [ref=e503]: Connected
+                  - cell "Mar 4, 2026, 12:11 PM" [ref=e504]
+                  - cell [ref=e505]:
+                    - generic [ref=e506]:
+                      - button "Import schema to enable entity metadata" [ref=e507] [cursor=pointer]:
+                        - img [ref=e508]
+                      - link [ref=e513] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=e608d9a9-258d-40b7-9733-439c6e18e113
+                        - button "Manage Entity Metadata" [ref=e514]:
+                          - img [ref=e515]
+                      - button "Edit data source" [ref=e518] [cursor=pointer]:
+                        - img [ref=e519]
+                      - button "Delete data source" [ref=e522] [cursor=pointer]:
+                        - img [ref=e523]
+                - row "Test DS 1772626735298 sqlite3 - Connected Mar 4, 2026, 12:18 PM" [ref=e526]:
+                  - cell "Test DS 1772626735298" [ref=e527]
+                  - cell "sqlite3" [ref=e528]:
+                    - generic [ref=e529]: sqlite3
+                  - cell "-" [ref=e530]
+                  - cell "Connected" [ref=e531]:
+                    - generic [ref=e533]: Connected
+                  - cell "Mar 4, 2026, 12:18 PM" [ref=e534]
+                  - cell [ref=e535]:
+                    - generic [ref=e536]:
+                      - button "Import schema to enable entity metadata" [ref=e537] [cursor=pointer]:
+                        - img [ref=e538]
+                      - link [ref=e543] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=b8f60363-8070-4702-bb4a-737a61728480
+                        - button "Manage Entity Metadata" [ref=e544]:
+                          - img [ref=e545]
+                      - button "Edit data source" [ref=e548] [cursor=pointer]:
+                        - img [ref=e549]
+                      - button "Delete data source" [ref=e552] [cursor=pointer]:
+                        - img [ref=e553]
+                - row "Test DS for Jobs 1772625501133 sqlite3 - Connected Mar 4, 2026, 11:58 AM" [ref=e556]:
+                  - cell "Test DS for Jobs 1772625501133" [ref=e557]
+                  - cell "sqlite3" [ref=e558]:
+                    - generic [ref=e559]: sqlite3
+                  - cell "-" [ref=e560]
+                  - cell "Connected" [ref=e561]:
+                    - generic [ref=e563]: Connected
+                  - cell "Mar 4, 2026, 11:58 AM" [ref=e564]
+                  - cell [ref=e565]:
+                    - generic [ref=e566]:
+                      - button "Import schema to enable entity metadata" [ref=e567] [cursor=pointer]:
+                        - img [ref=e568]
+                      - link [ref=e573] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=664f1018-b06e-49d5-af20-7300eba26d5f
+                        - button "Manage Entity Metadata" [ref=e574]:
+                          - img [ref=e575]
+                      - button "Edit data source" [ref=e578] [cursor=pointer]:
+                        - img [ref=e579]
+                      - button "Delete data source" [ref=e582] [cursor=pointer]:
+                        - img [ref=e583]
+                - row "Test DS for Jobs 1772625834879 sqlite3 - Connected Mar 4, 2026, 12:03 PM" [ref=e586]:
+                  - cell "Test DS for Jobs 1772625834879" [ref=e587]
+                  - cell "sqlite3" [ref=e588]:
+                    - generic [ref=e589]: sqlite3
+                  - cell "-" [ref=e590]
+                  - cell "Connected" [ref=e591]:
+                    - generic [ref=e593]: Connected
+                  - cell "Mar 4, 2026, 12:03 PM" [ref=e594]
+                  - cell [ref=e595]:
+                    - generic [ref=e596]:
+                      - button "Import schema to enable entity metadata" [ref=e597] [cursor=pointer]:
+                        - img [ref=e598]
+                      - link [ref=e603] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=acd748a5-f085-4248-9d01-fc700c4073f5
+                        - button "Manage Entity Metadata" [ref=e604]:
+                          - img [ref=e605]
+                      - button "Edit data source" [ref=e608] [cursor=pointer]:
+                        - img [ref=e609]
+                      - button "Delete data source" [ref=e612] [cursor=pointer]:
+                        - img [ref=e613]
+                - row "Test DS for Jobs 1772625980931 sqlite3 - Connected Mar 4, 2026, 12:06 PM" [ref=e616]:
+                  - cell "Test DS for Jobs 1772625980931" [ref=e617]
+                  - cell "sqlite3" [ref=e618]:
+                    - generic [ref=e619]: sqlite3
+                  - cell "-" [ref=e620]
+                  - cell "Connected" [ref=e621]:
+                    - generic [ref=e623]: Connected
+                  - cell "Mar 4, 2026, 12:06 PM" [ref=e624]
+                  - cell [ref=e625]:
+                    - generic [ref=e626]:
+                      - button "Import schema to enable entity metadata" [ref=e627] [cursor=pointer]:
+                        - img [ref=e628]
+                      - link [ref=e633] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=78ec028f-26ab-4d28-82d5-308809f17b06
+                        - button "Manage Entity Metadata" [ref=e634]:
+                          - img [ref=e635]
+                      - button "Edit data source" [ref=e638] [cursor=pointer]:
+                        - img [ref=e639]
+                      - button "Delete data source" [ref=e642] [cursor=pointer]:
+                        - img [ref=e643]
+                - row "Test DS for Jobs 1772626131801 sqlite3 - Connected Mar 4, 2026, 12:08 PM" [ref=e646]:
+                  - cell "Test DS for Jobs 1772626131801" [ref=e647]
+                  - cell "sqlite3" [ref=e648]:
+                    - generic [ref=e649]: sqlite3
+                  - cell "-" [ref=e650]
+                  - cell "Connected" [ref=e651]:
+                    - generic [ref=e653]: Connected
+                  - cell "Mar 4, 2026, 12:08 PM" [ref=e654]
+                  - cell [ref=e655]:
+                    - generic [ref=e656]:
+                      - button "Import schema to enable entity metadata" [ref=e657] [cursor=pointer]:
+                        - img [ref=e658]
+                      - link [ref=e663] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=0dd4b393-f50a-4e06-a337-7b065417dbfb
+                        - button "Manage Entity Metadata" [ref=e664]:
+                          - img [ref=e665]
+                      - button "Edit data source" [ref=e668] [cursor=pointer]:
+                        - img [ref=e669]
+                      - button "Delete data source" [ref=e672] [cursor=pointer]:
+                        - img [ref=e673]
+                - row "Test DS for Jobs 1772626224019 sqlite3 - Connected Mar 4, 2026, 12:10 PM" [ref=e676]:
+                  - cell "Test DS for Jobs 1772626224019" [ref=e677]
+                  - cell "sqlite3" [ref=e678]:
+                    - generic [ref=e679]: sqlite3
+                  - cell "-" [ref=e680]
+                  - cell "Connected" [ref=e681]:
+                    - generic [ref=e683]: Connected
+                  - cell "Mar 4, 2026, 12:10 PM" [ref=e684]
+                  - cell [ref=e685]:
+                    - generic [ref=e686]:
+                      - button "Import schema to enable entity metadata" [ref=e687] [cursor=pointer]:
+                        - img [ref=e688]
+                      - link [ref=e693] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=23919020-2d1b-44cf-b6bf-ada45ab4485e
+                        - button "Manage Entity Metadata" [ref=e694]:
+                          - img [ref=e695]
+                      - button "Edit data source" [ref=e698] [cursor=pointer]:
+                        - img [ref=e699]
+                      - button "Delete data source" [ref=e702] [cursor=pointer]:
+                        - img [ref=e703]
+                - row "Test DS for Jobs 1772626306832 sqlite3 - Connected Mar 4, 2026, 12:11 PM" [ref=e706]:
+                  - cell "Test DS for Jobs 1772626306832" [ref=e707]
+                  - cell "sqlite3" [ref=e708]:
+                    - generic [ref=e709]: sqlite3
+                  - cell "-" [ref=e710]
+                  - cell "Connected" [ref=e711]:
+                    - generic [ref=e713]: Connected
+                  - cell "Mar 4, 2026, 12:11 PM" [ref=e714]
+                  - cell [ref=e715]:
+                    - generic [ref=e716]:
+                      - button "Import schema to enable entity metadata" [ref=e717] [cursor=pointer]:
+                        - img [ref=e718]
+                      - link [ref=e723] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=23769d47-b148-481c-b315-39b585b12c90
+                        - button "Manage Entity Metadata" [ref=e724]:
+                          - img [ref=e725]
+                      - button "Edit data source" [ref=e728] [cursor=pointer]:
+                        - img [ref=e729]
+                      - button "Delete data source" [ref=e732] [cursor=pointer]:
+                        - img [ref=e733]
+                - row "Test DS for Jobs 1772626772420 sqlite3 - Connected Mar 4, 2026, 12:19 PM" [ref=e736]:
+                  - cell "Test DS for Jobs 1772626772420" [ref=e737]
+                  - cell "sqlite3" [ref=e738]:
+                    - generic [ref=e739]: sqlite3
+                  - cell "-" [ref=e740]
+                  - cell "Connected" [ref=e741]:
+                    - generic [ref=e743]: Connected
+                  - cell "Mar 4, 2026, 12:19 PM" [ref=e744]
+                  - cell [ref=e745]:
+                    - generic [ref=e746]:
+                      - button "Import schema to enable entity metadata" [ref=e747] [cursor=pointer]:
+                        - img [ref=e748]
+                      - link [ref=e753] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=235f3930-ed5b-457c-aa0d-dc152ec46b03
+                        - button "Manage Entity Metadata" [ref=e754]:
+                          - img [ref=e755]
+                      - button "Edit data source" [ref=e758] [cursor=pointer]:
+                        - img [ref=e759]
+                      - button "Delete data source" [ref=e762] [cursor=pointer]:
+                        - img [ref=e763]
+                - row "Test DS for Queries 1772625463117 sqlite3 - Connected Mar 4, 2026, 11:57 AM" [ref=e766]:
+                  - cell "Test DS for Queries 1772625463117" [ref=e767]
+                  - cell "sqlite3" [ref=e768]:
+                    - generic [ref=e769]: sqlite3
+                  - cell "-" [ref=e770]
+                  - cell "Connected" [ref=e771]:
+                    - generic [ref=e773]: Connected
+                  - cell "Mar 4, 2026, 11:57 AM" [ref=e774]
+                  - cell [ref=e775]:
+                    - generic [ref=e776]:
+                      - button "Import schema to enable entity metadata" [ref=e777] [cursor=pointer]:
+                        - img [ref=e778]
+                      - link [ref=e783] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=27b7f308-cf17-4e75-ad1b-ec57c57092b5
+                        - button "Manage Entity Metadata" [ref=e784]:
+                          - img [ref=e785]
+                      - button "Edit data source" [ref=e788] [cursor=pointer]:
+                        - img [ref=e789]
+                      - button "Delete data source" [ref=e792] [cursor=pointer]:
+                        - img [ref=e793]
+                - row "Test DS for Queries 1772625797556 sqlite3 - Connected Mar 4, 2026, 12:03 PM" [ref=e796]:
+                  - cell "Test DS for Queries 1772625797556" [ref=e797]
+                  - cell "sqlite3" [ref=e798]:
+                    - generic [ref=e799]: sqlite3
+                  - cell "-" [ref=e800]
+                  - cell "Connected" [ref=e801]:
+                    - generic [ref=e803]: Connected
+                  - cell "Mar 4, 2026, 12:03 PM" [ref=e804]
+                  - cell [ref=e805]:
+                    - generic [ref=e806]:
+                      - button "Import schema to enable entity metadata" [ref=e807] [cursor=pointer]:
+                        - img [ref=e808]
+                      - link [ref=e813] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=2bc0ebde-6b3c-4da2-8c51-7b2bd4655ada
+                        - button "Manage Entity Metadata" [ref=e814]:
+                          - img [ref=e815]
+                      - button "Edit data source" [ref=e818] [cursor=pointer]:
+                        - img [ref=e819]
+                      - button "Delete data source" [ref=e822] [cursor=pointer]:
+                        - img [ref=e823]
+                - row "Test DS for Queries 1772625943465 sqlite3 - Connected Mar 4, 2026, 12:05 PM" [ref=e826]:
+                  - cell "Test DS for Queries 1772625943465" [ref=e827]
+                  - cell "sqlite3" [ref=e828]:
+                    - generic [ref=e829]: sqlite3
+                  - cell "-" [ref=e830]
+                  - cell "Connected" [ref=e831]:
+                    - generic [ref=e833]: Connected
+                  - cell "Mar 4, 2026, 12:05 PM" [ref=e834]
+                  - cell [ref=e835]:
+                    - generic [ref=e836]:
+                      - button "Import schema to enable entity metadata" [ref=e837] [cursor=pointer]:
+                        - img [ref=e838]
+                      - link [ref=e843] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=d4f6a6bf-7e4e-4f61-a823-8238432f9cbe
+                        - button "Manage Entity Metadata" [ref=e844]:
+                          - img [ref=e845]
+                      - button "Edit data source" [ref=e848] [cursor=pointer]:
+                        - img [ref=e849]
+                      - button "Delete data source" [ref=e852] [cursor=pointer]:
+                        - img [ref=e853]
+                - row "Test DS for Queries 1772626094015 sqlite3 - Connected Mar 4, 2026, 12:08 PM" [ref=e856]:
+                  - cell "Test DS for Queries 1772626094015" [ref=e857]
+                  - cell "sqlite3" [ref=e858]:
+                    - generic [ref=e859]: sqlite3
+                  - cell "-" [ref=e860]
+                  - cell "Connected" [ref=e861]:
+                    - generic [ref=e863]: Connected
+                  - cell "Mar 4, 2026, 12:08 PM" [ref=e864]
+                  - cell [ref=e865]:
+                    - generic [ref=e866]:
+                      - button "Import schema to enable entity metadata" [ref=e867] [cursor=pointer]:
+                        - img [ref=e868]
+                      - link [ref=e873] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=574c278f-02b9-40bc-932c-dd0a77bd4aad
+                        - button "Manage Entity Metadata" [ref=e874]:
+                          - img [ref=e875]
+                      - button "Edit data source" [ref=e878] [cursor=pointer]:
+                        - img [ref=e879]
+                      - button "Delete data source" [ref=e882] [cursor=pointer]:
+                        - img [ref=e883]
+                - row "Test DS for Queries 1772626186465 sqlite3 - Connected Mar 4, 2026, 12:09 PM" [ref=e886]:
+                  - cell "Test DS for Queries 1772626186465" [ref=e887]
+                  - cell "sqlite3" [ref=e888]:
+                    - generic [ref=e889]: sqlite3
+                  - cell "-" [ref=e890]
+                  - cell "Connected" [ref=e891]:
+                    - generic [ref=e893]: Connected
+                  - cell "Mar 4, 2026, 12:09 PM" [ref=e894]
+                  - cell [ref=e895]:
+                    - generic [ref=e896]:
+                      - button "Import schema to enable entity metadata" [ref=e897] [cursor=pointer]:
+                        - img [ref=e898]
+                      - link [ref=e903] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=4775c831-78a3-4e7e-9602-01ea76162c2f
+                        - button "Manage Entity Metadata" [ref=e904]:
+                          - img [ref=e905]
+                      - button "Edit data source" [ref=e908] [cursor=pointer]:
+                        - img [ref=e909]
+                      - button "Delete data source" [ref=e912] [cursor=pointer]:
+                        - img [ref=e913]
+                - row "Test DS for Queries 1772626278513 sqlite3 - Connected Mar 4, 2026, 12:11 PM" [ref=e916]:
+                  - cell "Test DS for Queries 1772626278513" [ref=e917]
+                  - cell "sqlite3" [ref=e918]:
+                    - generic [ref=e919]: sqlite3
+                  - cell "-" [ref=e920]
+                  - cell "Connected" [ref=e921]:
+                    - generic [ref=e923]: Connected
+                  - cell "Mar 4, 2026, 12:11 PM" [ref=e924]
+                  - cell [ref=e925]:
+                    - generic [ref=e926]:
+                      - button "Import schema to enable entity metadata" [ref=e927] [cursor=pointer]:
+                        - img [ref=e928]
+                      - link [ref=e933] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=672cf69b-4336-4bf2-8e2d-a582277f9f15
+                        - button "Manage Entity Metadata" [ref=e934]:
+                          - img [ref=e935]
+                      - button "Edit data source" [ref=e938] [cursor=pointer]:
+                        - img [ref=e939]
+                      - button "Delete data source" [ref=e942] [cursor=pointer]:
+                        - img [ref=e943]
+                - row "Test DS for Queries 1772626742592 sqlite3 - Connected Mar 4, 2026, 12:19 PM" [ref=e946]:
+                  - cell "Test DS for Queries 1772626742592" [ref=e947]
+                  - cell "sqlite3" [ref=e948]:
+                    - generic [ref=e949]: sqlite3
+                  - cell "-" [ref=e950]
+                  - cell "Connected" [ref=e951]:
+                    - generic [ref=e953]: Connected
+                  - cell "Mar 4, 2026, 12:19 PM" [ref=e954]
+                  - cell [ref=e955]:
+                    - generic [ref=e956]:
+                      - button "Import schema to enable entity metadata" [ref=e957] [cursor=pointer]:
+                        - img [ref=e958]
+                      - link [ref=e963] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=9e6cfefc-18fa-4aa5-a729-6e8674cfbe63
+                        - button "Manage Entity Metadata" [ref=e964]:
+                          - img [ref=e965]
+                      - button "Edit data source" [ref=e968] [cursor=pointer]:
+                        - img [ref=e969]
+                      - button "Delete data source" [ref=e972] [cursor=pointer]:
+                        - img [ref=e973]
+                - row "Test DS for Reports 1772625477696 sqlite3 - Connected Mar 4, 2026, 11:57 AM" [ref=e976]:
+                  - cell "Test DS for Reports 1772625477696" [ref=e977]
+                  - cell "sqlite3" [ref=e978]:
+                    - generic [ref=e979]: sqlite3
+                  - cell "-" [ref=e980]
+                  - cell "Connected" [ref=e981]:
+                    - generic [ref=e983]: Connected
+                  - cell "Mar 4, 2026, 11:57 AM" [ref=e984]
+                  - cell [ref=e985]:
+                    - generic [ref=e986]:
+                      - button "Import schema to enable entity metadata" [ref=e987] [cursor=pointer]:
+                        - img [ref=e988]
+                      - link [ref=e993] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=6b67c9d7-d27e-4d98-adf0-d82f378c88a8
+                        - button "Manage Entity Metadata" [ref=e994]:
+                          - img [ref=e995]
+                      - button "Edit data source" [ref=e998] [cursor=pointer]:
+                        - img [ref=e999]
+                      - button "Delete data source" [ref=e1002] [cursor=pointer]:
+                        - img [ref=e1003]
+                - row "Test DS for Reports 1772625812134 sqlite3 - Connected Mar 4, 2026, 12:03 PM" [ref=e1006]:
+                  - cell "Test DS for Reports 1772625812134" [ref=e1007]
+                  - cell "sqlite3" [ref=e1008]:
+                    - generic [ref=e1009]: sqlite3
+                  - cell "-" [ref=e1010]
+                  - cell "Connected" [ref=e1011]:
+                    - generic [ref=e1013]: Connected
+                  - cell "Mar 4, 2026, 12:03 PM" [ref=e1014]
+                  - cell [ref=e1015]:
+                    - generic [ref=e1016]:
+                      - button "Import schema to enable entity metadata" [ref=e1017] [cursor=pointer]:
+                        - img [ref=e1018]
+                      - link [ref=e1023] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=e6aa736a-81fa-434c-8c04-a68ce718784d
+                        - button "Manage Entity Metadata" [ref=e1024]:
+                          - img [ref=e1025]
+                      - button "Edit data source" [ref=e1028] [cursor=pointer]:
+                        - img [ref=e1029]
+                      - button "Delete data source" [ref=e1032] [cursor=pointer]:
+                        - img [ref=e1033]
+                - row "Test DS for Reports 1772625958099 sqlite3 - Connected Mar 4, 2026, 12:05 PM" [ref=e1036]:
+                  - cell "Test DS for Reports 1772625958099" [ref=e1037]
+                  - cell "sqlite3" [ref=e1038]:
+                    - generic [ref=e1039]: sqlite3
+                  - cell "-" [ref=e1040]
+                  - cell "Connected" [ref=e1041]:
+                    - generic [ref=e1043]: Connected
+                  - cell "Mar 4, 2026, 12:05 PM" [ref=e1044]
+                  - cell [ref=e1045]:
+                    - generic [ref=e1046]:
+                      - button "Import schema to enable entity metadata" [ref=e1047] [cursor=pointer]:
+                        - img [ref=e1048]
+                      - link [ref=e1053] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=6e683d08-3c0b-414a-a714-abe2d566a351
+                        - button "Manage Entity Metadata" [ref=e1054]:
+                          - img [ref=e1055]
+                      - button "Edit data source" [ref=e1058] [cursor=pointer]:
+                        - img [ref=e1059]
+                      - button "Delete data source" [ref=e1062] [cursor=pointer]:
+                        - img [ref=e1063]
+                - row "Test DS for Reports 1772626108800 sqlite3 - Connected Mar 4, 2026, 12:08 PM" [ref=e1066]:
+                  - cell "Test DS for Reports 1772626108800" [ref=e1067]
+                  - cell "sqlite3" [ref=e1068]:
+                    - generic [ref=e1069]: sqlite3
+                  - cell "-" [ref=e1070]
+                  - cell "Connected" [ref=e1071]:
+                    - generic [ref=e1073]: Connected
+                  - cell "Mar 4, 2026, 12:08 PM" [ref=e1074]
+                  - cell [ref=e1075]:
+                    - generic [ref=e1076]:
+                      - button "Import schema to enable entity metadata" [ref=e1077] [cursor=pointer]:
+                        - img [ref=e1078]
+                      - link [ref=e1083] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=7c2e0106-b736-4644-9930-c6ef882d3d20
+                        - button "Manage Entity Metadata" [ref=e1084]:
+                          - img [ref=e1085]
+                      - button "Edit data source" [ref=e1088] [cursor=pointer]:
+                        - img [ref=e1089]
+                      - button "Delete data source" [ref=e1092] [cursor=pointer]:
+                        - img [ref=e1093]
+                - row "Test DS for Reports 1772626201186 sqlite3 - Connected Mar 4, 2026, 12:10 PM" [ref=e1096]:
+                  - cell "Test DS for Reports 1772626201186" [ref=e1097]
+                  - cell "sqlite3" [ref=e1098]:
+                    - generic [ref=e1099]: sqlite3
+                  - cell "-" [ref=e1100]
+                  - cell "Connected" [ref=e1101]:
+                    - generic [ref=e1103]: Connected
+                  - cell "Mar 4, 2026, 12:10 PM" [ref=e1104]
+                  - cell [ref=e1105]:
+                    - generic [ref=e1106]:
+                      - button "Import schema to enable entity metadata" [ref=e1107] [cursor=pointer]:
+                        - img [ref=e1108]
+                      - link [ref=e1113] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=a3d58ee9-71cc-4d19-9d0b-2be8629999c2
+                        - button "Manage Entity Metadata" [ref=e1114]:
+                          - img [ref=e1115]
+                      - button "Edit data source" [ref=e1118] [cursor=pointer]:
+                        - img [ref=e1119]
+                      - button "Delete data source" [ref=e1122] [cursor=pointer]:
+                        - img [ref=e1123]
+                - row "Test DS for Reports 1772626292792 sqlite3 - Connected Mar 4, 2026, 12:11 PM" [ref=e1126]:
+                  - cell "Test DS for Reports 1772626292792" [ref=e1127]
+                  - cell "sqlite3" [ref=e1128]:
+                    - generic [ref=e1129]: sqlite3
+                  - cell "-" [ref=e1130]
+                  - cell "Connected" [ref=e1131]:
+                    - generic [ref=e1133]: Connected
+                  - cell "Mar 4, 2026, 12:11 PM" [ref=e1134]
+                  - cell [ref=e1135]:
+                    - generic [ref=e1136]:
+                      - button "Import schema to enable entity metadata" [ref=e1137] [cursor=pointer]:
+                        - img [ref=e1138]
+                      - link [ref=e1143] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=9df5f2e5-ba1e-44bd-9f1d-3bf3fa90c467
+                        - button "Manage Entity Metadata" [ref=e1144]:
+                          - img [ref=e1145]
+                      - button "Edit data source" [ref=e1148] [cursor=pointer]:
+                        - img [ref=e1149]
+                      - button "Delete data source" [ref=e1152] [cursor=pointer]:
+                        - img [ref=e1153]
+                - row "Test DS for Reports 1772626757607 sqlite3 - Connected Mar 4, 2026, 12:19 PM" [ref=e1156]:
+                  - cell "Test DS for Reports 1772626757607" [ref=e1157]
+                  - cell "sqlite3" [ref=e1158]:
+                    - generic [ref=e1159]: sqlite3
+                  - cell "-" [ref=e1160]
+                  - cell "Connected" [ref=e1161]:
+                    - generic [ref=e1163]: Connected
+                  - cell "Mar 4, 2026, 12:19 PM" [ref=e1164]
+                  - cell [ref=e1165]:
+                    - generic [ref=e1166]:
+                      - button "Import schema to enable entity metadata" [ref=e1167] [cursor=pointer]:
+                        - img [ref=e1168]
+                      - link [ref=e1173] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=0f7e7341-921b-4eb1-b60d-81781b186f3f
+                        - button "Manage Entity Metadata" [ref=e1174]:
+                          - img [ref=e1175]
+                      - button "Edit data source" [ref=e1178] [cursor=pointer]:
+                        - img [ref=e1179]
+                      - button "Delete data source" [ref=e1182] [cursor=pointer]:
+                        - img [ref=e1183]
+                - row "Test DS for SQL 1772625470092 sqlite3 - Connected Mar 4, 2026, 11:57 AM" [ref=e1186]:
+                  - cell "Test DS for SQL 1772625470092" [ref=e1187]
+                  - cell "sqlite3" [ref=e1188]:
+                    - generic [ref=e1189]: sqlite3
+                  - cell "-" [ref=e1190]
+                  - cell "Connected" [ref=e1191]:
+                    - generic [ref=e1193]: Connected
+                  - cell "Mar 4, 2026, 11:57 AM" [ref=e1194]
+                  - cell [ref=e1195]:
+                    - generic [ref=e1196]:
+                      - button "Import schema to enable entity metadata" [ref=e1197] [cursor=pointer]:
+                        - img [ref=e1198]
+                      - link [ref=e1203] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=b2379325-5109-491b-b59b-d5d6fdb69d81
+                        - button "Manage Entity Metadata" [ref=e1204]:
+                          - img [ref=e1205]
+                      - button "Edit data source" [ref=e1208] [cursor=pointer]:
+                        - img [ref=e1209]
+                      - button "Delete data source" [ref=e1212] [cursor=pointer]:
+                        - img [ref=e1213]
+                - row "Test DS for SQL 1772625804539 sqlite3 - Connected Mar 4, 2026, 12:03 PM" [ref=e1216]:
+                  - cell "Test DS for SQL 1772625804539" [ref=e1217]
+                  - cell "sqlite3" [ref=e1218]:
+                    - generic [ref=e1219]: sqlite3
+                  - cell "-" [ref=e1220]
+                  - cell "Connected" [ref=e1221]:
+                    - generic [ref=e1223]: Connected
+                  - cell "Mar 4, 2026, 12:03 PM" [ref=e1224]
+                  - cell [ref=e1225]:
+                    - generic [ref=e1226]:
+                      - button "Import schema to enable entity metadata" [ref=e1227] [cursor=pointer]:
+                        - img [ref=e1228]
+                      - link [ref=e1233] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=60b342cf-f7d5-445f-851d-871f2d5679ef
+                        - button "Manage Entity Metadata" [ref=e1234]:
+                          - img [ref=e1235]
+                      - button "Edit data source" [ref=e1238] [cursor=pointer]:
+                        - img [ref=e1239]
+                      - button "Delete data source" [ref=e1242] [cursor=pointer]:
+                        - img [ref=e1243]
+                - row "Test DS for SQL 1772625950485 sqlite3 - Connected Mar 4, 2026, 12:05 PM" [ref=e1246]:
+                  - cell "Test DS for SQL 1772625950485" [ref=e1247]
+                  - cell "sqlite3" [ref=e1248]:
+                    - generic [ref=e1249]: sqlite3
+                  - cell "-" [ref=e1250]
+                  - cell "Connected" [ref=e1251]:
+                    - generic [ref=e1253]: Connected
+                  - cell "Mar 4, 2026, 12:05 PM" [ref=e1254]
+                  - cell [ref=e1255]:
+                    - generic [ref=e1256]:
+                      - button "Import schema to enable entity metadata" [ref=e1257] [cursor=pointer]:
+                        - img [ref=e1258]
+                      - link [ref=e1263] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=10abae2e-9776-4cb3-ab76-e7f889d02c41
+                        - button "Manage Entity Metadata" [ref=e1264]:
+                          - img [ref=e1265]
+                      - button "Edit data source" [ref=e1268] [cursor=pointer]:
+                        - img [ref=e1269]
+                      - button "Delete data source" [ref=e1272] [cursor=pointer]:
+                        - img [ref=e1273]
+                - row "Test DS for SQL 1772626101058 sqlite3 - Connected Mar 4, 2026, 12:08 PM" [ref=e1276]:
+                  - cell "Test DS for SQL 1772626101058" [ref=e1277]
+                  - cell "sqlite3" [ref=e1278]:
+                    - generic [ref=e1279]: sqlite3
+                  - cell "-" [ref=e1280]
+                  - cell "Connected" [ref=e1281]:
+                    - generic [ref=e1283]: Connected
+                  - cell "Mar 4, 2026, 12:08 PM" [ref=e1284]
+                  - cell [ref=e1285]:
+                    - generic [ref=e1286]:
+                      - button "Import schema to enable entity metadata" [ref=e1287] [cursor=pointer]:
+                        - img [ref=e1288]
+                      - link [ref=e1293] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=78c33568-21c6-459a-b435-ea3b7f65e112
+                        - button "Manage Entity Metadata" [ref=e1294]:
+                          - img [ref=e1295]
+                      - button "Edit data source" [ref=e1298] [cursor=pointer]:
+                        - img [ref=e1299]
+                      - button "Delete data source" [ref=e1302] [cursor=pointer]:
+                        - img [ref=e1303]
+                - row "Test DS for SQL 1772626193518 sqlite3 - Connected Mar 4, 2026, 12:09 PM" [ref=e1306]:
+                  - cell "Test DS for SQL 1772626193518" [ref=e1307]
+                  - cell "sqlite3" [ref=e1308]:
+                    - generic [ref=e1309]: sqlite3
+                  - cell "-" [ref=e1310]
+                  - cell "Connected" [ref=e1311]:
+                    - generic [ref=e1313]: Connected
+                  - cell "Mar 4, 2026, 12:09 PM" [ref=e1314]
+                  - cell [ref=e1315]:
+                    - generic [ref=e1316]:
+                      - button "Import schema to enable entity metadata" [ref=e1317] [cursor=pointer]:
+                        - img [ref=e1318]
+                      - link [ref=e1323] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=cd246429-c956-4df0-9234-008f835d80b7
+                        - button "Manage Entity Metadata" [ref=e1324]:
+                          - img [ref=e1325]
+                      - button "Edit data source" [ref=e1328] [cursor=pointer]:
+                        - img [ref=e1329]
+                      - button "Delete data source" [ref=e1332] [cursor=pointer]:
+                        - img [ref=e1333]
+                - row "Test DS for SQL 1772626285549 sqlite3 - Connected Mar 4, 2026, 12:11 PM" [ref=e1336]:
+                  - cell "Test DS for SQL 1772626285549" [ref=e1337]
+                  - cell "sqlite3" [ref=e1338]:
+                    - generic [ref=e1339]: sqlite3
+                  - cell "-" [ref=e1340]
+                  - cell "Connected" [ref=e1341]:
+                    - generic [ref=e1343]: Connected
+                  - cell "Mar 4, 2026, 12:11 PM" [ref=e1344]
+                  - cell [ref=e1345]:
+                    - generic [ref=e1346]:
+                      - button "Import schema to enable entity metadata" [ref=e1347] [cursor=pointer]:
+                        - img [ref=e1348]
+                      - link [ref=e1353] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=17282ba2-c745-46f3-ba23-2f3babcd73da
+                        - button "Manage Entity Metadata" [ref=e1354]:
+                          - img [ref=e1355]
+                      - button "Edit data source" [ref=e1358] [cursor=pointer]:
+                        - img [ref=e1359]
+                      - button "Delete data source" [ref=e1362] [cursor=pointer]:
+                        - img [ref=e1363]
+                - row "Test DS for SQL 1772626749663 sqlite3 - Connected Mar 4, 2026, 12:19 PM" [ref=e1366]:
+                  - cell "Test DS for SQL 1772626749663" [ref=e1367]
+                  - cell "sqlite3" [ref=e1368]:
+                    - generic [ref=e1369]: sqlite3
+                  - cell "-" [ref=e1370]
+                  - cell "Connected" [ref=e1371]:
+                    - generic [ref=e1373]: Connected
+                  - cell "Mar 4, 2026, 12:19 PM" [ref=e1374]
+                  - cell [ref=e1375]:
+                    - generic [ref=e1376]:
+                      - button "Import schema to enable entity metadata" [ref=e1377] [cursor=pointer]:
+                        - img [ref=e1378]
+                      - link [ref=e1383] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=ae76a792-11ad-439e-898b-b89bd232e694
+                        - button "Manage Entity Metadata" [ref=e1384]:
+                          - img [ref=e1385]
+                      - button "Edit data source" [ref=e1388] [cursor=pointer]:
+                        - img [ref=e1389]
+                      - button "Delete data source" [ref=e1392] [cursor=pointer]:
+                        - img [ref=e1393]
+                - row "Test Decrypt DS 1772626794552 pg - Connected Mar 4, 2026, 12:19 PM" [ref=e1396]:
+                  - cell "Test Decrypt DS 1772626794552" [ref=e1397]
+                  - cell "pg" [ref=e1398]:
+                    - generic [ref=e1399]: pg
+                  - cell "-" [ref=e1400]
+                  - cell "Connected" [ref=e1401]:
+                    - generic [ref=e1403]: Connected
+                  - cell "Mar 4, 2026, 12:19 PM" [ref=e1404]
+                  - cell [ref=e1405]:
+                    - generic [ref=e1406]:
+                      - button "Import schema to enable entity metadata" [ref=e1407] [cursor=pointer]:
+                        - img [ref=e1408]
+                      - link [ref=e1413] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=df3201ba-258b-45ac-8dbf-882933c75ed9
+                        - button "Manage Entity Metadata" [ref=e1414]:
+                          - img [ref=e1415]
+                      - button "Edit data source" [ref=e1418] [cursor=pointer]:
+                        - img [ref=e1419]
+                      - button "Delete data source" [ref=e1422] [cursor=pointer]:
+                        - img [ref=e1423]
+                - row "Test Encrypted DS 1772626794478 pg Test encrypted connection config Connected Mar 4, 2026, 12:19 PM" [ref=e1426]:
+                  - cell "Test Encrypted DS 1772626794478" [ref=e1427]
+                  - cell "pg" [ref=e1428]:
+                    - generic [ref=e1429]: pg
+                  - cell "Test encrypted connection config" [ref=e1430]
+                  - cell "Connected" [ref=e1431]:
+                    - generic [ref=e1433]: Connected
+                  - cell "Mar 4, 2026, 12:19 PM" [ref=e1434]
+                  - cell [ref=e1435]:
+                    - generic [ref=e1436]:
+                      - button "Import schema to enable entity metadata" [ref=e1437] [cursor=pointer]:
+                        - img [ref=e1438]
+                      - link [ref=e1443] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=ee49c6f2-ddfa-4377-a8a6-4be5094268a8
+                        - button "Manage Entity Metadata" [ref=e1444]:
+                          - img [ref=e1445]
+                      - button "Edit data source" [ref=e1448] [cursor=pointer]:
+                        - img [ref=e1449]
+                      - button "Delete data source" [ref=e1452] [cursor=pointer]:
+                        - img [ref=e1453]
+                - row "Test MySQL Encrypt 1772626794769 mysql - Connected Mar 4, 2026, 12:19 PM" [ref=e1456]:
+                  - cell "Test MySQL Encrypt 1772626794769" [ref=e1457]
+                  - cell "mysql" [ref=e1458]:
+                    - generic [ref=e1459]: mysql
+                  - cell "-" [ref=e1460]
+                  - cell "Connected" [ref=e1461]:
+                    - generic [ref=e1463]: Connected
+                  - cell "Mar 4, 2026, 12:19 PM" [ref=e1464]
+                  - cell [ref=e1465]:
+                    - generic [ref=e1466]:
+                      - button "Import schema to enable entity metadata" [ref=e1467] [cursor=pointer]:
+                        - img [ref=e1468]
+                      - link [ref=e1473] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=4b1947b5-cc02-4a81-8694-254ce33b473b
+                        - button "Manage Entity Metadata" [ref=e1474]:
+                          - img [ref=e1475]
+                      - button "Edit data source" [ref=e1478] [cursor=pointer]:
+                        - img [ref=e1479]
+                      - button "Delete data source" [ref=e1482] [cursor=pointer]:
+                        - img [ref=e1483]
+                - row "Test SQLite 1772625455733 sqlite3 Test SQLite database for API testing Connected Mar 4, 2026, 11:57 AM" [ref=e1486]:
+                  - cell "Test SQLite 1772625455733" [ref=e1487]
+                  - cell "sqlite3" [ref=e1488]:
+                    - generic [ref=e1489]: sqlite3
+                  - cell "Test SQLite database for API testing" [ref=e1490]
+                  - cell "Connected" [ref=e1491]:
+                    - generic [ref=e1493]: Connected
+                  - cell "Mar 4, 2026, 11:57 AM" [ref=e1494]
+                  - cell [ref=e1495]:
+                    - generic [ref=e1496]:
+                      - button "Import schema to enable entity metadata" [ref=e1497] [cursor=pointer]:
+                        - img [ref=e1498]
+                      - link [ref=e1503] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=87e2b31a-c011-4a70-a810-14121dde9ceb
+                        - button "Manage Entity Metadata" [ref=e1504]:
+                          - img [ref=e1505]
+                      - button "Edit data source" [ref=e1508] [cursor=pointer]:
+                        - img [ref=e1509]
+                      - button "Delete data source" [ref=e1512] [cursor=pointer]:
+                        - img [ref=e1513]
+                - row "Test SQLite 1772625790349 sqlite3 Test SQLite database for API testing Connected Mar 4, 2026, 12:03 PM" [ref=e1516]:
+                  - cell "Test SQLite 1772625790349" [ref=e1517]
+                  - cell "sqlite3" [ref=e1518]:
+                    - generic [ref=e1519]: sqlite3
+                  - cell "Test SQLite database for API testing" [ref=e1520]
+                  - cell "Connected" [ref=e1521]:
+                    - generic [ref=e1523]: Connected
+                  - cell "Mar 4, 2026, 12:03 PM" [ref=e1524]
+                  - cell [ref=e1525]:
+                    - generic [ref=e1526]:
+                      - button "Import schema to enable entity metadata" [ref=e1527] [cursor=pointer]:
+                        - img [ref=e1528]
+                      - link [ref=e1533] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=fff17bda-2484-464c-bb60-c8b3ea69b209
+                        - button "Manage Entity Metadata" [ref=e1534]:
+                          - img [ref=e1535]
+                      - button "Edit data source" [ref=e1538] [cursor=pointer]:
+                        - img [ref=e1539]
+                      - button "Delete data source" [ref=e1542] [cursor=pointer]:
+                        - img [ref=e1543]
+                - row "Test SQLite 1772625936245 sqlite3 Test SQLite database for API testing Connected Mar 4, 2026, 12:05 PM" [ref=e1546]:
+                  - cell "Test SQLite 1772625936245" [ref=e1547]
+                  - cell "sqlite3" [ref=e1548]:
+                    - generic [ref=e1549]: sqlite3
+                  - cell "Test SQLite database for API testing" [ref=e1550]
+                  - cell "Connected" [ref=e1551]:
+                    - generic [ref=e1553]: Connected
+                  - cell "Mar 4, 2026, 12:05 PM" [ref=e1554]
+                  - cell [ref=e1555]:
+                    - generic [ref=e1556]:
+                      - button "Import schema to enable entity metadata" [ref=e1557] [cursor=pointer]:
+                        - img [ref=e1558]
+                      - link [ref=e1563] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=c353e27f-6104-4fec-b40e-0b54fdd35779
+                        - button "Manage Entity Metadata" [ref=e1564]:
+                          - img [ref=e1565]
+                      - button "Edit data source" [ref=e1568] [cursor=pointer]:
+                        - img [ref=e1569]
+                      - button "Delete data source" [ref=e1572] [cursor=pointer]:
+                        - img [ref=e1573]
+                - row "Test SQLite 1772626086750 sqlite3 Test SQLite database for API testing Connected Mar 4, 2026, 12:08 PM" [ref=e1576]:
+                  - cell "Test SQLite 1772626086750" [ref=e1577]
+                  - cell "sqlite3" [ref=e1578]:
+                    - generic [ref=e1579]: sqlite3
+                  - cell "Test SQLite database for API testing" [ref=e1580]
+                  - cell "Connected" [ref=e1581]:
+                    - generic [ref=e1583]: Connected
+                  - cell "Mar 4, 2026, 12:08 PM" [ref=e1584]
+                  - cell [ref=e1585]:
+                    - generic [ref=e1586]:
+                      - button "Import schema to enable entity metadata" [ref=e1587] [cursor=pointer]:
+                        - img [ref=e1588]
+                      - link [ref=e1593] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=83b9a6e7-f4a9-407b-a8fd-ed9df6c45077
+                        - button "Manage Entity Metadata" [ref=e1594]:
+                          - img [ref=e1595]
+                      - button "Edit data source" [ref=e1598] [cursor=pointer]:
+                        - img [ref=e1599]
+                      - button "Delete data source" [ref=e1602] [cursor=pointer]:
+                        - img [ref=e1603]
+                - row "Test SQLite 1772626179348 sqlite3 Test SQLite database for API testing Connected Mar 4, 2026, 12:09 PM" [ref=e1606]:
+                  - cell "Test SQLite 1772626179348" [ref=e1607]
+                  - cell "sqlite3" [ref=e1608]:
+                    - generic [ref=e1609]: sqlite3
+                  - cell "Test SQLite database for API testing" [ref=e1610]
+                  - cell "Connected" [ref=e1611]:
+                    - generic [ref=e1613]: Connected
+                  - cell "Mar 4, 2026, 12:09 PM" [ref=e1614]
+                  - cell [ref=e1615]:
+                    - generic [ref=e1616]:
+                      - button "Import schema to enable entity metadata" [ref=e1617] [cursor=pointer]:
+                        - img [ref=e1618]
+                      - link [ref=e1623] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=54e7ccdb-2983-44ce-922a-01968605bd55
+                        - button "Manage Entity Metadata" [ref=e1624]:
+                          - img [ref=e1625]
+                      - button "Edit data source" [ref=e1628] [cursor=pointer]:
+                        - img [ref=e1629]
+                      - button "Delete data source" [ref=e1632] [cursor=pointer]:
+                        - img [ref=e1633]
+                - row "Test SQLite 1772626271395 sqlite3 Test SQLite database for API testing Connected Mar 4, 2026, 12:11 PM" [ref=e1636]:
+                  - cell "Test SQLite 1772626271395" [ref=e1637]
+                  - cell "sqlite3" [ref=e1638]:
+                    - generic [ref=e1639]: sqlite3
+                  - cell "Test SQLite database for API testing" [ref=e1640]
+                  - cell "Connected" [ref=e1641]:
+                    - generic [ref=e1643]: Connected
+                  - cell "Mar 4, 2026, 12:11 PM" [ref=e1644]
+                  - cell [ref=e1645]:
+                    - generic [ref=e1646]:
+                      - button "Import schema to enable entity metadata" [ref=e1647] [cursor=pointer]:
+                        - img [ref=e1648]
+                      - link [ref=e1653] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=5c471179-e0f5-465c-a454-6e30e717573f
+                        - button "Manage Entity Metadata" [ref=e1654]:
+                          - img [ref=e1655]
+                      - button "Edit data source" [ref=e1658] [cursor=pointer]:
+                        - img [ref=e1659]
+                      - button "Delete data source" [ref=e1662] [cursor=pointer]:
+                        - img [ref=e1663]
+                - row "Test SQLite 1772626735218 sqlite3 Test SQLite database for API testing Connected Mar 4, 2026, 12:18 PM" [ref=e1666]:
+                  - cell "Test SQLite 1772626735218" [ref=e1667]
+                  - cell "sqlite3" [ref=e1668]:
+                    - generic [ref=e1669]: sqlite3
+                  - cell "Test SQLite database for API testing" [ref=e1670]
+                  - cell "Connected" [ref=e1671]:
+                    - generic [ref=e1673]: Connected
+                  - cell "Mar 4, 2026, 12:18 PM" [ref=e1674]
+                  - cell [ref=e1675]:
+                    - generic [ref=e1676]:
+                      - button "Import schema to enable entity metadata" [ref=e1677] [cursor=pointer]:
+                        - img [ref=e1678]
+                      - link [ref=e1683] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=8360295d-41ee-4e66-92a5-a4987b4cd230
+                        - button "Manage Entity Metadata" [ref=e1684]:
+                          - img [ref=e1685]
+                      - button "Edit data source" [ref=e1688] [cursor=pointer]:
+                        - img [ref=e1689]
+                      - button "Delete data source" [ref=e1692] [cursor=pointer]:
+                        - img [ref=e1693]
+                - row "Test SQLite Encrypt 1772626794662 sqlite3 - Connected Mar 4, 2026, 12:19 PM" [ref=e1696]:
+                  - cell "Test SQLite Encrypt 1772626794662" [ref=e1697]
+                  - cell "sqlite3" [ref=e1698]:
+                    - generic [ref=e1699]: sqlite3
+                  - cell "-" [ref=e1700]
+                  - cell "Connected" [ref=e1701]:
+                    - generic [ref=e1703]: Connected
+                  - cell "Mar 4, 2026, 12:19 PM" [ref=e1704]
+                  - cell [ref=e1705]:
+                    - generic [ref=e1706]:
+                      - button "Import schema to enable entity metadata" [ref=e1707] [cursor=pointer]:
+                        - img [ref=e1708]
+                      - link [ref=e1713] [cursor=pointer]:
+                        - /url: /metadata/entities?data_source_id=dac5c58e-cd6c-4a38-b4f7-bafefbc06c24
+                        - button "Manage Entity Metadata" [ref=e1714]:
+                          - img [ref=e1715]
+                      - button "Edit data source" [ref=e1718] [cursor=pointer]:
+                        - img [ref=e1719]
+                      - button "Delete data source" [ref=e1722] [cursor=pointer]:
+                        - img [ref=e1723]
+  - region "Notifications alt+T"
+  - alert [ref=e1726]
+```

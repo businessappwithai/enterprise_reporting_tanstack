@@ -1,0 +1,1346 @@
+# Page snapshot
+
+```yaml
+- generic:
+  - generic:
+    - complementary:
+      - generic:
+        - link:
+          - /url: /
+          - img
+          - generic: Enterprise Reports
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - heading [level=2]: Main
+                - navigation:
+                  - link:
+                    - /url: /
+                    - button:
+                      - img
+                      - generic: Dashboard
+                  - link:
+                    - /url: /sql-editor
+                    - button:
+                      - img
+                      - generic: SQL Editor
+                  - link:
+                    - /url: /queries
+                    - button:
+                      - img
+                      - generic: Saved Queries
+                  - link:
+                    - /url: /reports
+                    - button:
+                      - img
+                      - generic: Reports
+                  - link:
+                    - /url: /charts
+                    - button:
+                      - img
+                      - generic: Charts
+                  - link:
+                    - /url: /dashboards
+                    - button:
+                      - img
+                      - generic: Dashboards
+                  - link:
+                    - /url: /filters
+                    - button:
+                      - img
+                      - generic: Filters
+                  - link:
+                    - /url: /jobs
+                    - button:
+                      - img
+                      - generic: Jobs
+                  - link:
+                    - /url: /nl-query
+                    - button:
+                      - img
+                      - generic: NL Query
+              - generic:
+                - heading [level=2]: Administration
+                - navigation:
+                  - link:
+                    - /url: /data-sources
+                    - button:
+                      - img
+                      - generic: Data Sources
+                  - link:
+                    - /url: /bull-board
+                    - button:
+                      - img
+                      - generic: Queue Management
+                  - link:
+                    - /url: /admin/users
+                    - button:
+                      - img
+                      - generic: Users
+                  - link:
+                    - /url: /admin/roles
+                    - button:
+                      - img
+                      - generic: Roles
+                  - link:
+                    - /url: /admin/permissions
+                    - button:
+                      - img
+                      - generic: Permissions
+                  - link:
+                    - /url: /settings
+                    - button:
+                      - img
+                      - generic: Settings
+      - button:
+        - img
+    - generic:
+      - banner:
+        - generic:
+          - button:
+            - img
+            - generic: E2E DDL DS 1772628737923
+            - generic: sqlite3
+        - generic:
+          - button:
+            - img
+            - generic: Toggle theme
+          - button:
+            - img
+            - generic: Notifications
+          - button:
+            - generic:
+              - generic: A
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - heading [level=1]: Data Sources
+              - paragraph: Manage database connections for reports and queries
+            - button [expanded]:
+              - img
+              - text: New Data Source
+          - generic:
+            - generic:
+              - heading [level=3]:
+                - img
+                - text: All Data Sources
+            - generic:
+              - generic:
+                - table:
+                  - rowgroup:
+                    - row:
+                      - columnheader: Name
+                      - columnheader: Type
+                      - columnheader: Description
+                      - columnheader: Status
+                      - columnheader: Created
+                      - columnheader: Actions
+                  - rowgroup:
+                    - row:
+                      - cell: E2E DDL DS 1772628737923
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:52 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=24dc0cb1-f885-4a03-a934-f2513c4927f3
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: E2E DS 1772628736644
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:52 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=b0a19310-cbf7-4f7e-8e79-c08ed729bd35
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: E2E SQL DS 1772628736679
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:52 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=2ebcfa5c-8b14-49e1-ad0e-5141640df8b7
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: HMS
+                      - cell:
+                        - generic: pg
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 07:32 AM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=14d7fe07-1c6e-452d-a8b7-86950f261dcd
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: SQLite for SQL Tests 1772626801811
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:20 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=5e53d237-9e1b-4623-b323-03b00902db18
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: SQLite for SQL Tests 1772626809795
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:20 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=2db93851-de70-4494-9ee4-abee5b5b0289
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Sakila 2
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Feb 28, 2026, 10:59 AM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=39c34f1b-6848-49eb-a670-4ab1f85cc4a1
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Sakila 2
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Feb 28, 2026, 11:05 AM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=3a13b9f3-fa64-4a20-9576-d94caca0c5c2
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Sakila 2
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Feb 28, 2026, 11:09 AM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=6cf41d33-b813-4602-8f6e-7d83e3696a05
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS 1772625455793
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 11:57 AM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=9b1324f6-c805-4fc4-8ef4-8f9abd6d136a
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS 1772625790412
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:03 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=c385036c-5815-47d9-bba2-db96c2f28001
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS 1772625936309
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:05 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=a54c52c9-ab70-4444-9a01-083f72636d9e
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS 1772626086825
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:08 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=71a04d12-ba30-4703-a147-56995b2bb4c7
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS 1772626179421
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:09 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=a4483f7b-92fa-495f-9602-f6145ee7503e
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS 1772626271475
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:11 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=e608d9a9-258d-40b7-9733-439c6e18e113
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS 1772626735298
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:18 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=b8f60363-8070-4702-bb4a-737a61728480
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS for Jobs 1772625501133
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 11:58 AM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=664f1018-b06e-49d5-af20-7300eba26d5f
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS for Jobs 1772625834879
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:03 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=acd748a5-f085-4248-9d01-fc700c4073f5
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS for Jobs 1772625980931
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:06 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=78ec028f-26ab-4d28-82d5-308809f17b06
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS for Jobs 1772626131801
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:08 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=0dd4b393-f50a-4e06-a337-7b065417dbfb
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS for Jobs 1772626224019
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:10 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=23919020-2d1b-44cf-b6bf-ada45ab4485e
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS for Jobs 1772626306832
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:11 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=23769d47-b148-481c-b315-39b585b12c90
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS for Jobs 1772626772420
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:19 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=235f3930-ed5b-457c-aa0d-dc152ec46b03
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS for Queries 1772625463117
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 11:57 AM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=27b7f308-cf17-4e75-ad1b-ec57c57092b5
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS for Queries 1772625797556
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:03 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=2bc0ebde-6b3c-4da2-8c51-7b2bd4655ada
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS for Queries 1772625943465
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:05 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=d4f6a6bf-7e4e-4f61-a823-8238432f9cbe
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS for Queries 1772626094015
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:08 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=574c278f-02b9-40bc-932c-dd0a77bd4aad
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS for Queries 1772626186465
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:09 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=4775c831-78a3-4e7e-9602-01ea76162c2f
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS for Queries 1772626278513
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:11 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=672cf69b-4336-4bf2-8e2d-a582277f9f15
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS for Queries 1772626742592
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:19 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=9e6cfefc-18fa-4aa5-a729-6e8674cfbe63
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS for Reports 1772625477696
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 11:57 AM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=6b67c9d7-d27e-4d98-adf0-d82f378c88a8
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS for Reports 1772625812134
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:03 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=e6aa736a-81fa-434c-8c04-a68ce718784d
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS for Reports 1772625958099
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:05 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=6e683d08-3c0b-414a-a714-abe2d566a351
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS for Reports 1772626108800
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:08 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=7c2e0106-b736-4644-9930-c6ef882d3d20
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS for Reports 1772626201186
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:10 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=a3d58ee9-71cc-4d19-9d0b-2be8629999c2
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS for Reports 1772626292792
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:11 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=9df5f2e5-ba1e-44bd-9f1d-3bf3fa90c467
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS for Reports 1772626757607
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:19 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=0f7e7341-921b-4eb1-b60d-81781b186f3f
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS for SQL 1772625470092
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 11:57 AM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=b2379325-5109-491b-b59b-d5d6fdb69d81
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS for SQL 1772625804539
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:03 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=60b342cf-f7d5-445f-851d-871f2d5679ef
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS for SQL 1772625950485
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:05 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=10abae2e-9776-4cb3-ab76-e7f889d02c41
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS for SQL 1772626101058
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:08 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=78c33568-21c6-459a-b435-ea3b7f65e112
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS for SQL 1772626193518
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:09 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=cd246429-c956-4df0-9234-008f835d80b7
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS for SQL 1772626285549
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:11 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=17282ba2-c745-46f3-ba23-2f3babcd73da
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test DS for SQL 1772626749663
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:19 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=ae76a792-11ad-439e-898b-b89bd232e694
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test Decrypt DS 1772626794552
+                      - cell:
+                        - generic: pg
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:19 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=df3201ba-258b-45ac-8dbf-882933c75ed9
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test Encrypted DS 1772626794478
+                      - cell:
+                        - generic: pg
+                      - cell: Test encrypted connection config
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:19 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=ee49c6f2-ddfa-4377-a8a6-4be5094268a8
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test MySQL Encrypt 1772626794769
+                      - cell:
+                        - generic: mysql
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:19 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=4b1947b5-cc02-4a81-8694-254ce33b473b
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test SQLite 1772625455733
+                      - cell:
+                        - generic: sqlite3
+                      - cell: Test SQLite database for API testing
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 11:57 AM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=87e2b31a-c011-4a70-a810-14121dde9ceb
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test SQLite 1772625790349
+                      - cell:
+                        - generic: sqlite3
+                      - cell: Test SQLite database for API testing
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:03 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=fff17bda-2484-464c-bb60-c8b3ea69b209
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test SQLite 1772625936245
+                      - cell:
+                        - generic: sqlite3
+                      - cell: Test SQLite database for API testing
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:05 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=c353e27f-6104-4fec-b40e-0b54fdd35779
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test SQLite 1772626086750
+                      - cell:
+                        - generic: sqlite3
+                      - cell: Test SQLite database for API testing
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:08 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=83b9a6e7-f4a9-407b-a8fd-ed9df6c45077
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test SQLite 1772626179348
+                      - cell:
+                        - generic: sqlite3
+                      - cell: Test SQLite database for API testing
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:09 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=54e7ccdb-2983-44ce-922a-01968605bd55
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test SQLite 1772626271395
+                      - cell:
+                        - generic: sqlite3
+                      - cell: Test SQLite database for API testing
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:11 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=5c471179-e0f5-465c-a454-6e30e717573f
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test SQLite 1772626735218
+                      - cell:
+                        - generic: sqlite3
+                      - cell: Test SQLite database for API testing
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:18 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=8360295d-41ee-4e66-92a5-a4987b4cd230
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+                    - row:
+                      - cell: Test SQLite Encrypt 1772626794662
+                      - cell:
+                        - generic: sqlite3
+                      - cell: "-"
+                      - cell:
+                        - generic:
+                          - generic: Connected
+                      - cell: Mar 4, 2026, 12:19 PM
+                      - cell:
+                        - generic:
+                          - button:
+                            - img
+                          - link:
+                            - /url: /metadata/entities?data_source_id=dac5c58e-cd6c-4a38-b4f7-bafefbc06c24
+                            - button:
+                              - img
+                          - button:
+                            - img
+                          - button:
+                            - img
+  - region "Notifications alt+T"
+  - alert
+  - dialog "Add Data Source" [ref=e2]:
+    - generic [ref=e3]:
+      - heading "Add Data Source" [level=2] [ref=e4]
+      - paragraph [ref=e5]: Configure a new database connection for your reports.
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - text: Name
+          - textbox "Name" [active] [ref=e9]:
+            - /placeholder: Production Database
+        - generic [ref=e10]:
+          - text: Database Type
+          - combobox [ref=e11] [cursor=pointer]:
+            - generic: PostgreSQL
+            - img [ref=e12]
+      - generic [ref=e14]:
+        - text: Description
+        - textbox "Description" [ref=e15]:
+          - /placeholder: Optional description
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - text: Host
+          - textbox "Host" [ref=e18]:
+            - /placeholder: localhost
+        - generic [ref=e19]:
+          - text: Port
+          - textbox "Port" [ref=e20]:
+            - /placeholder: "5432"
+      - generic [ref=e21]:
+        - text: Database
+        - textbox "Database" [ref=e22]:
+          - /placeholder: mydb
+      - generic [ref=e23]:
+        - generic [ref=e24]:
+          - text: Username
+          - textbox "Username" [ref=e25]:
+            - /placeholder: dbuser
+        - generic [ref=e26]:
+          - text: Password
+          - textbox "Password" [ref=e27]:
+            - /placeholder: "********"
+    - generic [ref=e29]:
+      - button "Test Connection" [disabled]
+      - button "Create" [disabled]
+    - button "Close" [ref=e30] [cursor=pointer]:
+      - img [ref=e31]
+      - generic [ref=e34]: Close
+```

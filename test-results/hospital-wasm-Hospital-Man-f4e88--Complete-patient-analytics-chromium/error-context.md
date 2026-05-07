@@ -1,0 +1,48 @@
+# Page snapshot
+
+```yaml
+- generic [active]:
+  - alert [ref=e1]
+  - dialog [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - heading "Build Error" [level=1] [ref=e7]
+        - paragraph [ref=e8]: Failed to compile
+      - generic [ref=e9]:
+        - generic [ref=e10]:
+          - link "./src/app/share/dashboard/[id]/page.tsx:16:1" [ref=e11] [cursor=pointer]:
+            - text: ./src/app/share/dashboard/[id]/page.tsx:16:1
+            - img [ref=e12]
+          - generic [ref=e16]:
+            - generic [ref=e17]: "Module not found: Can't resolve './PublicWidgetCard'"
+            - generic [ref=e18]: 14 |
+            - text: import
+            - generic [ref=e19]: "{"
+            - text: Lock, Home, AlertCircle, Loader2
+            - generic [ref=e20]: "}"
+            - text: from 'lucide-react';
+            - generic [ref=e21]: 15 |
+            - text: import Link from 'next/link'; >
+            - generic [ref=e22]: 16 |
+            - text: import
+            - generic [ref=e23]: "{"
+            - text: PublicWidgetCard
+            - generic [ref=e24]: "}"
+            - text: from './PublicWidgetCard';
+            - generic [ref=e25]: "|"
+            - text: ^
+            - generic [ref=e26]: 17 |
+            - text: import
+            - generic [ref=e27]: "type {"
+            - text: DashboardLayout, DashboardWidget
+            - generic [ref=e28]: "}"
+            - text: from '@/types/database';
+            - generic [ref=e29]: 18 |
+            - generic [ref=e30]: 19 |
+            - text: interface PublicDashboardData
+            - generic [ref=e31]: "{"
+            - link "https://nextjs.org/docs/messages/module-not-found" [ref=e33] [cursor=pointer]:
+              - /url: https://nextjs.org/docs/messages/module-not-found
+        - contentinfo [ref=e34]:
+          - paragraph [ref=e35]: This error occurred during the build process and can only be dismissed by fixing the error.
+```

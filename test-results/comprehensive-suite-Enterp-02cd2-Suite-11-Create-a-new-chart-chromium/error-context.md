@@ -1,0 +1,165 @@
+# Page snapshot
+
+```yaml
+- generic:
+  - generic:
+    - complementary:
+      - generic:
+        - link:
+          - /url: /
+          - img
+          - generic: Enterprise Reports
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - heading [level=2]: Main
+                - navigation:
+                  - link:
+                    - /url: /
+                    - button:
+                      - img
+                      - generic: Dashboard
+                  - link:
+                    - /url: /sql-editor
+                    - button:
+                      - img
+                      - generic: SQL Editor
+                  - link:
+                    - /url: /queries
+                    - button:
+                      - img
+                      - generic: Saved Queries
+                  - link:
+                    - /url: /reports
+                    - button:
+                      - img
+                      - generic: Reports
+                  - link:
+                    - /url: /charts
+                    - button:
+                      - img
+                      - generic: Charts
+                  - link:
+                    - /url: /dashboards
+                    - button:
+                      - img
+                      - generic: Dashboards
+                  - link:
+                    - /url: /filters
+                    - button:
+                      - img
+                      - generic: Filters
+                  - link:
+                    - /url: /jobs
+                    - button:
+                      - img
+                      - generic: Jobs
+                  - link:
+                    - /url: /nl-query
+                    - button:
+                      - img
+                      - generic: NL Query
+              - generic:
+                - heading [level=2]: Administration
+                - navigation:
+                  - link:
+                    - /url: /data-sources
+                    - button:
+                      - img
+                      - generic: Data Sources
+                  - link:
+                    - /url: /bull-board
+                    - button:
+                      - img
+                      - generic: Queue Management
+                  - link:
+                    - /url: /admin/users
+                    - button:
+                      - img
+                      - generic: Users
+                  - link:
+                    - /url: /admin/roles
+                    - button:
+                      - img
+                      - generic: Roles
+                  - link:
+                    - /url: /admin/permissions
+                    - button:
+                      - img
+                      - generic: Permissions
+                  - link:
+                    - /url: /settings
+                    - button:
+                      - img
+                      - generic: Settings
+      - button:
+        - img
+    - generic:
+      - banner:
+        - generic:
+          - button:
+            - img
+            - generic: SQLite for SQL Tests 1772626809795
+            - generic: sqlite3
+        - generic:
+          - button:
+            - img
+            - generic: Toggle theme
+          - button:
+            - img
+            - generic: Notifications
+          - button:
+            - generic:
+              - generic: A
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - heading [level=1]: Charts
+              - paragraph: Create and manage data visualizations
+            - generic:
+              - link:
+                - /url: /charts/editor/new
+                - button:
+                  - img
+                  - text: Open Chart Editor
+              - button [expanded]:
+                - img
+                - text: Quick Create
+          - generic:
+            - generic:
+              - heading [level=3]:
+                - img
+                - text: All Charts
+            - generic:
+              - generic: No charts created yet. Create your first chart to get started.
+  - region "Notifications alt+T"
+  - alert
+  - dialog "Create Chart" [ref=e2]:
+    - generic [ref=e3]:
+      - heading "Create Chart" [level=2] [ref=e4]
+      - paragraph [ref=e5]: Create a new chart visualization from a saved query.
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - text: Name
+        - textbox "Name" [active] [ref=e8]:
+          - /placeholder: My Chart
+      - generic [ref=e9]:
+        - text: Chart Type
+        - combobox [ref=e10] [cursor=pointer]:
+          - generic: Bar Chart
+          - img [ref=e11]
+      - generic [ref=e13]:
+        - text: Data Source Query
+        - combobox [ref=e14] [cursor=pointer]:
+          - generic: Select a query
+          - img [ref=e15]
+    - generic [ref=e17]:
+      - button "Cancel" [ref=e18] [cursor=pointer]
+      - button "Create Chart" [disabled]
+    - button "Close" [ref=e19] [cursor=pointer]:
+      - img [ref=e20]
+      - generic [ref=e23]: Close
+```

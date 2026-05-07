@@ -1,0 +1,311 @@
+# Page snapshot
+
+```yaml
+- generic:
+  - generic:
+    - complementary:
+      - generic:
+        - link:
+          - /url: /
+          - img
+          - generic: Enterprise Reports
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - heading [level=2]: Main
+                - navigation:
+                  - link:
+                    - /url: /
+                    - button:
+                      - img
+                      - generic: Dashboard
+                  - link:
+                    - /url: /sql-editor
+                    - button:
+                      - img
+                      - generic: SQL Editor
+                  - link:
+                    - /url: /queries
+                    - button:
+                      - img
+                      - generic: Saved Queries
+                  - link:
+                    - /url: /reports
+                    - button:
+                      - img
+                      - generic: Reports
+                  - link:
+                    - /url: /charts
+                    - button:
+                      - img
+                      - generic: Charts
+                  - link:
+                    - /url: /dashboards
+                    - button:
+                      - img
+                      - generic: Dashboards
+                  - link:
+                    - /url: /filters
+                    - button:
+                      - img
+                      - generic: Filters
+                  - link:
+                    - /url: /jobs
+                    - button:
+                      - img
+                      - generic: Jobs
+                  - link:
+                    - /url: /nl-query
+                    - button:
+                      - img
+                      - generic: NL Query
+              - generic:
+                - heading [level=2]: Administration
+                - navigation:
+                  - link:
+                    - /url: /data-sources
+                    - button:
+                      - img
+                      - generic: Data Sources
+                  - link:
+                    - /url: /bull-board
+                    - button:
+                      - img
+                      - generic: Queue Management
+                  - link:
+                    - /url: /admin/users
+                    - button:
+                      - img
+                      - generic: Users
+                  - link:
+                    - /url: /admin/roles
+                    - button:
+                      - img
+                      - generic: Roles
+                  - link:
+                    - /url: /admin/permissions
+                    - button:
+                      - img
+                      - generic: Permissions
+                  - link:
+                    - /url: /settings
+                    - button:
+                      - img
+                      - generic: Settings
+      - button:
+        - img
+    - generic:
+      - banner:
+        - generic:
+          - button:
+            - img
+            - generic: SQLite for SQL Tests 1772626809795
+            - generic: sqlite3
+        - generic:
+          - button:
+            - img
+            - generic: Toggle theme
+          - button:
+            - img
+            - generic: Notifications
+          - button:
+            - generic:
+              - generic: A
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - link:
+                  - /url: /charts
+                  - button:
+                    - img
+                - generic:
+                  - heading [level=1]: Chart Editor
+                  - paragraph: Create a new chart
+              - generic:
+                - button:
+                  - img
+                  - text: Hide Preview
+                - button:
+                  - img
+                  - text: Save Chart
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - heading [level=3]: Basic Information
+                  - generic:
+                    - generic:
+                      - text: Chart Name *
+                      - textbox:
+                        - /placeholder: My Sales Chart
+                    - generic:
+                      - text: Description
+                      - textbox:
+                        - /placeholder: Describe what this chart shows...
+                - generic:
+                  - generic:
+                    - heading [level=3]: Data Source
+                  - generic:
+                    - generic:
+                      - text: Select Query *
+                      - combobox [expanded]:
+                        - generic: Choose a saved query...
+                        - img
+                - generic:
+                  - generic:
+                    - heading [level=3]: Chart Type
+                  - generic:
+                    - combobox:
+                      - generic:
+                        - generic:
+                          - img
+                          - generic:
+                            - generic: Bar Chart
+                            - generic: Compare values across different categories using vertical bars
+                      - img
+                    - generic:
+                      - text: How to Use This Chart
+                      - textbox: "Best for: Comparing sales by region, population by country, revenue by product. Requires: 1 category field (X-axis) and 1+ value fields (Y-axis)."
+                - generic:
+                  - generic:
+                    - heading [level=3]: Axis Configuration
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic: X-Axis (Categories) *
+                      - combobox:
+                        - generic: Select field...
+                        - img
+                    - generic:
+                      - generic:
+                        - generic: Y-Axis (Values) *
+                        - button:
+                          - img
+                          - text: Add Series
+                      - paragraph: Add at least one Y-axis series
+                    - generic:
+                      - generic:
+                        - generic: Group By (Optional)
+                      - combobox:
+                        - generic: Select field to group by...
+                        - img
+                    - generic:
+                      - generic:
+                        - generic: Color By (Optional)
+                      - combobox:
+                        - generic: Select field to color by...
+                        - img
+                - generic:
+                  - generic:
+                    - heading [level=3]: Appearance
+                  - generic:
+                    - generic:
+                      - generic: Show Title
+                      - switch [checked]
+                    - textbox:
+                      - /placeholder: Chart title
+                    - generic:
+                      - generic: Show Legend
+                      - switch [checked]
+                    - generic:
+                      - generic: Enable Tooltip
+                      - switch [checked]
+                    - generic:
+                      - generic: Animation
+                      - switch [checked]
+              - generic:
+                - generic:
+                  - generic:
+                    - heading [level=3]: Preview
+                  - generic:
+                    - generic:
+                      - paragraph: Select a query to preview your chart
+  - region "Notifications alt+T"
+  - alert
+  - listbox [ref=e1]:
+    - option "Test Query for Jobs 1772626772473 No description" [active] [ref=e2]:
+      - generic [ref=e5]:
+        - generic [ref=e6]: Test Query for Jobs 1772626772473
+        - generic [ref=e7]: No description
+    - option "Test Query for Reports 1772626757657 No description" [ref=e8]:
+      - generic [ref=e11]:
+        - generic [ref=e12]: Test Query for Reports 1772626757657
+        - generic [ref=e13]: No description
+    - option "Test Query 1772626742680 Test query for API testing" [ref=e14]:
+      - generic [ref=e17]:
+        - generic [ref=e18]: Test Query 1772626742680
+        - generic [ref=e19]: Test query for API testing
+    - option "Test Query for Jobs 1772626306878 No description" [ref=e20]:
+      - generic [ref=e23]:
+        - generic [ref=e24]: Test Query for Jobs 1772626306878
+        - generic [ref=e25]: No description
+    - option "Test Query for Reports 1772626292837 No description" [ref=e26]:
+      - generic [ref=e29]:
+        - generic [ref=e30]: Test Query for Reports 1772626292837
+        - generic [ref=e31]: No description
+    - option "Test Query 1772626278590 Test query for API testing" [ref=e32]:
+      - generic [ref=e35]:
+        - generic [ref=e36]: Test Query 1772626278590
+        - generic [ref=e37]: Test query for API testing
+    - option "Test Query for Jobs 1772626224073 No description" [ref=e38]:
+      - generic [ref=e41]:
+        - generic [ref=e42]: Test Query for Jobs 1772626224073
+        - generic [ref=e43]: No description
+    - option "Test Query for Reports 1772626201240 No description" [ref=e44]:
+      - generic [ref=e47]:
+        - generic [ref=e48]: Test Query for Reports 1772626201240
+        - generic [ref=e49]: No description
+    - option "Test Query 1772626186545 Test query for API testing" [ref=e50]:
+      - generic [ref=e53]:
+        - generic [ref=e54]: Test Query 1772626186545
+        - generic [ref=e55]: Test query for API testing
+    - option "Test Query for Jobs 1772626131854 No description" [ref=e56]:
+      - generic [ref=e59]:
+        - generic [ref=e60]: Test Query for Jobs 1772626131854
+        - generic [ref=e61]: No description
+    - option "Test Query for Reports 1772626108847 No description" [ref=e62]:
+      - generic [ref=e65]:
+        - generic [ref=e66]: Test Query for Reports 1772626108847
+        - generic [ref=e67]: No description
+    - option "Test Query 1772626094092 Test query for API testing" [ref=e68]:
+      - generic [ref=e71]:
+        - generic [ref=e72]: Test Query 1772626094092
+        - generic [ref=e73]: Test query for API testing
+    - option "Test Query for Jobs 1772625980986 No description" [ref=e74]:
+      - generic [ref=e77]:
+        - generic [ref=e78]: Test Query for Jobs 1772625980986
+        - generic [ref=e79]: No description
+    - option "Test Query for Reports 1772625958139 No description" [ref=e80]:
+      - generic [ref=e83]:
+        - generic [ref=e84]: Test Query for Reports 1772625958139
+        - generic [ref=e85]: No description
+    - option "Test Query 1772625943533 Test query for API testing" [ref=e86]:
+      - generic [ref=e89]:
+        - generic [ref=e90]: Test Query 1772625943533
+        - generic [ref=e91]: Test query for API testing
+    - option "Test Query for Jobs 1772625834929 No description" [ref=e92]:
+      - generic [ref=e95]:
+        - generic [ref=e96]: Test Query for Jobs 1772625834929
+        - generic [ref=e97]: No description
+    - option "Test Query for Reports 1772625812173 No description" [ref=e98]:
+      - generic [ref=e101]:
+        - generic [ref=e102]: Test Query for Reports 1772625812173
+        - generic [ref=e103]: No description
+    - option "Test Query 1772625797615 Test query for API testing" [ref=e104]:
+      - generic [ref=e107]:
+        - generic [ref=e108]: Test Query 1772625797615
+        - generic [ref=e109]: Test query for API testing
+    - option "Test Query for Jobs 1772625501175 No description" [ref=e110]:
+      - generic [ref=e113]:
+        - generic [ref=e114]: Test Query for Jobs 1772625501175
+        - generic [ref=e115]: No description
+    - option "Test Query for Reports 1772625477736 No description" [ref=e116]:
+      - generic [ref=e119]:
+        - generic [ref=e120]: Test Query for Reports 1772625477736
+        - generic [ref=e121]: No description
+    - img [ref=e123]
+```

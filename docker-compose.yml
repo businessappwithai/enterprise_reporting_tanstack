@@ -1,0 +1,116 @@
+# Enterprise Reporting System - Docker Compose for Hostinger VPS
+# This setup uses bind mounts for data persistence (Hostinger best practice)
+# All data is stored on the VPS filesystem at /srv/enterprise-reporting-system/
+# Includes Nginx reverse proxy with automatic SSL via Let's Encrypt
+
+services:
+  # Nginx Reverse Proxy with SSL
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: ers-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ${DATA_PATH:-/srv/enterprise-reporting-system}/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ${DATA_PATH:-/srv/enterprise-reporting-system}/certbot/conf:/etc/letsencrypt:ro
+      - ${DATA_PATH:-/srv/enterprise-reporting-system}/certbot/www:/var/www/certbot:ro
+    depends_on:
+      - app
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - ers-network
+
+  # Certbot for automatic SSL certificate renewal
+  certbot:
+    image: certbot/certbot:latest
+    container_name: ers-certbot
+    volumes:
+      - ${DATA_PATH:-/srv/enterprise-reporting-system}/certbot/conf:/etc/letsencrypt
+      - ${DATA_PATH:-/srv/enterprise-reporting-system}/certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done;'"
+    networks:
+      - ers-network
+
+  # Redis (for BullMQ job queue)
+  redis:
+    image: redis:7-alpine
+    container_name: ers-redis
+    restart: unless-stopped
+    # Use default password if REDIS_PASSWORD is not set
+    command: >
+      sh -c 'if [ -z "$$REDIS_PASSWORD" ]; then
+        redis-server --appendonly yes;
+      else
+        redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD";
+      fi'
+    volumes:
+      - ${DATA_PATH:-/srv/enterprise-reporting-system}/redis/data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - ers-network
+
+  # Main Application
+  app:
+    image: enterprise-reporting-system:latest
+    container_name: ers-app
+    restart: unless-stopped
+    environment:
+      # Application
+      NODE_ENV: production
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+      PORT: 3000
+
+      # Authentication
+      AUTH_SECRET: ${AUTH_SECRET}
+      AUTH_URL: ${AUTH_URL}
+
+      # SQLite Configuration Database
+      DATABASE_PATH: /app/data/config.sqlite
+
+      # Redis (Job Queue)
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+
+      # Encryption
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+
+      # Job Processing
+      JOB_OUTPUT_PATH: /app/job-outputs
+      MAX_CONCURRENT_JOBS: ${MAX_CONCURRENT_JOBS:-5}
+
+      # Error Reporting
+      NEXT_PUBLIC_ERROR_REPORTING_EMAIL: ${NEXT_PUBLIC_ERROR_REPORTING_EMAIL:-admin@yourcompany.com}
+
+      # Server-Side Pagination
+      DEFAULT_PAGE_SIZE: ${DEFAULT_PAGE_SIZE:-50}
+      MAX_PAGE_SIZE: ${MAX_PAGE_SIZE:-1000}
+      DATA_TABLE_PAGE_SIZE: ${DATA_TABLE_PAGE_SIZE:-100}
+      EXPORT_PAGE_SIZE: ${EXPORT_PAGE_SIZE:-1000}
+      VIRTUAL_SCROLL_THRESHOLD: ${VIRTUAL_SCROLL_THRESHOLD:-500}
+      ENABLE_VIRTUAL_SCROLLING: ${ENABLE_VIRTUAL_SCROLLING:-true}
+
+      # Natural Language Query (NL Query) - AI Configuration
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o}
+    volumes:
+      - ${DATA_PATH:-/srv/enterprise-reporting-system}/app/data:/app/data
+      - ${DATA_PATH:-/srv/enterprise-reporting-system}/app/job-outputs:/app/job-outputs
+      - ${DATA_PATH:-/srv/enterprise-reporting-system}/app/uploads:/app/uploads
+      - ${DATA_PATH:-/srv/enterprise-reporting-system}/app/logs:/app/logs
+    depends_on:
+      - redis
+    networks:
+      - ers-network
+
+networks:
+  ers-network:
+    driver: bridge

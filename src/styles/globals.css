@@ -1,0 +1,279 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Swiss Clean Design System - Light Theme */
+    --background: 0 0% 100%; /* #FFFFFF */
+    --foreground: 0 0% 5%; /* #0D0D0D - Dark Gray */
+    --card: 0 0% 98%; /* #FAFAFA - Light Gray */
+    --card-foreground: 0 0% 5%; /* #0D0D0D */
+    --popover: 0 0% 100%; /* #FFFFFF */
+    --popover-foreground: 0 0% 5%; /* #0D0D0D */
+    --primary: 240 100% 50%; /* #0000FF - Swiss Blue */
+    --primary-foreground: 0 0% 100%; /* #FFFFFF */
+    --secondary: 0 0% 96%; /* #F5F5F5 */
+    --secondary-foreground: 0 0% 5%; /* #0D0D0D */
+    --muted: 0 0% 96%; /* #F5F5F5 */
+    --muted-foreground: 0 0% 40%; /* #666666 */
+    --accent: 0 0% 96%; /* #F5F5F5 */
+    --accent-foreground: 0 0% 5%; /* #0D0D0D */
+    --destructive: 0 84% 60%; /* #E63946 */
+    --destructive-foreground: 0 0% 100%; /* #FFFFFF */
+    --border: 0 0% 91%; /* #E8E8E8 */
+    --input: 0 0% 91%; /* #E8E8E8 */
+    --ring: 240 100% 50%; /* #0000FF */
+    --radius: 0.25rem; /* 4px - Swiss Clean radius */
+    --radius-sm: 0.25rem; /* 4px */
+    --radius-md: 0.5rem; /* 8px */
+    --radius-lg: 0.75rem; /* 12px */
+    --radius-xl: 1rem; /* 16px */
+    --radius-2xl: 9999px; /* pill radius */
+
+    /* Swiss Status Colors - Light */
+    --color-info: 210 100% 50%; /* #007AFF - Blue */
+    --color-info-foreground: 0 0% 100%; /* #FFFFFF */
+    --color-success: 142 76% 36%; /* #22C55E - Green */
+    --color-success-foreground: 0 0% 100%; /* #FFFFFF */
+    --color-warning: 35 95% 58%; /* #F59E0B - Orange */
+    --color-warning-foreground: 0 0% 100%; /* #FFFFFF */
+    --color-error: 0 84% 60%; /* #E63946 - Red */
+    --color-error-foreground: 0 0% 100%; /* #FFFFFF */
+
+    /* Swiss Sidebar Colors - Light */
+    --sidebar: 0 0% 100%; /* #FFFFFF */
+    --sidebar-foreground: 0 0% 40%; /* #666666 */
+    --sidebar-primary: 0 0% 96%; /* #F5F5F5 */
+    --sidebar-primary-foreground: 0 0% 5%; /* #0D0D0D */
+    --sidebar-accent: 0 0% 96%; /* #F5F5F5 */
+    --sidebar-accent-foreground: 0 0% 5%; /* #0D0D0D */
+    --sidebar-border: 0 0% 91%; /* #E8E8E8 */
+    --sidebar-ring: 240 100% 50%; /* #0000FF */
+
+    /* Chart colors - Swiss palette */
+    --chart-1: 240 100% 50%; /* Swiss Blue */
+    --chart-2: 142 76% 36%; /* Green */
+    --chart-3: 280 70% 50%; /* Purple */
+    --chart-4: 35 95% 58%; /* Orange */
+    --chart-5: 190 80% 45%; /* Cyan */
+  }
+
+  .dark {
+    /* Swiss Clean Design System - Dark Theme */
+    --background: 0 0% 8%; /* #141414 - Very Dark Gray */
+    --foreground: 0 0% 95%; /* #F2F2F2 */
+    --card: 0 0% 12%; /* #1F1F1F */
+    --card-foreground: 0 0% 95%; /* #F2F2F2 */
+    --popover: 0 0% 12%; /* #1F1F1F */
+    --popover-foreground: 0 0% 95%; /* #F2F2F2 */
+    --primary: 220 100% 60%; /* #3399FF - Lighter Blue for Dark */
+    --primary-foreground: 0 0% 100%; /* #FFFFFF */
+    --secondary: 0 0% 18%; /* #2E2E2E */
+    --secondary-foreground: 0 0% 95%; /* #F2F2F2 */
+    --muted: 0 0% 18%; /* #2E2E2E */
+    --muted-foreground: 0 0% 55%; /* #8C8C8C */
+    --accent: 0 0% 18%; /* #2E2E2E */
+    --accent-foreground: 0 0% 95%; /* #F2F2F2 */
+    --destructive: 0 72% 51%; /* #CC3333 */
+    --destructive-foreground: 0 0% 100%; /* #FFFFFF */
+    --border: 0 0% 22%; /* #383838 */
+    --input: 0 0% 22%; /* #383838 */
+    --ring: 220 100% 60%; /* #3399FF */
+
+    /* Swiss Status Colors - Dark */
+    --color-info: 220 100% 60%; /* #3399FF */
+    --color-info-foreground: 0 0% 100%; /* #FFFFFF */
+    --color-success: 142 76% 46%; /* #22C55E */
+    --color-success-foreground: 0 0% 100%; /* #FFFFFF */
+    --color-warning: 35 95% 58%; /* #F59E0B */
+    --color-warning-foreground: 0 0% 100%; /* #FFFFFF */
+    --color-error: 0 72% 51%; /* #CC3333 */
+    --color-error-foreground: 0 0% 100%; /* #FFFFFF */
+
+    /* Swiss Sidebar Colors - Dark */
+    --sidebar: 0 0% 10%; /* #1A1A1A */
+    --sidebar-foreground: 0 0% 60%; /* #999999 */
+    --sidebar-primary: 220 100% 60%; /* #3399FF */
+    --sidebar-primary-foreground: 0 0% 100%; /* #FFFFFF */
+    --sidebar-accent: 0 0% 18%; /* #2E2E2E */
+    --sidebar-accent-foreground: 0 0% 95%; /* #F2F2F2 */
+    --sidebar-border: 0 0% 22%; /* #383838 */
+    --sidebar-ring: 220 100% 60%; /* #3399FF */
+
+    /* Chart colors - Dark Swiss palette */
+    --chart-1: 220 100% 60%; /* Lighter Blue */
+    --chart-2: 142 76% 46%; /* Green */
+    --chart-3: 280 70% 60%; /* Purple */
+    --chart-4: 35 95% 58%; /* Orange */
+    --chart-5: 190 80% 55%; /* Cyan */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Monaco Editor Customizations */
+.monaco-editor {
+  @apply rounded-md border;
+}
+
+/* Monaco Editor Wrapper - Create isolation from browser extensions */
+.monaco-editor-wrapper {
+  position: relative;
+  isolation: isolate;
+  contain: layout style paint;
+}
+
+/* Monaco Editor Widgets - Ensure they appear above all other elements */
+.monaco-editor .suggest-widget {
+  z-index: 1000 !important;
+}
+
+.monaco-editor .context-view {
+  z-index: 1000 !important;
+}
+
+.monaco-editor .editor-widget {
+  z-index: 1000 !important;
+}
+
+.monaco-editor .hover-widget {
+  z-index: 1000 !important;
+}
+
+.monaco-editor .monaco-menu {
+  z-index: 1000 !important;
+}
+
+.monaco-editor .monaco-list {
+  z-index: 1000 !important;
+}
+
+.monaco-editor .find-widget {
+  z-index: 1000 !important;
+}
+
+/* Radix UI dropdowns (Select, Dialog, Popover, etc.) - Must be above Monaco Editor */
+[data-radix-popper-content-wrapper],
+[data-radix-select-content],
+[data-radix-dialog-content],
+[data-radix-dropdown-menu-content],
+[data-radix-context-menu-content],
+[data-radix-popover-content] {
+  z-index: 1100 !important;
+}
+
+/* Radix UI Portal root */
+[data-radix-portal] {
+  z-index: 1100 !important;
+}
+
+/* React Grid Layout */
+.react-grid-layout {
+  position: relative;
+  transition: height 200ms ease;
+}
+
+.react-grid-item {
+  transition: all 200ms ease;
+  transition-property: left, top;
+}
+
+.react-grid-item.cssTransforms {
+  transition-property: transform;
+}
+
+.react-grid-item.resizing {
+  z-index: 1;
+  will-change: width, height;
+}
+
+.react-grid-item.react-draggable-dragging {
+  transition: none;
+  z-index: 3;
+  will-change: transform;
+}
+
+.react-grid-item.dropping {
+  visibility: hidden;
+}
+
+.react-grid-item > .react-resizable-handle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+}
+
+.react-grid-item > .react-resizable-handle::after {
+  content: '';
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 5px;
+  height: 5px;
+  border-right: 2px solid rgba(0, 0, 0, 0.4);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.4);
+}
+
+.react-grid-item > .react-resizable-handle.react-resizable-handle-se {
+  bottom: 0;
+  right: 0;
+  cursor: se-resize;
+}
+
+/* Enhanced resize handles for dashboard editing */
+.react-grid-item.resizing {
+  opacity: 1;
+  z-index: 10;
+}
+
+.react-grid-item > .react-resizable-handle {
+  background-image: none;
+  background-color: hsl(var(--primary));
+  opacity: 0.6;
+}
+
+.react-grid-item > .react-resizable-handle::after {
+  content: '';
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid white;
+  border-bottom: 2px solid white;
+}
+
+.react-grid-item > .react-resizable-handle:hover {
+  opacity: 1;
+}
+
+/* Widget container hover effect */
+.widget-container:hover .react-resizable-handle {
+  opacity: 0.8;
+}
+
+/* Scrollbar customization */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-muted;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/30 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/50;
+}
