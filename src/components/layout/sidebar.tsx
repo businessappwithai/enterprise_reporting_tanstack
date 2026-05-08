@@ -1,7 +1,4 @@
-'use client';
-
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { Link, useRouterState } from '@tanstack/react-router';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -58,7 +55,8 @@ const adminNavItems = [
 ];
 
 export function Sidebar({ collapsed, onCollapse }: SidebarProps) {
-  const pathname = usePathname();
+  const { location } = useRouterState()
+  const pathname = location.pathname
   const { data: permissions } = usePermissions();
   const canViewQuery = useCanView('query');
   const canViewReport = useCanView('report');
@@ -108,7 +106,7 @@ export function Sidebar({ collapsed, onCollapse }: SidebarProps) {
     const isActive = pathname === href || pathname.startsWith(href + '/');
 
     const content = (
-      <Link href={href}>
+      <Link to={href}>
         <Button
           variant={isActive ? 'secondary' : 'ghost'}
           className={cn(
@@ -146,13 +144,13 @@ export function Sidebar({ collapsed, onCollapse }: SidebarProps) {
       >
         <div className="flex h-14 items-center justify-between border-b border-border px-4">
           {!collapsed && (
-            <Link href="/" className="flex items-center gap-2">
+            <Link to="/" className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-foreground" />
               <span className="font-medium text-foreground text-sm">Enterprise Reports</span>
             </Link>
           )}
           {collapsed && (
-            <Link href="/" className="mx-auto">
+            <Link to="/" className="mx-auto">
               <BarChart3 className="h-5 w-5 text-foreground" />
             </Link>
           )}

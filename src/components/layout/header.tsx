@@ -1,9 +1,8 @@
-'use client';
-
 import { useState } from 'react';
-import { signOut } from 'next-auth/react';
 import { useTheme } from 'next-themes';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
+import { logoutFn } from '@/server-fns/auth';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -18,7 +17,6 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Bell, LogOut, Moon, Settings, Sun, User, Database, Loader2, Check, X, CheckCheck } from 'lucide-react';
 import { useActiveDataSource } from '@/lib/hooks/use-active-datasource';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 interface User {
@@ -34,7 +32,7 @@ interface HeaderProps {
 export function Header({ user }: HeaderProps) {
   const { theme, setTheme } = useTheme();
   const { activeDataSource, isLoading } = useActiveDataSource();
-  const router = useRouter();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showReadNotifications, setShowReadNotifications] = useState(false);
 
@@ -131,7 +129,7 @@ export function Header({ user }: HeaderProps) {
             variant="outline"
             size="sm"
             className="gap-2 rounded-md"
-            onClick={() => router.push('/data-sources')}
+            onClick={() => navigate({ to: '/data-sources' })}
           >
             <Database className="h-4 w-4 text-green-500" />
             <span>{activeDataSource.name}</span>
@@ -144,7 +142,7 @@ export function Header({ user }: HeaderProps) {
             variant="outline"
             size="sm"
             className="gap-2 rounded-md"
-            onClick={() => router.push('/data-sources')}
+            onClick={() => navigate({ to: '/data-sources' })}
           >
             <Database className="h-4 w-4 text-muted-foreground" />
             <span>No connection</span>
@@ -298,7 +296,7 @@ export function Header({ user }: HeaderProps) {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={() => signOut({ callbackUrl: '/login' })}
+              onClick={() => logoutFn()}
               className="text-destructive focus:text-destructive"
             >
               <LogOut className="mr-2 h-4 w-4" />

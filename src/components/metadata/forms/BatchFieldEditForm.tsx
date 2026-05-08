@@ -2,10 +2,8 @@
  * Batch Field Metadata Edit Form Component
  *
  * Form for editing multiple field metadata records in a single request.
- * Uses react-hook-form with shadcn/ui components.
+ * Uses local state for change tracking with Zod validation on submit.
  */
-
-'use client';
 
 import { useState } from 'react';
 import { z } from 'zod';
@@ -96,7 +94,7 @@ export function BatchFieldEditForm({
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {fields.map((field, index) => {
+          {fields.map((field) => {
             const isForeignKey = field.is_foreign_key;
             const isOpen = openFieldIds.has(field.id);
             const changes = fieldChanges.get(field.id);

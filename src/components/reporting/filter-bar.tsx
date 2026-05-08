@@ -1,8 +1,6 @@
-'use client';
-
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,8 +38,8 @@ interface FilterBarProps {
 }
 
 export function FilterBar({ reportId, chartId, filters, type }: FilterBarProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const navigate = useNavigate();
+  const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
   const [selectedValues, setSelectedValues] = useState<Record<string, string | string[]>>({});
   const [appliedValues, setAppliedValues] = useState<Record<string, string | string[]>>({});
 
@@ -142,7 +140,7 @@ export function FilterBar({ reportId, chartId, filters, type }: FilterBarProps) 
       }
     });
     setAppliedValues(selectedValues);
-    router.push(`?${params.toString()}`, { scroll: false });
+    navigate({ search: Object.fromEntries(params), replace: true });
   };
 
   if (filters.length === 0) {

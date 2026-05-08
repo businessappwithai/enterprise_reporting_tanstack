@@ -2,25 +2,14 @@
  * Entity Metadata Form Component
  *
  * Form for editing entity metadata (description, is_active, is_hidden).
- * Uses react-hook-form with shadcn/ui components.
+ * Uses TanStack Form with Zod validation.
  */
 
-'use client';
-
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
@@ -54,18 +43,17 @@ export function EntityMetadataForm({
   onCancel,
   isLoading = false,
 }: EntityMetadataFormProps) {
-  const form = useForm<EntityMetadataFormValues>({
-    resolver: zodResolver(entityMetadataSchema),
+  const form = useForm({
     defaultValues: {
       description: initialDescription,
       is_active: initialIsActive,
       is_hidden: initialIsHidden,
     },
+    onSubmit: async ({ value }) => {
+      entityMetadataSchema.parse(value);
+      await onSubmit(value);
+    },
   });
-
-  const handleSubmit = async (data: EntityMetadataFormValues) => {
-    await onSubmit(data);
-  };
 
   return (
     <Card className="w-full">
@@ -76,97 +64,106 @@ export function EntityMetadataForm({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-            {/* Description Field */}
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Enter a description for this entity..."
-                      className="min-h-[100px] resize-y"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    A human-readable description of what this entity represents. Max 5000 characters.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            form.handleSubmit();
+          }}
+          className="space-y-6"
+        >
+          {/* Description Field */}
+          <form.Field
+            name="description"
+            validators={{
+              onChange: ({ value }) => {
+                const result = z
+                  .string()
+                  .max(5000, 'Description must not exceed 5000 characters')
+                  .optional()
+                  .safeParse(value);
+                return result.success ? undefined : result.error.issues[0]?.message;
+              },
+            }}
+          >
+            {(field) => (
+              <div className="space-y-2">
+                <Label htmlFor={field.name}>Description</Label>
+                <Textarea
+                  id={field.name}
+                  placeholder="Enter a description for this entity..."
+                  className="min-h-[100px] resize-y"
+                  value={field.state.value ?? ''}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  onBlur={field.handleBlur}
+                />
+                <p className="text-sm text-muted-foreground">
+                  A human-readable description of what this entity represents. Max 5000 characters.
+                </p>
+                {field.state.meta.errors.length > 0 && (
+                  <p className="text-sm text-destructive">{field.state.meta.errors[0]}</p>
+                )}
+              </div>
+            )}
+          </form.Field>
 
-            {/* Is Active Field */}
-            <FormField
-              control={form.control}
-              name="is_active"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                  <FormControl>
-                    <Checkbox
-                      name={field.name}
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>Active</FormLabel>
-                    <FormDescription>
-                      When enabled, this entity will be visible and accessible in the system. Entities are inactive by default.
-                    </FormDescription>
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          {/* Is Active Field */}
+          <form.Field name="is_active">
+            {(field) => (
+              <div className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                <Checkbox
+                  id="is_active"
+                  checked={field.state.value}
+                  onCheckedChange={(checked) => field.handleChange(checked as boolean)}
+                />
+                <div className="space-y-1 leading-none">
+                  <Label htmlFor="is_active">Active</Label>
+                  <p className="text-sm text-muted-foreground">
+                    When enabled, this entity will be visible and accessible in the system. Entities are inactive by default.
+                  </p>
+                </div>
+              </div>
+            )}
+          </form.Field>
 
-            {/* Is Hidden Field */}
-            <FormField
-              control={form.control}
-              name="is_hidden"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                  <FormControl>
-                    <Checkbox
-                      name={field.name}
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>Hidden</FormLabel>
-                    <FormDescription>
-                      When enabled, this entity will be hidden from standard views. Hidden entities are still accessible via direct links or API.
-                    </FormDescription>
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          {/* Is Hidden Field */}
+          <form.Field name="is_hidden">
+            {(field) => (
+              <div className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                <Checkbox
+                  id="is_hidden"
+                  checked={field.state.value}
+                  onCheckedChange={(checked) => field.handleChange(checked as boolean)}
+                />
+                <div className="space-y-1 leading-none">
+                  <Label htmlFor="is_hidden">Hidden</Label>
+                  <p className="text-sm text-muted-foreground">
+                    When enabled, this entity will be hidden from standard views. Hidden entities are still accessible via direct links or API.
+                  </p>
+                </div>
+              </div>
+            )}
+          </form.Field>
 
-            {/* Form Actions */}
-            <div className="flex items-center justify-end gap-3 pt-4 border-t">
-              {onCancel && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={onCancel}
-                  disabled={isLoading}
-                >
-                  Cancel
-                </Button>
-              )}
-              <Button type="submit" disabled={isLoading}>
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Save Changes
+          {/* Form Actions */}
+          <div className="flex items-center justify-end gap-3 pt-4 border-t">
+            {onCancel && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onCancel}
+                disabled={isLoading}
+              >
+                Cancel
               </Button>
-            </div>
-          </form>
-        </Form>
+            )}
+            <Button type="submit" disabled={isLoading || form.state.isSubmitting}>
+              {(isLoading || form.state.isSubmitting) && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Save Changes
+            </Button>
+          </div>
+        </form>
       </CardContent>
     </Card>
   );

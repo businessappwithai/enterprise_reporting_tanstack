@@ -1,7 +1,4 @@
-'use client';
-
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { Link, useRouterState } from '@tanstack/react-router';
 import { ChevronRight, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -16,7 +13,8 @@ interface BreadcrumbProps {
 }
 
 export function Breadcrumb({ items, className }: BreadcrumbProps) {
-  const pathname = usePathname();
+  const { location } = useRouterState()
+  const pathname = location.pathname;
 
   const defaultItems: BreadcrumbItem[] = pathname
     .split('/')
@@ -35,7 +33,7 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
   return (
     <nav className={cn('flex items-center space-x-1 text-sm', className)}>
       <Link
-        href="/"
+        to="/"
         className="flex items-center text-muted-foreground hover:text-foreground"
       >
         <Home className="h-4 w-4" />
@@ -46,7 +44,7 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
           {item.href && index < breadcrumbItems.length - 1 ? (
             <Link
-              href={item.href}
+              to={item.href}
               className="ml-1 text-muted-foreground hover:text-foreground"
             >
               {item.label}
