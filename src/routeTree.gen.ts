@@ -23,7 +23,17 @@ import { Route as ApiChartsRouteImport } from './routes/api/charts'
 import { Route as AuthedSqlEditorRouteImport } from './routes/_authed/sql-editor'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
 import { Route as AuthedBullBoardRouteImport } from './routes/_authed/bull-board'
+import { Route as AuthedSettingsIndexRouteImport } from './routes/_authed/settings/index'
 import { Route as AuthedReportsIndexRouteImport } from './routes/_authed/reports/index'
+import { Route as AuthedQueriesIndexRouteImport } from './routes/_authed/queries/index'
+import { Route as AuthedNlQueryIndexRouteImport } from './routes/_authed/nl-query/index'
+import { Route as AuthedJobsIndexRouteImport } from './routes/_authed/jobs/index'
+import { Route as AuthedFiltersIndexRouteImport } from './routes/_authed/filters/index'
+import { Route as AuthedEmailTemplatesIndexRouteImport } from './routes/_authed/email-templates/index'
+import { Route as AuthedDatasetsIndexRouteImport } from './routes/_authed/datasets/index'
+import { Route as AuthedDataSourcesIndexRouteImport } from './routes/_authed/data-sources/index'
+import { Route as AuthedDashboardsIndexRouteImport } from './routes/_authed/dashboards/index'
+import { Route as AuthedChartsIndexRouteImport } from './routes/_authed/charts/index'
 import { Route as ShareReportIdRouteImport } from './routes/share/report/$id'
 import { Route as ShareDashboardIdRouteImport } from './routes/share/dashboard/$id'
 import { Route as ShareChartIdRouteImport } from './routes/share/chart/$id'
@@ -34,12 +44,22 @@ import { Route as ApiDataSourcesIdRouteImport } from './routes/api/data-sources/
 import { Route as ApiDashboardsIdRouteImport } from './routes/api/dashboards/$id'
 import { Route as ApiChartsIdRouteImport } from './routes/api/charts/$id'
 import { Route as ApiAuthPermissionsRouteImport } from './routes/api/auth/permissions'
+import { Route as AuthedSettingsEmailIndexRouteImport } from './routes/_authed/settings/email/index'
+import { Route as AuthedMetadataEntitiesIndexRouteImport } from './routes/_authed/metadata/entities/index'
+import { Route as AuthedDashboardsIdIndexRouteImport } from './routes/_authed/dashboards/$id/index'
+import { Route as AuthedAdminUsersIndexRouteImport } from './routes/_authed/admin/users/index'
+import { Route as AuthedAdminRolesIndexRouteImport } from './routes/_authed/admin/roles/index'
+import { Route as AuthedAdminPermissionsIndexRouteImport } from './routes/_authed/admin/permissions/index'
 import { Route as ApiSqlSchemaDataSourceIdRouteImport } from './routes/api/sql/schema.$dataSourceId'
 import { Route as ApiReportsIdFiltersRouteImport } from './routes/api/reports/$id/filters'
 import { Route as ApiReportsIdExportRouteImport } from './routes/api/reports/$id/export'
 import { Route as ApiDashboardsIdWidgetsRouteImport } from './routes/api/dashboards/$id/widgets'
 import { Route as ApiChartsIdFiltersRouteImport } from './routes/api/charts/$id/filters'
 import { Route as AuthedReportsIdEditorRouteImport } from './routes/_authed/reports/$id/editor'
+import { Route as AuthedDataSourcesIdPermissionsRouteImport } from './routes/_authed/data-sources/$id/permissions'
+import { Route as AuthedChartsViewerIdRouteImport } from './routes/_authed/charts/viewer/$id'
+import { Route as AuthedChartsEditorIdRouteImport } from './routes/_authed/charts/editor/$id'
+import { Route as AuthedMetadataEntitiesIdIndexRouteImport } from './routes/_authed/metadata/entities/$id/index'
 import { Route as ApiReportsIdFiltersFilterLinkIdRouteImport } from './routes/api/reports/$id/filters/$filterLinkId'
 import { Route as ApiDashboardsIdWidgetsWidgetIdRouteImport } from './routes/api/dashboards/$id/widgets/$widgetId'
 import { Route as ApiChartsIdFiltersFilterLinkIdRouteImport } from './routes/api/charts/$id/filters/$filterLinkId'
@@ -113,9 +133,60 @@ const AuthedBullBoardRoute = AuthedBullBoardRouteImport.update({
   path: '/bull-board',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedSettingsIndexRoute = AuthedSettingsIndexRouteImport.update({
+  id: '/settings/',
+  path: '/settings/',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedReportsIndexRoute = AuthedReportsIndexRouteImport.update({
   id: '/reports/',
   path: '/reports/',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedQueriesIndexRoute = AuthedQueriesIndexRouteImport.update({
+  id: '/queries/',
+  path: '/queries/',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedNlQueryIndexRoute = AuthedNlQueryIndexRouteImport.update({
+  id: '/nl-query/',
+  path: '/nl-query/',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedJobsIndexRoute = AuthedJobsIndexRouteImport.update({
+  id: '/jobs/',
+  path: '/jobs/',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedFiltersIndexRoute = AuthedFiltersIndexRouteImport.update({
+  id: '/filters/',
+  path: '/filters/',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedEmailTemplatesIndexRoute =
+  AuthedEmailTemplatesIndexRouteImport.update({
+    id: '/email-templates/',
+    path: '/email-templates/',
+    getParentRoute: () => AuthedRoute,
+  } as any)
+const AuthedDatasetsIndexRoute = AuthedDatasetsIndexRouteImport.update({
+  id: '/datasets/',
+  path: '/datasets/',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedDataSourcesIndexRoute = AuthedDataSourcesIndexRouteImport.update({
+  id: '/data-sources/',
+  path: '/data-sources/',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedDashboardsIndexRoute = AuthedDashboardsIndexRouteImport.update({
+  id: '/dashboards/',
+  path: '/dashboards/',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedChartsIndexRoute = AuthedChartsIndexRouteImport.update({
+  id: '/charts/',
+  path: '/charts/',
   getParentRoute: () => AuthedRoute,
 } as any)
 const ShareReportIdRoute = ShareReportIdRouteImport.update({
@@ -168,6 +239,39 @@ const ApiAuthPermissionsRoute = ApiAuthPermissionsRouteImport.update({
   path: '/api/auth/permissions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthedSettingsEmailIndexRoute =
+  AuthedSettingsEmailIndexRouteImport.update({
+    id: '/settings/email/',
+    path: '/settings/email/',
+    getParentRoute: () => AuthedRoute,
+  } as any)
+const AuthedMetadataEntitiesIndexRoute =
+  AuthedMetadataEntitiesIndexRouteImport.update({
+    id: '/metadata/entities/',
+    path: '/metadata/entities/',
+    getParentRoute: () => AuthedRoute,
+  } as any)
+const AuthedDashboardsIdIndexRoute = AuthedDashboardsIdIndexRouteImport.update({
+  id: '/dashboards/$id/',
+  path: '/dashboards/$id/',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedAdminUsersIndexRoute = AuthedAdminUsersIndexRouteImport.update({
+  id: '/admin/users/',
+  path: '/admin/users/',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedAdminRolesIndexRoute = AuthedAdminRolesIndexRouteImport.update({
+  id: '/admin/roles/',
+  path: '/admin/roles/',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedAdminPermissionsIndexRoute =
+  AuthedAdminPermissionsIndexRouteImport.update({
+    id: '/admin/permissions/',
+    path: '/admin/permissions/',
+    getParentRoute: () => AuthedRoute,
+  } as any)
 const ApiSqlSchemaDataSourceIdRoute =
   ApiSqlSchemaDataSourceIdRouteImport.update({
     id: '/api/sql/schema/$dataSourceId',
@@ -199,6 +303,28 @@ const AuthedReportsIdEditorRoute = AuthedReportsIdEditorRouteImport.update({
   path: '/reports/$id/editor',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedDataSourcesIdPermissionsRoute =
+  AuthedDataSourcesIdPermissionsRouteImport.update({
+    id: '/data-sources/$id/permissions',
+    path: '/data-sources/$id/permissions',
+    getParentRoute: () => AuthedRoute,
+  } as any)
+const AuthedChartsViewerIdRoute = AuthedChartsViewerIdRouteImport.update({
+  id: '/charts/viewer/$id',
+  path: '/charts/viewer/$id',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedChartsEditorIdRoute = AuthedChartsEditorIdRouteImport.update({
+  id: '/charts/editor/$id',
+  path: '/charts/editor/$id',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedMetadataEntitiesIdIndexRoute =
+  AuthedMetadataEntitiesIdIndexRouteImport.update({
+    id: '/metadata/entities/$id/',
+    path: '/metadata/entities/$id/',
+    getParentRoute: () => AuthedRoute,
+  } as any)
 const ApiReportsIdFiltersFilterLinkIdRoute =
   ApiReportsIdFiltersFilterLinkIdRouteImport.update({
     id: '/$filterLinkId',
@@ -242,16 +368,36 @@ export interface FileRoutesByFullPath {
   '/share/chart/$id': typeof ShareChartIdRoute
   '/share/dashboard/$id': typeof ShareDashboardIdRoute
   '/share/report/$id': typeof ShareReportIdRoute
+  '/charts/': typeof AuthedChartsIndexRoute
+  '/dashboards/': typeof AuthedDashboardsIndexRoute
+  '/data-sources/': typeof AuthedDataSourcesIndexRoute
+  '/datasets/': typeof AuthedDatasetsIndexRoute
+  '/email-templates/': typeof AuthedEmailTemplatesIndexRoute
+  '/filters/': typeof AuthedFiltersIndexRoute
+  '/jobs/': typeof AuthedJobsIndexRoute
+  '/nl-query/': typeof AuthedNlQueryIndexRoute
+  '/queries/': typeof AuthedQueriesIndexRoute
   '/reports/': typeof AuthedReportsIndexRoute
+  '/settings/': typeof AuthedSettingsIndexRoute
+  '/charts/editor/$id': typeof AuthedChartsEditorIdRoute
+  '/charts/viewer/$id': typeof AuthedChartsViewerIdRoute
+  '/data-sources/$id/permissions': typeof AuthedDataSourcesIdPermissionsRoute
   '/reports/$id/editor': typeof AuthedReportsIdEditorRoute
   '/api/charts/$id/filters': typeof ApiChartsIdFiltersRouteWithChildren
   '/api/dashboards/$id/widgets': typeof ApiDashboardsIdWidgetsRouteWithChildren
   '/api/reports/$id/export': typeof ApiReportsIdExportRoute
   '/api/reports/$id/filters': typeof ApiReportsIdFiltersRouteWithChildren
   '/api/sql/schema/$dataSourceId': typeof ApiSqlSchemaDataSourceIdRoute
+  '/admin/permissions/': typeof AuthedAdminPermissionsIndexRoute
+  '/admin/roles/': typeof AuthedAdminRolesIndexRoute
+  '/admin/users/': typeof AuthedAdminUsersIndexRoute
+  '/dashboards/$id/': typeof AuthedDashboardsIdIndexRoute
+  '/metadata/entities/': typeof AuthedMetadataEntitiesIndexRoute
+  '/settings/email/': typeof AuthedSettingsEmailIndexRoute
   '/api/charts/$id/filters/$filterLinkId': typeof ApiChartsIdFiltersFilterLinkIdRoute
   '/api/dashboards/$id/widgets/$widgetId': typeof ApiDashboardsIdWidgetsWidgetIdRoute
   '/api/reports/$id/filters/$filterLinkId': typeof ApiReportsIdFiltersFilterLinkIdRoute
+  '/metadata/entities/$id/': typeof AuthedMetadataEntitiesIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -277,16 +423,36 @@ export interface FileRoutesByTo {
   '/share/chart/$id': typeof ShareChartIdRoute
   '/share/dashboard/$id': typeof ShareDashboardIdRoute
   '/share/report/$id': typeof ShareReportIdRoute
+  '/charts': typeof AuthedChartsIndexRoute
+  '/dashboards': typeof AuthedDashboardsIndexRoute
+  '/data-sources': typeof AuthedDataSourcesIndexRoute
+  '/datasets': typeof AuthedDatasetsIndexRoute
+  '/email-templates': typeof AuthedEmailTemplatesIndexRoute
+  '/filters': typeof AuthedFiltersIndexRoute
+  '/jobs': typeof AuthedJobsIndexRoute
+  '/nl-query': typeof AuthedNlQueryIndexRoute
+  '/queries': typeof AuthedQueriesIndexRoute
   '/reports': typeof AuthedReportsIndexRoute
+  '/settings': typeof AuthedSettingsIndexRoute
+  '/charts/editor/$id': typeof AuthedChartsEditorIdRoute
+  '/charts/viewer/$id': typeof AuthedChartsViewerIdRoute
+  '/data-sources/$id/permissions': typeof AuthedDataSourcesIdPermissionsRoute
   '/reports/$id/editor': typeof AuthedReportsIdEditorRoute
   '/api/charts/$id/filters': typeof ApiChartsIdFiltersRouteWithChildren
   '/api/dashboards/$id/widgets': typeof ApiDashboardsIdWidgetsRouteWithChildren
   '/api/reports/$id/export': typeof ApiReportsIdExportRoute
   '/api/reports/$id/filters': typeof ApiReportsIdFiltersRouteWithChildren
   '/api/sql/schema/$dataSourceId': typeof ApiSqlSchemaDataSourceIdRoute
+  '/admin/permissions': typeof AuthedAdminPermissionsIndexRoute
+  '/admin/roles': typeof AuthedAdminRolesIndexRoute
+  '/admin/users': typeof AuthedAdminUsersIndexRoute
+  '/dashboards/$id': typeof AuthedDashboardsIdIndexRoute
+  '/metadata/entities': typeof AuthedMetadataEntitiesIndexRoute
+  '/settings/email': typeof AuthedSettingsEmailIndexRoute
   '/api/charts/$id/filters/$filterLinkId': typeof ApiChartsIdFiltersFilterLinkIdRoute
   '/api/dashboards/$id/widgets/$widgetId': typeof ApiDashboardsIdWidgetsWidgetIdRoute
   '/api/reports/$id/filters/$filterLinkId': typeof ApiReportsIdFiltersFilterLinkIdRoute
+  '/metadata/entities/$id': typeof AuthedMetadataEntitiesIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -314,16 +480,36 @@ export interface FileRoutesById {
   '/share/chart/$id': typeof ShareChartIdRoute
   '/share/dashboard/$id': typeof ShareDashboardIdRoute
   '/share/report/$id': typeof ShareReportIdRoute
+  '/_authed/charts/': typeof AuthedChartsIndexRoute
+  '/_authed/dashboards/': typeof AuthedDashboardsIndexRoute
+  '/_authed/data-sources/': typeof AuthedDataSourcesIndexRoute
+  '/_authed/datasets/': typeof AuthedDatasetsIndexRoute
+  '/_authed/email-templates/': typeof AuthedEmailTemplatesIndexRoute
+  '/_authed/filters/': typeof AuthedFiltersIndexRoute
+  '/_authed/jobs/': typeof AuthedJobsIndexRoute
+  '/_authed/nl-query/': typeof AuthedNlQueryIndexRoute
+  '/_authed/queries/': typeof AuthedQueriesIndexRoute
   '/_authed/reports/': typeof AuthedReportsIndexRoute
+  '/_authed/settings/': typeof AuthedSettingsIndexRoute
+  '/_authed/charts/editor/$id': typeof AuthedChartsEditorIdRoute
+  '/_authed/charts/viewer/$id': typeof AuthedChartsViewerIdRoute
+  '/_authed/data-sources/$id/permissions': typeof AuthedDataSourcesIdPermissionsRoute
   '/_authed/reports/$id/editor': typeof AuthedReportsIdEditorRoute
   '/api/charts/$id/filters': typeof ApiChartsIdFiltersRouteWithChildren
   '/api/dashboards/$id/widgets': typeof ApiDashboardsIdWidgetsRouteWithChildren
   '/api/reports/$id/export': typeof ApiReportsIdExportRoute
   '/api/reports/$id/filters': typeof ApiReportsIdFiltersRouteWithChildren
   '/api/sql/schema/$dataSourceId': typeof ApiSqlSchemaDataSourceIdRoute
+  '/_authed/admin/permissions/': typeof AuthedAdminPermissionsIndexRoute
+  '/_authed/admin/roles/': typeof AuthedAdminRolesIndexRoute
+  '/_authed/admin/users/': typeof AuthedAdminUsersIndexRoute
+  '/_authed/dashboards/$id/': typeof AuthedDashboardsIdIndexRoute
+  '/_authed/metadata/entities/': typeof AuthedMetadataEntitiesIndexRoute
+  '/_authed/settings/email/': typeof AuthedSettingsEmailIndexRoute
   '/api/charts/$id/filters/$filterLinkId': typeof ApiChartsIdFiltersFilterLinkIdRoute
   '/api/dashboards/$id/widgets/$widgetId': typeof ApiDashboardsIdWidgetsWidgetIdRoute
   '/api/reports/$id/filters/$filterLinkId': typeof ApiReportsIdFiltersFilterLinkIdRoute
+  '/_authed/metadata/entities/$id/': typeof AuthedMetadataEntitiesIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -351,16 +537,36 @@ export interface FileRouteTypes {
     | '/share/chart/$id'
     | '/share/dashboard/$id'
     | '/share/report/$id'
+    | '/charts/'
+    | '/dashboards/'
+    | '/data-sources/'
+    | '/datasets/'
+    | '/email-templates/'
+    | '/filters/'
+    | '/jobs/'
+    | '/nl-query/'
+    | '/queries/'
     | '/reports/'
+    | '/settings/'
+    | '/charts/editor/$id'
+    | '/charts/viewer/$id'
+    | '/data-sources/$id/permissions'
     | '/reports/$id/editor'
     | '/api/charts/$id/filters'
     | '/api/dashboards/$id/widgets'
     | '/api/reports/$id/export'
     | '/api/reports/$id/filters'
     | '/api/sql/schema/$dataSourceId'
+    | '/admin/permissions/'
+    | '/admin/roles/'
+    | '/admin/users/'
+    | '/dashboards/$id/'
+    | '/metadata/entities/'
+    | '/settings/email/'
     | '/api/charts/$id/filters/$filterLinkId'
     | '/api/dashboards/$id/widgets/$widgetId'
     | '/api/reports/$id/filters/$filterLinkId'
+    | '/metadata/entities/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -386,16 +592,36 @@ export interface FileRouteTypes {
     | '/share/chart/$id'
     | '/share/dashboard/$id'
     | '/share/report/$id'
+    | '/charts'
+    | '/dashboards'
+    | '/data-sources'
+    | '/datasets'
+    | '/email-templates'
+    | '/filters'
+    | '/jobs'
+    | '/nl-query'
+    | '/queries'
     | '/reports'
+    | '/settings'
+    | '/charts/editor/$id'
+    | '/charts/viewer/$id'
+    | '/data-sources/$id/permissions'
     | '/reports/$id/editor'
     | '/api/charts/$id/filters'
     | '/api/dashboards/$id/widgets'
     | '/api/reports/$id/export'
     | '/api/reports/$id/filters'
     | '/api/sql/schema/$dataSourceId'
+    | '/admin/permissions'
+    | '/admin/roles'
+    | '/admin/users'
+    | '/dashboards/$id'
+    | '/metadata/entities'
+    | '/settings/email'
     | '/api/charts/$id/filters/$filterLinkId'
     | '/api/dashboards/$id/widgets/$widgetId'
     | '/api/reports/$id/filters/$filterLinkId'
+    | '/metadata/entities/$id'
   id:
     | '__root__'
     | '/'
@@ -422,16 +648,36 @@ export interface FileRouteTypes {
     | '/share/chart/$id'
     | '/share/dashboard/$id'
     | '/share/report/$id'
+    | '/_authed/charts/'
+    | '/_authed/dashboards/'
+    | '/_authed/data-sources/'
+    | '/_authed/datasets/'
+    | '/_authed/email-templates/'
+    | '/_authed/filters/'
+    | '/_authed/jobs/'
+    | '/_authed/nl-query/'
+    | '/_authed/queries/'
     | '/_authed/reports/'
+    | '/_authed/settings/'
+    | '/_authed/charts/editor/$id'
+    | '/_authed/charts/viewer/$id'
+    | '/_authed/data-sources/$id/permissions'
     | '/_authed/reports/$id/editor'
     | '/api/charts/$id/filters'
     | '/api/dashboards/$id/widgets'
     | '/api/reports/$id/export'
     | '/api/reports/$id/filters'
     | '/api/sql/schema/$dataSourceId'
+    | '/_authed/admin/permissions/'
+    | '/_authed/admin/roles/'
+    | '/_authed/admin/users/'
+    | '/_authed/dashboards/$id/'
+    | '/_authed/metadata/entities/'
+    | '/_authed/settings/email/'
     | '/api/charts/$id/filters/$filterLinkId'
     | '/api/dashboards/$id/widgets/$widgetId'
     | '/api/reports/$id/filters/$filterLinkId'
+    | '/_authed/metadata/entities/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -555,11 +801,81 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedBullBoardRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/settings/': {
+      id: '/_authed/settings/'
+      path: '/settings'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof AuthedSettingsIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/reports/': {
       id: '/_authed/reports/'
       path: '/reports'
       fullPath: '/reports/'
       preLoaderRoute: typeof AuthedReportsIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/queries/': {
+      id: '/_authed/queries/'
+      path: '/queries'
+      fullPath: '/queries/'
+      preLoaderRoute: typeof AuthedQueriesIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/nl-query/': {
+      id: '/_authed/nl-query/'
+      path: '/nl-query'
+      fullPath: '/nl-query/'
+      preLoaderRoute: typeof AuthedNlQueryIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/jobs/': {
+      id: '/_authed/jobs/'
+      path: '/jobs'
+      fullPath: '/jobs/'
+      preLoaderRoute: typeof AuthedJobsIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/filters/': {
+      id: '/_authed/filters/'
+      path: '/filters'
+      fullPath: '/filters/'
+      preLoaderRoute: typeof AuthedFiltersIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/email-templates/': {
+      id: '/_authed/email-templates/'
+      path: '/email-templates'
+      fullPath: '/email-templates/'
+      preLoaderRoute: typeof AuthedEmailTemplatesIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/datasets/': {
+      id: '/_authed/datasets/'
+      path: '/datasets'
+      fullPath: '/datasets/'
+      preLoaderRoute: typeof AuthedDatasetsIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/data-sources/': {
+      id: '/_authed/data-sources/'
+      path: '/data-sources'
+      fullPath: '/data-sources/'
+      preLoaderRoute: typeof AuthedDataSourcesIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/dashboards/': {
+      id: '/_authed/dashboards/'
+      path: '/dashboards'
+      fullPath: '/dashboards/'
+      preLoaderRoute: typeof AuthedDashboardsIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/charts/': {
+      id: '/_authed/charts/'
+      path: '/charts'
+      fullPath: '/charts/'
+      preLoaderRoute: typeof AuthedChartsIndexRouteImport
       parentRoute: typeof AuthedRoute
     }
     '/share/report/$id': {
@@ -632,6 +948,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthPermissionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authed/settings/email/': {
+      id: '/_authed/settings/email/'
+      path: '/settings/email'
+      fullPath: '/settings/email/'
+      preLoaderRoute: typeof AuthedSettingsEmailIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/metadata/entities/': {
+      id: '/_authed/metadata/entities/'
+      path: '/metadata/entities'
+      fullPath: '/metadata/entities/'
+      preLoaderRoute: typeof AuthedMetadataEntitiesIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/dashboards/$id/': {
+      id: '/_authed/dashboards/$id/'
+      path: '/dashboards/$id'
+      fullPath: '/dashboards/$id/'
+      preLoaderRoute: typeof AuthedDashboardsIdIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/admin/users/': {
+      id: '/_authed/admin/users/'
+      path: '/admin/users'
+      fullPath: '/admin/users/'
+      preLoaderRoute: typeof AuthedAdminUsersIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/admin/roles/': {
+      id: '/_authed/admin/roles/'
+      path: '/admin/roles'
+      fullPath: '/admin/roles/'
+      preLoaderRoute: typeof AuthedAdminRolesIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/admin/permissions/': {
+      id: '/_authed/admin/permissions/'
+      path: '/admin/permissions'
+      fullPath: '/admin/permissions/'
+      preLoaderRoute: typeof AuthedAdminPermissionsIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/api/sql/schema/$dataSourceId': {
       id: '/api/sql/schema/$dataSourceId'
       path: '/api/sql/schema/$dataSourceId'
@@ -674,6 +1032,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedReportsIdEditorRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/data-sources/$id/permissions': {
+      id: '/_authed/data-sources/$id/permissions'
+      path: '/data-sources/$id/permissions'
+      fullPath: '/data-sources/$id/permissions'
+      preLoaderRoute: typeof AuthedDataSourcesIdPermissionsRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/charts/viewer/$id': {
+      id: '/_authed/charts/viewer/$id'
+      path: '/charts/viewer/$id'
+      fullPath: '/charts/viewer/$id'
+      preLoaderRoute: typeof AuthedChartsViewerIdRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/charts/editor/$id': {
+      id: '/_authed/charts/editor/$id'
+      path: '/charts/editor/$id'
+      fullPath: '/charts/editor/$id'
+      preLoaderRoute: typeof AuthedChartsEditorIdRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/metadata/entities/$id/': {
+      id: '/_authed/metadata/entities/$id/'
+      path: '/metadata/entities/$id'
+      fullPath: '/metadata/entities/$id/'
+      preLoaderRoute: typeof AuthedMetadataEntitiesIdIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/api/reports/$id/filters/$filterLinkId': {
       id: '/api/reports/$id/filters/$filterLinkId'
       path: '/$filterLinkId'
@@ -702,16 +1088,56 @@ interface AuthedRouteChildren {
   AuthedBullBoardRoute: typeof AuthedBullBoardRoute
   AuthedDashboardRoute: typeof AuthedDashboardRoute
   AuthedSqlEditorRoute: typeof AuthedSqlEditorRoute
+  AuthedChartsIndexRoute: typeof AuthedChartsIndexRoute
+  AuthedDashboardsIndexRoute: typeof AuthedDashboardsIndexRoute
+  AuthedDataSourcesIndexRoute: typeof AuthedDataSourcesIndexRoute
+  AuthedDatasetsIndexRoute: typeof AuthedDatasetsIndexRoute
+  AuthedEmailTemplatesIndexRoute: typeof AuthedEmailTemplatesIndexRoute
+  AuthedFiltersIndexRoute: typeof AuthedFiltersIndexRoute
+  AuthedJobsIndexRoute: typeof AuthedJobsIndexRoute
+  AuthedNlQueryIndexRoute: typeof AuthedNlQueryIndexRoute
+  AuthedQueriesIndexRoute: typeof AuthedQueriesIndexRoute
   AuthedReportsIndexRoute: typeof AuthedReportsIndexRoute
+  AuthedSettingsIndexRoute: typeof AuthedSettingsIndexRoute
+  AuthedChartsEditorIdRoute: typeof AuthedChartsEditorIdRoute
+  AuthedChartsViewerIdRoute: typeof AuthedChartsViewerIdRoute
+  AuthedDataSourcesIdPermissionsRoute: typeof AuthedDataSourcesIdPermissionsRoute
   AuthedReportsIdEditorRoute: typeof AuthedReportsIdEditorRoute
+  AuthedAdminPermissionsIndexRoute: typeof AuthedAdminPermissionsIndexRoute
+  AuthedAdminRolesIndexRoute: typeof AuthedAdminRolesIndexRoute
+  AuthedAdminUsersIndexRoute: typeof AuthedAdminUsersIndexRoute
+  AuthedDashboardsIdIndexRoute: typeof AuthedDashboardsIdIndexRoute
+  AuthedMetadataEntitiesIndexRoute: typeof AuthedMetadataEntitiesIndexRoute
+  AuthedSettingsEmailIndexRoute: typeof AuthedSettingsEmailIndexRoute
+  AuthedMetadataEntitiesIdIndexRoute: typeof AuthedMetadataEntitiesIdIndexRoute
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedBullBoardRoute: AuthedBullBoardRoute,
   AuthedDashboardRoute: AuthedDashboardRoute,
   AuthedSqlEditorRoute: AuthedSqlEditorRoute,
+  AuthedChartsIndexRoute: AuthedChartsIndexRoute,
+  AuthedDashboardsIndexRoute: AuthedDashboardsIndexRoute,
+  AuthedDataSourcesIndexRoute: AuthedDataSourcesIndexRoute,
+  AuthedDatasetsIndexRoute: AuthedDatasetsIndexRoute,
+  AuthedEmailTemplatesIndexRoute: AuthedEmailTemplatesIndexRoute,
+  AuthedFiltersIndexRoute: AuthedFiltersIndexRoute,
+  AuthedJobsIndexRoute: AuthedJobsIndexRoute,
+  AuthedNlQueryIndexRoute: AuthedNlQueryIndexRoute,
+  AuthedQueriesIndexRoute: AuthedQueriesIndexRoute,
   AuthedReportsIndexRoute: AuthedReportsIndexRoute,
+  AuthedSettingsIndexRoute: AuthedSettingsIndexRoute,
+  AuthedChartsEditorIdRoute: AuthedChartsEditorIdRoute,
+  AuthedChartsViewerIdRoute: AuthedChartsViewerIdRoute,
+  AuthedDataSourcesIdPermissionsRoute: AuthedDataSourcesIdPermissionsRoute,
   AuthedReportsIdEditorRoute: AuthedReportsIdEditorRoute,
+  AuthedAdminPermissionsIndexRoute: AuthedAdminPermissionsIndexRoute,
+  AuthedAdminRolesIndexRoute: AuthedAdminRolesIndexRoute,
+  AuthedAdminUsersIndexRoute: AuthedAdminUsersIndexRoute,
+  AuthedDashboardsIdIndexRoute: AuthedDashboardsIdIndexRoute,
+  AuthedMetadataEntitiesIndexRoute: AuthedMetadataEntitiesIndexRoute,
+  AuthedSettingsEmailIndexRoute: AuthedSettingsEmailIndexRoute,
+  AuthedMetadataEntitiesIdIndexRoute: AuthedMetadataEntitiesIdIndexRoute,
 }
 
 const AuthedRouteWithChildren =
