@@ -2,34 +2,7 @@ import { useState, useEffect } from 'react';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { ChartRenderer } from '@/components/charts/chart-renderer';
-import {
-  ArrowLeft,
-  Save,
-  Eye,
-  BarChart3,
-  LineChart,
-  PieChart,
-  AreaChart,
-  ScatterChart,
-  Plus,
-  Trash2,
-  Info,
-  X,
-} from 'lucide-react';
+import { ArrowLeft, Eye, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import type {
   ChartDefinition,
@@ -37,62 +10,15 @@ import type {
   ChartType,
   ChartConfig,
   DataMapping,
-  SeriesMapping,
-  AxisMapping,
   FilterDefinition,
 } from '@/types/database';
-
-const chartTypes: { type: ChartType; icon: React.ReactNode; label: string; description: string; usage: string }[] = [
-  {
-    type: 'bar',
-    icon: <BarChart3 className="h-5 w-5" />,
-    label: 'Bar Chart',
-    description: 'Compare values across different categories using vertical bars',
-    usage: 'Best for: Comparing sales by region, population by country, revenue by product. Requires: 1 category field (X-axis) and 1+ value fields (Y-axis).'
-  },
-  {
-    type: 'line',
-    icon: <LineChart className="h-5 w-5" />,
-    label: 'Line Chart',
-    description: 'Show trends and changes over time with connected data points',
-    usage: 'Best for: Stock prices, temperature over time, website traffic. Requires: 1 time/sequence field (X-axis) and 1+ value fields (Y-axis).'
-  },
-  {
-    type: 'area',
-    icon: <AreaChart className="h-5 w-5" />,
-    label: 'Area Chart',
-    description: 'Show volume over time with filled areas under the line',
-    usage: 'Best for: Cumulative revenue, website traffic over time, inventory levels. Requires: 1 time/sequence field (X-axis) and 1+ value fields (Y-axis).'
-  },
-  {
-    type: 'pie',
-    icon: <PieChart className="h-5 w-5" />,
-    label: 'Pie Chart',
-    description: 'Show proportions and percentages of a whole',
-    usage: 'Best for: Market share, budget allocation, survey results. Requires: 1 category field (X-axis) and 1 numeric value field (Y-axis). Shows data for the first series only.'
-  },
-  {
-    type: 'scatter',
-    icon: <ScatterChart className="h-5 w-5" />,
-    label: 'Scatter Plot',
-    description: 'Show correlation and distribution between two numeric variables',
-    usage: 'Best for: Height vs weight, price vs demand, advertising vs sales. Requires: 2 numeric value fields (X and Y axes).'
-  },
-  {
-    type: 'column',
-    icon: <BarChart3 className="h-5 w-5" />,
-    label: 'Column Chart',
-    description: 'Compare values across categories using horizontal bars',
-    usage: 'Best for: Long category names, ranking data, comparing performance. Requires: 1 category field (X-axis) and 1+ value fields (Y-axis).'
-  },
-  {
-    type: 'doughnut',
-    icon: <PieChart className="h-5 w-5" />,
-    label: 'Doughnut Chart',
-    description: 'Show proportions with a hollow center, similar to pie chart',
-    usage: 'Best for: Showing progress toward goals, metric breakdown with center text. Requires: 1 category field and 1 numeric value. Shows first series only.'
-  },
-];
+import { ChartBasicInfo } from '@/components/charts/editor/chart-basic-info';
+import { ChartDataSource } from '@/components/charts/editor/chart-data-source';
+import { ChartTypeSelector } from '@/components/charts/editor/chart-type-selector';
+import { ChartAxisConfig } from '@/components/charts/editor/chart-axis-config';
+import { ChartAppearance } from '@/components/charts/editor/chart-appearance';
+import { ChartReusableFilters } from '@/components/charts/editor/chart-reusable-filters';
+import { ChartPreviewPanel } from '@/components/charts/editor/chart-preview-panel';
 
 export const Route = createFileRoute('/_authed/charts/editor/$id')({
   component: ChartEditorPage,
@@ -103,7 +29,6 @@ function ChartEditorPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Form state
   const [chartName, setChartName] = useState('');
   const [chartDescription, setChartDescription] = useState('');
   const [chartType, setChartType] = useState<ChartType>('bar');
@@ -122,17 +47,12 @@ function ChartEditorPage() {
     groupBy: '',
     colorBy: '',
   });
-
-  // Preview state
   const [showPreview, setShowPreview] = useState(true);
   const [previewData, setPreviewData] = useState<Record<string, unknown>[]>([]);
-
-  // Reusable filter selector state
   const [selectedFilterId, setSelectedFilterId] = useState<string>('');
   const [targetColumn, setTargetColumn] = useState<string>('');
 
-  // Fetch chart definition
-  const { data: chart, isLoading: _chartLoading } = useQuery<ChartDefinition>({
+  const { data: chart } = useQuery<ChartDefinition>({
     queryKey: ['chart', chartId],
     queryFn: async () => {
       const res = await fetch(`/api/charts/${chartId}`);
@@ -142,8 +62,7 @@ function ChartEditorPage() {
     enabled: !!chartId && chartId !== 'new',
   });
 
-  // Fetch available queries
-  const { data: queries, isLoading: _queriesLoading } = useQuery<SavedQuery[]>({
+  const { data: queries } = useQuery<SavedQuery[]>({
     queryKey: ['queries'],
     queryFn: async () => {
       const res = await fetch('/api/queries');
@@ -152,7 +71,6 @@ function ChartEditorPage() {
     },
   });
 
-  // Fetch available filters
   const { data: availableFilters } = useQuery<FilterDefinition[]>({
     queryKey: ['filters'],
     queryFn: async () => {
@@ -162,8 +80,7 @@ function ChartEditorPage() {
     },
   });
 
-  // Fetch chart filters (link table)
-  const { data: chartFilters, refetch: refetchChartFilters } = useQuery({
+  const { data: chartFilters } = useQuery({
     queryKey: ['chart-filters', chartId],
     queryFn: async () => {
       if (chartId === 'new') return [];
@@ -174,55 +91,32 @@ function ChartEditorPage() {
     enabled: !!chartId && chartId !== 'new',
   });
 
-  // Fetch query results for preview - always use the selected query's results
   const { data: queryResults, isLoading: queryResultsLoading } = useQuery({
     queryKey: ['chart-data-preview', selectedQueryId, chartId],
     queryFn: async () => {
       if (!selectedQueryId) return { rows: [] };
-
-      console.log('[ChartEditor] Fetching query results for query:', selectedQueryId);
-      // Always execute the selected query to get fresh data
-      // This ensures when changing data source/query, we get new fields
-      const res = await fetch(`/api/queries/${selectedQueryId}/execute`, {
-        method: 'POST',
-      });
-
-      if (!res.ok) {
-        console.error('[ChartEditor] Error executing query:', res.status, res.statusText);
-        return { rows: [] };
-      }
-
+      const res = await fetch(`/api/queries/${selectedQueryId}/execute`, { method: 'POST' });
+      if (!res.ok) return { rows: [] };
       const data = await res.json();
-      console.log('[ChartEditor] Query results:', data);
       return data.data;
     },
     enabled: !!selectedQueryId,
   });
 
-  // Load chart data into form
   useEffect(() => {
     if (chart) {
-      console.log('[ChartEditor] Loading chart:', chart);
       setChartName(chart.name || '');
       setChartDescription(chart.description || '');
       setChartType(chart.chart_type || 'bar');
       setSelectedQueryId(chart.saved_query_id || '');
 
-      // Safely parse chart config with defaults
       if (chart.chart_config) {
         try {
           let configStr = chart.chart_config;
-          console.log('[ChartEditor] chart_config raw:', configStr, 'Type:', typeof configStr);
-
-          // Handle double-escaped JSON
           if (typeof configStr === 'string' && configStr.startsWith('"') && configStr.includes('\\"')) {
-            console.log('[ChartEditor] Detected double-escaped chart_config, parsing twice');
             configStr = JSON.parse(configStr);
           }
-
           const parsed = typeof configStr === 'string' ? JSON.parse(configStr) : configStr;
-          console.log('[ChartEditor] Parsed chart config:', parsed);
-
           setChartConfig({
             title: parsed.title || { show: true, text: '' },
             legend: parsed.legend || { show: true, position: 'bottom' },
@@ -231,88 +125,66 @@ function ChartEditorPage() {
             stacked: parsed.stacked || false,
             colors: parsed.colors || ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
           });
-        } catch (e) {
-          console.error('[ChartEditor] Failed to parse chart_config:', e, 'Raw value:', chart.chart_config);
-          // Keep defaults if parsing fails
+        } catch {
+          // keep defaults
         }
       }
 
-      // Safely parse data mapping with defaults
       if (chart.data_mapping) {
         try {
           let mappingStr = chart.data_mapping;
-          console.log('[ChartEditor] data_mapping raw:', mappingStr, 'Type:', typeof mappingStr);
-
-          // Handle double-escaped JSON
           if (typeof mappingStr === 'string' && mappingStr.startsWith('"') && mappingStr.includes('\\"')) {
-            console.log('[ChartEditor] Detected double-escaped data_mapping, parsing twice');
             mappingStr = JSON.parse(mappingStr);
           }
-
           const parsed = typeof mappingStr === 'string' ? JSON.parse(mappingStr) : mappingStr;
-          console.log('[ChartEditor] Parsed data mapping:', parsed);
-
           setDataMapping({
             xAxis: parsed.xAxis || { field: '', label: '' },
             yAxis: parsed.yAxis || [],
             groupBy: parsed.groupBy || '',
             colorBy: parsed.colorBy || '',
           });
-        } catch (e) {
-          console.error('[ChartEditor] Failed to parse data_mapping:', e, 'Raw value:', chart.data_mapping);
-          // Keep defaults if parsing fails
+        } catch {
+          // keep defaults
         }
       }
     }
   }, [chart]);
 
-  // Update preview data when query results change
   useEffect(() => {
     if (queryResults?.rows) {
-      console.log('[ChartEditor] Updating preview data:', queryResults.rows.length, 'rows');
       setPreviewData(queryResults.rows);
     }
   }, [queryResults]);
 
-  // Reset data mapping when query changes (to avoid invalid field references)
   useEffect(() => {
     if (selectedQueryId && chart) {
-      console.log('[ChartEditor] Query changed, resetting data mapping');
-      // Keep the structure but clear field references
-      setDataMapping({
-        xAxis: { field: '', label: '' },
-        yAxis: [],
-        groupBy: '',
-        colorBy: '',
-      });
+      setDataMapping({ xAxis: { field: '', label: '' }, yAxis: [], groupBy: '', colorBy: '' });
     }
   }, [selectedQueryId, chartId]);
+
+  const availableFields = previewData.length > 0 ? Object.keys(previewData[0]) : [];
 
   const saveMutation = useMutation({
     mutationFn: async () => {
       const payload = {
         name: chartName,
         description: chartDescription,
-        chartType: chartType,
+        chartType,
         savedQueryId: selectedQueryId || undefined,
         chartConfig: JSON.stringify(chartConfig),
         dataMapping: JSON.stringify(dataMapping),
       };
-
       const url = chartId === 'new' ? '/api/charts' : `/api/charts/${chartId}`;
       const method = chartId === 'new' ? 'POST' : 'PUT';
-
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-
       if (!res.ok) {
         const error = await res.json();
         throw new Error(error.error?.message || 'Failed to save chart');
       }
-
       return res.json();
     },
     onSuccess: (data) => {
@@ -328,7 +200,6 @@ function ChartEditorPage() {
     },
   });
 
-  // Add filter to chart
   const addFilterMutation = useMutation({
     mutationFn: async ({ filterId, targetColumn }: { filterId: string; targetColumn: string }) => {
       const res = await fetch(`/api/charts/${chartId}/filters`, {
@@ -345,12 +216,9 @@ function ChartEditorPage() {
     },
   });
 
-  // Remove filter from chart
   const removeFilterMutation = useMutation({
     mutationFn: async (filterLinkId: string) => {
-      const res = await fetch(`/api/charts/${chartId}/filters/${filterLinkId}`, {
-        method: 'DELETE',
-      });
+      const res = await fetch(`/api/charts/${chartId}/filters/${filterLinkId}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to remove filter');
       return res.json();
     },
@@ -360,73 +228,9 @@ function ChartEditorPage() {
     },
   });
 
-  const selectedQuery = queries?.find((q) => q.id === selectedQueryId);
-  const availableFields = previewData.length > 0 ? Object.keys(previewData[0]) : [];
-
-  // Generate a random distinct color
-  const generateRandomColor = () => {
-    // Generate a random HSL color with good saturation and lightness
-    const hue = Math.floor(Math.random() * 360);
-    const saturation = 60 + Math.floor(Math.random() * 30); // 60-90%
-    const lightness = 45 + Math.floor(Math.random() * 15); // 45-60%
-    return hslToHex(hue, saturation, lightness);
-  };
-
-  // Convert HSL to Hex
-  const hslToHex = (h: number, s: number, l: number) => {
-    s /= 100;
-    l /= 100;
-    const a = s * Math.min(l, 1 - l);
-    const f = (n: number) => {
-      const k = (n + h / 30) % 12;
-      const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
-      return Math.round(255 * color)
-        .toString(16)
-        .padStart(2, '0');
-    };
-    return `#${f(0)}${f(8)}${f(4)}`;
-  };
-
-  // Add a new Y-axis series with a random distinct color
-  const addYSeries = () => {
-    const existingColors = dataMapping.yAxis.map(s => s.color).filter(Boolean) as string[];
-    let newColor = generateRandomColor();
-
-    // Ensure the new color is distinct from existing colors (simple check)
-    let attempts = 0;
-    while (existingColors.includes(newColor) && attempts < 10) {
-      newColor = generateRandomColor();
-      attempts++;
-    }
-
-    setDataMapping({
-      ...dataMapping,
-      yAxis: [
-        ...dataMapping.yAxis,
-        { field: '', label: '', color: newColor },
-      ],
-    });
-  };
-
-  // Update a Y-axis series
-  const updateYSeries = (index: number, updates: Partial<SeriesMapping>) => {
-    const newYAxis = [...dataMapping.yAxis];
-    newYAxis[index] = { ...newYAxis[index], ...updates };
-    setDataMapping({ ...dataMapping, yAxis: newYAxis });
-  };
-
-  // Remove a Y-axis series
-  const removeYSeries = (index: number) => {
-    setDataMapping({
-      ...dataMapping,
-      yAxis: dataMapping.yAxis.filter((_, i) => i !== index),
-    });
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="mx-auto max-w-7xl space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link to="/charts/">
@@ -442,10 +246,7 @@ function ChartEditorPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setShowPreview(!showPreview)}
-            >
+            <Button variant="outline" onClick={() => setShowPreview(!showPreview)}>
               <Eye className="mr-2 h-4 w-4" />
               {showPreview ? 'Hide' : 'Show'} Preview
             </Button>
@@ -457,675 +258,62 @@ function ChartEditorPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {/* Configuration Panel */}
           <div className="space-y-6">
-            {/* Basic Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Basic Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="chart-name">Chart Name *</Label>
-                  <Input
-                    id="chart-name"
-                    value={chartName}
-                    onChange={(e) => setChartName(e.target.value)}
-                    placeholder="My Sales Chart"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="chart-description">Description</Label>
-                  <Textarea
-                    id="chart-description"
-                    value={chartDescription}
-                    onChange={(e) => setChartDescription(e.target.value)}
-                    placeholder="Describe what this chart shows..."
-                    rows={3}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Data Source */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Data Source</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="query-select">Select Query *</Label>
-                  <Select value={selectedQueryId} onValueChange={setSelectedQueryId}>
-                    <SelectTrigger id="query-select">
-                      <SelectValue placeholder="Choose a saved query..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {queries?.map((query) => (
-                        <SelectItem key={query.id} value={query.id}>
-                          <div className="flex flex-col">
-                            <span className="font-medium">{query.name}</span>
-                            <span className="text-xs text-gray-500">{query.description || 'No description'}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {selectedQuery && (
-                    <p className="mt-2 text-sm text-gray-500">
-                      Using: <span className="font-medium">{selectedQuery.name}</span>
-                    </p>
-                  )}
-                </div>
-
-                {availableFields.length > 0 && (
-                  <div className="rounded-md bg-blue-50 p-3">
-                    <div className="flex items-start gap-2">
-                      <Info className="h-4 w-4 text-blue-600 mt-0.5" />
-                      <div className="text-sm">
-                        <p className="font-medium text-blue-900">Available Fields</p>
-                        <div className="mt-1 flex flex-wrap gap-1">
-                          {availableFields.map((field) => (
-                            <Badge key={field} variant="secondary" className="text-xs">
-                              {field}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Reusable Filters */}
+            <ChartBasicInfo
+              chartName={chartName}
+              chartDescription={chartDescription}
+              onNameChange={setChartName}
+              onDescriptionChange={setChartDescription}
+            />
+            <ChartDataSource
+              queries={queries}
+              selectedQueryId={selectedQueryId}
+              availableFields={availableFields}
+              onQueryChange={setSelectedQueryId}
+            />
             {chartId !== 'new' && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Reusable Filters</CardTitle>
-                  <p className="text-sm text-gray-500">
-                    Add pre-configured filters that users can select from dropdowns when viewing the chart.
-                  </p>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Add Filter Form */}
-                  <div className="flex items-end gap-2">
-                    <div className="flex-1">
-                      <Label htmlFor="filter-select">Select Filter</Label>
-                      <Select value={selectedFilterId} onValueChange={setSelectedFilterId}>
-                        <SelectTrigger id="filter-select">
-                          <SelectValue placeholder="Choose a filter..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {availableFilters?.filter(f =>
-                            !chartFilters?.some((cf: any) => cf.filter_id === f.id)
-                          ).map((filter) => (
-                            <SelectItem key={filter.id} value={filter.id}>
-                              {filter.name}
-                              <span className="text-gray-500 text-xs ml-2">
-                                ({filter.display_field} → {filter.value_field})
-                              </span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex-1">
-                      <Label htmlFor="target-column">Target Column</Label>
-                      <Select value={targetColumn} onValueChange={setTargetColumn}>
-                        <SelectTrigger id="target-column">
-                          <SelectValue placeholder="Select column..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {availableFields.map((field) => (
-                            <SelectItem key={field} value={field}>
-                              {field}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Button
-                      onClick={() => {
-                        if (selectedFilterId && targetColumn) {
-                          addFilterMutation.mutate({
-                            filterId: selectedFilterId,
-                            targetColumn: targetColumn,
-                          });
-                          setSelectedFilterId('');
-                          setTargetColumn('');
-                        }
-                      }}
-                      disabled={!selectedFilterId || !targetColumn || addFilterMutation.isPending}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add
-                    </Button>
-                  </div>
-
-                  {/* Selected Filters List */}
-                  {chartFilters && chartFilters.length > 0 && (
-                    <div className="space-y-2">
-                      <Label>Active Filters</Label>
-                      <div className="border rounded-lg divide-y">
-                        {chartFilters.map((cf: any) => {
-                          const filterDef = availableFilters?.find((f) => f.id === cf.filter_id);
-                          if (!filterDef) return null;
-                          return (
-                            <div key={cf.id} className="flex items-center justify-between p-3">
-                              <div className="flex-1">
-                                <div className="font-medium">{filterDef.name}</div>
-                                <div className="text-sm text-gray-500">
-                                  Filter: <code>{filterDef.display_field}</code> → <code>{filterDef.value_field}</code>
-                                  {' '}| Target: <code>{cf.target_column}</code>
-                                </div>
-                              </div>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => removeFilterMutation.mutate(cf.id)}
-                                disabled={removeFilterMutation.isPending}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {chartFilters?.length === 0 && (
-                    <div className="text-center py-4 text-gray-500 text-sm">
-                      No filters added. Add filters above to allow users to filter the chart.
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <ChartReusableFilters
+                availableFilters={availableFilters}
+                chartFilters={chartFilters}
+                availableFields={availableFields}
+                selectedFilterId={selectedFilterId}
+                targetColumn={targetColumn}
+                onSelectedFilterChange={setSelectedFilterId}
+                onTargetColumnChange={setTargetColumn}
+                onAddFilter={(filterId, col) => {
+                  addFilterMutation.mutate({ filterId, targetColumn: col });
+                  setSelectedFilterId('');
+                  setTargetColumn('');
+                }}
+                onRemoveFilter={(id) => removeFilterMutation.mutate(id)}
+                isAdding={addFilterMutation.isPending}
+                isRemoving={removeFilterMutation.isPending}
+              />
             )}
-
-            {/* Chart Type */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Chart Type</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Select value={chartType} onValueChange={(value) => setChartType(value as ChartType)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select chart type..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {chartTypes.map(({ type, icon, label, description }) => (
-                      <SelectItem key={type} value={type}>
-                        <div className="flex items-center gap-2">
-                          {icon}
-                          <div>
-                            <div className="font-medium">{label}</div>
-                            <div className="text-xs text-gray-500">{description}</div>
-                          </div>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                {chartType && (
-                  <div className="space-y-2">
-                    <Label htmlFor="chart-usage">How to Use This Chart</Label>
-                    <Textarea
-                      id="chart-usage"
-                      readOnly
-                      value={chartTypes.find(ct => ct.type === chartType)?.usage || ''}
-                      className="bg-gray-50 min-h-[120px] text-sm"
-                    />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Axis Configuration */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Axis Configuration</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* X-Axis */}
-                <div>
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="x-axis">X-Axis (Categories) *</Label>
-                    {dataMapping.xAxis.field && dataMapping.xAxis.field !== '' && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-6 text-xs"
-                        onClick={() =>
-                          setDataMapping({
-                            ...dataMapping,
-                            xAxis: { field: '', label: '' },
-                          })
-                        }
-                      >
-                        Clear
-                      </Button>
-                    )}
-                  </div>
-                  <Select
-                    value={dataMapping.xAxis.field}
-                    onValueChange={(value) => {
-                      if (value === '__none__') {
-                        setDataMapping({
-                          ...dataMapping,
-                          xAxis: { field: '', label: '' },
-                        });
-                      } else {
-                        setDataMapping({
-                          ...dataMapping,
-                          xAxis: { ...dataMapping.xAxis, field: value, label: value },
-                        });
-                      }
-                    }}
-                  >
-                    <SelectTrigger id="x-axis">
-                      <SelectValue placeholder="Select field..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none__">— None —</SelectItem>
-                      {availableFields.map((field) => (
-                        <SelectItem key={field} value={field}>
-                          {field}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {dataMapping.xAxis.field && dataMapping.xAxis.field !== '__none__' && dataMapping.xAxis.field !== '' && (
-                    <Input
-                      className="mt-2"
-                      value={dataMapping.xAxis.label}
-                      onChange={(e) =>
-                        setDataMapping({
-                          ...dataMapping,
-                          xAxis: { ...dataMapping.xAxis, label: e.target.value },
-                        })
-                      }
-                      placeholder="Axis label"
-                    />
-                  )}
-                </div>
-
-                {/* Y-Axis Series */}
-                <div>
-                  <div className="flex items-center justify-between">
-                    <Label>Y-Axis (Values) *</Label>
-                    <Button size="sm" variant="outline" onClick={addYSeries}>
-                      <Plus className="mr-1 h-3 w-3" />
-                      Add Series
-                    </Button>
-                  </div>
-                  {dataMapping.yAxis.length === 0 && (
-                    <p className="mt-2 text-sm text-gray-500">Add at least one Y-axis series</p>
-                  )}
-                  {dataMapping.yAxis.map((series, index) => (
-                    <div key={index} className="mt-2 space-y-2 rounded-lg border p-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium">Series {index + 1}</span>
-                          {/* Color picker for this series */}
-                          <div className="flex items-center gap-1">
-                            <input
-                              type="color"
-                              value={series.color || chartConfig.colors[index % chartConfig.colors.length]}
-                              onChange={(e) => updateYSeries(index, { color: e.target.value })}
-                              className="h-6 w-8 rounded cursor-pointer border-2"
-                              title="Choose color for this series"
-                            />
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 px-2 text-xs"
-                              onClick={() => updateYSeries(index, { color: generateRandomColor() })}
-                              title="Generate random color"
-                            >
-                              🎲 Random
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 text-xs"
-                            onClick={() => updateYSeries(index, { field: '', label: '' })}
-                          >
-                            Clear
-                          </Button>
-                          {dataMapping.yAxis.length > 1 && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => removeYSeries(index)}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                      <Select
-                        value={series.field}
-                        onValueChange={(value) => {
-                          if (value === '__none__') {
-                            updateYSeries(index, { field: '', label: '' });
-                          } else {
-                            updateYSeries(index, { field: value, label: value });
-                          }
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select field..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="__none__">— None —</SelectItem>
-                          {availableFields.map((field) => (
-                            <SelectItem key={field} value={field}>
-                              {field}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Input
-                        value={series.label}
-                        onChange={(e) => updateYSeries(index, { label: e.target.value })}
-                        placeholder="Series label"
-                      />
-                    </div>
-                  ))}
-                </div>
-
-                {/* Group By */}
-                <div>
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="group-by">Group By (Optional)</Label>
-                    {dataMapping.groupBy && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-6 text-xs"
-                        onClick={() => setDataMapping({ ...dataMapping, groupBy: '' })}
-                      >
-                        Clear
-                      </Button>
-                    )}
-                  </div>
-                  <Select
-                    value={dataMapping.groupBy}
-                    onValueChange={(value) =>
-                      setDataMapping({ ...dataMapping, groupBy: value === '__none__' ? '' : value })
-                    }
-                  >
-                    <SelectTrigger id="group-by">
-                      <SelectValue placeholder="Select field to group by..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none__">— None —</SelectItem>
-                      {availableFields.map((field) => (
-                        <SelectItem key={field} value={field}>
-                          {field}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Color By */}
-                <div>
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="color-by">Color By (Optional)</Label>
-                    {dataMapping.colorBy && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-6 text-xs"
-                        onClick={() => setDataMapping({ ...dataMapping, colorBy: '' })}
-                      >
-                        Clear
-                      </Button>
-                    )}
-                  </div>
-                  <Select
-                    value={dataMapping.colorBy}
-                    onValueChange={(value) =>
-                      setDataMapping({ ...dataMapping, colorBy: value === '__none__' ? '' : value })
-                    }
-                  >
-                    <SelectTrigger id="color-by">
-                      <SelectValue placeholder="Select field to color by..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none__">— None —</SelectItem>
-                      {availableFields.map((field) => (
-                        <SelectItem key={field} value={field}>
-                          {field}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Appearance */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Appearance</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="show-title">Show Title</Label>
-                  <Switch
-                    id="show-title"
-                    checked={chartConfig.title.show}
-                    onCheckedChange={(checked) =>
-                      setChartConfig({ ...chartConfig, title: { ...chartConfig.title, show: checked } })
-                    }
-                  />
-                </div>
-                {chartConfig.title.show && (
-                  <Input
-                    value={chartConfig.title.text}
-                    onChange={(e) =>
-                      setChartConfig({ ...chartConfig, title: { ...chartConfig.title, text: e.target.value } })
-                    }
-                    placeholder="Chart title"
-                  />
-                )}
-
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="show-legend">Show Legend</Label>
-                  <Switch
-                    id="show-legend"
-                    checked={chartConfig.legend.show}
-                    onCheckedChange={(checked) =>
-                      setChartConfig({ ...chartConfig, legend: { ...chartConfig.legend, show: checked } })
-                    }
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="enable-tooltip">Enable Tooltip</Label>
-                  <Switch
-                    id="enable-tooltip"
-                    checked={chartConfig.tooltip.enabled}
-                    onCheckedChange={(checked) =>
-                      setChartConfig({ ...chartConfig, tooltip: { enabled: checked } })
-                    }
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="enable-animation">Animation</Label>
-                  <Switch
-                    id="enable-animation"
-                    checked={chartConfig.animation}
-                    onCheckedChange={(checked) =>
-                      setChartConfig({ ...chartConfig, animation: checked })
-                    }
-                  />
-                </div>
-
-                {(chartType === 'bar' || chartType === 'column') && (
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label htmlFor="enable-stacked">Stacked Chart</Label>
-                      <p className="text-xs text-gray-500">
-                        Stack multiple series on top of each other (for bar/column charts)
-                      </p>
-                    </div>
-                    <Switch
-                      id="enable-stacked"
-                      checked={chartConfig.stacked || false}
-                      onCheckedChange={(checked) =>
-                        setChartConfig({ ...chartConfig, stacked: checked })
-                      }
-                    />
-                  </div>
-                )}
-
-                <div>
-                  <Label>Chart Colors</Label>
-                  <p className="text-xs text-gray-500 mb-2">
-                    Customize the color palette for your chart. Click to edit.
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {chartConfig.colors.map((color, index) => (
-                      <div key={index} className="flex items-center gap-1">
-                        <input
-                          type="color"
-                          value={color}
-                          onChange={(e) => {
-                            const newColors = [...chartConfig.colors];
-                            newColors[index] = e.target.value;
-                            setChartConfig({ ...chartConfig, colors: newColors });
-                          }}
-                          className="h-8 w-12 rounded cursor-pointer border-2"
-                          title={`Color ${index + 1}: ${color}`}
-                        />
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-6 w-6 p-0"
-                          onClick={() => {
-                            const newColors = chartConfig.colors.filter((_, i) => i !== index);
-                            setChartConfig({ ...chartConfig, colors: newColors.length > 0 ? newColors : chartConfig.colors });
-                          }}
-                          disabled={chartConfig.colors.length <= 1}
-                          title="Remove color"
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ))}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() =>
-                        setChartConfig({
-                          ...chartConfig,
-                          colors: [...chartConfig.colors, '#64748b'],
-                        })
-                      }
-                      disabled={chartConfig.colors.length >= 12}
-                    >
-                      <Plus className="h-3 w-3 mr-1" />
-                      Add
-                    </Button>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="mt-2"
-                    onClick={() =>
-                      setChartConfig({
-                        ...chartConfig,
-                        colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'],
-                      })
-                    }
-                  >
-                    Reset to Default
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <ChartTypeSelector chartType={chartType} onChartTypeChange={setChartType} />
+            <ChartAxisConfig
+              dataMapping={dataMapping}
+              availableFields={availableFields}
+              chartConfig={chartConfig}
+              onDataMappingChange={setDataMapping}
+            />
+            <ChartAppearance
+              chartConfig={chartConfig}
+              chartType={chartType}
+              onChartConfigChange={setChartConfig}
+            />
           </div>
 
-          {/* Preview Panel */}
           {showPreview && (
-            <div className="space-y-6">
-              <Card className="sticky top-6">
-                <CardHeader>
-                  <CardTitle>Preview</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {queryResultsLoading ? (
-                    <div className="flex h-96 items-center justify-center">
-                      <p className="text-gray-500">Loading preview data...</p>
-                    </div>
-                  ) : !selectedQueryId ? (
-                    <div className="flex h-96 items-center justify-center">
-                      <p className="text-gray-500">Select a query to preview your chart</p>
-                    </div>
-                  ) : !dataMapping.xAxis.field || dataMapping.yAxis.length === 0 ? (
-                    <div className="flex h-96 items-center justify-center">
-                      <p className="text-gray-500">Configure X and Y axes to see the preview</p>
-                    </div>
-                  ) : (
-                    <ChartRenderer
-                      data={previewData}
-                      chartType={chartType}
-                      chartConfig={chartConfig}
-                      dataMapping={dataMapping}
-                    />
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Sample Data */}
-              {previewData.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Sample Data</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b">
-                            {availableFields.slice(0, 5).map((field) => (
-                              <th key={field} className="p-2 text-left font-medium">
-                                {field}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {previewData.slice(0, 5).map((row, i) => (
-                            <tr key={i} className="border-b">
-                              {availableFields.slice(0, 5).map((field) => (
-                                <td key={field} className="p-2">
-                                  {String(row[field] ?? '')}
-                                </td>
-                              ))}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                    {previewData.length > 5 && (
-                      <p className="mt-2 text-xs text-gray-500">
-                        Showing 5 of {previewData.length} rows
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+            <ChartPreviewPanel
+              previewData={previewData}
+              availableFields={availableFields}
+              chartType={chartType}
+              chartConfig={chartConfig}
+              dataMapping={dataMapping}
+              selectedQueryId={selectedQueryId}
+              isLoading={queryResultsLoading}
+            />
           )}
         </div>
       </div>
