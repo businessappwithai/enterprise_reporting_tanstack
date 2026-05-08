@@ -1,5 +1,3 @@
-'use client';
-
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { errorLogger } from '@/lib/errors/error-logger';
 import { ErrorReportDialog } from './error-report-dialog';

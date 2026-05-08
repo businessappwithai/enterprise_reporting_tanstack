@@ -1,87 +1,49 @@
-/**
- * Database configuration using Knex with sqlite3 client
- * For production (Bun runtime), we use a custom wrapper around bun:sqlite
- */
+import knex, { type Knex } from 'knex'
 
-import knex, { Knex } from 'knex';
-import { existsSync, mkdirSync } from 'fs';
-import path from 'path';
-import { getBunSQLiteWrapper as getBunSQLite } from './bun-sqlite-wrapper';
+const DATABASE_URL = process.env.DATABASE_URL || ''
+const DATABASE_PATH = process.env.DATABASE_PATH || './data/config.sqlite'
 
-const DATABASE_PATH = process.env.DATABASE_PATH || './data/config.sqlite';
+let db: Knex | null = null
 
-let db: Knex | null = null;
-const isProduction = process.env.NODE_ENV === 'production';
-
-/**
- * Get the database connection
- * - Development: Knex with better-sqlite3
- * - Production: Knex with a custom bun:sqlite dialect wrapper
- */
 export function getDb(): Knex {
   if (!db) {
-    // Ensure directory exists
-    const dir = path.dirname(DATABASE_PATH);
-    if (!existsSync(dir)) {
-      mkdirSync(dir, { recursive: true });
-    }
-
-    // In production (Bun runtime), we can't use better-sqlite3 or sqlite3
-    // because they require native Node.js modules
-    // For now, use better-sqlite3 in dev and a workaround in production
-    if (!isProduction) {
-      // Development: Use Knex with better-sqlite3
+    if (DATABASE_URL) {
       db = knex({
-        client: 'better-sqlite3',
-        connection: {
-          filename: DATABASE_PATH,
-        },
-        useNullAsDefault: true,
-        pool: {
-          min: 0,
-          max: 10,
-        },
-      });
-
-      // Enable foreign keys
-      db.raw('PRAGMA foreign_keys = ON').catch((err) => {
-        console.error('Failed to enable foreign keys:', err);
-      });
+        client: 'pg',
+        connection: DATABASE_URL,
+        pool: { min: 2, max: 10 },
+        acquireConnectionTimeout: 10000,
+      })
     } else {
-      // Production: Use Knex with better-sqlite3 (pre-built during Docker build)
-      // The native bindings should work since they were compiled during the build
+      const { existsSync, mkdirSync } = require('fs')
+      const path = require('path')
+      const dir = path.dirname(DATABASE_PATH)
+      if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
+
       db = knex({
         client: 'better-sqlite3',
-        connection: {
-          filename: DATABASE_PATH,
-        },
+        connection: { filename: DATABASE_PATH },
         useNullAsDefault: true,
-        pool: {
-          min: 0,
-          max: 10,
-        },
-      });
+        pool: { min: 0, max: 10 },
+      })
 
-      // Enable foreign keys
-      db.raw('PRAGMA foreign_keys = ON').catch((err) => {
-        console.error('Failed to enable foreign keys:', err);
-      });
+      db.raw('PRAGMA foreign_keys = ON').catch(console.error)
     }
   }
-  return db;
+  return db
 }
 
-// Alias for getDb() - used for clarity when accessing config database
 export function getConfigDB(): Knex {
-  return getDb();
+  return getDb()
 }
 
-/**
- * Close the database connection
- */
 export async function closeDb(): Promise<void> {
   if (db) {
-    await db.destroy();
-    db = null;
+    await db.destroy()
+    db = null
   }
+}
+
+export function isPostgres(): boolean {
+  return !!DATABASE_URL
 }

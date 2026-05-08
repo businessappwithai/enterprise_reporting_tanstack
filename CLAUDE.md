@@ -4,36 +4,38 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview - Enterprise Reporting System
 
-Enterprise Reporting and Dashboard System built with **Next.js 14 (App Router)**, **Bun runtime**, **SQLite** (via better-sqlite3/Knex.js), and **shadcn/ui**. Provides data visualization, SQL querying, role-based access control, job scheduling, and multi-format export capabilities.
+Enterprise Reporting and Dashboard System built with **TanStack Start** (full-stack React), **Bun runtime**, **PostgreSQL** (via Knex.js) with **TanStack DB** for reactive client-side collections, and **shadcn/ui**. Provides data visualization, SQL querying, role-based access control, job scheduling, and multi-format export capabilities.
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
 | Runtime | Bun >= 1.3.0 |
-| Framework | Next.js 14.2.11 (App Router, standalone output) |
+| Framework | TanStack Start 1.167+ (Vite-based, full-stack React) |
+| Routing | TanStack Router (file-based, type-safe) |
 | Language | TypeScript (strict mode, ES2022 target) |
 | UI Components | shadcn/ui (Radix UI + Tailwind CSS 3) |
-| State/Data | TanStack Query, TanStack Table, TanStack Form |
-| Database | SQLite via better-sqlite3 + Knex.js query builder |
-| Auth | NextAuth v5 (beta) with credentials provider |
-| Charts | Recharts |
+| State/Data | TanStack Query v5, TanStack Table v8, TanStack Form v1 |
+| Reactive DB | TanStack DB v0.6 (client-side collections, PostgreSQL sync) |
+| Database | PostgreSQL (Knex.js) or SQLite (fallback via better-sqlite3) |
+| Auth | Custom JWT (jose) with HTTP-only cookies |
+| Charts | Recharts, ECharts |
 | Job Queue | BullMQ + Redis (ioredis) |
 | AI/NL Query | OpenAI (via @ai-sdk/openai), CopilotKit |
 | Testing | Playwright (E2E only) |
 | Styling | Tailwind CSS with CSS variables (HSL color system) |
-| Deployment | Docker (Bun Alpine), Nginx reverse proxy, Hostinger VPS |
+| Deployment | Docker (Bun Alpine), Nginx reverse proxy |
 
 ## Quick Reference Commands
 
 ```bash
 # Development
-bun run dev              # Start dev server on port 4050 (with --watch)
-bun run build            # Production build
-bun run start            # Start production server on port 4050
+bun run dev              # Start Vite dev server on port 4050
+bun run build            # Production build (.output/)
+bun run start            # Start production server (node .output/server/index.mjs)
 
 # Quality checks
-bun run lint             # ESLint (next/core-web-vitals + next/typescript)
+bun run lint             # ESLint
 bun run lint:fix         # ESLint with auto-fix
 bun run typecheck        # TypeScript type checking (tsc --noEmit)
 bun run format           # Prettier formatting

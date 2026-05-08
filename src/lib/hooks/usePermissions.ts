@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query';
-import { useSession } from 'next-auth/react';
 import { useMemo } from 'react';
 import type { ResourceType } from '@/types/database';
 
@@ -22,15 +21,16 @@ interface UserPermissions {
 }
 
 /**
- * Hook to get all permissions for the current user
+ * Hook to get all permissions for the current user.
+ * Fetches from /api/auth/permissions which reads the session cookie server-side.
  */
 export function usePermissions() {
-  const { data: session } = useSession();
-
   return useQuery<UserPermissions>({
-    queryKey: ['user-permissions', session?.user?.id],
+    queryKey: ['user-permissions'],
     queryFn: async () => {
-      if (!session?.user?.id) {
+      const res = await fetch('/api/auth/permissions');
+      if (!res.ok) {
+        // Not authenticated or error — return empty permissions
         return {
           userId: '',
           roles: [],
@@ -39,15 +39,8 @@ export function usePermissions() {
           isAdmin: false,
         };
       }
-
-      const res = await fetch('/api/auth/permissions');
-      if (!res.ok) {
-        throw new Error('Failed to fetch permissions');
-      }
-
       return res.json();
     },
-    enabled: !!session?.user?.id,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 }
