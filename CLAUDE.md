@@ -81,23 +81,44 @@ bun run jobs:worker      # Start BullMQ job worker
 ```
 enterprise-reporting-system/
 ├── src/
-│   ├── app/                          # Next.js App Router
-│   │   ├── layout.tsx                # Root layout (Inter font, ErrorBoundary, Providers)
-│   │   ├── providers.tsx             # Client providers (QueryClient, Theme, Session)
-│   │   ├── (auth)/                   # Auth route group
-│   │   │   └── login/                # Login page
-│   │   ├── (dashboard)/              # Main app route group (authenticated)
-│   │   │   ├── page.tsx              # Dashboard home
-│   │   │   ├── layout.tsx            # Dashboard layout with sidebar
-│   │   │   ├── charts/               # Chart editor & viewer (editor/[id], viewer/[id])
-│   │   │   ├── dashboards/           # Dashboard management ([id] detail view)
-│   │   │   ├── data-sources/         # Data source config ([id]/permissions)
-│   │   │   ├── reports/              # Report editor & viewer
-│   │   │   ├── sql-editor/           # SQL editor page
-│   │   │   ├── jobs/                 # Job queue monitoring
-│   │   │   ├── metadata/             # Metadata entity management (entities/[id])
-│   │   │   ├── nl-query/             # Natural language query interface
-│   │   │   ├── filters/              # Filter management
+│   ├── routes/                       # TanStack Router file-based routes
+│   │   ├── __root.tsx                # Root layout (layout + error boundary)
+│   │   ├── index.tsx                 # Home/login redirect
+│   │   ├── login.tsx                 # Login page
+│   │   ├── _authed.tsx               # Auth guard layout (requires session)
+│   │   ├── _authed/                  # Authenticated routes
+│   │   │   ├── dashboard.tsx         # Dashboard home
+│   │   │   ├── sql-editor.tsx        # SQL editor page
+│   │   │   ├── bull-board.tsx        # Job queue monitoring UI
+│   │   │   ├── reports/
+│   │   │   │   ├── index.tsx         # Reports list
+│   │   │   │   └── $id/
+│   │   │   │       └── editor.tsx    # Report editor
+│   │   │   ├── charts/               # Chart management (future)
+│   │   │   ├── dashboards/           # Dashboard management (future)
+│   │   │   └── data-sources/         # Data source config (future)
+│   │   ├── api/                      # API routes (REST endpoints)
+│   │   │   ├── reports.ts            # Reports CRUD
+│   │   │   ├── charts.ts             # Charts CRUD
+│   │   │   ├── dashboards.ts         # Dashboards CRUD
+│   │   │   ├── sql/
+│   │   │   │   ├── execute.ts        # SQL execution
+│   │   │   │   ├── validate.ts       # SQL validation
+│   │   │   │   └── schema.$id.ts     # Schema introspection
+│   │   │   ├── filters.ts            # Filter management
+│   │   │   ├── queries.ts            # Saved queries
+│   │   │   └── jobs.ts               # Job management
+│   │   └── share/                    # Public share routes (no auth)
+│   │       ├── chart/$id.tsx         # Public chart viewer
+│   │       ├── dashboard/$id.tsx     # Public dashboard viewer
+│   │       └── report/$id.tsx        # Public report viewer
+│   │
+│   ├── server-fns/                   # Server functions (RPC/createServerFn)
+│   │   ├── auth.ts                   # Auth operations (login, logout, refresh)
+│   │   ├── reports.ts                # Reports RPC (type-safe)
+│   │   ├── sql.ts                    # SQL operations (execute, validate, schema)
+│   │   ├── charts.ts                 # Charts RPC (future)
+│   │   └── queries.ts                # Saved queries RPC (future)
 │   │   │   ├── queries/              # Saved queries
 │   │   │   ├── settings/             # App settings (email config)
 │   │   │   ├── email-templates/      # Email template management
@@ -210,69 +231,112 @@ enterprise-reporting-system/
 └── components.json                   # shadcn/ui configuration
 ```
 
-## API Routes
+## TanStack Start Architecture
 
-All API routes live under `src/app/api/`:
+### Server Functions (RPC) - Best Practice
 
-| Route | Purpose |
-|-------|---------|
-| `api/auth/` | NextAuth authentication endpoints |
-| `api/admin/` | Admin operations (users, roles, permissions, data-sources, audit-log, metadata) |
-| `api/reports/` | Report data and management |
-| `api/dashboards/` | Dashboard CRUD |
-| `api/charts/` | Chart configuration |
-| `api/data-sources/` | Data source management (CRUD, test, schema, entity permissions) |
-| `api/sql/` | SQL execution, validation, saved queries, schema introspection |
-| `api/jobs/` | Job queue management (create, status, results, download, retry, cleanup) |
-| `api/filters/` | Filter management |
-| `api/queries/` | Saved query management |
-| `api/metadata/` | Metadata entity operations |
-| `api/nl-query/` | Natural language to SQL |
-| `api/email-templates/` | Email template CRUD |
-| `api/notifications/` | Notification system |
-| `api/settings/` | Application settings |
-| `api/health/` | Health check endpoint |
-| `api/copilotkit/` | CopilotKit integration |
-| `api/seed/` | Database seeding |
-| `api/setup/` | Initial setup |
-| `api/test/` | Test utilities |
+Use **server functions** with `createServerFn` for type-safe client-server communication instead of REST APIs where possible:
 
-## Architecture & Conventions
+```typescript
+// src/server-fns/reports.ts
+import { createServerFn } from '@tanstack/react-start'
+import { requireAuth } from '@/lib/auth/middleware'
+
+export const listReports = createServerFn({
+  method: 'GET',
+}).handler(async (input: { page?: number; pageSize?: number }) => {
+  const session = await requireAuth()
+  // Automatically type-safe serialization, no manual JSON
+  // Called from client as: await listReports({ page: 0, pageSize: 20 })
+})
+```
+
+**Benefits over REST:**
+- Automatic type inference (input/output types)
+- No manual JSON serialization/deserialization
+- Full TypeScript support across client-server boundary
+- Code splitting by the TanStack Start plugin
+- Cleaner error handling with thrown errors serializing to client
+
+### API Routes (REST) - Legacy Compatibility
+
+Keep REST routes under `src/routes/api/` for:
+- External API access (webhooks, third-party integrations)
+- Non-browser clients (mobile apps, CLI tools)
+- Gradual migration from REST to RPC
+
+Both patterns coexist during migration.
+
+### Server Functions vs REST Routes
+
+| Aspect | Server Functions (RPC) | REST Routes |
+|--------|------------------------|------------|
+| Type safety | ✅ Full end-to-end | ⚠️ Manual typing needed |
+| Serialization | ✅ Automatic | ⚠️ Manual JSON.stringify |
+| Code splitting | ✅ Plugin handles | ⚠️ Not optimized |
+| DX | ✅ Excellent | ⚠️ More boilerplate |
+| External access | ❌ Client only | ✅ Any HTTP client |
+| Data mutation | ✅ POST/PUT/DELETE | ✅ POST/PUT/DELETE |
+
+### Authentication
+
+- **JWT-based**: Custom session management with jose library
+- **Session token**: Stored in HTTP-only cookie `session_token`
+- **Server functions**: Use `requireAuth()` from `src/lib/auth/middleware.ts`
+- **RBAC**: Defined in `src/lib/auth/rbac.ts`
+- **Permissions**: Stored with user roles, checked in server functions
+
+```typescript
+// Enforce auth in any server function
+const session = await requireAuth() // Throws if not authenticated
+const { user } = session // Type-safe access to user data
+```
+
+### Routing with TanStack Router
+
+File-based routing follows the `src/routes/` directory structure:
+
+```
+src/routes/
+├── __root.tsx           # Root route (layout, providers)
+├── index.tsx            # "/" route
+├── login.tsx            # "/login" route
+├── _authed.tsx          # Auth guard layout (requires session)
+├── _authed/
+│   ├── dashboard.tsx    # "/dashboard" (authenticated)
+│   └── reports/
+│       └── $id/
+│           └── editor.tsx  # "/reports/$id/editor" (authenticated)
+└── api/
+    ├── reports.ts       # "/api/reports" (REST endpoint)
+    └── sql/
+        └── execute.ts   # "/api/sql/execute" (REST endpoint)
+```
 
 ### Path Aliases
 
 Use `@/*` to import from `src/*`:
 ```typescript
-import { getDb } from '@/lib/db/config';
-import { Button } from '@/components/ui/button';
+import { getDb } from '@/lib/db/config'
+import { Button } from '@/components/ui/button'
+import { requireAuth } from '@/lib/auth/middleware'
 ```
 
 ### Database Access
 
-- **Always use Knex.js** for database queries - never raw SQL strings
-- Get database instance via `getDb()` or `getConfigDB()` from `@/lib/db/config`
-- SQLite is the sole database (config + business data in same DB)
-- Foreign keys are enabled via PRAGMA
-- All migrations are in `src/lib/db/migrations/` with timestamp prefixes
-- Migration naming: `YYYYMMDDHHMMSS_description.ts`
-
-### Authentication
-
-- NextAuth v5 with credentials provider
-- Session managed via `authjs.session-token` cookie
-- RBAC defined in `src/lib/auth/rbac.ts`
-- Granular permissions in `src/lib/permissions/`
-- Default admin credentials for dev: `admin@admin.com` / `admin`
+- **Knex.js**: All database queries use Knex, never raw SQL
+- **Instance**: Get via `getDb()` from `@/lib/db/config`
+- **Database**: SQLite with foreign keys enabled via PRAGMA
+- **Migrations**: `src/lib/db/migrations/YYYYMMDDHHMMSS_description.ts`
+- **Querying**: Always use LIMIT/OFFSET for server-side pagination
 
 ### Component Patterns
 
-- **UI primitives**: shadcn/ui in `src/components/ui/` - do not modify directly, add via `npx shadcn@latest add`
-- **Feature components**: Organized by domain (charts, dashboard, reporting, sql-editor, etc.)
-- **Client components**: Mark with `'use client'` directive at top of file
-- **Server components**: Default in App Router - used for data fetching
-- **Styling**: Tailwind utility classes + `cn()` helper from `@/lib/utils` for conditional classes
-- **Forms**: react-hook-form + zod validation + @hookform/resolvers
-- **Data tables**: TanStack Table with server-side pagination (critical: always use LIMIT/OFFSET)
+- **UI primitives**: shadcn/ui in `src/components/ui/` - add via `npx shadcn@latest add`
+- **Feature components**: Organized by domain (charts, dashboard, reporting)
+- **Forms**: Use TanStack Form v1 (not react-hook-form)
+- **Styling**: Tailwind utilities + `cn()` from `@/lib/utils`
+- **Data tables**: TanStack Table with server-side pagination (critical)
 
 ### Server-Side Pagination (Critical Rule)
 
