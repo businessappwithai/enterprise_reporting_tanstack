@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { json } from '@tanstack/react-start/server'
+import { json } from '@/lib/server/response'
 import { v4 as uuidv4 } from 'uuid'
 import type { DashboardWidget } from '@/types/database'
 

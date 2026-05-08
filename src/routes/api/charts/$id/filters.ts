@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { json } from '@tanstack/react-start/server'
+import { json } from '@/lib/server/response'
 import { randomUUID } from 'crypto'
 
 async function getSession(request: Request) {

@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { json } from '@tanstack/react-start/server'
+import { json } from '@/lib/server/response'
 import { getDb } from '@/lib/db/config'
 import { getConnection } from '@/lib/db/connection-manager'
 import { isReadOnlyQuery } from '@/lib/sql/validator'

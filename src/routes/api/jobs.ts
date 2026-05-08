@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { json } from '@tanstack/react-start/server'
+import { json } from '@/lib/server/response'
 import { getDb } from '@/lib/db/config'
 import { verifySession } from '@/lib/auth/session'
 import type { JobDefinition } from '@/types/database'
