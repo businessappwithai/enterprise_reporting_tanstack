@@ -21,22 +21,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Plus,
   Database,
   Check,
-  X,
   Loader2,
-  FolderOpen,
   Edit,
   Trash2,
   AlertCircle,
@@ -47,40 +36,51 @@ import {
 import { toast } from 'sonner';
 import { formatDateTime } from '@/lib/utils';
 import type { DataSource, DatabaseClientType } from '@/types/database';
-
-const databaseTypes: { value: DatabaseClientType; label: string }[] = [
-  { value: 'pg', label: 'PostgreSQL' },
-  { value: 'mysql', label: 'MySQL' },
-  { value: 'mssql', label: 'SQL Server' },
-  { value: 'sqlite3', label: 'SQLite' },
-  { value: 'oracledb', label: 'Oracle' },
-];
+import {
+  ConnectionFormFields,
+  isTestConnectionDisabled,
+  type ConnectionFormState,
+} from '@/components/data-sources/connection-form-fields';
 
 export const Route = createFileRoute('/_authed/data-sources/')({
   component: DataSourcesPage,
 })
+
+const DEFAULT_FORM: ConnectionFormState = {
+  name: '',
+  description: '',
+  clientType: 'pg',
+  host: '',
+  port: '',
+  database: '',
+  user: '',
+  password: '',
+  fileName: '',
+};
+
+function buildConnectionConfig(state: ConnectionFormState) {
+  if (state.clientType === 'sqlite3') {
+    return { filename: state.fileName };
+  }
+  return {
+    host: state.host,
+    port: state.port ? parseInt(state.port, 10) : undefined,
+    database: state.database,
+    user: state.user,
+    password: state.password || undefined,
+  };
+}
 
 function DataSourcesPage() {
   const queryClient = useQueryClient();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingDataSource, setEditingDataSource] = useState<DataSource | null>(null);
-  const [newDSName, setNewDSName] = useState('');
-  const [newDSDescription, setNewDSDescription] = useState('');
-  const [newDSType, setNewDSType] = useState<DatabaseClientType>('pg');
-  const [newDSHost, setNewDSHost] = useState('');
-  const [newDSPort, setNewDSPort] = useState('');
-  const [newDSDatabase, setNewDSDatabase] = useState('');
-  const [newDSUser, setNewDSUser] = useState('');
-  const [newDSPassword, setNewDSPassword] = useState('');
-  const [newDSFileName, setNewDSFileName] = useState('');
+  const [formState, setFormState] = useState<ConnectionFormState>(DEFAULT_FORM);
   const [uploadingFile, setUploadingFile] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [testingConnection, setTestingConnection] = useState(false);
-  const [connectionTestResult, setConnectionTestResult] = useState<{
-    success: boolean;
-    message: string;
-  } | null>(null);
+  const [connectionTestResult, setConnectionTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [dataSourceToDelete, setDataSourceToDelete] = useState<DataSource | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -96,44 +96,97 @@ function DataSourcesPage() {
     },
   });
 
+  const resetForm = () => {
+    setFormState(DEFAULT_FORM);
+    setConnectionTestResult(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleFileUpload = async (file: File) => {
+    if (!file.name.endsWith('.db') && !file.name.endsWith('.sqlite') && !file.name.endsWith('.sqlite3')) {
+      toast.error('Please select a valid SQLite database file (.db, .sqlite, .sqlite3)');
+      return;
+    }
+    setUploadingFile(true);
+    setConnectionTestResult(null);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/data-sources/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.success) {
+        setFormState((prev) => ({ ...prev, fileName: data.data.filename }));
+        toast.success(data.data.message);
+      } else {
+        toast.error(data.error?.message || 'Failed to upload file');
+      }
+    } catch {
+      toast.error('Failed to upload file');
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleFileUpload(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const file = e.dataTransfer.files?.[0];
+    if (file && (file.name.endsWith('.db') || file.name.endsWith('.sqlite') || file.name.endsWith('.sqlite3'))) {
+      handleFileUpload(file);
+    } else if (file) {
+      toast.error('Please select a valid SQLite database file (.db, .sqlite, .sqlite3)');
+    }
+  };
+
+  const testConnection = async () => {
+    setTestingConnection(true);
+    setConnectionTestResult(null);
+    try {
+      if (formState.clientType === 'sqlite3' && !formState.fileName) {
+        setConnectionTestResult({ success: false, message: 'Please upload a SQLite database file' });
+        return;
+      }
+      if (formState.clientType !== 'sqlite3' && (!formState.host || !formState.database || !formState.user)) {
+        setConnectionTestResult({ success: false, message: 'Please fill in Host, Database, and Username fields' });
+        return;
+      }
+      const res = await fetch('/api/data-sources/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientType: formState.clientType, connectionConfig: buildConnectionConfig(formState) }),
+      });
+      const data = await res.json();
+      setConnectionTestResult({
+        success: data.data?.connected || false,
+        message: data.data?.message || data.error?.message || 'Test failed',
+      });
+    } catch (error) {
+      setConnectionTestResult({
+        success: false,
+        message: error instanceof Error ? error.message : 'Connection test failed',
+      });
+    } finally {
+      setTestingConnection(false);
+    }
+  };
+
   const createMutation = useMutation({
     mutationFn: async () => {
-      // For SQLite, use the uploaded filename
-      if (newDSType === 'sqlite3') {
-        if (!newDSFileName) {
-          throw new Error('Please upload a SQLite database file');
-        }
-
-        const res = await fetch('/api/data-sources', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: newDSName,
-            description: newDSDescription,
-            clientType: newDSType,
-            connectionConfig: {
-              filename: newDSFileName, // Just the filename, server will prepend data/uploads/
-            },
-          }),
-        });
-        return res.json();
-      }
-
-      // For other databases, use JSON
       const res = await fetch('/api/data-sources', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: newDSName,
-          description: newDSDescription,
-          clientType: newDSType,
-          connectionConfig: {
-            host: newDSHost,
-            port: newDSPort ? parseInt(newDSPort, 10) : undefined,
-            database: newDSDatabase,
-            user: newDSUser,
-            password: newDSPassword,
-          },
+          name: formState.name,
+          description: formState.description,
+          clientType: formState.clientType,
+          connectionConfig: buildConnectionConfig(formState),
         }),
       });
       return res.json();
@@ -150,178 +203,22 @@ function DataSourcesPage() {
     },
   });
 
-  const testConnection = async () => {
-    setTestingConnection(true);
-    setConnectionTestResult(null);
-
-    try {
-      // For SQLite, use the uploaded filename
-      if (newDSType === 'sqlite3') {
-        if (!newDSFileName) {
-          setConnectionTestResult({ success: false, message: 'Please upload a SQLite database file' });
-          setTestingConnection(false);
-          return;
-        }
-
-        const res = await fetch('/api/data-sources/test', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            clientType: newDSType,
-            connectionConfig: {
-              filename: newDSFileName, // Just the filename, server will prepend data/uploads/
-            },
-          }),
-        });
-        const data = await res.json();
-        console.log('SQLite test connection response:', data);
-        setConnectionTestResult({
-          success: data.data?.connected || false,
-          message: data.data?.message || data.error?.message || 'Test failed'
-        });
-      } else {
-        // Validate required fields for non-SQLite databases
-        if (!newDSHost || !newDSDatabase || !newDSUser) {
-          setConnectionTestResult({
-            success: false,
-            message: 'Please fill in Host, Database, and Username fields'
-          });
-          setTestingConnection(false);
-          return;
-        }
-
-        // For other databases, use JSON
-        const res = await fetch('/api/data-sources/test', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            clientType: newDSType,
-            connectionConfig: {
-              host: newDSHost,
-              port: newDSPort ? parseInt(newDSPort, 10) : undefined,
-              database: newDSDatabase,
-              user: newDSUser,
-              password: newDSPassword,
-            },
-          }),
-        });
-        const data = await res.json();
-        console.log('Database test connection response:', data);
-        setConnectionTestResult({
-          success: data.data?.connected || false,
-          message: data.data?.message || data.error?.message || 'Test failed'
-        });
-      }
-    } catch (error) {
-      console.error('Connection test error:', error);
-      setConnectionTestResult({
-        success: false,
-        message: error instanceof Error ? error.message : 'Connection test failed'
-      });
-    } finally {
-      setTestingConnection(false);
-    }
-  };
-
-  const resetForm = () => {
-    setNewDSName('');
-    setNewDSDescription('');
-    setNewDSType('pg');
-    setNewDSHost('');
-    setNewDSPort('');
-    setNewDSDatabase('');
-    setNewDSUser('');
-    setNewDSPassword('');
-    setNewDSFileName('');
-    setConnectionTestResult(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const handleFileUpload = async (file: File) => {
-    // Validate file type
-    if (!file.name.endsWith('.db') && !file.name.endsWith('.sqlite') && !file.name.endsWith('.sqlite3')) {
-      toast.error('Please select a valid SQLite database file (.db, .sqlite, .sqlite3)');
-      return;
-    }
-
-    setUploadingFile(true);
-    setConnectionTestResult(null);
-
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const res = await fetch('/api/data-sources/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        setNewDSFileName(data.data.filename);
-        toast.success(data.data.message);
-      } else {
-        toast.error(data.error?.message || 'Failed to upload file');
-      }
-    } catch (error) {
-      console.error('Upload error:', error);
-      toast.error('Failed to upload file');
-    } finally {
-      setUploadingFile(false);
-    }
-  };
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleFileUpload(file);
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const file = e.dataTransfer.files?.[0];
-    if (file && (file.name.endsWith('.db') || file.name.endsWith('.sqlite') || file.name.endsWith('.sqlite3'))) {
-      handleFileUpload(file);
-    } else if (file) {
-      toast.error('Please select a valid SQLite database file (.db, .sqlite, .sqlite3)');
-    }
-  };
-
   const handleEdit = (ds: DataSource) => {
     setEditingDataSource(ds);
-    setNewDSName(ds.name);
-    setNewDSDescription(ds.description || '');
-    setNewDSType(ds.client_type);
-
-    // Parse connection config to extract values
-    let config = {};
-    try {
-      config = ds.connection_config ? JSON.parse(ds.connection_config) : {};
-    } catch {
-      config = {};
-    }
-
-    // Extract just the filename from the path
-    const fullPath = (config as any).filename || '';
-    const fileName = fullPath.split('/').pop() || fullPath;
-    setNewDSFileName(fileName);
-
-    setNewDSHost((config as any).host || '');
-    setNewDSPort((config as any).port?.toString() || '');
-    setNewDSDatabase((config as any).database || '');
-    setNewDSUser((config as any).user || '');
-    setNewDSPassword(''); // Don't pre-fill password for security
+    let config: Record<string, unknown> = {};
+    try { config = ds.connection_config ? JSON.parse(ds.connection_config) : {}; } catch { /* ignore */ }
+    const fullPath = (config.filename as string) || '';
+    setFormState({
+      name: ds.name,
+      description: ds.description || '',
+      clientType: ds.client_type,
+      host: (config.host as string) || '',
+      port: config.port?.toString() || '',
+      database: (config.database as string) || '',
+      user: (config.user as string) || '',
+      password: '',
+      fileName: fullPath.split('/').pop() || fullPath,
+    });
     setConnectionTestResult(null);
     setEditDialogOpen(true);
   };
@@ -329,43 +226,14 @@ function DataSourcesPage() {
   const updateMutation = useMutation({
     mutationFn: async () => {
       if (!editingDataSource) throw new Error('No data source selected');
-
-      // For SQLite, use the uploaded filename
-      if (newDSType === 'sqlite3') {
-        if (!newDSFileName) {
-          throw new Error('Please upload a SQLite database file');
-        }
-
-        const res = await fetch(`/api/data-sources/${editingDataSource.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: newDSName,
-            description: newDSDescription,
-            clientType: newDSType,
-            connectionConfig: {
-              filename: newDSFileName, // Just the filename, server will prepend data/uploads/
-            },
-          }),
-        });
-        return res.json();
-      }
-
-      // For other databases
       const res = await fetch(`/api/data-sources/${editingDataSource.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: newDSName,
-          description: newDSDescription,
-          clientType: newDSType,
-          connectionConfig: {
-            host: newDSHost,
-            port: newDSPort ? parseInt(newDSPort, 10) : undefined,
-            database: newDSDatabase,
-            user: newDSUser,
-            password: newDSPassword || undefined,
-          },
+          name: formState.name,
+          description: formState.description,
+          clientType: formState.clientType,
+          connectionConfig: buildConnectionConfig(formState),
         }),
       });
       return res.json();
@@ -387,24 +255,16 @@ function DataSourcesPage() {
     setDataSourceToDelete(ds);
     setUsageInfo(null);
     setDeleteDialogOpen(true);
-
-    // Check usage
     try {
       const res = await fetch(`/api/data-sources/${ds.id}/usage`);
       const data = await res.json();
-      if (data.success) {
-        setUsageInfo(data.data);
-      }
-    } catch (error) {
-      console.error('Failed to check usage:', error);
-    }
+      if (data.success) setUsageInfo(data.data);
+    } catch { /* ignore */ }
   };
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/data-sources/${id}`, {
-        method: 'DELETE',
-      });
+      const res = await fetch(`/api/data-sources/${id}`, { method: 'DELETE' });
       return res.json();
     },
     onSuccess: (data) => {
@@ -425,20 +285,12 @@ function DataSourcesPage() {
     },
   });
 
-  const handleDeleteConfirm = () => {
-    if (!dataSourceToDelete) return;
-    setIsDeleting(true);
-    deleteMutation.mutate(dataSourceToDelete.id);
-  };
-
   const inspectMutation = useMutation({
     mutationFn: async (dsId: string) => {
-      const res = await fetch(`/api/data-sources/${dsId}/inspect`, {
-        method: 'POST',
-      });
+      const res = await fetch(`/api/data-sources/${dsId}/inspect`, { method: 'POST' });
       return res.json();
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data) => {
       if (data.success) {
         toast.success(`Schema imported successfully! Found ${data.data?.entities_count || 0} entities`);
         queryClient.invalidateQueries({ queryKey: ['data-sources'] });
@@ -453,19 +305,15 @@ function DataSourcesPage() {
     },
   });
 
-  const handleInspectSchema = async (dsId: string) => {
-    setInspectingDs(dsId);
-    inspectMutation.mutate(dsId);
-  };
+  const sharedFileProps = { fileInputRef, uploading: uploadingFile, onFileSelect: handleFileSelect, onDragOver: handleDragOver, onDrop: handleDrop };
+  const testDisabled = isTestConnectionDisabled({ state: formState, testing: testingConnection });
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Data Sources</h1>
-          <p className="text-muted-foreground">
-            Manage database connections for reports and queries
-          </p>
+          <p className="text-muted-foreground">Manage database connections for reports and queries</p>
         </div>
 
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
@@ -478,208 +326,38 @@ function DataSourcesPage() {
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Add Data Source</DialogTitle>
-              <DialogDescription>
-                Configure a new database connection for your reports.
-              </DialogDescription>
+              <DialogDescription>Configure a new database connection for your reports.</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="ds-name">Name</Label>
-                  <Input
-                    id="ds-name"
-                    value={newDSName}
-                    onChange={(e) => setNewDSName(e.target.value)}
-                    placeholder="Production Database"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="ds-type">Database Type</Label>
-                  <Select value={newDSType} onValueChange={(v) => setNewDSType(v as DatabaseClientType)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {databaseTypes.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="ds-description">Description</Label>
-                <Input
-                  id="ds-description"
-                  value={newDSDescription}
-                  onChange={(e) => setNewDSDescription(e.target.value)}
-                  placeholder="Optional description"
-                />
-              </div>
-
-              {newDSType === 'sqlite3' ? (
-                // SQLite file upload to server
-                <div className="space-y-3">
-                  <Label>Database File</Label>
-
-                  {/* File upload zone */}
-                  <div
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}
-                    className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-                      uploadingFile
-                        ? 'bg-muted cursor-not-allowed'
-                        : 'cursor-pointer hover:bg-accent/50'
-                    }`}
-                    onClick={() => !uploadingFile && fileInputRef.current?.click()}
-                  >
-                    {uploadingFile ? (
-                      <>
-                        <Loader2 className="h-8 w-8 mx-auto mb-2 animate-spin text-muted-foreground" />
-                        <p className="text-sm font-medium">Uploading file...</p>
-                      </>
-                    ) : (
-                      <>
-                        <FolderOpen className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                        <p className="text-sm font-medium">
-                          {newDSFileName || 'Click to browse or drag & drop SQLite file'}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          File will be uploaded to: <code className="bg-muted px-1 py-0.5 rounded">data/uploads/</code>
-                        </p>
-                      </>
-                    )}
-                    <Input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".db,.sqlite,.sqlite3"
-                      onChange={handleFileSelect}
-                      className="hidden"
-                      disabled={uploadingFile}
-                    />
-                  </div>
-
-                  {newDSFileName && (
-                    <div className="rounded-md bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-900/30 p-3">
-                      <p className="text-sm font-medium text-green-800 dark:text-green-400 flex items-center gap-2">
-                        <Check className="h-4 w-4" />
-                        File uploaded successfully
-                      </p>
-                      <p className="text-xs text-green-700 dark:text-green-400 mt-1 font-mono">
-                        data/uploads/{newDSFileName}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                // Connection fields for other databases
-                <>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="space-y-2 col-span-2">
-                      <Label htmlFor="ds-host">Host</Label>
-                      <Input
-                        id="ds-host"
-                        value={newDSHost}
-                        onChange={(e) => setNewDSHost(e.target.value)}
-                        placeholder="localhost"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="ds-port">Port</Label>
-                      <Input
-                        id="ds-port"
-                        value={newDSPort}
-                        onChange={(e) => setNewDSPort(e.target.value)}
-                        placeholder={newDSType === 'pg' ? '5432' : newDSType === 'mysql' ? '3306' : ''}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="ds-database">Database</Label>
-                    <Input
-                      id="ds-database"
-                      value={newDSDatabase}
-                      onChange={(e) => setNewDSDatabase(e.target.value)}
-                      placeholder="mydb"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="ds-user">Username</Label>
-                      <Input
-                        id="ds-user"
-                        value={newDSUser}
-                        onChange={(e) => setNewDSUser(e.target.value)}
-                        placeholder="dbuser"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="ds-password">Password</Label>
-                      <Input
-                        id="ds-password"
-                        type="password"
-                        value={newDSPassword}
-                        onChange={(e) => setNewDSPassword(e.target.value)}
-                        placeholder="********"
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {connectionTestResult && (
-                <div
-                  className={`p-3 rounded-md flex items-center gap-2 ${
-                    connectionTestResult.success
-                      ? 'bg-green-500 text-white dark:bg-green-600'
-                      : 'bg-red-500 text-white dark:bg-red-600'
-                  }`}
-                >
-                  {connectionTestResult.success ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    <X className="h-4 w-4" />
-                  )}
-                  <span className="font-medium">
-                    {connectionTestResult.success ? 'Connection Successful' : 'Connection Failed'}
-                  </span>
-                  {connectionTestResult.message && !connectionTestResult.success && (
-                    <span className="text-sm opacity-90">: {connectionTestResult.message}</span>
-                  )}
-                </div>
-              )}
+              <ConnectionFormFields
+                state={formState}
+                onChange={(patch) => setFormState((prev) => ({ ...prev, ...patch }))}
+                connectionTestResult={connectionTestResult}
+                idPrefix="create-"
+                {...sharedFileProps}
+              />
             </div>
             <DialogFooter className="flex-col sm:flex-row gap-2">
-              {connectionTestResult?.success && !newDSName && (
+              {connectionTestResult?.success && !formState.name && (
                 <div className="w-full flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/10 px-3 py-2 rounded-md">
                   <AlertCircle className="h-4 w-4" />
                   <span>Connection verified! Please enter a Name above to enable the Create button.</span>
                 </div>
               )}
-              {connectionTestResult?.success && newDSName && (
+              {connectionTestResult?.success && formState.name && (
                 <div className="w-full flex items-center gap-2 text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/10 px-3 py-2 rounded-md">
                   <Check className="h-4 w-4" />
                   <span>All set! Click Create to add your data source.</span>
                 </div>
               )}
               <div className="flex gap-2 w-full sm:w-auto">
-                <Button
-                  variant="outline"
-                  onClick={testConnection}
-                  disabled={testingConnection || (newDSType === 'sqlite3' ? !newDSFileName : !newDSHost || !newDSDatabase || !newDSUser)}
-                  className="flex-1 sm:flex-none"
-                >
+                <Button variant="outline" onClick={testConnection} disabled={testDisabled} className="flex-1 sm:flex-none">
                   {testingConnection && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   Test Connection
                 </Button>
                 <Button
                   onClick={() => createMutation.mutate()}
-                  disabled={!newDSName || !connectionTestResult?.success || createMutation.isPending}
+                  disabled={!formState.name || !connectionTestResult?.success || createMutation.isPending}
                   className="flex-1 sm:flex-none"
                 >
                   {createMutation.isPending ? 'Creating...' : 'Create'}
@@ -689,213 +367,38 @@ function DataSourcesPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Edit Dialog */}
         <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Edit Data Source</DialogTitle>
-              <DialogDescription>
-                Update the configuration for {editingDataSource?.name}.
-              </DialogDescription>
+              <DialogDescription>Update the configuration for {editingDataSource?.name}.</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-ds-name">Name</Label>
-                  <Input
-                    id="edit-ds-name"
-                    value={newDSName}
-                    onChange={(e) => setNewDSName(e.target.value)}
-                    placeholder="Production Database"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-ds-type">Database Type</Label>
-                  <Select value={newDSType} onValueChange={(v) => setNewDSType(v as DatabaseClientType)} disabled>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {databaseTypes.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="edit-ds-description">Description</Label>
-                <Input
-                  id="edit-ds-description"
-                  value={newDSDescription}
-                  onChange={(e) => setNewDSDescription(e.target.value)}
-                  placeholder="Optional description"
-                />
-              </div>
-
-              {newDSType === 'sqlite3' ? (
-                // SQLite file upload for edit dialog
-                <div className="space-y-3">
-                  <Label>Database File</Label>
-
-                  {/* File upload zone for edit */}
-                  <div
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}
-                    className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
-                      uploadingFile
-                        ? 'bg-muted cursor-not-allowed'
-                        : 'cursor-pointer hover:bg-accent/50'
-                    }`}
-                    onClick={() => !uploadingFile && fileInputRef.current?.click()}
-                  >
-                    {uploadingFile ? (
-                      <>
-                        <Loader2 className="h-6 w-6 mx-auto mb-1 animate-spin text-muted-foreground" />
-                        <p className="text-sm font-medium">Uploading...</p>
-                      </>
-                    ) : (
-                      <>
-                        <FolderOpen className="h-6 w-6 mx-auto mb-1 text-muted-foreground" />
-                        <p className="text-sm font-medium">
-                          {newDSFileName || 'Click to browse or drag & drop to change file'}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Upload to: <code className="bg-muted px-1 py-0.5 rounded">data/uploads/</code>
-                        </p>
-                      </>
-                    )}
-                    <Input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".db,.sqlite,.sqlite3"
-                      onChange={handleFileSelect}
-                      className="hidden"
-                      disabled={uploadingFile}
-                    />
-                  </div>
-
-                  {newDSFileName && (
-                    <div className="rounded-md bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-900/30 p-3">
-                      <p className="text-sm font-medium text-green-800 dark:text-green-400 flex items-center gap-2">
-                        <Check className="h-4 w-4" />
-                        Ready to use: {newDSFileName}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="space-y-2 col-span-2">
-                      <Label htmlFor="edit-ds-host">Host</Label>
-                      <Input
-                        id="edit-ds-host"
-                        value={newDSHost}
-                        onChange={(e) => setNewDSHost(e.target.value)}
-                        placeholder="localhost"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="edit-ds-port">Port</Label>
-                      <Input
-                        id="edit-ds-port"
-                        value={newDSPort}
-                        onChange={(e) => setNewDSPort(e.target.value)}
-                        placeholder={newDSType === 'pg' ? '5432' : newDSType === 'mysql' ? '3306' : ''}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-ds-database">Database</Label>
-                    <Input
-                      id="edit-ds-database"
-                      value={newDSDatabase}
-                      onChange={(e) => setNewDSDatabase(e.target.value)}
-                      placeholder="mydb"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="edit-ds-user">Username</Label>
-                      <Input
-                        id="edit-ds-user"
-                        value={newDSUser}
-                        onChange={(e) => setNewDSUser(e.target.value)}
-                        placeholder="dbuser"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="edit-ds-password">Password</Label>
-                      <Input
-                        id="edit-ds-password"
-                        type="password"
-                        value={newDSPassword}
-                        onChange={(e) => setNewDSPassword(e.target.value)}
-                        placeholder="Leave empty to keep current"
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {connectionTestResult && (
-                <div
-                  className={`p-3 rounded-md flex items-center gap-2 ${
-                    connectionTestResult.success
-                      ? 'bg-green-500 text-white dark:bg-green-600'
-                      : 'bg-red-500 text-white dark:bg-red-600'
-                  }`}
-                >
-                  {connectionTestResult.success ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    <X className="h-4 w-4" />
-                  )}
-                  <span className="font-medium">
-                    {connectionTestResult.success ? 'Connection Successful' : 'Connection Failed'}
-                  </span>
-                  {connectionTestResult.message && !connectionTestResult.success && (
-                    <span className="text-sm opacity-90">: {connectionTestResult.message}</span>
-                  )}
-                </div>
-              )}
+              <ConnectionFormFields
+                state={formState}
+                onChange={(patch) => setFormState((prev) => ({ ...prev, ...patch }))}
+                disableType
+                passwordPlaceholder="Leave empty to keep current"
+                connectionTestResult={connectionTestResult}
+                idPrefix="edit-"
+                {...sharedFileProps}
+              />
             </div>
             <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={testConnection}
-                disabled={testingConnection || (newDSType === 'sqlite3' ? !newDSFileName : !newDSHost || !newDSDatabase || !newDSUser)}
-              >
+              <Button variant="outline" onClick={testConnection} disabled={testDisabled}>
                 {testingConnection && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Test Connection
               </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setEditDialogOpen(false);
-                  resetForm();
-                  setEditingDataSource(null);
-                }}
-              >
+              <Button variant="outline" onClick={() => { setEditDialogOpen(false); resetForm(); setEditingDataSource(null); }}>
                 Cancel
               </Button>
-              <Button
-                onClick={() => updateMutation.mutate()}
-                disabled={!newDSName || updateMutation.isPending}
-              >
+              <Button onClick={() => updateMutation.mutate()} disabled={!formState.name || updateMutation.isPending}>
                 {updateMutation.isPending ? 'Updating...' : 'Update'}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
 
-        {/* Delete Confirmation Dialog */}
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent>
             <DialogHeader>
@@ -936,20 +439,13 @@ function DataSourcesPage() {
               )}
             </div>
             <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setDeleteDialogOpen(false);
-                  setDataSourceToDelete(null);
-                  setUsageInfo(null);
-                }}
-              >
+              <Button variant="outline" onClick={() => { setDeleteDialogOpen(false); setDataSourceToDelete(null); setUsageInfo(null); }}>
                 Cancel
               </Button>
               <Button
                 variant="destructive"
-                onClick={handleDeleteConfirm}
-                disabled={!!usageInfo && (usageInfo.queries > 0 || usageInfo.reports > 0 || usageInfo.charts > 0) || isDeleting}
+                onClick={() => { if (!dataSourceToDelete) return; setIsDeleting(true); deleteMutation.mutate(dataSourceToDelete.id); }}
+                disabled={!!(usageInfo && (usageInfo.queries > 0 || usageInfo.reports > 0 || usageInfo.charts > 0)) || isDeleting}
               >
                 {isDeleting ? 'Deleting...' : 'Delete'}
               </Button>
@@ -967,9 +463,7 @@ function DataSourcesPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Loading data sources...
-            </div>
+            <div className="text-center py-8 text-muted-foreground">Loading data sources...</div>
           ) : dataSources?.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               No data sources configured. Add your first data source to get started.
@@ -990,12 +484,8 @@ function DataSourcesPage() {
                 {dataSources?.map((ds) => (
                   <TableRow key={ds.id}>
                     <TableCell className="font-medium">{ds.name}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{ds.client_type}</Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {ds.description || '-'}
-                    </TableCell>
+                    <TableCell><Badge variant="outline">{ds.client_type}</Badge></TableCell>
+                    <TableCell className="text-muted-foreground">{ds.description || '-'}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Badge variant={ds.is_active ? 'default' : 'secondary'}>
@@ -1009,17 +499,14 @@ function DataSourcesPage() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {formatDateTime(ds.created_at)}
-                    </TableCell>
+                    <TableCell className="text-muted-foreground">{formatDateTime(ds.created_at)}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
-                        {/* Inspect Schema button - only for active datasources */}
                         {ds.is_active && (
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleInspectSchema(ds.id)}
+                            onClick={() => { setInspectingDs(ds.id); inspectMutation.mutate(ds.id); }}
                             disabled={inspectingDs === ds.id}
                             title="Import schema to enable entity metadata"
                             className="text-green-600 hover:text-green-700 hover:bg-green-50"
@@ -1031,29 +518,16 @@ function DataSourcesPage() {
                             )}
                           </Button>
                         )}
-                        {/* Entity Metadata button - only show if inspected */}
                         {ds.is_active && (
                           <Link to="/metadata/entities/" search={{ data_source_id: ds.id }}>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              title="Manage Entity Metadata"
-                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                            >
+                            <Button variant="ghost" size="sm" title="Manage Entity Metadata" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
                               <Settings className="h-4 w-4" />
                             </Button>
                           </Link>
                         )}
-                        {/* Edit button */}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(ds)}
-                          title="Edit data source"
-                        >
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(ds)} title="Edit data source">
                           <Edit className="h-4 w-4" />
                         </Button>
-                        {/* Delete button */}
                         <Button
                           variant="ghost"
                           size="sm"
