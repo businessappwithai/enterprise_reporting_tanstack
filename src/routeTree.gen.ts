@@ -8,1098 +8,1128 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from "./routes/__root";
-import { Route as LoginRouteImport } from "./routes/login";
-import { Route as AuthedRouteImport } from "./routes/_authed";
-import { Route as IndexRouteImport } from "./routes/index";
-import { Route as ApiReportsRouteImport } from "./routes/api/reports";
-import { Route as ApiQueriesRouteImport } from "./routes/api/queries";
-import { Route as ApiJobsRouteImport } from "./routes/api/jobs";
-import { Route as ApiHealthRouteImport } from "./routes/api/health";
-import { Route as ApiFiltersRouteImport } from "./routes/api/filters";
-import { Route as ApiDataSourcesRouteImport } from "./routes/api/data-sources";
-import { Route as ApiDashboardsRouteImport } from "./routes/api/dashboards";
-import { Route as ApiChartsRouteImport } from "./routes/api/charts";
-import { Route as AuthedSqlEditorRouteImport } from "./routes/_authed/sql-editor";
-import { Route as AuthedDashboardRouteImport } from "./routes/_authed/dashboard";
-import { Route as AuthedBullBoardRouteImport } from "./routes/_authed/bull-board";
-import { Route as AuthedSettingsIndexRouteImport } from "./routes/_authed/settings/index";
-import { Route as AuthedReportsIndexRouteImport } from "./routes/_authed/reports/index";
-import { Route as AuthedQueriesIndexRouteImport } from "./routes/_authed/queries/index";
-import { Route as AuthedNlQueryIndexRouteImport } from "./routes/_authed/nl-query/index";
-import { Route as AuthedJobsIndexRouteImport } from "./routes/_authed/jobs/index";
-import { Route as AuthedFiltersIndexRouteImport } from "./routes/_authed/filters/index";
-import { Route as AuthedEmailTemplatesIndexRouteImport } from "./routes/_authed/email-templates/index";
-import { Route as AuthedDatasetsIndexRouteImport } from "./routes/_authed/datasets/index";
-import { Route as AuthedDataSourcesIndexRouteImport } from "./routes/_authed/data-sources/index";
-import { Route as AuthedDashboardsIndexRouteImport } from "./routes/_authed/dashboards/index";
-import { Route as AuthedChartsIndexRouteImport } from "./routes/_authed/charts/index";
-import { Route as ShareReportIdRouteImport } from "./routes/share/report/$id";
-import { Route as ShareDashboardIdRouteImport } from "./routes/share/dashboard/$id";
-import { Route as ShareChartIdRouteImport } from "./routes/share/chart/$id";
-import { Route as ApiSqlValidateRouteImport } from "./routes/api/sql/validate";
-import { Route as ApiSqlExecuteRouteImport } from "./routes/api/sql/execute";
-import { Route as ApiReportsIdRouteImport } from "./routes/api/reports/$id";
-import { Route as ApiDataSourcesIdRouteImport } from "./routes/api/data-sources/$id";
-import { Route as ApiDashboardsIdRouteImport } from "./routes/api/dashboards/$id";
-import { Route as ApiChartsIdRouteImport } from "./routes/api/charts/$id";
-import { Route as ApiAuthPermissionsRouteImport } from "./routes/api/auth/permissions";
-import { Route as AuthedSettingsEmailIndexRouteImport } from "./routes/_authed/settings/email/index";
-import { Route as AuthedMetadataEntitiesIndexRouteImport } from "./routes/_authed/metadata/entities/index";
-import { Route as AuthedDashboardsIdIndexRouteImport } from "./routes/_authed/dashboards/$id/index";
-import { Route as AuthedAdminUsersIndexRouteImport } from "./routes/_authed/admin/users/index";
-import { Route as AuthedAdminRolesIndexRouteImport } from "./routes/_authed/admin/roles/index";
-import { Route as AuthedAdminPermissionsIndexRouteImport } from "./routes/_authed/admin/permissions/index";
-import { Route as ApiSqlSchemaDataSourceIdRouteImport } from "./routes/api/sql/schema.$dataSourceId";
-import { Route as ApiReportsIdFiltersRouteImport } from "./routes/api/reports/$id/filters";
-import { Route as ApiReportsIdExportRouteImport } from "./routes/api/reports/$id/export";
-import { Route as ApiDashboardsIdWidgetsRouteImport } from "./routes/api/dashboards/$id/widgets";
-import { Route as ApiChartsIdFiltersRouteImport } from "./routes/api/charts/$id/filters";
-import { Route as AuthedReportsIdEditorRouteImport } from "./routes/_authed/reports/$id/editor";
-import { Route as AuthedDataSourcesIdPermissionsRouteImport } from "./routes/_authed/data-sources/$id/permissions";
-import { Route as AuthedChartsViewerIdRouteImport } from "./routes/_authed/charts/viewer/$id";
-import { Route as AuthedChartsEditorIdRouteImport } from "./routes/_authed/charts/editor/$id";
-import { Route as AuthedMetadataEntitiesIdIndexRouteImport } from "./routes/_authed/metadata/entities/$id/index";
-import { Route as ApiReportsIdFiltersFilterLinkIdRouteImport } from "./routes/api/reports/$id/filters/$filterLinkId";
-import { Route as ApiDashboardsIdWidgetsWidgetIdRouteImport } from "./routes/api/dashboards/$id/widgets/$widgetId";
-import { Route as ApiChartsIdFiltersFilterLinkIdRouteImport } from "./routes/api/charts/$id/filters/$filterLinkId";
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as AuthedRouteImport } from './routes/_authed'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiReportsRouteImport } from './routes/api/reports'
+import { Route as ApiQueriesRouteImport } from './routes/api/queries'
+import { Route as ApiJobsRouteImport } from './routes/api/jobs'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
+import { Route as ApiFiltersRouteImport } from './routes/api/filters'
+import { Route as ApiDataSourcesRouteImport } from './routes/api/data-sources'
+import { Route as ApiDashboardsRouteImport } from './routes/api/dashboards'
+import { Route as ApiChartsRouteImport } from './routes/api/charts'
+import { Route as AuthedSqlEditorRouteImport } from './routes/_authed/sql-editor'
+import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
+import { Route as AuthedBullBoardRouteImport } from './routes/_authed/bull-board'
+import { Route as AuthedSettingsIndexRouteImport } from './routes/_authed/settings/index'
+import { Route as AuthedReportsIndexRouteImport } from './routes/_authed/reports/index'
+import { Route as AuthedQueriesIndexRouteImport } from './routes/_authed/queries/index'
+import { Route as AuthedNlQueryIndexRouteImport } from './routes/_authed/nl-query/index'
+import { Route as AuthedJobsIndexRouteImport } from './routes/_authed/jobs/index'
+import { Route as AuthedFiltersIndexRouteImport } from './routes/_authed/filters/index'
+import { Route as AuthedEmailTemplatesIndexRouteImport } from './routes/_authed/email-templates/index'
+import { Route as AuthedDatasetsIndexRouteImport } from './routes/_authed/datasets/index'
+import { Route as AuthedDataSourcesIndexRouteImport } from './routes/_authed/data-sources/index'
+import { Route as AuthedDashboardsIndexRouteImport } from './routes/_authed/dashboards/index'
+import { Route as AuthedChartsIndexRouteImport } from './routes/_authed/charts/index'
+import { Route as ShareReportIdRouteImport } from './routes/share/report/$id'
+import { Route as ShareDashboardIdRouteImport } from './routes/share/dashboard/$id'
+import { Route as ShareChartIdRouteImport } from './routes/share/chart/$id'
+import { Route as ApiSqlValidateRouteImport } from './routes/api/sql/validate'
+import { Route as ApiSqlExecuteRouteImport } from './routes/api/sql/execute'
+import { Route as ApiReportsIdRouteImport } from './routes/api/reports/$id'
+import { Route as ApiNlQueryExecuteRouteImport } from './routes/api/nl-query/execute'
+import { Route as ApiDataSourcesIdRouteImport } from './routes/api/data-sources/$id'
+import { Route as ApiDashboardsIdRouteImport } from './routes/api/dashboards/$id'
+import { Route as ApiChartsIdRouteImport } from './routes/api/charts/$id'
+import { Route as ApiAuthPermissionsRouteImport } from './routes/api/auth/permissions'
+import { Route as AuthedSettingsEmailIndexRouteImport } from './routes/_authed/settings/email/index'
+import { Route as AuthedMetadataEntitiesIndexRouteImport } from './routes/_authed/metadata/entities/index'
+import { Route as AuthedDashboardsIdIndexRouteImport } from './routes/_authed/dashboards/$id/index'
+import { Route as AuthedAdminUsersIndexRouteImport } from './routes/_authed/admin/users/index'
+import { Route as AuthedAdminRolesIndexRouteImport } from './routes/_authed/admin/roles/index'
+import { Route as AuthedAdminPermissionsIndexRouteImport } from './routes/_authed/admin/permissions/index'
+import { Route as ApiSqlSchemaDataSourceIdRouteImport } from './routes/api/sql/schema.$dataSourceId'
+import { Route as ApiReportsIdFiltersRouteImport } from './routes/api/reports/$id/filters'
+import { Route as ApiReportsIdExportRouteImport } from './routes/api/reports/$id/export'
+import { Route as ApiDashboardsIdWidgetsRouteImport } from './routes/api/dashboards/$id/widgets'
+import { Route as ApiChartsIdFiltersRouteImport } from './routes/api/charts/$id/filters'
+import { Route as AuthedReportsIdEditorRouteImport } from './routes/_authed/reports/$id/editor'
+import { Route as AuthedDataSourcesIdPermissionsRouteImport } from './routes/_authed/data-sources/$id/permissions'
+import { Route as AuthedChartsViewerIdRouteImport } from './routes/_authed/charts/viewer/$id'
+import { Route as AuthedChartsEditorIdRouteImport } from './routes/_authed/charts/editor/$id'
+import { Route as AuthedMetadataEntitiesIdIndexRouteImport } from './routes/_authed/metadata/entities/$id/index'
+import { Route as ApiReportsIdFiltersFilterLinkIdRouteImport } from './routes/api/reports/$id/filters/$filterLinkId'
+import { Route as ApiDashboardsIdWidgetsWidgetIdRouteImport } from './routes/api/dashboards/$id/widgets/$widgetId'
+import { Route as ApiChartsIdFiltersFilterLinkIdRouteImport } from './routes/api/charts/$id/filters/$filterLinkId'
 
 const LoginRoute = LoginRouteImport.update({
-  id: "/login",
-  path: "/login",
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const AuthedRoute = AuthedRouteImport.update({
-  id: "/_authed",
+  id: '/_authed',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const IndexRoute = IndexRouteImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ApiReportsRoute = ApiReportsRouteImport.update({
-  id: "/api/reports",
-  path: "/api/reports",
+  id: '/api/reports',
+  path: '/api/reports',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ApiQueriesRoute = ApiQueriesRouteImport.update({
-  id: "/api/queries",
-  path: "/api/queries",
+  id: '/api/queries',
+  path: '/api/queries',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ApiJobsRoute = ApiJobsRouteImport.update({
-  id: "/api/jobs",
-  path: "/api/jobs",
+  id: '/api/jobs',
+  path: '/api/jobs',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ApiHealthRoute = ApiHealthRouteImport.update({
-  id: "/api/health",
-  path: "/api/health",
+  id: '/api/health',
+  path: '/api/health',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ApiFiltersRoute = ApiFiltersRouteImport.update({
-  id: "/api/filters",
-  path: "/api/filters",
+  id: '/api/filters',
+  path: '/api/filters',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ApiDataSourcesRoute = ApiDataSourcesRouteImport.update({
-  id: "/api/data-sources",
-  path: "/api/data-sources",
+  id: '/api/data-sources',
+  path: '/api/data-sources',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ApiDashboardsRoute = ApiDashboardsRouteImport.update({
-  id: "/api/dashboards",
-  path: "/api/dashboards",
+  id: '/api/dashboards',
+  path: '/api/dashboards',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ApiChartsRoute = ApiChartsRouteImport.update({
-  id: "/api/charts",
-  path: "/api/charts",
+  id: '/api/charts',
+  path: '/api/charts',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const AuthedSqlEditorRoute = AuthedSqlEditorRouteImport.update({
-  id: "/sql-editor",
-  path: "/sql-editor",
+  id: '/sql-editor',
+  path: '/sql-editor',
   getParentRoute: () => AuthedRoute,
-} as any);
+} as any)
 const AuthedDashboardRoute = AuthedDashboardRouteImport.update({
-  id: "/dashboard",
-  path: "/dashboard",
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => AuthedRoute,
-} as any);
+} as any)
 const AuthedBullBoardRoute = AuthedBullBoardRouteImport.update({
-  id: "/bull-board",
-  path: "/bull-board",
+  id: '/bull-board',
+  path: '/bull-board',
   getParentRoute: () => AuthedRoute,
-} as any);
+} as any)
 const AuthedSettingsIndexRoute = AuthedSettingsIndexRouteImport.update({
-  id: "/settings/",
-  path: "/settings/",
+  id: '/settings/',
+  path: '/settings/',
   getParentRoute: () => AuthedRoute,
-} as any);
+} as any)
 const AuthedReportsIndexRoute = AuthedReportsIndexRouteImport.update({
-  id: "/reports/",
-  path: "/reports/",
+  id: '/reports/',
+  path: '/reports/',
   getParentRoute: () => AuthedRoute,
-} as any);
+} as any)
 const AuthedQueriesIndexRoute = AuthedQueriesIndexRouteImport.update({
-  id: "/queries/",
-  path: "/queries/",
+  id: '/queries/',
+  path: '/queries/',
   getParentRoute: () => AuthedRoute,
-} as any);
+} as any)
 const AuthedNlQueryIndexRoute = AuthedNlQueryIndexRouteImport.update({
-  id: "/nl-query/",
-  path: "/nl-query/",
+  id: '/nl-query/',
+  path: '/nl-query/',
   getParentRoute: () => AuthedRoute,
-} as any);
+} as any)
 const AuthedJobsIndexRoute = AuthedJobsIndexRouteImport.update({
-  id: "/jobs/",
-  path: "/jobs/",
+  id: '/jobs/',
+  path: '/jobs/',
   getParentRoute: () => AuthedRoute,
-} as any);
+} as any)
 const AuthedFiltersIndexRoute = AuthedFiltersIndexRouteImport.update({
-  id: "/filters/",
-  path: "/filters/",
+  id: '/filters/',
+  path: '/filters/',
   getParentRoute: () => AuthedRoute,
-} as any);
-const AuthedEmailTemplatesIndexRoute = AuthedEmailTemplatesIndexRouteImport.update({
-  id: "/email-templates/",
-  path: "/email-templates/",
-  getParentRoute: () => AuthedRoute,
-} as any);
+} as any)
+const AuthedEmailTemplatesIndexRoute =
+  AuthedEmailTemplatesIndexRouteImport.update({
+    id: '/email-templates/',
+    path: '/email-templates/',
+    getParentRoute: () => AuthedRoute,
+  } as any)
 const AuthedDatasetsIndexRoute = AuthedDatasetsIndexRouteImport.update({
-  id: "/datasets/",
-  path: "/datasets/",
+  id: '/datasets/',
+  path: '/datasets/',
   getParentRoute: () => AuthedRoute,
-} as any);
+} as any)
 const AuthedDataSourcesIndexRoute = AuthedDataSourcesIndexRouteImport.update({
-  id: "/data-sources/",
-  path: "/data-sources/",
+  id: '/data-sources/',
+  path: '/data-sources/',
   getParentRoute: () => AuthedRoute,
-} as any);
+} as any)
 const AuthedDashboardsIndexRoute = AuthedDashboardsIndexRouteImport.update({
-  id: "/dashboards/",
-  path: "/dashboards/",
+  id: '/dashboards/',
+  path: '/dashboards/',
   getParentRoute: () => AuthedRoute,
-} as any);
+} as any)
 const AuthedChartsIndexRoute = AuthedChartsIndexRouteImport.update({
-  id: "/charts/",
-  path: "/charts/",
+  id: '/charts/',
+  path: '/charts/',
   getParentRoute: () => AuthedRoute,
-} as any);
+} as any)
 const ShareReportIdRoute = ShareReportIdRouteImport.update({
-  id: "/share/report/$id",
-  path: "/share/report/$id",
+  id: '/share/report/$id',
+  path: '/share/report/$id',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ShareDashboardIdRoute = ShareDashboardIdRouteImport.update({
-  id: "/share/dashboard/$id",
-  path: "/share/dashboard/$id",
+  id: '/share/dashboard/$id',
+  path: '/share/dashboard/$id',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ShareChartIdRoute = ShareChartIdRouteImport.update({
-  id: "/share/chart/$id",
-  path: "/share/chart/$id",
+  id: '/share/chart/$id',
+  path: '/share/chart/$id',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ApiSqlValidateRoute = ApiSqlValidateRouteImport.update({
-  id: "/api/sql/validate",
-  path: "/api/sql/validate",
+  id: '/api/sql/validate',
+  path: '/api/sql/validate',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ApiSqlExecuteRoute = ApiSqlExecuteRouteImport.update({
-  id: "/api/sql/execute",
-  path: "/api/sql/execute",
+  id: '/api/sql/execute',
+  path: '/api/sql/execute',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ApiReportsIdRoute = ApiReportsIdRouteImport.update({
-  id: "/$id",
-  path: "/$id",
+  id: '/$id',
+  path: '/$id',
   getParentRoute: () => ApiReportsRoute,
-} as any);
+} as any)
+const ApiNlQueryExecuteRoute = ApiNlQueryExecuteRouteImport.update({
+  id: '/api/nl-query/execute',
+  path: '/api/nl-query/execute',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiDataSourcesIdRoute = ApiDataSourcesIdRouteImport.update({
-  id: "/$id",
-  path: "/$id",
+  id: '/$id',
+  path: '/$id',
   getParentRoute: () => ApiDataSourcesRoute,
-} as any);
+} as any)
 const ApiDashboardsIdRoute = ApiDashboardsIdRouteImport.update({
-  id: "/$id",
-  path: "/$id",
+  id: '/$id',
+  path: '/$id',
   getParentRoute: () => ApiDashboardsRoute,
-} as any);
+} as any)
 const ApiChartsIdRoute = ApiChartsIdRouteImport.update({
-  id: "/$id",
-  path: "/$id",
+  id: '/$id',
+  path: '/$id',
   getParentRoute: () => ApiChartsRoute,
-} as any);
+} as any)
 const ApiAuthPermissionsRoute = ApiAuthPermissionsRouteImport.update({
-  id: "/api/auth/permissions",
-  path: "/api/auth/permissions",
+  id: '/api/auth/permissions',
+  path: '/api/auth/permissions',
   getParentRoute: () => rootRouteImport,
-} as any);
-const AuthedSettingsEmailIndexRoute = AuthedSettingsEmailIndexRouteImport.update({
-  id: "/settings/email/",
-  path: "/settings/email/",
-  getParentRoute: () => AuthedRoute,
-} as any);
-const AuthedMetadataEntitiesIndexRoute = AuthedMetadataEntitiesIndexRouteImport.update({
-  id: "/metadata/entities/",
-  path: "/metadata/entities/",
-  getParentRoute: () => AuthedRoute,
-} as any);
+} as any)
+const AuthedSettingsEmailIndexRoute =
+  AuthedSettingsEmailIndexRouteImport.update({
+    id: '/settings/email/',
+    path: '/settings/email/',
+    getParentRoute: () => AuthedRoute,
+  } as any)
+const AuthedMetadataEntitiesIndexRoute =
+  AuthedMetadataEntitiesIndexRouteImport.update({
+    id: '/metadata/entities/',
+    path: '/metadata/entities/',
+    getParentRoute: () => AuthedRoute,
+  } as any)
 const AuthedDashboardsIdIndexRoute = AuthedDashboardsIdIndexRouteImport.update({
-  id: "/dashboards/$id/",
-  path: "/dashboards/$id/",
+  id: '/dashboards/$id/',
+  path: '/dashboards/$id/',
   getParentRoute: () => AuthedRoute,
-} as any);
+} as any)
 const AuthedAdminUsersIndexRoute = AuthedAdminUsersIndexRouteImport.update({
-  id: "/admin/users/",
-  path: "/admin/users/",
+  id: '/admin/users/',
+  path: '/admin/users/',
   getParentRoute: () => AuthedRoute,
-} as any);
+} as any)
 const AuthedAdminRolesIndexRoute = AuthedAdminRolesIndexRouteImport.update({
-  id: "/admin/roles/",
-  path: "/admin/roles/",
+  id: '/admin/roles/',
+  path: '/admin/roles/',
   getParentRoute: () => AuthedRoute,
-} as any);
-const AuthedAdminPermissionsIndexRoute = AuthedAdminPermissionsIndexRouteImport.update({
-  id: "/admin/permissions/",
-  path: "/admin/permissions/",
-  getParentRoute: () => AuthedRoute,
-} as any);
-const ApiSqlSchemaDataSourceIdRoute = ApiSqlSchemaDataSourceIdRouteImport.update({
-  id: "/api/sql/schema/$dataSourceId",
-  path: "/api/sql/schema/$dataSourceId",
-  getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
+const AuthedAdminPermissionsIndexRoute =
+  AuthedAdminPermissionsIndexRouteImport.update({
+    id: '/admin/permissions/',
+    path: '/admin/permissions/',
+    getParentRoute: () => AuthedRoute,
+  } as any)
+const ApiSqlSchemaDataSourceIdRoute =
+  ApiSqlSchemaDataSourceIdRouteImport.update({
+    id: '/api/sql/schema/$dataSourceId',
+    path: '/api/sql/schema/$dataSourceId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiReportsIdFiltersRoute = ApiReportsIdFiltersRouteImport.update({
-  id: "/filters",
-  path: "/filters",
+  id: '/filters',
+  path: '/filters',
   getParentRoute: () => ApiReportsIdRoute,
-} as any);
+} as any)
 const ApiReportsIdExportRoute = ApiReportsIdExportRouteImport.update({
-  id: "/export",
-  path: "/export",
+  id: '/export',
+  path: '/export',
   getParentRoute: () => ApiReportsIdRoute,
-} as any);
+} as any)
 const ApiDashboardsIdWidgetsRoute = ApiDashboardsIdWidgetsRouteImport.update({
-  id: "/widgets",
-  path: "/widgets",
+  id: '/widgets',
+  path: '/widgets',
   getParentRoute: () => ApiDashboardsIdRoute,
-} as any);
+} as any)
 const ApiChartsIdFiltersRoute = ApiChartsIdFiltersRouteImport.update({
-  id: "/filters",
-  path: "/filters",
+  id: '/filters',
+  path: '/filters',
   getParentRoute: () => ApiChartsIdRoute,
-} as any);
+} as any)
 const AuthedReportsIdEditorRoute = AuthedReportsIdEditorRouteImport.update({
-  id: "/reports/$id/editor",
-  path: "/reports/$id/editor",
+  id: '/reports/$id/editor',
+  path: '/reports/$id/editor',
   getParentRoute: () => AuthedRoute,
-} as any);
-const AuthedDataSourcesIdPermissionsRoute = AuthedDataSourcesIdPermissionsRouteImport.update({
-  id: "/data-sources/$id/permissions",
-  path: "/data-sources/$id/permissions",
-  getParentRoute: () => AuthedRoute,
-} as any);
+} as any)
+const AuthedDataSourcesIdPermissionsRoute =
+  AuthedDataSourcesIdPermissionsRouteImport.update({
+    id: '/data-sources/$id/permissions',
+    path: '/data-sources/$id/permissions',
+    getParentRoute: () => AuthedRoute,
+  } as any)
 const AuthedChartsViewerIdRoute = AuthedChartsViewerIdRouteImport.update({
-  id: "/charts/viewer/$id",
-  path: "/charts/viewer/$id",
+  id: '/charts/viewer/$id',
+  path: '/charts/viewer/$id',
   getParentRoute: () => AuthedRoute,
-} as any);
+} as any)
 const AuthedChartsEditorIdRoute = AuthedChartsEditorIdRouteImport.update({
-  id: "/charts/editor/$id",
-  path: "/charts/editor/$id",
+  id: '/charts/editor/$id',
+  path: '/charts/editor/$id',
   getParentRoute: () => AuthedRoute,
-} as any);
-const AuthedMetadataEntitiesIdIndexRoute = AuthedMetadataEntitiesIdIndexRouteImport.update({
-  id: "/metadata/entities/$id/",
-  path: "/metadata/entities/$id/",
-  getParentRoute: () => AuthedRoute,
-} as any);
-const ApiReportsIdFiltersFilterLinkIdRoute = ApiReportsIdFiltersFilterLinkIdRouteImport.update({
-  id: "/$filterLinkId",
-  path: "/$filterLinkId",
-  getParentRoute: () => ApiReportsIdFiltersRoute,
-} as any);
-const ApiDashboardsIdWidgetsWidgetIdRoute = ApiDashboardsIdWidgetsWidgetIdRouteImport.update({
-  id: "/$widgetId",
-  path: "/$widgetId",
-  getParentRoute: () => ApiDashboardsIdWidgetsRoute,
-} as any);
-const ApiChartsIdFiltersFilterLinkIdRoute = ApiChartsIdFiltersFilterLinkIdRouteImport.update({
-  id: "/$filterLinkId",
-  path: "/$filterLinkId",
-  getParentRoute: () => ApiChartsIdFiltersRoute,
-} as any);
+} as any)
+const AuthedMetadataEntitiesIdIndexRoute =
+  AuthedMetadataEntitiesIdIndexRouteImport.update({
+    id: '/metadata/entities/$id/',
+    path: '/metadata/entities/$id/',
+    getParentRoute: () => AuthedRoute,
+  } as any)
+const ApiReportsIdFiltersFilterLinkIdRoute =
+  ApiReportsIdFiltersFilterLinkIdRouteImport.update({
+    id: '/$filterLinkId',
+    path: '/$filterLinkId',
+    getParentRoute: () => ApiReportsIdFiltersRoute,
+  } as any)
+const ApiDashboardsIdWidgetsWidgetIdRoute =
+  ApiDashboardsIdWidgetsWidgetIdRouteImport.update({
+    id: '/$widgetId',
+    path: '/$widgetId',
+    getParentRoute: () => ApiDashboardsIdWidgetsRoute,
+  } as any)
+const ApiChartsIdFiltersFilterLinkIdRoute =
+  ApiChartsIdFiltersFilterLinkIdRouteImport.update({
+    id: '/$filterLinkId',
+    path: '/$filterLinkId',
+    getParentRoute: () => ApiChartsIdFiltersRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  "/": typeof IndexRoute;
-  "/login": typeof LoginRoute;
-  "/bull-board": typeof AuthedBullBoardRoute;
-  "/dashboard": typeof AuthedDashboardRoute;
-  "/sql-editor": typeof AuthedSqlEditorRoute;
-  "/api/charts": typeof ApiChartsRouteWithChildren;
-  "/api/dashboards": typeof ApiDashboardsRouteWithChildren;
-  "/api/data-sources": typeof ApiDataSourcesRouteWithChildren;
-  "/api/filters": typeof ApiFiltersRoute;
-  "/api/health": typeof ApiHealthRoute;
-  "/api/jobs": typeof ApiJobsRoute;
-  "/api/queries": typeof ApiQueriesRoute;
-  "/api/reports": typeof ApiReportsRouteWithChildren;
-  "/api/auth/permissions": typeof ApiAuthPermissionsRoute;
-  "/api/charts/$id": typeof ApiChartsIdRouteWithChildren;
-  "/api/dashboards/$id": typeof ApiDashboardsIdRouteWithChildren;
-  "/api/data-sources/$id": typeof ApiDataSourcesIdRoute;
-  "/api/reports/$id": typeof ApiReportsIdRouteWithChildren;
-  "/api/sql/execute": typeof ApiSqlExecuteRoute;
-  "/api/sql/validate": typeof ApiSqlValidateRoute;
-  "/share/chart/$id": typeof ShareChartIdRoute;
-  "/share/dashboard/$id": typeof ShareDashboardIdRoute;
-  "/share/report/$id": typeof ShareReportIdRoute;
-  "/charts/": typeof AuthedChartsIndexRoute;
-  "/dashboards/": typeof AuthedDashboardsIndexRoute;
-  "/data-sources/": typeof AuthedDataSourcesIndexRoute;
-  "/datasets/": typeof AuthedDatasetsIndexRoute;
-  "/email-templates/": typeof AuthedEmailTemplatesIndexRoute;
-  "/filters/": typeof AuthedFiltersIndexRoute;
-  "/jobs/": typeof AuthedJobsIndexRoute;
-  "/nl-query/": typeof AuthedNlQueryIndexRoute;
-  "/queries/": typeof AuthedQueriesIndexRoute;
-  "/reports/": typeof AuthedReportsIndexRoute;
-  "/settings/": typeof AuthedSettingsIndexRoute;
-  "/charts/editor/$id": typeof AuthedChartsEditorIdRoute;
-  "/charts/viewer/$id": typeof AuthedChartsViewerIdRoute;
-  "/data-sources/$id/permissions": typeof AuthedDataSourcesIdPermissionsRoute;
-  "/reports/$id/editor": typeof AuthedReportsIdEditorRoute;
-  "/api/charts/$id/filters": typeof ApiChartsIdFiltersRouteWithChildren;
-  "/api/dashboards/$id/widgets": typeof ApiDashboardsIdWidgetsRouteWithChildren;
-  "/api/reports/$id/export": typeof ApiReportsIdExportRoute;
-  "/api/reports/$id/filters": typeof ApiReportsIdFiltersRouteWithChildren;
-  "/api/sql/schema/$dataSourceId": typeof ApiSqlSchemaDataSourceIdRoute;
-  "/admin/permissions/": typeof AuthedAdminPermissionsIndexRoute;
-  "/admin/roles/": typeof AuthedAdminRolesIndexRoute;
-  "/admin/users/": typeof AuthedAdminUsersIndexRoute;
-  "/dashboards/$id/": typeof AuthedDashboardsIdIndexRoute;
-  "/metadata/entities/": typeof AuthedMetadataEntitiesIndexRoute;
-  "/settings/email/": typeof AuthedSettingsEmailIndexRoute;
-  "/api/charts/$id/filters/$filterLinkId": typeof ApiChartsIdFiltersFilterLinkIdRoute;
-  "/api/dashboards/$id/widgets/$widgetId": typeof ApiDashboardsIdWidgetsWidgetIdRoute;
-  "/api/reports/$id/filters/$filterLinkId": typeof ApiReportsIdFiltersFilterLinkIdRoute;
-  "/metadata/entities/$id/": typeof AuthedMetadataEntitiesIdIndexRoute;
+  '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/bull-board': typeof AuthedBullBoardRoute
+  '/dashboard': typeof AuthedDashboardRoute
+  '/sql-editor': typeof AuthedSqlEditorRoute
+  '/api/charts': typeof ApiChartsRouteWithChildren
+  '/api/dashboards': typeof ApiDashboardsRouteWithChildren
+  '/api/data-sources': typeof ApiDataSourcesRouteWithChildren
+  '/api/filters': typeof ApiFiltersRoute
+  '/api/health': typeof ApiHealthRoute
+  '/api/jobs': typeof ApiJobsRoute
+  '/api/queries': typeof ApiQueriesRoute
+  '/api/reports': typeof ApiReportsRouteWithChildren
+  '/api/auth/permissions': typeof ApiAuthPermissionsRoute
+  '/api/charts/$id': typeof ApiChartsIdRouteWithChildren
+  '/api/dashboards/$id': typeof ApiDashboardsIdRouteWithChildren
+  '/api/data-sources/$id': typeof ApiDataSourcesIdRoute
+  '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
+  '/api/reports/$id': typeof ApiReportsIdRouteWithChildren
+  '/api/sql/execute': typeof ApiSqlExecuteRoute
+  '/api/sql/validate': typeof ApiSqlValidateRoute
+  '/share/chart/$id': typeof ShareChartIdRoute
+  '/share/dashboard/$id': typeof ShareDashboardIdRoute
+  '/share/report/$id': typeof ShareReportIdRoute
+  '/charts/': typeof AuthedChartsIndexRoute
+  '/dashboards/': typeof AuthedDashboardsIndexRoute
+  '/data-sources/': typeof AuthedDataSourcesIndexRoute
+  '/datasets/': typeof AuthedDatasetsIndexRoute
+  '/email-templates/': typeof AuthedEmailTemplatesIndexRoute
+  '/filters/': typeof AuthedFiltersIndexRoute
+  '/jobs/': typeof AuthedJobsIndexRoute
+  '/nl-query/': typeof AuthedNlQueryIndexRoute
+  '/queries/': typeof AuthedQueriesIndexRoute
+  '/reports/': typeof AuthedReportsIndexRoute
+  '/settings/': typeof AuthedSettingsIndexRoute
+  '/charts/editor/$id': typeof AuthedChartsEditorIdRoute
+  '/charts/viewer/$id': typeof AuthedChartsViewerIdRoute
+  '/data-sources/$id/permissions': typeof AuthedDataSourcesIdPermissionsRoute
+  '/reports/$id/editor': typeof AuthedReportsIdEditorRoute
+  '/api/charts/$id/filters': typeof ApiChartsIdFiltersRouteWithChildren
+  '/api/dashboards/$id/widgets': typeof ApiDashboardsIdWidgetsRouteWithChildren
+  '/api/reports/$id/export': typeof ApiReportsIdExportRoute
+  '/api/reports/$id/filters': typeof ApiReportsIdFiltersRouteWithChildren
+  '/api/sql/schema/$dataSourceId': typeof ApiSqlSchemaDataSourceIdRoute
+  '/admin/permissions/': typeof AuthedAdminPermissionsIndexRoute
+  '/admin/roles/': typeof AuthedAdminRolesIndexRoute
+  '/admin/users/': typeof AuthedAdminUsersIndexRoute
+  '/dashboards/$id/': typeof AuthedDashboardsIdIndexRoute
+  '/metadata/entities/': typeof AuthedMetadataEntitiesIndexRoute
+  '/settings/email/': typeof AuthedSettingsEmailIndexRoute
+  '/api/charts/$id/filters/$filterLinkId': typeof ApiChartsIdFiltersFilterLinkIdRoute
+  '/api/dashboards/$id/widgets/$widgetId': typeof ApiDashboardsIdWidgetsWidgetIdRoute
+  '/api/reports/$id/filters/$filterLinkId': typeof ApiReportsIdFiltersFilterLinkIdRoute
+  '/metadata/entities/$id/': typeof AuthedMetadataEntitiesIdIndexRoute
 }
 export interface FileRoutesByTo {
-  "/": typeof IndexRoute;
-  "/login": typeof LoginRoute;
-  "/bull-board": typeof AuthedBullBoardRoute;
-  "/dashboard": typeof AuthedDashboardRoute;
-  "/sql-editor": typeof AuthedSqlEditorRoute;
-  "/api/charts": typeof ApiChartsRouteWithChildren;
-  "/api/dashboards": typeof ApiDashboardsRouteWithChildren;
-  "/api/data-sources": typeof ApiDataSourcesRouteWithChildren;
-  "/api/filters": typeof ApiFiltersRoute;
-  "/api/health": typeof ApiHealthRoute;
-  "/api/jobs": typeof ApiJobsRoute;
-  "/api/queries": typeof ApiQueriesRoute;
-  "/api/reports": typeof ApiReportsRouteWithChildren;
-  "/api/auth/permissions": typeof ApiAuthPermissionsRoute;
-  "/api/charts/$id": typeof ApiChartsIdRouteWithChildren;
-  "/api/dashboards/$id": typeof ApiDashboardsIdRouteWithChildren;
-  "/api/data-sources/$id": typeof ApiDataSourcesIdRoute;
-  "/api/reports/$id": typeof ApiReportsIdRouteWithChildren;
-  "/api/sql/execute": typeof ApiSqlExecuteRoute;
-  "/api/sql/validate": typeof ApiSqlValidateRoute;
-  "/share/chart/$id": typeof ShareChartIdRoute;
-  "/share/dashboard/$id": typeof ShareDashboardIdRoute;
-  "/share/report/$id": typeof ShareReportIdRoute;
-  "/charts": typeof AuthedChartsIndexRoute;
-  "/dashboards": typeof AuthedDashboardsIndexRoute;
-  "/data-sources": typeof AuthedDataSourcesIndexRoute;
-  "/datasets": typeof AuthedDatasetsIndexRoute;
-  "/email-templates": typeof AuthedEmailTemplatesIndexRoute;
-  "/filters": typeof AuthedFiltersIndexRoute;
-  "/jobs": typeof AuthedJobsIndexRoute;
-  "/nl-query": typeof AuthedNlQueryIndexRoute;
-  "/queries": typeof AuthedQueriesIndexRoute;
-  "/reports": typeof AuthedReportsIndexRoute;
-  "/settings": typeof AuthedSettingsIndexRoute;
-  "/charts/editor/$id": typeof AuthedChartsEditorIdRoute;
-  "/charts/viewer/$id": typeof AuthedChartsViewerIdRoute;
-  "/data-sources/$id/permissions": typeof AuthedDataSourcesIdPermissionsRoute;
-  "/reports/$id/editor": typeof AuthedReportsIdEditorRoute;
-  "/api/charts/$id/filters": typeof ApiChartsIdFiltersRouteWithChildren;
-  "/api/dashboards/$id/widgets": typeof ApiDashboardsIdWidgetsRouteWithChildren;
-  "/api/reports/$id/export": typeof ApiReportsIdExportRoute;
-  "/api/reports/$id/filters": typeof ApiReportsIdFiltersRouteWithChildren;
-  "/api/sql/schema/$dataSourceId": typeof ApiSqlSchemaDataSourceIdRoute;
-  "/admin/permissions": typeof AuthedAdminPermissionsIndexRoute;
-  "/admin/roles": typeof AuthedAdminRolesIndexRoute;
-  "/admin/users": typeof AuthedAdminUsersIndexRoute;
-  "/dashboards/$id": typeof AuthedDashboardsIdIndexRoute;
-  "/metadata/entities": typeof AuthedMetadataEntitiesIndexRoute;
-  "/settings/email": typeof AuthedSettingsEmailIndexRoute;
-  "/api/charts/$id/filters/$filterLinkId": typeof ApiChartsIdFiltersFilterLinkIdRoute;
-  "/api/dashboards/$id/widgets/$widgetId": typeof ApiDashboardsIdWidgetsWidgetIdRoute;
-  "/api/reports/$id/filters/$filterLinkId": typeof ApiReportsIdFiltersFilterLinkIdRoute;
-  "/metadata/entities/$id": typeof AuthedMetadataEntitiesIdIndexRoute;
+  '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/bull-board': typeof AuthedBullBoardRoute
+  '/dashboard': typeof AuthedDashboardRoute
+  '/sql-editor': typeof AuthedSqlEditorRoute
+  '/api/charts': typeof ApiChartsRouteWithChildren
+  '/api/dashboards': typeof ApiDashboardsRouteWithChildren
+  '/api/data-sources': typeof ApiDataSourcesRouteWithChildren
+  '/api/filters': typeof ApiFiltersRoute
+  '/api/health': typeof ApiHealthRoute
+  '/api/jobs': typeof ApiJobsRoute
+  '/api/queries': typeof ApiQueriesRoute
+  '/api/reports': typeof ApiReportsRouteWithChildren
+  '/api/auth/permissions': typeof ApiAuthPermissionsRoute
+  '/api/charts/$id': typeof ApiChartsIdRouteWithChildren
+  '/api/dashboards/$id': typeof ApiDashboardsIdRouteWithChildren
+  '/api/data-sources/$id': typeof ApiDataSourcesIdRoute
+  '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
+  '/api/reports/$id': typeof ApiReportsIdRouteWithChildren
+  '/api/sql/execute': typeof ApiSqlExecuteRoute
+  '/api/sql/validate': typeof ApiSqlValidateRoute
+  '/share/chart/$id': typeof ShareChartIdRoute
+  '/share/dashboard/$id': typeof ShareDashboardIdRoute
+  '/share/report/$id': typeof ShareReportIdRoute
+  '/charts': typeof AuthedChartsIndexRoute
+  '/dashboards': typeof AuthedDashboardsIndexRoute
+  '/data-sources': typeof AuthedDataSourcesIndexRoute
+  '/datasets': typeof AuthedDatasetsIndexRoute
+  '/email-templates': typeof AuthedEmailTemplatesIndexRoute
+  '/filters': typeof AuthedFiltersIndexRoute
+  '/jobs': typeof AuthedJobsIndexRoute
+  '/nl-query': typeof AuthedNlQueryIndexRoute
+  '/queries': typeof AuthedQueriesIndexRoute
+  '/reports': typeof AuthedReportsIndexRoute
+  '/settings': typeof AuthedSettingsIndexRoute
+  '/charts/editor/$id': typeof AuthedChartsEditorIdRoute
+  '/charts/viewer/$id': typeof AuthedChartsViewerIdRoute
+  '/data-sources/$id/permissions': typeof AuthedDataSourcesIdPermissionsRoute
+  '/reports/$id/editor': typeof AuthedReportsIdEditorRoute
+  '/api/charts/$id/filters': typeof ApiChartsIdFiltersRouteWithChildren
+  '/api/dashboards/$id/widgets': typeof ApiDashboardsIdWidgetsRouteWithChildren
+  '/api/reports/$id/export': typeof ApiReportsIdExportRoute
+  '/api/reports/$id/filters': typeof ApiReportsIdFiltersRouteWithChildren
+  '/api/sql/schema/$dataSourceId': typeof ApiSqlSchemaDataSourceIdRoute
+  '/admin/permissions': typeof AuthedAdminPermissionsIndexRoute
+  '/admin/roles': typeof AuthedAdminRolesIndexRoute
+  '/admin/users': typeof AuthedAdminUsersIndexRoute
+  '/dashboards/$id': typeof AuthedDashboardsIdIndexRoute
+  '/metadata/entities': typeof AuthedMetadataEntitiesIndexRoute
+  '/settings/email': typeof AuthedSettingsEmailIndexRoute
+  '/api/charts/$id/filters/$filterLinkId': typeof ApiChartsIdFiltersFilterLinkIdRoute
+  '/api/dashboards/$id/widgets/$widgetId': typeof ApiDashboardsIdWidgetsWidgetIdRoute
+  '/api/reports/$id/filters/$filterLinkId': typeof ApiReportsIdFiltersFilterLinkIdRoute
+  '/metadata/entities/$id': typeof AuthedMetadataEntitiesIdIndexRoute
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport;
-  "/": typeof IndexRoute;
-  "/_authed": typeof AuthedRouteWithChildren;
-  "/login": typeof LoginRoute;
-  "/_authed/bull-board": typeof AuthedBullBoardRoute;
-  "/_authed/dashboard": typeof AuthedDashboardRoute;
-  "/_authed/sql-editor": typeof AuthedSqlEditorRoute;
-  "/api/charts": typeof ApiChartsRouteWithChildren;
-  "/api/dashboards": typeof ApiDashboardsRouteWithChildren;
-  "/api/data-sources": typeof ApiDataSourcesRouteWithChildren;
-  "/api/filters": typeof ApiFiltersRoute;
-  "/api/health": typeof ApiHealthRoute;
-  "/api/jobs": typeof ApiJobsRoute;
-  "/api/queries": typeof ApiQueriesRoute;
-  "/api/reports": typeof ApiReportsRouteWithChildren;
-  "/api/auth/permissions": typeof ApiAuthPermissionsRoute;
-  "/api/charts/$id": typeof ApiChartsIdRouteWithChildren;
-  "/api/dashboards/$id": typeof ApiDashboardsIdRouteWithChildren;
-  "/api/data-sources/$id": typeof ApiDataSourcesIdRoute;
-  "/api/reports/$id": typeof ApiReportsIdRouteWithChildren;
-  "/api/sql/execute": typeof ApiSqlExecuteRoute;
-  "/api/sql/validate": typeof ApiSqlValidateRoute;
-  "/share/chart/$id": typeof ShareChartIdRoute;
-  "/share/dashboard/$id": typeof ShareDashboardIdRoute;
-  "/share/report/$id": typeof ShareReportIdRoute;
-  "/_authed/charts/": typeof AuthedChartsIndexRoute;
-  "/_authed/dashboards/": typeof AuthedDashboardsIndexRoute;
-  "/_authed/data-sources/": typeof AuthedDataSourcesIndexRoute;
-  "/_authed/datasets/": typeof AuthedDatasetsIndexRoute;
-  "/_authed/email-templates/": typeof AuthedEmailTemplatesIndexRoute;
-  "/_authed/filters/": typeof AuthedFiltersIndexRoute;
-  "/_authed/jobs/": typeof AuthedJobsIndexRoute;
-  "/_authed/nl-query/": typeof AuthedNlQueryIndexRoute;
-  "/_authed/queries/": typeof AuthedQueriesIndexRoute;
-  "/_authed/reports/": typeof AuthedReportsIndexRoute;
-  "/_authed/settings/": typeof AuthedSettingsIndexRoute;
-  "/_authed/charts/editor/$id": typeof AuthedChartsEditorIdRoute;
-  "/_authed/charts/viewer/$id": typeof AuthedChartsViewerIdRoute;
-  "/_authed/data-sources/$id/permissions": typeof AuthedDataSourcesIdPermissionsRoute;
-  "/_authed/reports/$id/editor": typeof AuthedReportsIdEditorRoute;
-  "/api/charts/$id/filters": typeof ApiChartsIdFiltersRouteWithChildren;
-  "/api/dashboards/$id/widgets": typeof ApiDashboardsIdWidgetsRouteWithChildren;
-  "/api/reports/$id/export": typeof ApiReportsIdExportRoute;
-  "/api/reports/$id/filters": typeof ApiReportsIdFiltersRouteWithChildren;
-  "/api/sql/schema/$dataSourceId": typeof ApiSqlSchemaDataSourceIdRoute;
-  "/_authed/admin/permissions/": typeof AuthedAdminPermissionsIndexRoute;
-  "/_authed/admin/roles/": typeof AuthedAdminRolesIndexRoute;
-  "/_authed/admin/users/": typeof AuthedAdminUsersIndexRoute;
-  "/_authed/dashboards/$id/": typeof AuthedDashboardsIdIndexRoute;
-  "/_authed/metadata/entities/": typeof AuthedMetadataEntitiesIndexRoute;
-  "/_authed/settings/email/": typeof AuthedSettingsEmailIndexRoute;
-  "/api/charts/$id/filters/$filterLinkId": typeof ApiChartsIdFiltersFilterLinkIdRoute;
-  "/api/dashboards/$id/widgets/$widgetId": typeof ApiDashboardsIdWidgetsWidgetIdRoute;
-  "/api/reports/$id/filters/$filterLinkId": typeof ApiReportsIdFiltersFilterLinkIdRoute;
-  "/_authed/metadata/entities/$id/": typeof AuthedMetadataEntitiesIdIndexRoute;
+  __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/_authed': typeof AuthedRouteWithChildren
+  '/login': typeof LoginRoute
+  '/_authed/bull-board': typeof AuthedBullBoardRoute
+  '/_authed/dashboard': typeof AuthedDashboardRoute
+  '/_authed/sql-editor': typeof AuthedSqlEditorRoute
+  '/api/charts': typeof ApiChartsRouteWithChildren
+  '/api/dashboards': typeof ApiDashboardsRouteWithChildren
+  '/api/data-sources': typeof ApiDataSourcesRouteWithChildren
+  '/api/filters': typeof ApiFiltersRoute
+  '/api/health': typeof ApiHealthRoute
+  '/api/jobs': typeof ApiJobsRoute
+  '/api/queries': typeof ApiQueriesRoute
+  '/api/reports': typeof ApiReportsRouteWithChildren
+  '/api/auth/permissions': typeof ApiAuthPermissionsRoute
+  '/api/charts/$id': typeof ApiChartsIdRouteWithChildren
+  '/api/dashboards/$id': typeof ApiDashboardsIdRouteWithChildren
+  '/api/data-sources/$id': typeof ApiDataSourcesIdRoute
+  '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
+  '/api/reports/$id': typeof ApiReportsIdRouteWithChildren
+  '/api/sql/execute': typeof ApiSqlExecuteRoute
+  '/api/sql/validate': typeof ApiSqlValidateRoute
+  '/share/chart/$id': typeof ShareChartIdRoute
+  '/share/dashboard/$id': typeof ShareDashboardIdRoute
+  '/share/report/$id': typeof ShareReportIdRoute
+  '/_authed/charts/': typeof AuthedChartsIndexRoute
+  '/_authed/dashboards/': typeof AuthedDashboardsIndexRoute
+  '/_authed/data-sources/': typeof AuthedDataSourcesIndexRoute
+  '/_authed/datasets/': typeof AuthedDatasetsIndexRoute
+  '/_authed/email-templates/': typeof AuthedEmailTemplatesIndexRoute
+  '/_authed/filters/': typeof AuthedFiltersIndexRoute
+  '/_authed/jobs/': typeof AuthedJobsIndexRoute
+  '/_authed/nl-query/': typeof AuthedNlQueryIndexRoute
+  '/_authed/queries/': typeof AuthedQueriesIndexRoute
+  '/_authed/reports/': typeof AuthedReportsIndexRoute
+  '/_authed/settings/': typeof AuthedSettingsIndexRoute
+  '/_authed/charts/editor/$id': typeof AuthedChartsEditorIdRoute
+  '/_authed/charts/viewer/$id': typeof AuthedChartsViewerIdRoute
+  '/_authed/data-sources/$id/permissions': typeof AuthedDataSourcesIdPermissionsRoute
+  '/_authed/reports/$id/editor': typeof AuthedReportsIdEditorRoute
+  '/api/charts/$id/filters': typeof ApiChartsIdFiltersRouteWithChildren
+  '/api/dashboards/$id/widgets': typeof ApiDashboardsIdWidgetsRouteWithChildren
+  '/api/reports/$id/export': typeof ApiReportsIdExportRoute
+  '/api/reports/$id/filters': typeof ApiReportsIdFiltersRouteWithChildren
+  '/api/sql/schema/$dataSourceId': typeof ApiSqlSchemaDataSourceIdRoute
+  '/_authed/admin/permissions/': typeof AuthedAdminPermissionsIndexRoute
+  '/_authed/admin/roles/': typeof AuthedAdminRolesIndexRoute
+  '/_authed/admin/users/': typeof AuthedAdminUsersIndexRoute
+  '/_authed/dashboards/$id/': typeof AuthedDashboardsIdIndexRoute
+  '/_authed/metadata/entities/': typeof AuthedMetadataEntitiesIndexRoute
+  '/_authed/settings/email/': typeof AuthedSettingsEmailIndexRoute
+  '/api/charts/$id/filters/$filterLinkId': typeof ApiChartsIdFiltersFilterLinkIdRoute
+  '/api/dashboards/$id/widgets/$widgetId': typeof ApiDashboardsIdWidgetsWidgetIdRoute
+  '/api/reports/$id/filters/$filterLinkId': typeof ApiReportsIdFiltersFilterLinkIdRoute
+  '/_authed/metadata/entities/$id/': typeof AuthedMetadataEntitiesIdIndexRoute
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
+  fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | "/"
-    | "/login"
-    | "/bull-board"
-    | "/dashboard"
-    | "/sql-editor"
-    | "/api/charts"
-    | "/api/dashboards"
-    | "/api/data-sources"
-    | "/api/filters"
-    | "/api/health"
-    | "/api/jobs"
-    | "/api/queries"
-    | "/api/reports"
-    | "/api/auth/permissions"
-    | "/api/charts/$id"
-    | "/api/dashboards/$id"
-    | "/api/data-sources/$id"
-    | "/api/reports/$id"
-    | "/api/sql/execute"
-    | "/api/sql/validate"
-    | "/share/chart/$id"
-    | "/share/dashboard/$id"
-    | "/share/report/$id"
-    | "/charts/"
-    | "/dashboards/"
-    | "/data-sources/"
-    | "/datasets/"
-    | "/email-templates/"
-    | "/filters/"
-    | "/jobs/"
-    | "/nl-query/"
-    | "/queries/"
-    | "/reports/"
-    | "/settings/"
-    | "/charts/editor/$id"
-    | "/charts/viewer/$id"
-    | "/data-sources/$id/permissions"
-    | "/reports/$id/editor"
-    | "/api/charts/$id/filters"
-    | "/api/dashboards/$id/widgets"
-    | "/api/reports/$id/export"
-    | "/api/reports/$id/filters"
-    | "/api/sql/schema/$dataSourceId"
-    | "/admin/permissions/"
-    | "/admin/roles/"
-    | "/admin/users/"
-    | "/dashboards/$id/"
-    | "/metadata/entities/"
-    | "/settings/email/"
-    | "/api/charts/$id/filters/$filterLinkId"
-    | "/api/dashboards/$id/widgets/$widgetId"
-    | "/api/reports/$id/filters/$filterLinkId"
-    | "/metadata/entities/$id/";
-  fileRoutesByTo: FileRoutesByTo;
+    | '/'
+    | '/login'
+    | '/bull-board'
+    | '/dashboard'
+    | '/sql-editor'
+    | '/api/charts'
+    | '/api/dashboards'
+    | '/api/data-sources'
+    | '/api/filters'
+    | '/api/health'
+    | '/api/jobs'
+    | '/api/queries'
+    | '/api/reports'
+    | '/api/auth/permissions'
+    | '/api/charts/$id'
+    | '/api/dashboards/$id'
+    | '/api/data-sources/$id'
+    | '/api/nl-query/execute'
+    | '/api/reports/$id'
+    | '/api/sql/execute'
+    | '/api/sql/validate'
+    | '/share/chart/$id'
+    | '/share/dashboard/$id'
+    | '/share/report/$id'
+    | '/charts/'
+    | '/dashboards/'
+    | '/data-sources/'
+    | '/datasets/'
+    | '/email-templates/'
+    | '/filters/'
+    | '/jobs/'
+    | '/nl-query/'
+    | '/queries/'
+    | '/reports/'
+    | '/settings/'
+    | '/charts/editor/$id'
+    | '/charts/viewer/$id'
+    | '/data-sources/$id/permissions'
+    | '/reports/$id/editor'
+    | '/api/charts/$id/filters'
+    | '/api/dashboards/$id/widgets'
+    | '/api/reports/$id/export'
+    | '/api/reports/$id/filters'
+    | '/api/sql/schema/$dataSourceId'
+    | '/admin/permissions/'
+    | '/admin/roles/'
+    | '/admin/users/'
+    | '/dashboards/$id/'
+    | '/metadata/entities/'
+    | '/settings/email/'
+    | '/api/charts/$id/filters/$filterLinkId'
+    | '/api/dashboards/$id/widgets/$widgetId'
+    | '/api/reports/$id/filters/$filterLinkId'
+    | '/metadata/entities/$id/'
+  fileRoutesByTo: FileRoutesByTo
   to:
-    | "/"
-    | "/login"
-    | "/bull-board"
-    | "/dashboard"
-    | "/sql-editor"
-    | "/api/charts"
-    | "/api/dashboards"
-    | "/api/data-sources"
-    | "/api/filters"
-    | "/api/health"
-    | "/api/jobs"
-    | "/api/queries"
-    | "/api/reports"
-    | "/api/auth/permissions"
-    | "/api/charts/$id"
-    | "/api/dashboards/$id"
-    | "/api/data-sources/$id"
-    | "/api/reports/$id"
-    | "/api/sql/execute"
-    | "/api/sql/validate"
-    | "/share/chart/$id"
-    | "/share/dashboard/$id"
-    | "/share/report/$id"
-    | "/charts"
-    | "/dashboards"
-    | "/data-sources"
-    | "/datasets"
-    | "/email-templates"
-    | "/filters"
-    | "/jobs"
-    | "/nl-query"
-    | "/queries"
-    | "/reports"
-    | "/settings"
-    | "/charts/editor/$id"
-    | "/charts/viewer/$id"
-    | "/data-sources/$id/permissions"
-    | "/reports/$id/editor"
-    | "/api/charts/$id/filters"
-    | "/api/dashboards/$id/widgets"
-    | "/api/reports/$id/export"
-    | "/api/reports/$id/filters"
-    | "/api/sql/schema/$dataSourceId"
-    | "/admin/permissions"
-    | "/admin/roles"
-    | "/admin/users"
-    | "/dashboards/$id"
-    | "/metadata/entities"
-    | "/settings/email"
-    | "/api/charts/$id/filters/$filterLinkId"
-    | "/api/dashboards/$id/widgets/$widgetId"
-    | "/api/reports/$id/filters/$filterLinkId"
-    | "/metadata/entities/$id";
+    | '/'
+    | '/login'
+    | '/bull-board'
+    | '/dashboard'
+    | '/sql-editor'
+    | '/api/charts'
+    | '/api/dashboards'
+    | '/api/data-sources'
+    | '/api/filters'
+    | '/api/health'
+    | '/api/jobs'
+    | '/api/queries'
+    | '/api/reports'
+    | '/api/auth/permissions'
+    | '/api/charts/$id'
+    | '/api/dashboards/$id'
+    | '/api/data-sources/$id'
+    | '/api/nl-query/execute'
+    | '/api/reports/$id'
+    | '/api/sql/execute'
+    | '/api/sql/validate'
+    | '/share/chart/$id'
+    | '/share/dashboard/$id'
+    | '/share/report/$id'
+    | '/charts'
+    | '/dashboards'
+    | '/data-sources'
+    | '/datasets'
+    | '/email-templates'
+    | '/filters'
+    | '/jobs'
+    | '/nl-query'
+    | '/queries'
+    | '/reports'
+    | '/settings'
+    | '/charts/editor/$id'
+    | '/charts/viewer/$id'
+    | '/data-sources/$id/permissions'
+    | '/reports/$id/editor'
+    | '/api/charts/$id/filters'
+    | '/api/dashboards/$id/widgets'
+    | '/api/reports/$id/export'
+    | '/api/reports/$id/filters'
+    | '/api/sql/schema/$dataSourceId'
+    | '/admin/permissions'
+    | '/admin/roles'
+    | '/admin/users'
+    | '/dashboards/$id'
+    | '/metadata/entities'
+    | '/settings/email'
+    | '/api/charts/$id/filters/$filterLinkId'
+    | '/api/dashboards/$id/widgets/$widgetId'
+    | '/api/reports/$id/filters/$filterLinkId'
+    | '/metadata/entities/$id'
   id:
-    | "__root__"
-    | "/"
-    | "/_authed"
-    | "/login"
-    | "/_authed/bull-board"
-    | "/_authed/dashboard"
-    | "/_authed/sql-editor"
-    | "/api/charts"
-    | "/api/dashboards"
-    | "/api/data-sources"
-    | "/api/filters"
-    | "/api/health"
-    | "/api/jobs"
-    | "/api/queries"
-    | "/api/reports"
-    | "/api/auth/permissions"
-    | "/api/charts/$id"
-    | "/api/dashboards/$id"
-    | "/api/data-sources/$id"
-    | "/api/reports/$id"
-    | "/api/sql/execute"
-    | "/api/sql/validate"
-    | "/share/chart/$id"
-    | "/share/dashboard/$id"
-    | "/share/report/$id"
-    | "/_authed/charts/"
-    | "/_authed/dashboards/"
-    | "/_authed/data-sources/"
-    | "/_authed/datasets/"
-    | "/_authed/email-templates/"
-    | "/_authed/filters/"
-    | "/_authed/jobs/"
-    | "/_authed/nl-query/"
-    | "/_authed/queries/"
-    | "/_authed/reports/"
-    | "/_authed/settings/"
-    | "/_authed/charts/editor/$id"
-    | "/_authed/charts/viewer/$id"
-    | "/_authed/data-sources/$id/permissions"
-    | "/_authed/reports/$id/editor"
-    | "/api/charts/$id/filters"
-    | "/api/dashboards/$id/widgets"
-    | "/api/reports/$id/export"
-    | "/api/reports/$id/filters"
-    | "/api/sql/schema/$dataSourceId"
-    | "/_authed/admin/permissions/"
-    | "/_authed/admin/roles/"
-    | "/_authed/admin/users/"
-    | "/_authed/dashboards/$id/"
-    | "/_authed/metadata/entities/"
-    | "/_authed/settings/email/"
-    | "/api/charts/$id/filters/$filterLinkId"
-    | "/api/dashboards/$id/widgets/$widgetId"
-    | "/api/reports/$id/filters/$filterLinkId"
-    | "/_authed/metadata/entities/$id/";
-  fileRoutesById: FileRoutesById;
+    | '__root__'
+    | '/'
+    | '/_authed'
+    | '/login'
+    | '/_authed/bull-board'
+    | '/_authed/dashboard'
+    | '/_authed/sql-editor'
+    | '/api/charts'
+    | '/api/dashboards'
+    | '/api/data-sources'
+    | '/api/filters'
+    | '/api/health'
+    | '/api/jobs'
+    | '/api/queries'
+    | '/api/reports'
+    | '/api/auth/permissions'
+    | '/api/charts/$id'
+    | '/api/dashboards/$id'
+    | '/api/data-sources/$id'
+    | '/api/nl-query/execute'
+    | '/api/reports/$id'
+    | '/api/sql/execute'
+    | '/api/sql/validate'
+    | '/share/chart/$id'
+    | '/share/dashboard/$id'
+    | '/share/report/$id'
+    | '/_authed/charts/'
+    | '/_authed/dashboards/'
+    | '/_authed/data-sources/'
+    | '/_authed/datasets/'
+    | '/_authed/email-templates/'
+    | '/_authed/filters/'
+    | '/_authed/jobs/'
+    | '/_authed/nl-query/'
+    | '/_authed/queries/'
+    | '/_authed/reports/'
+    | '/_authed/settings/'
+    | '/_authed/charts/editor/$id'
+    | '/_authed/charts/viewer/$id'
+    | '/_authed/data-sources/$id/permissions'
+    | '/_authed/reports/$id/editor'
+    | '/api/charts/$id/filters'
+    | '/api/dashboards/$id/widgets'
+    | '/api/reports/$id/export'
+    | '/api/reports/$id/filters'
+    | '/api/sql/schema/$dataSourceId'
+    | '/_authed/admin/permissions/'
+    | '/_authed/admin/roles/'
+    | '/_authed/admin/users/'
+    | '/_authed/dashboards/$id/'
+    | '/_authed/metadata/entities/'
+    | '/_authed/settings/email/'
+    | '/api/charts/$id/filters/$filterLinkId'
+    | '/api/dashboards/$id/widgets/$widgetId'
+    | '/api/reports/$id/filters/$filterLinkId'
+    | '/_authed/metadata/entities/$id/'
+  fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute;
-  AuthedRoute: typeof AuthedRouteWithChildren;
-  LoginRoute: typeof LoginRoute;
-  ApiChartsRoute: typeof ApiChartsRouteWithChildren;
-  ApiDashboardsRoute: typeof ApiDashboardsRouteWithChildren;
-  ApiDataSourcesRoute: typeof ApiDataSourcesRouteWithChildren;
-  ApiFiltersRoute: typeof ApiFiltersRoute;
-  ApiHealthRoute: typeof ApiHealthRoute;
-  ApiJobsRoute: typeof ApiJobsRoute;
-  ApiQueriesRoute: typeof ApiQueriesRoute;
-  ApiReportsRoute: typeof ApiReportsRouteWithChildren;
-  ApiAuthPermissionsRoute: typeof ApiAuthPermissionsRoute;
-  ApiSqlExecuteRoute: typeof ApiSqlExecuteRoute;
-  ApiSqlValidateRoute: typeof ApiSqlValidateRoute;
-  ShareChartIdRoute: typeof ShareChartIdRoute;
-  ShareDashboardIdRoute: typeof ShareDashboardIdRoute;
-  ShareReportIdRoute: typeof ShareReportIdRoute;
-  ApiSqlSchemaDataSourceIdRoute: typeof ApiSqlSchemaDataSourceIdRoute;
+  IndexRoute: typeof IndexRoute
+  AuthedRoute: typeof AuthedRouteWithChildren
+  LoginRoute: typeof LoginRoute
+  ApiChartsRoute: typeof ApiChartsRouteWithChildren
+  ApiDashboardsRoute: typeof ApiDashboardsRouteWithChildren
+  ApiDataSourcesRoute: typeof ApiDataSourcesRouteWithChildren
+  ApiFiltersRoute: typeof ApiFiltersRoute
+  ApiHealthRoute: typeof ApiHealthRoute
+  ApiJobsRoute: typeof ApiJobsRoute
+  ApiQueriesRoute: typeof ApiQueriesRoute
+  ApiReportsRoute: typeof ApiReportsRouteWithChildren
+  ApiAuthPermissionsRoute: typeof ApiAuthPermissionsRoute
+  ApiNlQueryExecuteRoute: typeof ApiNlQueryExecuteRoute
+  ApiSqlExecuteRoute: typeof ApiSqlExecuteRoute
+  ApiSqlValidateRoute: typeof ApiSqlValidateRoute
+  ShareChartIdRoute: typeof ShareChartIdRoute
+  ShareDashboardIdRoute: typeof ShareDashboardIdRoute
+  ShareReportIdRoute: typeof ShareReportIdRoute
+  ApiSqlSchemaDataSourceIdRoute: typeof ApiSqlSchemaDataSourceIdRoute
 }
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    "/login": {
-      id: "/login";
-      path: "/login";
-      fullPath: "/login";
-      preLoaderRoute: typeof LoginRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/_authed": {
-      id: "/_authed";
-      path: "";
-      fullPath: "/";
-      preLoaderRoute: typeof AuthedRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/": {
-      id: "/";
-      path: "/";
-      fullPath: "/";
-      preLoaderRoute: typeof IndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/reports": {
-      id: "/api/reports";
-      path: "/api/reports";
-      fullPath: "/api/reports";
-      preLoaderRoute: typeof ApiReportsRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/queries": {
-      id: "/api/queries";
-      path: "/api/queries";
-      fullPath: "/api/queries";
-      preLoaderRoute: typeof ApiQueriesRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/jobs": {
-      id: "/api/jobs";
-      path: "/api/jobs";
-      fullPath: "/api/jobs";
-      preLoaderRoute: typeof ApiJobsRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/health": {
-      id: "/api/health";
-      path: "/api/health";
-      fullPath: "/api/health";
-      preLoaderRoute: typeof ApiHealthRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/filters": {
-      id: "/api/filters";
-      path: "/api/filters";
-      fullPath: "/api/filters";
-      preLoaderRoute: typeof ApiFiltersRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/data-sources": {
-      id: "/api/data-sources";
-      path: "/api/data-sources";
-      fullPath: "/api/data-sources";
-      preLoaderRoute: typeof ApiDataSourcesRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/dashboards": {
-      id: "/api/dashboards";
-      path: "/api/dashboards";
-      fullPath: "/api/dashboards";
-      preLoaderRoute: typeof ApiDashboardsRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/charts": {
-      id: "/api/charts";
-      path: "/api/charts";
-      fullPath: "/api/charts";
-      preLoaderRoute: typeof ApiChartsRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/_authed/sql-editor": {
-      id: "/_authed/sql-editor";
-      path: "/sql-editor";
-      fullPath: "/sql-editor";
-      preLoaderRoute: typeof AuthedSqlEditorRouteImport;
-      parentRoute: typeof AuthedRoute;
-    };
-    "/_authed/dashboard": {
-      id: "/_authed/dashboard";
-      path: "/dashboard";
-      fullPath: "/dashboard";
-      preLoaderRoute: typeof AuthedDashboardRouteImport;
-      parentRoute: typeof AuthedRoute;
-    };
-    "/_authed/bull-board": {
-      id: "/_authed/bull-board";
-      path: "/bull-board";
-      fullPath: "/bull-board";
-      preLoaderRoute: typeof AuthedBullBoardRouteImport;
-      parentRoute: typeof AuthedRoute;
-    };
-    "/_authed/settings/": {
-      id: "/_authed/settings/";
-      path: "/settings";
-      fullPath: "/settings/";
-      preLoaderRoute: typeof AuthedSettingsIndexRouteImport;
-      parentRoute: typeof AuthedRoute;
-    };
-    "/_authed/reports/": {
-      id: "/_authed/reports/";
-      path: "/reports";
-      fullPath: "/reports/";
-      preLoaderRoute: typeof AuthedReportsIndexRouteImport;
-      parentRoute: typeof AuthedRoute;
-    };
-    "/_authed/queries/": {
-      id: "/_authed/queries/";
-      path: "/queries";
-      fullPath: "/queries/";
-      preLoaderRoute: typeof AuthedQueriesIndexRouteImport;
-      parentRoute: typeof AuthedRoute;
-    };
-    "/_authed/nl-query/": {
-      id: "/_authed/nl-query/";
-      path: "/nl-query";
-      fullPath: "/nl-query/";
-      preLoaderRoute: typeof AuthedNlQueryIndexRouteImport;
-      parentRoute: typeof AuthedRoute;
-    };
-    "/_authed/jobs/": {
-      id: "/_authed/jobs/";
-      path: "/jobs";
-      fullPath: "/jobs/";
-      preLoaderRoute: typeof AuthedJobsIndexRouteImport;
-      parentRoute: typeof AuthedRoute;
-    };
-    "/_authed/filters/": {
-      id: "/_authed/filters/";
-      path: "/filters";
-      fullPath: "/filters/";
-      preLoaderRoute: typeof AuthedFiltersIndexRouteImport;
-      parentRoute: typeof AuthedRoute;
-    };
-    "/_authed/email-templates/": {
-      id: "/_authed/email-templates/";
-      path: "/email-templates";
-      fullPath: "/email-templates/";
-      preLoaderRoute: typeof AuthedEmailTemplatesIndexRouteImport;
-      parentRoute: typeof AuthedRoute;
-    };
-    "/_authed/datasets/": {
-      id: "/_authed/datasets/";
-      path: "/datasets";
-      fullPath: "/datasets/";
-      preLoaderRoute: typeof AuthedDatasetsIndexRouteImport;
-      parentRoute: typeof AuthedRoute;
-    };
-    "/_authed/data-sources/": {
-      id: "/_authed/data-sources/";
-      path: "/data-sources";
-      fullPath: "/data-sources/";
-      preLoaderRoute: typeof AuthedDataSourcesIndexRouteImport;
-      parentRoute: typeof AuthedRoute;
-    };
-    "/_authed/dashboards/": {
-      id: "/_authed/dashboards/";
-      path: "/dashboards";
-      fullPath: "/dashboards/";
-      preLoaderRoute: typeof AuthedDashboardsIndexRouteImport;
-      parentRoute: typeof AuthedRoute;
-    };
-    "/_authed/charts/": {
-      id: "/_authed/charts/";
-      path: "/charts";
-      fullPath: "/charts/";
-      preLoaderRoute: typeof AuthedChartsIndexRouteImport;
-      parentRoute: typeof AuthedRoute;
-    };
-    "/share/report/$id": {
-      id: "/share/report/$id";
-      path: "/share/report/$id";
-      fullPath: "/share/report/$id";
-      preLoaderRoute: typeof ShareReportIdRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/share/dashboard/$id": {
-      id: "/share/dashboard/$id";
-      path: "/share/dashboard/$id";
-      fullPath: "/share/dashboard/$id";
-      preLoaderRoute: typeof ShareDashboardIdRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/share/chart/$id": {
-      id: "/share/chart/$id";
-      path: "/share/chart/$id";
-      fullPath: "/share/chart/$id";
-      preLoaderRoute: typeof ShareChartIdRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/sql/validate": {
-      id: "/api/sql/validate";
-      path: "/api/sql/validate";
-      fullPath: "/api/sql/validate";
-      preLoaderRoute: typeof ApiSqlValidateRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/sql/execute": {
-      id: "/api/sql/execute";
-      path: "/api/sql/execute";
-      fullPath: "/api/sql/execute";
-      preLoaderRoute: typeof ApiSqlExecuteRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/reports/$id": {
-      id: "/api/reports/$id";
-      path: "/$id";
-      fullPath: "/api/reports/$id";
-      preLoaderRoute: typeof ApiReportsIdRouteImport;
-      parentRoute: typeof ApiReportsRoute;
-    };
-    "/api/data-sources/$id": {
-      id: "/api/data-sources/$id";
-      path: "/$id";
-      fullPath: "/api/data-sources/$id";
-      preLoaderRoute: typeof ApiDataSourcesIdRouteImport;
-      parentRoute: typeof ApiDataSourcesRoute;
-    };
-    "/api/dashboards/$id": {
-      id: "/api/dashboards/$id";
-      path: "/$id";
-      fullPath: "/api/dashboards/$id";
-      preLoaderRoute: typeof ApiDashboardsIdRouteImport;
-      parentRoute: typeof ApiDashboardsRoute;
-    };
-    "/api/charts/$id": {
-      id: "/api/charts/$id";
-      path: "/$id";
-      fullPath: "/api/charts/$id";
-      preLoaderRoute: typeof ApiChartsIdRouteImport;
-      parentRoute: typeof ApiChartsRoute;
-    };
-    "/api/auth/permissions": {
-      id: "/api/auth/permissions";
-      path: "/api/auth/permissions";
-      fullPath: "/api/auth/permissions";
-      preLoaderRoute: typeof ApiAuthPermissionsRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/_authed/settings/email/": {
-      id: "/_authed/settings/email/";
-      path: "/settings/email";
-      fullPath: "/settings/email/";
-      preLoaderRoute: typeof AuthedSettingsEmailIndexRouteImport;
-      parentRoute: typeof AuthedRoute;
-    };
-    "/_authed/metadata/entities/": {
-      id: "/_authed/metadata/entities/";
-      path: "/metadata/entities";
-      fullPath: "/metadata/entities/";
-      preLoaderRoute: typeof AuthedMetadataEntitiesIndexRouteImport;
-      parentRoute: typeof AuthedRoute;
-    };
-    "/_authed/dashboards/$id/": {
-      id: "/_authed/dashboards/$id/";
-      path: "/dashboards/$id";
-      fullPath: "/dashboards/$id/";
-      preLoaderRoute: typeof AuthedDashboardsIdIndexRouteImport;
-      parentRoute: typeof AuthedRoute;
-    };
-    "/_authed/admin/users/": {
-      id: "/_authed/admin/users/";
-      path: "/admin/users";
-      fullPath: "/admin/users/";
-      preLoaderRoute: typeof AuthedAdminUsersIndexRouteImport;
-      parentRoute: typeof AuthedRoute;
-    };
-    "/_authed/admin/roles/": {
-      id: "/_authed/admin/roles/";
-      path: "/admin/roles";
-      fullPath: "/admin/roles/";
-      preLoaderRoute: typeof AuthedAdminRolesIndexRouteImport;
-      parentRoute: typeof AuthedRoute;
-    };
-    "/_authed/admin/permissions/": {
-      id: "/_authed/admin/permissions/";
-      path: "/admin/permissions";
-      fullPath: "/admin/permissions/";
-      preLoaderRoute: typeof AuthedAdminPermissionsIndexRouteImport;
-      parentRoute: typeof AuthedRoute;
-    };
-    "/api/sql/schema/$dataSourceId": {
-      id: "/api/sql/schema/$dataSourceId";
-      path: "/api/sql/schema/$dataSourceId";
-      fullPath: "/api/sql/schema/$dataSourceId";
-      preLoaderRoute: typeof ApiSqlSchemaDataSourceIdRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/reports/$id/filters": {
-      id: "/api/reports/$id/filters";
-      path: "/filters";
-      fullPath: "/api/reports/$id/filters";
-      preLoaderRoute: typeof ApiReportsIdFiltersRouteImport;
-      parentRoute: typeof ApiReportsIdRoute;
-    };
-    "/api/reports/$id/export": {
-      id: "/api/reports/$id/export";
-      path: "/export";
-      fullPath: "/api/reports/$id/export";
-      preLoaderRoute: typeof ApiReportsIdExportRouteImport;
-      parentRoute: typeof ApiReportsIdRoute;
-    };
-    "/api/dashboards/$id/widgets": {
-      id: "/api/dashboards/$id/widgets";
-      path: "/widgets";
-      fullPath: "/api/dashboards/$id/widgets";
-      preLoaderRoute: typeof ApiDashboardsIdWidgetsRouteImport;
-      parentRoute: typeof ApiDashboardsIdRoute;
-    };
-    "/api/charts/$id/filters": {
-      id: "/api/charts/$id/filters";
-      path: "/filters";
-      fullPath: "/api/charts/$id/filters";
-      preLoaderRoute: typeof ApiChartsIdFiltersRouteImport;
-      parentRoute: typeof ApiChartsIdRoute;
-    };
-    "/_authed/reports/$id/editor": {
-      id: "/_authed/reports/$id/editor";
-      path: "/reports/$id/editor";
-      fullPath: "/reports/$id/editor";
-      preLoaderRoute: typeof AuthedReportsIdEditorRouteImport;
-      parentRoute: typeof AuthedRoute;
-    };
-    "/_authed/data-sources/$id/permissions": {
-      id: "/_authed/data-sources/$id/permissions";
-      path: "/data-sources/$id/permissions";
-      fullPath: "/data-sources/$id/permissions";
-      preLoaderRoute: typeof AuthedDataSourcesIdPermissionsRouteImport;
-      parentRoute: typeof AuthedRoute;
-    };
-    "/_authed/charts/viewer/$id": {
-      id: "/_authed/charts/viewer/$id";
-      path: "/charts/viewer/$id";
-      fullPath: "/charts/viewer/$id";
-      preLoaderRoute: typeof AuthedChartsViewerIdRouteImport;
-      parentRoute: typeof AuthedRoute;
-    };
-    "/_authed/charts/editor/$id": {
-      id: "/_authed/charts/editor/$id";
-      path: "/charts/editor/$id";
-      fullPath: "/charts/editor/$id";
-      preLoaderRoute: typeof AuthedChartsEditorIdRouteImport;
-      parentRoute: typeof AuthedRoute;
-    };
-    "/_authed/metadata/entities/$id/": {
-      id: "/_authed/metadata/entities/$id/";
-      path: "/metadata/entities/$id";
-      fullPath: "/metadata/entities/$id/";
-      preLoaderRoute: typeof AuthedMetadataEntitiesIdIndexRouteImport;
-      parentRoute: typeof AuthedRoute;
-    };
-    "/api/reports/$id/filters/$filterLinkId": {
-      id: "/api/reports/$id/filters/$filterLinkId";
-      path: "/$filterLinkId";
-      fullPath: "/api/reports/$id/filters/$filterLinkId";
-      preLoaderRoute: typeof ApiReportsIdFiltersFilterLinkIdRouteImport;
-      parentRoute: typeof ApiReportsIdFiltersRoute;
-    };
-    "/api/dashboards/$id/widgets/$widgetId": {
-      id: "/api/dashboards/$id/widgets/$widgetId";
-      path: "/$widgetId";
-      fullPath: "/api/dashboards/$id/widgets/$widgetId";
-      preLoaderRoute: typeof ApiDashboardsIdWidgetsWidgetIdRouteImport;
-      parentRoute: typeof ApiDashboardsIdWidgetsRoute;
-    };
-    "/api/charts/$id/filters/$filterLinkId": {
-      id: "/api/charts/$id/filters/$filterLinkId";
-      path: "/$filterLinkId";
-      fullPath: "/api/charts/$id/filters/$filterLinkId";
-      preLoaderRoute: typeof ApiChartsIdFiltersFilterLinkIdRouteImport;
-      parentRoute: typeof ApiChartsIdFiltersRoute;
-    };
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authed': {
+      id: '/_authed'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/reports': {
+      id: '/api/reports'
+      path: '/api/reports'
+      fullPath: '/api/reports'
+      preLoaderRoute: typeof ApiReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/queries': {
+      id: '/api/queries'
+      path: '/api/queries'
+      fullPath: '/api/queries'
+      preLoaderRoute: typeof ApiQueriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/jobs': {
+      id: '/api/jobs'
+      path: '/api/jobs'
+      fullPath: '/api/jobs'
+      preLoaderRoute: typeof ApiJobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/filters': {
+      id: '/api/filters'
+      path: '/api/filters'
+      fullPath: '/api/filters'
+      preLoaderRoute: typeof ApiFiltersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/data-sources': {
+      id: '/api/data-sources'
+      path: '/api/data-sources'
+      fullPath: '/api/data-sources'
+      preLoaderRoute: typeof ApiDataSourcesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/dashboards': {
+      id: '/api/dashboards'
+      path: '/api/dashboards'
+      fullPath: '/api/dashboards'
+      preLoaderRoute: typeof ApiDashboardsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/charts': {
+      id: '/api/charts'
+      path: '/api/charts'
+      fullPath: '/api/charts'
+      preLoaderRoute: typeof ApiChartsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authed/sql-editor': {
+      id: '/_authed/sql-editor'
+      path: '/sql-editor'
+      fullPath: '/sql-editor'
+      preLoaderRoute: typeof AuthedSqlEditorRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/dashboard': {
+      id: '/_authed/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthedDashboardRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/bull-board': {
+      id: '/_authed/bull-board'
+      path: '/bull-board'
+      fullPath: '/bull-board'
+      preLoaderRoute: typeof AuthedBullBoardRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/settings/': {
+      id: '/_authed/settings/'
+      path: '/settings'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof AuthedSettingsIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/reports/': {
+      id: '/_authed/reports/'
+      path: '/reports'
+      fullPath: '/reports/'
+      preLoaderRoute: typeof AuthedReportsIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/queries/': {
+      id: '/_authed/queries/'
+      path: '/queries'
+      fullPath: '/queries/'
+      preLoaderRoute: typeof AuthedQueriesIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/nl-query/': {
+      id: '/_authed/nl-query/'
+      path: '/nl-query'
+      fullPath: '/nl-query/'
+      preLoaderRoute: typeof AuthedNlQueryIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/jobs/': {
+      id: '/_authed/jobs/'
+      path: '/jobs'
+      fullPath: '/jobs/'
+      preLoaderRoute: typeof AuthedJobsIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/filters/': {
+      id: '/_authed/filters/'
+      path: '/filters'
+      fullPath: '/filters/'
+      preLoaderRoute: typeof AuthedFiltersIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/email-templates/': {
+      id: '/_authed/email-templates/'
+      path: '/email-templates'
+      fullPath: '/email-templates/'
+      preLoaderRoute: typeof AuthedEmailTemplatesIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/datasets/': {
+      id: '/_authed/datasets/'
+      path: '/datasets'
+      fullPath: '/datasets/'
+      preLoaderRoute: typeof AuthedDatasetsIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/data-sources/': {
+      id: '/_authed/data-sources/'
+      path: '/data-sources'
+      fullPath: '/data-sources/'
+      preLoaderRoute: typeof AuthedDataSourcesIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/dashboards/': {
+      id: '/_authed/dashboards/'
+      path: '/dashboards'
+      fullPath: '/dashboards/'
+      preLoaderRoute: typeof AuthedDashboardsIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/charts/': {
+      id: '/_authed/charts/'
+      path: '/charts'
+      fullPath: '/charts/'
+      preLoaderRoute: typeof AuthedChartsIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/share/report/$id': {
+      id: '/share/report/$id'
+      path: '/share/report/$id'
+      fullPath: '/share/report/$id'
+      preLoaderRoute: typeof ShareReportIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/share/dashboard/$id': {
+      id: '/share/dashboard/$id'
+      path: '/share/dashboard/$id'
+      fullPath: '/share/dashboard/$id'
+      preLoaderRoute: typeof ShareDashboardIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/share/chart/$id': {
+      id: '/share/chart/$id'
+      path: '/share/chart/$id'
+      fullPath: '/share/chart/$id'
+      preLoaderRoute: typeof ShareChartIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/sql/validate': {
+      id: '/api/sql/validate'
+      path: '/api/sql/validate'
+      fullPath: '/api/sql/validate'
+      preLoaderRoute: typeof ApiSqlValidateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/sql/execute': {
+      id: '/api/sql/execute'
+      path: '/api/sql/execute'
+      fullPath: '/api/sql/execute'
+      preLoaderRoute: typeof ApiSqlExecuteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/reports/$id': {
+      id: '/api/reports/$id'
+      path: '/$id'
+      fullPath: '/api/reports/$id'
+      preLoaderRoute: typeof ApiReportsIdRouteImport
+      parentRoute: typeof ApiReportsRoute
+    }
+    '/api/nl-query/execute': {
+      id: '/api/nl-query/execute'
+      path: '/api/nl-query/execute'
+      fullPath: '/api/nl-query/execute'
+      preLoaderRoute: typeof ApiNlQueryExecuteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/data-sources/$id': {
+      id: '/api/data-sources/$id'
+      path: '/$id'
+      fullPath: '/api/data-sources/$id'
+      preLoaderRoute: typeof ApiDataSourcesIdRouteImport
+      parentRoute: typeof ApiDataSourcesRoute
+    }
+    '/api/dashboards/$id': {
+      id: '/api/dashboards/$id'
+      path: '/$id'
+      fullPath: '/api/dashboards/$id'
+      preLoaderRoute: typeof ApiDashboardsIdRouteImport
+      parentRoute: typeof ApiDashboardsRoute
+    }
+    '/api/charts/$id': {
+      id: '/api/charts/$id'
+      path: '/$id'
+      fullPath: '/api/charts/$id'
+      preLoaderRoute: typeof ApiChartsIdRouteImport
+      parentRoute: typeof ApiChartsRoute
+    }
+    '/api/auth/permissions': {
+      id: '/api/auth/permissions'
+      path: '/api/auth/permissions'
+      fullPath: '/api/auth/permissions'
+      preLoaderRoute: typeof ApiAuthPermissionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authed/settings/email/': {
+      id: '/_authed/settings/email/'
+      path: '/settings/email'
+      fullPath: '/settings/email/'
+      preLoaderRoute: typeof AuthedSettingsEmailIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/metadata/entities/': {
+      id: '/_authed/metadata/entities/'
+      path: '/metadata/entities'
+      fullPath: '/metadata/entities/'
+      preLoaderRoute: typeof AuthedMetadataEntitiesIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/dashboards/$id/': {
+      id: '/_authed/dashboards/$id/'
+      path: '/dashboards/$id'
+      fullPath: '/dashboards/$id/'
+      preLoaderRoute: typeof AuthedDashboardsIdIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/admin/users/': {
+      id: '/_authed/admin/users/'
+      path: '/admin/users'
+      fullPath: '/admin/users/'
+      preLoaderRoute: typeof AuthedAdminUsersIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/admin/roles/': {
+      id: '/_authed/admin/roles/'
+      path: '/admin/roles'
+      fullPath: '/admin/roles/'
+      preLoaderRoute: typeof AuthedAdminRolesIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/admin/permissions/': {
+      id: '/_authed/admin/permissions/'
+      path: '/admin/permissions'
+      fullPath: '/admin/permissions/'
+      preLoaderRoute: typeof AuthedAdminPermissionsIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/api/sql/schema/$dataSourceId': {
+      id: '/api/sql/schema/$dataSourceId'
+      path: '/api/sql/schema/$dataSourceId'
+      fullPath: '/api/sql/schema/$dataSourceId'
+      preLoaderRoute: typeof ApiSqlSchemaDataSourceIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/reports/$id/filters': {
+      id: '/api/reports/$id/filters'
+      path: '/filters'
+      fullPath: '/api/reports/$id/filters'
+      preLoaderRoute: typeof ApiReportsIdFiltersRouteImport
+      parentRoute: typeof ApiReportsIdRoute
+    }
+    '/api/reports/$id/export': {
+      id: '/api/reports/$id/export'
+      path: '/export'
+      fullPath: '/api/reports/$id/export'
+      preLoaderRoute: typeof ApiReportsIdExportRouteImport
+      parentRoute: typeof ApiReportsIdRoute
+    }
+    '/api/dashboards/$id/widgets': {
+      id: '/api/dashboards/$id/widgets'
+      path: '/widgets'
+      fullPath: '/api/dashboards/$id/widgets'
+      preLoaderRoute: typeof ApiDashboardsIdWidgetsRouteImport
+      parentRoute: typeof ApiDashboardsIdRoute
+    }
+    '/api/charts/$id/filters': {
+      id: '/api/charts/$id/filters'
+      path: '/filters'
+      fullPath: '/api/charts/$id/filters'
+      preLoaderRoute: typeof ApiChartsIdFiltersRouteImport
+      parentRoute: typeof ApiChartsIdRoute
+    }
+    '/_authed/reports/$id/editor': {
+      id: '/_authed/reports/$id/editor'
+      path: '/reports/$id/editor'
+      fullPath: '/reports/$id/editor'
+      preLoaderRoute: typeof AuthedReportsIdEditorRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/data-sources/$id/permissions': {
+      id: '/_authed/data-sources/$id/permissions'
+      path: '/data-sources/$id/permissions'
+      fullPath: '/data-sources/$id/permissions'
+      preLoaderRoute: typeof AuthedDataSourcesIdPermissionsRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/charts/viewer/$id': {
+      id: '/_authed/charts/viewer/$id'
+      path: '/charts/viewer/$id'
+      fullPath: '/charts/viewer/$id'
+      preLoaderRoute: typeof AuthedChartsViewerIdRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/charts/editor/$id': {
+      id: '/_authed/charts/editor/$id'
+      path: '/charts/editor/$id'
+      fullPath: '/charts/editor/$id'
+      preLoaderRoute: typeof AuthedChartsEditorIdRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/metadata/entities/$id/': {
+      id: '/_authed/metadata/entities/$id/'
+      path: '/metadata/entities/$id'
+      fullPath: '/metadata/entities/$id/'
+      preLoaderRoute: typeof AuthedMetadataEntitiesIdIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/api/reports/$id/filters/$filterLinkId': {
+      id: '/api/reports/$id/filters/$filterLinkId'
+      path: '/$filterLinkId'
+      fullPath: '/api/reports/$id/filters/$filterLinkId'
+      preLoaderRoute: typeof ApiReportsIdFiltersFilterLinkIdRouteImport
+      parentRoute: typeof ApiReportsIdFiltersRoute
+    }
+    '/api/dashboards/$id/widgets/$widgetId': {
+      id: '/api/dashboards/$id/widgets/$widgetId'
+      path: '/$widgetId'
+      fullPath: '/api/dashboards/$id/widgets/$widgetId'
+      preLoaderRoute: typeof ApiDashboardsIdWidgetsWidgetIdRouteImport
+      parentRoute: typeof ApiDashboardsIdWidgetsRoute
+    }
+    '/api/charts/$id/filters/$filterLinkId': {
+      id: '/api/charts/$id/filters/$filterLinkId'
+      path: '/$filterLinkId'
+      fullPath: '/api/charts/$id/filters/$filterLinkId'
+      preLoaderRoute: typeof ApiChartsIdFiltersFilterLinkIdRouteImport
+      parentRoute: typeof ApiChartsIdFiltersRoute
+    }
   }
 }
 
 interface AuthedRouteChildren {
-  AuthedBullBoardRoute: typeof AuthedBullBoardRoute;
-  AuthedDashboardRoute: typeof AuthedDashboardRoute;
-  AuthedSqlEditorRoute: typeof AuthedSqlEditorRoute;
-  AuthedChartsIndexRoute: typeof AuthedChartsIndexRoute;
-  AuthedDashboardsIndexRoute: typeof AuthedDashboardsIndexRoute;
-  AuthedDataSourcesIndexRoute: typeof AuthedDataSourcesIndexRoute;
-  AuthedDatasetsIndexRoute: typeof AuthedDatasetsIndexRoute;
-  AuthedEmailTemplatesIndexRoute: typeof AuthedEmailTemplatesIndexRoute;
-  AuthedFiltersIndexRoute: typeof AuthedFiltersIndexRoute;
-  AuthedJobsIndexRoute: typeof AuthedJobsIndexRoute;
-  AuthedNlQueryIndexRoute: typeof AuthedNlQueryIndexRoute;
-  AuthedQueriesIndexRoute: typeof AuthedQueriesIndexRoute;
-  AuthedReportsIndexRoute: typeof AuthedReportsIndexRoute;
-  AuthedSettingsIndexRoute: typeof AuthedSettingsIndexRoute;
-  AuthedChartsEditorIdRoute: typeof AuthedChartsEditorIdRoute;
-  AuthedChartsViewerIdRoute: typeof AuthedChartsViewerIdRoute;
-  AuthedDataSourcesIdPermissionsRoute: typeof AuthedDataSourcesIdPermissionsRoute;
-  AuthedReportsIdEditorRoute: typeof AuthedReportsIdEditorRoute;
-  AuthedAdminPermissionsIndexRoute: typeof AuthedAdminPermissionsIndexRoute;
-  AuthedAdminRolesIndexRoute: typeof AuthedAdminRolesIndexRoute;
-  AuthedAdminUsersIndexRoute: typeof AuthedAdminUsersIndexRoute;
-  AuthedDashboardsIdIndexRoute: typeof AuthedDashboardsIdIndexRoute;
-  AuthedMetadataEntitiesIndexRoute: typeof AuthedMetadataEntitiesIndexRoute;
-  AuthedSettingsEmailIndexRoute: typeof AuthedSettingsEmailIndexRoute;
-  AuthedMetadataEntitiesIdIndexRoute: typeof AuthedMetadataEntitiesIdIndexRoute;
+  AuthedBullBoardRoute: typeof AuthedBullBoardRoute
+  AuthedDashboardRoute: typeof AuthedDashboardRoute
+  AuthedSqlEditorRoute: typeof AuthedSqlEditorRoute
+  AuthedChartsIndexRoute: typeof AuthedChartsIndexRoute
+  AuthedDashboardsIndexRoute: typeof AuthedDashboardsIndexRoute
+  AuthedDataSourcesIndexRoute: typeof AuthedDataSourcesIndexRoute
+  AuthedDatasetsIndexRoute: typeof AuthedDatasetsIndexRoute
+  AuthedEmailTemplatesIndexRoute: typeof AuthedEmailTemplatesIndexRoute
+  AuthedFiltersIndexRoute: typeof AuthedFiltersIndexRoute
+  AuthedJobsIndexRoute: typeof AuthedJobsIndexRoute
+  AuthedNlQueryIndexRoute: typeof AuthedNlQueryIndexRoute
+  AuthedQueriesIndexRoute: typeof AuthedQueriesIndexRoute
+  AuthedReportsIndexRoute: typeof AuthedReportsIndexRoute
+  AuthedSettingsIndexRoute: typeof AuthedSettingsIndexRoute
+  AuthedChartsEditorIdRoute: typeof AuthedChartsEditorIdRoute
+  AuthedChartsViewerIdRoute: typeof AuthedChartsViewerIdRoute
+  AuthedDataSourcesIdPermissionsRoute: typeof AuthedDataSourcesIdPermissionsRoute
+  AuthedReportsIdEditorRoute: typeof AuthedReportsIdEditorRoute
+  AuthedAdminPermissionsIndexRoute: typeof AuthedAdminPermissionsIndexRoute
+  AuthedAdminRolesIndexRoute: typeof AuthedAdminRolesIndexRoute
+  AuthedAdminUsersIndexRoute: typeof AuthedAdminUsersIndexRoute
+  AuthedDashboardsIdIndexRoute: typeof AuthedDashboardsIdIndexRoute
+  AuthedMetadataEntitiesIndexRoute: typeof AuthedMetadataEntitiesIndexRoute
+  AuthedSettingsEmailIndexRoute: typeof AuthedSettingsEmailIndexRoute
+  AuthedMetadataEntitiesIdIndexRoute: typeof AuthedMetadataEntitiesIdIndexRoute
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
@@ -1128,123 +1158,132 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedMetadataEntitiesIndexRoute: AuthedMetadataEntitiesIndexRoute,
   AuthedSettingsEmailIndexRoute: AuthedSettingsEmailIndexRoute,
   AuthedMetadataEntitiesIdIndexRoute: AuthedMetadataEntitiesIdIndexRoute,
-};
+}
 
-const AuthedRouteWithChildren = AuthedRoute._addFileChildren(AuthedRouteChildren);
+const AuthedRouteWithChildren =
+  AuthedRoute._addFileChildren(AuthedRouteChildren)
 
 interface ApiChartsIdFiltersRouteChildren {
-  ApiChartsIdFiltersFilterLinkIdRoute: typeof ApiChartsIdFiltersFilterLinkIdRoute;
+  ApiChartsIdFiltersFilterLinkIdRoute: typeof ApiChartsIdFiltersFilterLinkIdRoute
 }
 
 const ApiChartsIdFiltersRouteChildren: ApiChartsIdFiltersRouteChildren = {
   ApiChartsIdFiltersFilterLinkIdRoute: ApiChartsIdFiltersFilterLinkIdRoute,
-};
+}
 
-const ApiChartsIdFiltersRouteWithChildren = ApiChartsIdFiltersRoute._addFileChildren(
-  ApiChartsIdFiltersRouteChildren
-);
+const ApiChartsIdFiltersRouteWithChildren =
+  ApiChartsIdFiltersRoute._addFileChildren(ApiChartsIdFiltersRouteChildren)
 
 interface ApiChartsIdRouteChildren {
-  ApiChartsIdFiltersRoute: typeof ApiChartsIdFiltersRouteWithChildren;
+  ApiChartsIdFiltersRoute: typeof ApiChartsIdFiltersRouteWithChildren
 }
 
 const ApiChartsIdRouteChildren: ApiChartsIdRouteChildren = {
   ApiChartsIdFiltersRoute: ApiChartsIdFiltersRouteWithChildren,
-};
+}
 
-const ApiChartsIdRouteWithChildren = ApiChartsIdRoute._addFileChildren(ApiChartsIdRouteChildren);
+const ApiChartsIdRouteWithChildren = ApiChartsIdRoute._addFileChildren(
+  ApiChartsIdRouteChildren,
+)
 
 interface ApiChartsRouteChildren {
-  ApiChartsIdRoute: typeof ApiChartsIdRouteWithChildren;
+  ApiChartsIdRoute: typeof ApiChartsIdRouteWithChildren
 }
 
 const ApiChartsRouteChildren: ApiChartsRouteChildren = {
   ApiChartsIdRoute: ApiChartsIdRouteWithChildren,
-};
-
-const ApiChartsRouteWithChildren = ApiChartsRoute._addFileChildren(ApiChartsRouteChildren);
-
-interface ApiDashboardsIdWidgetsRouteChildren {
-  ApiDashboardsIdWidgetsWidgetIdRoute: typeof ApiDashboardsIdWidgetsWidgetIdRoute;
 }
 
-const ApiDashboardsIdWidgetsRouteChildren: ApiDashboardsIdWidgetsRouteChildren = {
-  ApiDashboardsIdWidgetsWidgetIdRoute: ApiDashboardsIdWidgetsWidgetIdRoute,
-};
+const ApiChartsRouteWithChildren = ApiChartsRoute._addFileChildren(
+  ApiChartsRouteChildren,
+)
 
-const ApiDashboardsIdWidgetsRouteWithChildren = ApiDashboardsIdWidgetsRoute._addFileChildren(
-  ApiDashboardsIdWidgetsRouteChildren
-);
+interface ApiDashboardsIdWidgetsRouteChildren {
+  ApiDashboardsIdWidgetsWidgetIdRoute: typeof ApiDashboardsIdWidgetsWidgetIdRoute
+}
+
+const ApiDashboardsIdWidgetsRouteChildren: ApiDashboardsIdWidgetsRouteChildren =
+  {
+    ApiDashboardsIdWidgetsWidgetIdRoute: ApiDashboardsIdWidgetsWidgetIdRoute,
+  }
+
+const ApiDashboardsIdWidgetsRouteWithChildren =
+  ApiDashboardsIdWidgetsRoute._addFileChildren(
+    ApiDashboardsIdWidgetsRouteChildren,
+  )
 
 interface ApiDashboardsIdRouteChildren {
-  ApiDashboardsIdWidgetsRoute: typeof ApiDashboardsIdWidgetsRouteWithChildren;
+  ApiDashboardsIdWidgetsRoute: typeof ApiDashboardsIdWidgetsRouteWithChildren
 }
 
 const ApiDashboardsIdRouteChildren: ApiDashboardsIdRouteChildren = {
   ApiDashboardsIdWidgetsRoute: ApiDashboardsIdWidgetsRouteWithChildren,
-};
+}
 
 const ApiDashboardsIdRouteWithChildren = ApiDashboardsIdRoute._addFileChildren(
-  ApiDashboardsIdRouteChildren
-);
+  ApiDashboardsIdRouteChildren,
+)
 
 interface ApiDashboardsRouteChildren {
-  ApiDashboardsIdRoute: typeof ApiDashboardsIdRouteWithChildren;
+  ApiDashboardsIdRoute: typeof ApiDashboardsIdRouteWithChildren
 }
 
 const ApiDashboardsRouteChildren: ApiDashboardsRouteChildren = {
   ApiDashboardsIdRoute: ApiDashboardsIdRouteWithChildren,
-};
+}
 
 const ApiDashboardsRouteWithChildren = ApiDashboardsRoute._addFileChildren(
-  ApiDashboardsRouteChildren
-);
+  ApiDashboardsRouteChildren,
+)
 
 interface ApiDataSourcesRouteChildren {
-  ApiDataSourcesIdRoute: typeof ApiDataSourcesIdRoute;
+  ApiDataSourcesIdRoute: typeof ApiDataSourcesIdRoute
 }
 
 const ApiDataSourcesRouteChildren: ApiDataSourcesRouteChildren = {
   ApiDataSourcesIdRoute: ApiDataSourcesIdRoute,
-};
+}
 
 const ApiDataSourcesRouteWithChildren = ApiDataSourcesRoute._addFileChildren(
-  ApiDataSourcesRouteChildren
-);
+  ApiDataSourcesRouteChildren,
+)
 
 interface ApiReportsIdFiltersRouteChildren {
-  ApiReportsIdFiltersFilterLinkIdRoute: typeof ApiReportsIdFiltersFilterLinkIdRoute;
+  ApiReportsIdFiltersFilterLinkIdRoute: typeof ApiReportsIdFiltersFilterLinkIdRoute
 }
 
 const ApiReportsIdFiltersRouteChildren: ApiReportsIdFiltersRouteChildren = {
   ApiReportsIdFiltersFilterLinkIdRoute: ApiReportsIdFiltersFilterLinkIdRoute,
-};
+}
 
-const ApiReportsIdFiltersRouteWithChildren = ApiReportsIdFiltersRoute._addFileChildren(
-  ApiReportsIdFiltersRouteChildren
-);
+const ApiReportsIdFiltersRouteWithChildren =
+  ApiReportsIdFiltersRoute._addFileChildren(ApiReportsIdFiltersRouteChildren)
 
 interface ApiReportsIdRouteChildren {
-  ApiReportsIdExportRoute: typeof ApiReportsIdExportRoute;
-  ApiReportsIdFiltersRoute: typeof ApiReportsIdFiltersRouteWithChildren;
+  ApiReportsIdExportRoute: typeof ApiReportsIdExportRoute
+  ApiReportsIdFiltersRoute: typeof ApiReportsIdFiltersRouteWithChildren
 }
 
 const ApiReportsIdRouteChildren: ApiReportsIdRouteChildren = {
   ApiReportsIdExportRoute: ApiReportsIdExportRoute,
   ApiReportsIdFiltersRoute: ApiReportsIdFiltersRouteWithChildren,
-};
+}
 
-const ApiReportsIdRouteWithChildren = ApiReportsIdRoute._addFileChildren(ApiReportsIdRouteChildren);
+const ApiReportsIdRouteWithChildren = ApiReportsIdRoute._addFileChildren(
+  ApiReportsIdRouteChildren,
+)
 
 interface ApiReportsRouteChildren {
-  ApiReportsIdRoute: typeof ApiReportsIdRouteWithChildren;
+  ApiReportsIdRoute: typeof ApiReportsIdRouteWithChildren
 }
 
 const ApiReportsRouteChildren: ApiReportsRouteChildren = {
   ApiReportsIdRoute: ApiReportsIdRouteWithChildren,
-};
+}
 
-const ApiReportsRouteWithChildren = ApiReportsRoute._addFileChildren(ApiReportsRouteChildren);
+const ApiReportsRouteWithChildren = ApiReportsRoute._addFileChildren(
+  ApiReportsRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -1259,22 +1298,23 @@ const rootRouteChildren: RootRouteChildren = {
   ApiQueriesRoute: ApiQueriesRoute,
   ApiReportsRoute: ApiReportsRouteWithChildren,
   ApiAuthPermissionsRoute: ApiAuthPermissionsRoute,
+  ApiNlQueryExecuteRoute: ApiNlQueryExecuteRoute,
   ApiSqlExecuteRoute: ApiSqlExecuteRoute,
   ApiSqlValidateRoute: ApiSqlValidateRoute,
   ShareChartIdRoute: ShareChartIdRoute,
   ShareDashboardIdRoute: ShareDashboardIdRoute,
   ShareReportIdRoute: ShareReportIdRoute,
   ApiSqlSchemaDataSourceIdRoute: ApiSqlSchemaDataSourceIdRoute,
-};
+}
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>();
+  ._addFileTypes<FileRouteTypes>()
 
-import type { getRouter } from "./router.tsx";
-import type { createStart } from "@tanstack/react-start";
-declare module "@tanstack/react-start" {
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
   interface Register {
-    ssr: true;
-    router: Awaited<ReturnType<typeof getRouter>>;
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
   }
 }
