@@ -1,0 +1,8 @@
+{
+  "tanstack-start": {
+    "command": "bun",
+    "args": [".claude/mcp/tanstack-start-mcp.ts"],
+    "disabled": false,
+    "description": "MCP server providing deep understanding of TanStack Start project structure, routes, components, server functions, database schema, and architecture"
+  }
+}
