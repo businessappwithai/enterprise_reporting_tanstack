@@ -513,12 +513,19 @@ For web browsing and site testing, use the **`/browse` skill** from gstack. Neve
 
 ### Installing Gstack
 
-To set up gstack, run:
+Gstack is included as a git submodule. To set it up:
+
 ```bash
+# First time setup - initialize and update submodules
+git submodule update --init --recursive
+
+# Then run the setup script
 bash .claude/setup-gstack.sh
 ```
 
-This will clone and build gstack in `~/.claude/skills/gstack`. It's a one-time setup per machine.
+This clones and builds gstack in `~/.claude/skills/gstack`. It's a one-time setup per machine.
+
+**For new team members:** Simply run the above commands after cloning the repository.
 
 ### Available Gstack Skills
 
