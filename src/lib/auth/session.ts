@@ -45,17 +45,24 @@ export async function authenticateUser(
 ): Promise<SessionUser | null> {
   const db = getDb();
 
-  const user = await db("users").where("email", email).where("is_active", true).first();
+  const user = await db
+    .selectFrom("users")
+    .where("email", "=", email)
+    .where("is_active", "=", 1 as unknown as boolean)
+    .selectAll()
+    .executeTakeFirst();
 
   if (!user) return null;
 
   const valid = await bcrypt.compare(password, user.password_hash);
   if (!valid) return null;
 
-  const roles = await db("roles")
-    .join("user_roles", "roles.id", "user_roles.role_id")
-    .where("user_roles.user_id", user.id)
-    .select("roles.*");
+  const roles = await db
+    .selectFrom("roles")
+    .innerJoin("user_roles", "roles.id", "user_roles.role_id")
+    .where("user_roles.user_id", "=", user.id)
+    .selectAll("roles")
+    .execute();
 
   const permissions = roles.flatMap((role: { permissions: string }) => {
     try {

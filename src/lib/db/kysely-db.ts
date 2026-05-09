@@ -5,14 +5,12 @@
 
 import {
   Kysely,
+  SqliteDialect,
   type MigrationProvider,
 } from "kysely";
 import { Pool } from "pg";
 import path from "path";
 import { promises as fs } from "fs";
-
-// Note: We don't import dialects here to avoid Vite module resolution issues
-// They are imported dynamically when needed
 
 // Database schema type definition
 // This is the most important part - defines all tables and their columns
@@ -301,42 +299,14 @@ export function getDb(): KyselyDB {
         mkdirSync(dirPath, { recursive: true });
       }
 
-      // SQLite with better-sqlite3
-      // Import at runtime to avoid Vite module resolution issues
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const BetterSqlite3 = require("better-sqlite3");
 
-      // Create a simple dialect implementation compatible with Kysely
-      class SimpleSqliteDialect {
-        private database: any;
-
-        constructor(options: { database: string }) {
-          this.database = new BetterSqlite3(options.database);
-        }
-
-        createDriver() {
-          return {
-            acquireConnection: async () => ({
-              query: (sql: string) => this.database.prepare(sql),
-            }),
-          };
-        }
-
-        createQueryCompiler() {
-          return {
-            compile: (query: any) => query.toOperationNode(),
-          };
-        }
-      }
-
       db = new Kysely<Database>({
-        dialect: new (SimpleSqliteDialect as any)({
-          database: DATABASE_PATH,
+        dialect: new SqliteDialect({
+          database: new BetterSqlite3(DATABASE_PATH),
         }),
       });
-
-      // Enable foreign keys for SQLite
-      db.executeQuery(db.schema.raw("PRAGMA foreign_keys = ON")).catch(console.error);
     }
   }
   return db;
