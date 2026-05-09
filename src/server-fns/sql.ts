@@ -4,6 +4,7 @@ import { createServerFn } from '@tanstack/react-start'
 import { getDb } from '@/lib/db/config'
 import { getConnection } from '@/lib/db/connection-manager'
 import { isReadOnlyQuery } from '@/lib/sql/validator'
+import { validateSQLWithAllowlist, extractTables, extractColumns } from '@/lib/sql/antlr-validator'
 import { logAudit } from '@/lib/security/audit'
 import { validatePageSize, sqlEditorConfig } from '@/lib/config/pagination'
 import { requireAuth } from '@/lib/auth/middleware'
@@ -46,11 +47,39 @@ export const executeSql = createServerFn({
     throw new Error('Only SELECT queries are allowed in the SQL editor')
   }
 
+  // ANTLR validation: keyword allowlist enforcement (D11)
+  const antlrValidation = validateSQLWithAllowlist(sql)
+  if (!antlrValidation.valid) {
+    const errorMessages = antlrValidation.errors
+      .map(e => e.message)
+      .join('; ')
+    throw new Error(`SQL validation failed: ${errorMessages}`)
+  }
+
+  // Log validation warnings for security audit
+  if (antlrValidation.warnings.length > 0) {
+    const securityWarnings = antlrValidation.warnings.filter(w => w.type === 'security')
+    if (securityWarnings.length > 0) {
+      await logAudit({
+        userId: session.user.id,
+        action: 'sql_validation_warning',
+        resourceType: 'query',
+        resourceId: dataSourceId,
+        details: {
+          warnings: securityWarnings.map(w => w.message),
+          sql: sql.substring(0, 200),
+        },
+      })
+    }
+  }
+
   const db = getDb()
-  const dataSource = await db<DataSource>('data_sources')
-    .where('id', dataSourceId)
-    .where('is_active', true)
-    .first()
+  const dataSource = await db
+    .selectFrom('data_sources')
+    .selectAll()
+    .where('id', '=', dataSourceId)
+    .where('is_active', '=', true)
+    .executeTakeFirst()
 
   if (!dataSource) {
     throw new Error('Data source not found')
@@ -180,7 +209,11 @@ export const validateSql = createServerFn({
 
   if (dataSourceId) {
     const db = getDb()
-    const dataSource = await db<DataSource>('data_sources').where('id', dataSourceId).first()
+    const dataSource = await db
+      .selectFrom('data_sources')
+      .selectAll()
+      .where('id', '=', dataSourceId)
+      .executeTakeFirst()
     if (dataSource) {
       dialect = dataSource.client_type
     }
@@ -196,10 +229,12 @@ export const introspectSchema = createServerFn({
   const { dataSourceId } = input
 
   const db = getDb()
-  const dataSource = await db<DataSource>('data_sources')
-    .where('id', dataSourceId)
-    .where('is_active', true)
-    .first()
+  const dataSource = await db
+    .selectFrom('data_sources')
+    .selectAll()
+    .where('id', '=', dataSourceId)
+    .where('is_active', '=', true)
+    .executeTakeFirst()
 
   if (!dataSource) {
     throw new Error('Data source not found or not active')

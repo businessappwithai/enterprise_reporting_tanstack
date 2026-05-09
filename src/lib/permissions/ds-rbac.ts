@@ -15,10 +15,14 @@ import type {
  */
 export async function getDsRoles(dataSourceId: string): Promise<DsRole[]> {
   const db = getDb();
-  return db<DsRole>('ds_roles')
-    .where('data_source_id', dataSourceId)
-    .where('is_active', true)
-    .orderBy('name');
+  const roles = await db
+    .selectFrom('ds_roles')
+    .selectAll()
+    .where('data_source_id', '=', dataSourceId)
+    .where('is_active', '=', true)
+    .orderBy('name')
+    .execute();
+  return roles as unknown as DsRole[];
 }
 
 /**
@@ -26,7 +30,12 @@ export async function getDsRoles(dataSourceId: string): Promise<DsRole[]> {
  */
 export async function getDsRole(roleId: string): Promise<DsRole | undefined> {
   const db = getDb();
-  return db<DsRole>('ds_roles').where('id', roleId).first();
+  const role = await db
+    .selectFrom('ds_roles')
+    .selectAll()
+    .where('id', '=', roleId)
+    .executeTakeFirst();
+  return role as unknown as DsRole | undefined;
 }
 
 /**
@@ -42,18 +51,26 @@ export async function createDsRole(
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  await db('ds_roles').insert({
-    id,
-    data_source_id: dataSourceId,
-    name,
-    description,
-    is_active: true,
-    created_by: createdBy,
-    created_at: now,
-    updated_at: now,
-  });
+  await db
+    .insertInto('ds_roles')
+    .values({
+      id,
+      data_source_id: dataSourceId,
+      name,
+      description: description || null,
+      is_active: true,
+      created_by: createdBy,
+      created_at: now,
+      updated_at: now,
+    })
+    .execute();
 
-  return db<DsRole>('ds_roles').where('id', id).first() as Promise<DsRole>;
+  const role = await db
+    .selectFrom('ds_roles')
+    .selectAll()
+    .where('id', '=', id)
+    .executeTakeFirstOrThrow();
+  return role as unknown as DsRole;
 }
 
 /**
@@ -64,10 +81,18 @@ export async function updateDsRole(
   updates: { name?: string; description?: string; is_active?: boolean }
 ): Promise<DsRole | undefined> {
   const db = getDb();
-  await db('ds_roles')
-    .where('id', roleId)
-    .update({ ...updates, updated_at: new Date().toISOString() });
-  return db<DsRole>('ds_roles').where('id', roleId).first();
+  await db
+    .updateTable('ds_roles')
+    .set({ ...updates, updated_at: new Date().toISOString() })
+    .where('id', '=', roleId)
+    .execute();
+
+  const role = await db
+    .selectFrom('ds_roles')
+    .selectAll()
+    .where('id', '=', roleId)
+    .executeTakeFirst();
+  return role as unknown as DsRole | undefined;
 }
 
 /**
@@ -75,7 +100,10 @@ export async function updateDsRole(
  */
 export async function deleteDsRole(roleId: string): Promise<void> {
   const db = getDb();
-  await db('ds_roles').where('id', roleId).delete();
+  await db
+    .deleteFrom('ds_roles')
+    .where('id', '=', roleId)
+    .execute();
 }
 
 /**
@@ -83,16 +111,22 @@ export async function deleteDsRole(roleId: string): Promise<void> {
  */
 export async function getDsUserRoles(dataSourceId: string): Promise<DsUserRoleJoinRow[]> {
   const db = getDb();
-  return db('ds_user_roles')
-    .join('users', 'ds_user_roles.user_id', 'users.id')
-    .join('ds_roles', 'ds_user_roles.ds_role_id', 'ds_roles.id')
-    .where('ds_user_roles.data_source_id', dataSourceId)
-    .select(
-      'ds_user_roles.*',
+  const rows = await db
+    .selectFrom('ds_user_roles')
+    .innerJoin('users', 'ds_user_roles.user_id', 'users.id')
+    .innerJoin('ds_roles', 'ds_user_roles.ds_role_id', 'ds_roles.id')
+    .where('ds_user_roles.data_source_id', '=', dataSourceId)
+    .select([
+      'ds_user_roles.data_source_id',
+      'ds_user_roles.user_id',
+      'ds_user_roles.ds_role_id',
+      'ds_user_roles.assigned_at',
       'users.email as user_email',
       'users.display_name as user_display_name',
-      'ds_roles.name as role_name'
-    ) as Promise<DsUserRoleJoinRow[]>;
+      'ds_roles.name as role_name',
+    ])
+    .execute();
+  return rows as unknown as DsUserRoleJoinRow[];
 }
 
 /**
@@ -104,15 +138,20 @@ export async function assignDsUserRole(
   dsRoleId: string
 ): Promise<void> {
   const db = getDb();
-  await db('ds_user_roles')
-    .insert({
+  await db
+    .insertInto('ds_user_roles')
+    .values({
       data_source_id: dataSourceId,
       user_id: userId,
       ds_role_id: dsRoleId,
       assigned_at: new Date().toISOString(),
     })
-    .onConflict(['data_source_id', 'user_id', 'ds_role_id'])
-    .ignore();
+    .onConflict((oc) =>
+      oc
+        .columns(['data_source_id', 'user_id', 'ds_role_id'])
+        .doNothing()
+    )
+    .execute();
 }
 
 /**
@@ -124,11 +163,12 @@ export async function removeDsUserRole(
   dsRoleId: string
 ): Promise<void> {
   const db = getDb();
-  await db('ds_user_roles')
-    .where('data_source_id', dataSourceId)
-    .where('user_id', userId)
-    .where('ds_role_id', dsRoleId)
-    .delete();
+  await db
+    .deleteFrom('ds_user_roles')
+    .where('data_source_id', '=', dataSourceId)
+    .where('user_id', '=', userId)
+    .where('ds_role_id', '=', dsRoleId)
+    .execute();
 }
 
 /**
@@ -139,14 +179,17 @@ export async function getDsEntityPermissions(
   dsRoleId?: string
 ): Promise<DsEntityPermission[]> {
   const db = getDb();
-  let query = db<DsEntityPermission>('ds_entity_permissions')
-    .where('data_source_id', dataSourceId);
+  let query = db
+    .selectFrom('ds_entity_permissions')
+    .selectAll()
+    .where('data_source_id', '=', dataSourceId);
 
   if (dsRoleId) {
-    query = query.where('ds_role_id', dsRoleId);
+    query = query.where('ds_role_id', '=', dsRoleId);
   }
 
-  return query.orderBy('entity_name');
+  const perms = await query.orderBy('entity_name').execute();
+  return perms as unknown as DsEntityPermission[];
 }
 
 /**
@@ -167,41 +210,49 @@ export async function upsertDsEntityPermission(
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  await db('ds_entity_permissions')
-    .insert({
+  await db
+    .insertInto('ds_entity_permissions')
+    .values({
       id,
       data_source_id: dataSourceId,
       ds_role_id: dsRoleId,
       entity_name: entityName,
       entity_type: entityType,
-      entity_schema: entitySchema || null,
+      entity_schema: entitySchema ? entitySchema : null,
       permission_level: permissionLevel,
       column_restrictions: columnRestrictions ? JSON.stringify(columnRestrictions) : null,
-      row_filter: rowFilter || null,
-      created_by: createdBy,
+      row_filter: rowFilter ? rowFilter : null,
+      created_by: createdBy ? createdBy : null,
       created_at: now,
       updated_at: now,
-    })
-    .onConflict(['data_source_id', 'ds_role_id', 'entity_name', 'entity_schema'])
-    .merge({
-      permission_level: permissionLevel,
-      column_restrictions: columnRestrictions ? JSON.stringify(columnRestrictions) : null,
-      row_filter: rowFilter || null,
-      updated_at: now,
-    });
+    } as any)
+    .onConflict((oc) =>
+      oc
+        .columns(['data_source_id', 'ds_role_id', 'entity_name', 'entity_schema'])
+        .doUpdateSet({
+          permission_level: permissionLevel,
+          column_restrictions: columnRestrictions ? JSON.stringify(columnRestrictions) : null,
+          row_filter: rowFilter || null,
+          updated_at: now,
+        })
+    )
+    .execute();
 
-  return db<DsEntityPermission>('ds_entity_permissions')
-    .where('data_source_id', dataSourceId)
-    .where('ds_role_id', dsRoleId)
-    .where('entity_name', entityName)
-    .where(function() {
-      if (entitySchema) {
-        this.where('entity_schema', entitySchema);
-      } else {
-        this.whereNull('entity_schema');
-      }
-    })
-    .first() as Promise<DsEntityPermission>;
+  let query = db
+    .selectFrom('ds_entity_permissions')
+    .selectAll()
+    .where('data_source_id', '=', dataSourceId)
+    .where('ds_role_id', '=', dsRoleId)
+    .where('entity_name', '=', entityName);
+
+  if (entitySchema) {
+    query = query.where('entity_schema', '=', entitySchema);
+  } else {
+    query = query.where('entity_schema', 'is', null as unknown as any);
+  }
+
+  const perm = await query.executeTakeFirstOrThrow();
+  return perm as unknown as DsEntityPermission;
 }
 
 /**
@@ -209,7 +260,10 @@ export async function upsertDsEntityPermission(
  */
 export async function deleteDsEntityPermission(permissionId: string): Promise<void> {
   const db = getDb();
-  await db('ds_entity_permissions').where('id', permissionId).delete();
+  await db
+    .deleteFrom('ds_entity_permissions')
+    .where('id', '=', permissionId)
+    .execute();
 }
 
 /**
@@ -224,12 +278,14 @@ export async function checkEntityAccess(
   const db = getDb();
 
   // First check if user is a system admin
-  const userRoles: UserRolePermissionRow[] = await db('user_roles')
-    .join('roles', 'user_roles.role_id', 'roles.id')
-    .where('user_roles.user_id', userId)
-    .select('roles.permissions');
+  const userRoles = await db
+    .selectFrom('user_roles')
+    .innerJoin('roles', 'user_roles.role_id', 'roles.id')
+    .where('user_roles.user_id', '=', userId)
+    .select(['roles.permissions'])
+    .execute();
 
-  const isSystemAdmin = userRoles.some((r: UserRolePermissionRow) => {
+  const isSystemAdmin = userRoles.some((r) => {
     const perms: string[] = JSON.parse(r.permissions);
     return perms.includes('admin:*');
   });
@@ -245,12 +301,14 @@ export async function checkEntityAccess(
   }
 
   // Get user's DS roles for this data source
-  const dsUserRoles: DsUserRoleWithRoleInfo[] = await db('ds_user_roles')
-    .join('ds_roles', 'ds_user_roles.ds_role_id', 'ds_roles.id')
-    .where('ds_user_roles.data_source_id', dataSourceId)
-    .where('ds_user_roles.user_id', userId)
-    .where('ds_roles.is_active', true)
-    .select('ds_roles.id as role_id', 'ds_roles.name as role_name');
+  const dsUserRoles = await db
+    .selectFrom('ds_user_roles')
+    .innerJoin('ds_roles', 'ds_user_roles.ds_role_id', 'ds_roles.id')
+    .where('ds_user_roles.data_source_id', '=', dataSourceId)
+    .where('ds_user_roles.user_id', '=', userId)
+    .where('ds_roles.is_active', '=', true)
+    .select(['ds_roles.id as role_id', 'ds_roles.name as role_name'])
+    .execute();
 
   if (dsUserRoles.length === 0) {
     return entities.map((entity) => ({
@@ -260,13 +318,17 @@ export async function checkEntityAccess(
     }));
   }
 
-  const roleIds = dsUserRoles.map((r: DsUserRoleWithRoleInfo) => r.role_id);
+  const roleIds = dsUserRoles.map((r) => r.role_id);
 
   // Get all entity permissions for user's DS roles
-  const permissions = await db<DsEntityPermission>('ds_entity_permissions')
-    .where('data_source_id', dataSourceId)
-    .whereIn('ds_role_id', roleIds)
-    .select('*');
+  const permissions = await db
+    .selectFrom('ds_entity_permissions')
+    .selectAll()
+    .where('data_source_id', '=', dataSourceId)
+    .where((eb) =>
+      eb('ds_role_id', 'in', roleIds)
+    )
+    .execute() as unknown as DsEntityPermission[];
 
   // Check each entity
   return entities.map((entity) => {
@@ -308,7 +370,7 @@ export async function checkEntityAccess(
       }
     }
 
-    const grantingRole = dsUserRoles.find((r: DsUserRoleWithRoleInfo) => r.role_id === bestPerm.ds_role_id);
+    const grantingRole = dsUserRoles.find((r) => r.role_id === bestPerm.ds_role_id);
     const columnRestrictions: string[] | undefined = bestPerm.column_restrictions
       ? JSON.parse(bestPerm.column_restrictions)
       : undefined;
@@ -318,7 +380,7 @@ export async function checkEntityAccess(
       entitySchema: entity.schema,
       hasAccess: true,
       grantedBy: grantingRole?.role_name,
-      permissionLevel: bestPerm.permission_level,
+      permissionLevel: bestPerm.permission_level as DsEntityPermissionLevel,
       columnRestrictions,
       rowFilter: bestPerm.row_filter || undefined,
     };
@@ -335,12 +397,14 @@ export async function getUserAccessibleEntities(
   const db = getDb();
 
   // Check system admin
-  const userRoles: UserRolePermissionRow[] = await db('user_roles')
-    .join('roles', 'user_roles.role_id', 'roles.id')
-    .where('user_roles.user_id', userId)
-    .select('roles.permissions');
+  const userRoles = await db
+    .selectFrom('user_roles')
+    .innerJoin('roles', 'user_roles.role_id', 'roles.id')
+    .where('user_roles.user_id', '=', userId)
+    .select(['roles.permissions'])
+    .execute();
 
-  const isSystemAdmin = userRoles.some((r: UserRolePermissionRow) => {
+  const isSystemAdmin = userRoles.some((r) => {
     const perms: string[] = JSON.parse(r.permissions);
     return perms.includes('admin:*');
   });
@@ -351,17 +415,23 @@ export async function getUserAccessibleEntities(
   }
 
   // Get user's DS roles
-  const dsRoleIds: string[] = await db('ds_user_roles')
-    .join('ds_roles', 'ds_user_roles.ds_role_id', 'ds_roles.id')
-    .where('ds_user_roles.data_source_id', dataSourceId)
-    .where('ds_user_roles.user_id', userId)
-    .where('ds_roles.is_active', true)
-    .pluck('ds_roles.id');
+  const dsRoleIds = await db
+    .selectFrom('ds_user_roles')
+    .innerJoin('ds_roles', 'ds_user_roles.ds_role_id', 'ds_roles.id')
+    .where('ds_user_roles.data_source_id', '=', dataSourceId)
+    .where('ds_user_roles.user_id', '=', userId)
+    .where('ds_roles.is_active', '=', true)
+    .select(['ds_roles.id'])
+    .execute()
+    .then((rows) => rows.map((r) => r.id));
 
   if (dsRoleIds.length === 0) return [];
 
-  return db<DsEntityPermission>('ds_entity_permissions')
-    .where('data_source_id', dataSourceId)
-    .whereIn('ds_role_id', dsRoleIds)
-    .select('*');
+  const perms = await db
+    .selectFrom('ds_entity_permissions')
+    .selectAll()
+    .where('data_source_id', '=', dataSourceId)
+    .where((eb) => eb('ds_role_id', 'in', dsRoleIds))
+    .execute();
+  return perms as unknown as DsEntityPermission[];
 }

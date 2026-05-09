@@ -2,7 +2,7 @@ import type { Knex } from 'knex';
 
 export async function up(knex: Knex): Promise<void> {
   // Add is_public column to report_definitions
-  await knex.schema alteringTable('report_definitions', (table) => {
+  await knex.schema.alterTable('report_definitions', (table) => {
     table.boolean('is_public').defaultTo(false).notNullable();
   });
 
