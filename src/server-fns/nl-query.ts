@@ -18,6 +18,8 @@ import {
 import { validateQueryAccess } from "@/lib/permissions/query-access-validator";
 import { logAudit } from "@/lib/security/audit";
 import { requireAuth } from "@/lib/auth/middleware";
+import { translateNLToSQL, isSafeSelectQuery } from "@/lib/nlquery/openai-translator";
+import { getSchemaMetadata } from "@/lib/nlquery/schema-metadata";
 import type { DataSource } from "@/types/database";
 
 export interface ExecuteNLQueryInput {
@@ -91,20 +93,41 @@ export const executeNLQuery = createServerFn({
   }
 
   try {
-    // [Step 1] Translate NL to SQL (would use OpenAI in real implementation)
-    // For MVP, return stub indicating need for OpenAI integration
-    const generatedSQL = await nlToSQL(nlQuestion, dataSource);
-    if (!generatedSQL) {
+    // [Step 1] Get schema metadata
+    const schema = await getSchemaMetadata(dataSource);
+
+    // [Step 1.5] Translate NL to SQL using OpenAI
+    const translation = await translateNLToSQL(nlQuestion, schema);
+    if (!translation) {
       await logAudit({
         userId: session.user.id,
         action: "nl_query_error",
         resourceType: "query",
         resourceId: dataSourceId,
-        details: { nlQuestion, error: "Failed to generate SQL" },
+        details: { nlQuestion, error: "Failed to generate SQL - OpenAI unavailable" },
       });
       return {
         success: false,
-        error: "Could not translate your question to SQL. Try asking differently.",
+        error:
+          "Could not translate your question to SQL. OpenAI integration may not be configured.",
+      };
+    }
+
+    const generatedSQL = translation.sql;
+
+    // Verify it's a safe SELECT statement
+    if (!isSafeSelectQuery(generatedSQL)) {
+      await logAudit({
+        userId: session.user.id,
+        action: "nl_query_error",
+        resourceType: "query",
+        resourceId: dataSourceId,
+        details: { nlQuestion, error: "Generated query is not a safe SELECT statement" },
+      });
+      return {
+        success: false,
+        error:
+          "The generated query is not a valid SELECT statement. Please rephrase your question.",
       };
     }
 
@@ -120,7 +143,6 @@ export const executeNLQuery = createServerFn({
     }
 
     // [Step 3] Translation validation (D4: reverse-translation semantic match)
-    const schema = await getSchemaMetadata(dataSource);
     const reverseTranslation = await reverseTranslateSql(generatedSQL, nlQuestion, schema);
 
     const confidenceAssessment = assessTranslationConfidence(
@@ -240,25 +262,15 @@ export const executeNLQuery = createServerFn({
 });
 
 /**
- * Translate NL question to SQL (stub - requires OpenAI integration)
+ * NL→SQL translation is now handled by:
+ * - @/lib/nlquery/openai-translator.ts - OpenAI-powered translation
+ * - @/lib/nlquery/schema-metadata.ts - Database schema extraction
+ *
+ * These modules provide:
+ * - translateNLToSQL: Converts natural language to SQL using GPT-4
+ * - getSchemaMetadata: Fetches and caches table/column metadata
+ * - isSafeSelectQuery: Validates that generated queries are safe SELECT statements
  */
-async function nlToSQL(nlQuestion: string, dataSource: DataSource): Promise<string | null> {
-  // TODO: Implement with OpenAI or other LLM
-  // For now, return null to indicate not implemented
-  console.log(`[NL→SQL] Would translate: "${nlQuestion}" for datasource ${dataSource.id}`);
-  return null;
-}
-
-/**
- * Get schema metadata for a datasource
- */
-async function getSchemaMetadata(dataSource: DataSource): Promise<SchemaMetadata> {
-  // TODO: Fetch actual schema from datasource
-  // For now, return stub
-  return {
-    tables: [],
-  };
-}
 
 /**
  * Allow manager to override low-confidence translation and execute anyway
