@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
 /**
  * Card component displaying a single dataset's info and actions.
  */
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import type { DatasetInfo } from '@/types/wasm';
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import type { DatasetInfo } from "@/types/wasm";
 
 function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B';
-  const units = ['B', 'KB', 'MB', 'GB'];
+  if (bytes === 0) return "0 B";
+  const units = ["B", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${units[i]}`;
+  return `${(bytes / 1024 ** i).toFixed(1)} ${units[i]}`;
 }
 
 function formatNumber(n: number): string {
@@ -33,11 +33,11 @@ interface DatasetCardProps {
 export function DatasetCard({ dataset, onRefresh, onUnload, onLoad }: DatasetCardProps) {
   const isLoaded = dataset.memorySize > 0;
   const statusColor =
-    dataset.cacheStatus === 'cached'
-      ? 'bg-green-500'
-      : dataset.cacheStatus === 'stale'
-        ? 'bg-yellow-500'
-        : 'bg-gray-400';
+    dataset.cacheStatus === "cached"
+      ? "bg-green-500"
+      : dataset.cacheStatus === "stale"
+        ? "bg-yellow-500"
+        : "bg-gray-400";
 
   return (
     <Card>
@@ -45,8 +45,8 @@ export function DatasetCard({ dataset, onRefresh, onUnload, onLoad }: DatasetCar
         <div className="flex items-center justify-between">
           <CardTitle className="text-base">{dataset.name}</CardTitle>
           <div className="flex items-center gap-2">
-            <Badge variant={isLoaded ? 'default' : 'secondary'}>
-              {isLoaded ? 'Loaded' : dataset.cacheStatus === 'cached' ? 'Cached' : 'Not loaded'}
+            <Badge variant={isLoaded ? "default" : "secondary"}>
+              {isLoaded ? "Loaded" : dataset.cacheStatus === "cached" ? "Cached" : "Not loaded"}
             </Badge>
             <span className={`inline-block h-2 w-2 rounded-full ${statusColor}`} />
           </div>
@@ -62,7 +62,7 @@ export function DatasetCard({ dataset, onRefresh, onUnload, onLoad }: DatasetCar
         {/* Schema preview */}
         {dataset.schema.length > 0 && (
           <div className="rounded bg-muted px-2 py-1 text-xs text-muted-foreground">
-            schema: [{dataset.schema.map((c) => c.name).join(', ')}]
+            schema: [{dataset.schema.map((c) => c.name).join(", ")}]
           </div>
         )}
 

@@ -1,18 +1,19 @@
-'use client';
+"use client";
 
 /**
  * Dashboard state management context for WASM-enhanced dashboards.
  * Tracks loaded datasets, active filters, and widget states.
  */
 
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
-import type { ActiveFilter, CrossFilterConfig } from '@/types/wasm';
-import { useCrossFilter } from '@/hooks/useCrossFilter';
+import type React from "react";
+import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import type { ActiveFilter, CrossFilterConfig } from "@/types/wasm";
+import { useCrossFilter } from "@/hooks/useCrossFilter";
 
 interface DashboardStateValue {
   /** Cross-filter state */
   activeFilters: ActiveFilter[];
-  applyFilter: (filter: Omit<ActiveFilter, 'id' | 'affectedWidgets'>) => void;
+  applyFilter: (filter: Omit<ActiveFilter, "id" | "affectedWidgets">) => void;
   removeFilter: (filterId: string) => void;
   clearFilters: () => void;
   getFilteredQuery: (widgetId: string, baseQuery: string) => string;
@@ -55,20 +56,16 @@ export function DashboardStateProvider({ config, children }: DashboardStateProvi
       getFilteredQuery,
       widgetDatasets,
       setWidgetDataset,
-    ],
+    ]
   );
 
-  return (
-    <DashboardStateContext.Provider value={value}>
-      {children}
-    </DashboardStateContext.Provider>
-  );
+  return <DashboardStateContext.Provider value={value}>{children}</DashboardStateContext.Provider>;
 }
 
 export function useDashboardState(): DashboardStateValue {
   const ctx = useContext(DashboardStateContext);
   if (!ctx) {
-    throw new Error('useDashboardState must be used within a DashboardStateProvider');
+    throw new Error("useDashboardState must be used within a DashboardStateProvider");
   }
   return ctx;
 }

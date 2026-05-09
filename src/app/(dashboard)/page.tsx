@@ -1,39 +1,32 @@
-import { getDb } from '@/lib/db/config';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  BarChart3,
-  Database,
-  FileText,
-  LayoutDashboard,
-  Play,
-  Clock,
-} from 'lucide-react';
-import Link from 'next/link';
-import { auth } from '@/lib/auth/config';
+import { getDb } from "@/lib/db/config";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BarChart3, Database, FileText, LayoutDashboard, Play, Clock } from "lucide-react";
+import Link from "next/link";
+import { auth } from "@/lib/auth/config";
 
 const quickLinks = [
   {
-    title: 'SQL Editor',
-    description: 'Write and execute SQL queries',
-    href: '/sql-editor',
+    title: "SQL Editor",
+    description: "Write and execute SQL queries",
+    href: "/sql-editor",
     icon: Database,
   },
   {
-    title: 'Reports',
-    description: 'View and manage reports',
-    href: '/reports',
+    title: "Reports",
+    description: "View and manage reports",
+    href: "/reports",
     icon: FileText,
   },
   {
-    title: 'Charts',
-    description: 'Create data visualizations',
-    href: '/charts',
+    title: "Charts",
+    description: "Create data visualizations",
+    href: "/charts",
     icon: BarChart3,
   },
   {
-    title: 'Dashboards',
-    description: 'Build interactive dashboards',
-    href: '/dashboards',
+    title: "Dashboards",
+    description: "Build interactive dashboards",
+    href: "/dashboards",
     icon: LayoutDashboard,
   },
 ];
@@ -42,13 +35,13 @@ async function getDashboardStats() {
   const db = getDb();
 
   // Helper to safely get count from a table
-  const safeCount = async (tableName: string, column = '*') => {
+  const safeCount = async (tableName: string, column = "*") => {
     try {
       const result = await db(tableName).count(`${column} as count`).first();
       return Number((result as any)?.count || 0);
     } catch (error: any) {
       // Table doesn't exist or other error
-      if (error.message?.includes('no such table')) {
+      if (error.message?.includes("no such table")) {
         return 0;
       }
       console.error(`Error counting ${tableName}:`, error);
@@ -59,24 +52,24 @@ async function getDashboardStats() {
   // Get scheduled jobs count separately
   const getJobsCount = async () => {
     try {
-      const result = await db('job_definitions')
-        .whereNotNull('schedule_cron')
-        .count('* as count')
+      const result = await db("job_definitions")
+        .whereNotNull("schedule_cron")
+        .count("* as count")
         .first();
       return Number((result as any)?.count || 0);
     } catch (error: any) {
-      if (error.message?.includes('no such table')) {
+      if (error.message?.includes("no such table")) {
         return 0;
       }
-      console.error('Error counting jobs:', error);
+      console.error("Error counting jobs:", error);
       return 0;
     }
   };
 
   const [reportsCount, chartsCount, dashboardsCount, jobsCount] = await Promise.all([
-    safeCount('report_definitions'),
-    safeCount('chart_definitions'),
-    safeCount('dashboard_layouts'),
+    safeCount("report_definitions"),
+    safeCount("chart_definitions"),
+    safeCount("dashboard_layouts"),
     getJobsCount(),
   ]);
 
@@ -94,28 +87,28 @@ export default async function DashboardPage() {
 
   const statItems = [
     {
-      title: 'Total Reports',
+      title: "Total Reports",
       value: stats.reports.toString(),
       icon: FileText,
-      href: '/reports',
+      href: "/reports",
     },
     {
-      title: 'Active Charts',
+      title: "Active Charts",
       value: stats.charts.toString(),
       icon: BarChart3,
-      href: '/charts',
+      href: "/charts",
     },
     {
-      title: 'Dashboards',
+      title: "Dashboards",
       value: stats.dashboards.toString(),
       icon: LayoutDashboard,
-      href: '/dashboards',
+      href: "/dashboards",
     },
     {
-      title: 'Scheduled Jobs',
+      title: "Scheduled Jobs",
       value: stats.jobs.toString(),
       icon: Clock,
-      href: '/jobs',
+      href: "/jobs",
     },
   ];
 
@@ -134,9 +127,7 @@ export default async function DashboardPage() {
           <Link key={stat.title} href={stat.href}>
             <Card className="hover:bg-accent/50 transition-colors cursor-pointer h-full border-border">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  {stat.title}
-                </CardTitle>
+                <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
                 <stat.icon className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -160,9 +151,7 @@ export default async function DashboardPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-xs text-muted-foreground">
-                    {link.description}
-                  </p>
+                  <p className="text-xs text-muted-foreground">{link.description}</p>
                 </CardContent>
               </Card>
             </Link>
@@ -179,9 +168,7 @@ export default async function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
-              No recent job executions
-            </p>
+            <p className="text-sm text-muted-foreground">No recent job executions</p>
           </CardContent>
         </Card>
 

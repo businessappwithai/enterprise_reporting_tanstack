@@ -2,22 +2,20 @@
  * DuckDB schema introspection utilities.
  */
 
-import type { AsyncDuckDBConnection } from './types';
-import type { DuckDBTableInfo } from './types';
-import { createConnection } from './instance';
-import { executeQuery } from './query';
+import type { AsyncDuckDBConnection } from "./types";
+import type { DuckDBTableInfo } from "./types";
+import { createConnection } from "./instance";
+import { executeQuery } from "./query";
 
 /**
  * List all user tables currently loaded in DuckDB.
  */
-export async function listTables(
-  conn?: AsyncDuckDBConnection,
-): Promise<string[]> {
+export async function listTables(conn?: AsyncDuckDBConnection): Promise<string[]> {
   const result = await executeQuery(
     `SELECT table_name FROM information_schema.tables
      WHERE table_schema = 'main'
      ORDER BY table_name`,
-    conn,
+    conn
   );
   return result.rows.map((r) => String(r.table_name));
 }
@@ -27,7 +25,7 @@ export async function listTables(
  */
 export async function getTableSchema(
   tableName: string,
-  conn?: AsyncDuckDBConnection,
+  conn?: AsyncDuckDBConnection
 ): Promise<DuckDBTableInfo> {
   const ownConnection = !conn;
   const connection = conn ?? (await createConnection());
@@ -38,12 +36,12 @@ export async function getTableSchema(
        FROM information_schema.columns
        WHERE table_name = '${tableName}' AND table_schema = 'main'
        ORDER BY ordinal_position`,
-      connection,
+      connection
     );
 
     const countResult = await executeQuery(
       `SELECT COUNT(*) as cnt FROM "${tableName}"`,
-      connection,
+      connection
     );
 
     return {
@@ -51,7 +49,7 @@ export async function getTableSchema(
       columns: columnsResult.rows.map((r) => ({
         name: String(r.column_name),
         type: String(r.data_type),
-        nullable: r.is_nullable === 'YES',
+        nullable: r.is_nullable === "YES",
       })),
       rowCount: Number(countResult.rows[0]?.cnt ?? 0),
     };
@@ -65,9 +63,7 @@ export async function getTableSchema(
 /**
  * Get schema info for all tables.
  */
-export async function getAllTableSchemas(
-  conn?: AsyncDuckDBConnection,
-): Promise<DuckDBTableInfo[]> {
+export async function getAllTableSchemas(conn?: AsyncDuckDBConnection): Promise<DuckDBTableInfo[]> {
   const tables = await listTables(conn);
   const schemas: DuckDBTableInfo[] = [];
   for (const table of tables) {

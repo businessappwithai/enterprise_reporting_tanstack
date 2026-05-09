@@ -3,18 +3,22 @@
  * This allows existing charts saved in the database to render with the new ECharts engine.
  */
 
-import type { EChartsConfig, ChartType as WasmChartType, DataMapping as WasmDataMapping } from '@/types/wasm';
-import type { ChartType, ChartConfig, DataMapping } from '@/types/database';
+import type {
+  EChartsConfig,
+  ChartType as WasmChartType,
+  DataMapping as WasmDataMapping,
+} from "@/types/wasm";
+import type { ChartType, ChartConfig, DataMapping } from "@/types/database";
 
 const CHART_TYPE_MAP: Record<string, WasmChartType> = {
-  bar: 'bar',
-  line: 'line',
-  area: 'area',
-  pie: 'pie',
-  scatter: 'scatter',
-  column: 'bar', // horizontal bar
-  doughnut: 'doughnut',
-  composed: 'bar', // fallback
+  bar: "bar",
+  line: "line",
+  area: "area",
+  pie: "pie",
+  scatter: "scatter",
+  column: "bar", // horizontal bar
+  doughnut: "doughnut",
+  composed: "bar", // fallback
 };
 
 /**
@@ -23,9 +27,9 @@ const CHART_TYPE_MAP: Record<string, WasmChartType> = {
 export function convertRechartsToECharts(
   chartType: ChartType,
   chartConfig: ChartConfig | null | undefined,
-  dataMapping: DataMapping | null | undefined,
+  dataMapping: DataMapping | null | undefined
 ): EChartsConfig {
-  const type: WasmChartType = CHART_TYPE_MAP[chartType] ?? 'bar';
+  const type: WasmChartType = CHART_TYPE_MAP[chartType] ?? "bar";
 
   const echartsMapping: WasmDataMapping = {
     x: dataMapping?.xAxis?.field ?? undefined,
@@ -50,10 +54,13 @@ export function convertRechartsToECharts(
     dataMapping: echartsMapping,
     animation: chartConfig?.animation ?? true,
     stacked: chartConfig?.stacked === true,
-    tooltip: chartConfig?.tooltip?.enabled !== false ? { trigger: 'axis' } : false,
+    tooltip: chartConfig?.tooltip?.enabled !== false ? { trigger: "axis" } : false,
     legend:
       chartConfig?.legend?.show !== false
-        ? { orient: 'horizontal' as const, top: chartConfig?.legend?.position === 'top' ? 'top' : 'bottom' }
+        ? {
+            orient: "horizontal" as const,
+            top: chartConfig?.legend?.position === "top" ? "top" : "bottom",
+          }
         : false,
     xAxis: chartConfig?.xAxis
       ? {
@@ -67,10 +74,15 @@ export function convertRechartsToECharts(
       : undefined,
   };
 
-  console.log('[RechartsCompatAdapter] Input:', { chartType, chartConfig, dataMapping });
-  console.log('[RechartsCompatAdapter] Output:', result);
-  console.log('[RechartsCompatAdapter] Series colors:', seriesColors);
-  console.log('[RechartsCompatAdapter] Stacked value:', result.stacked, 'Type:', typeof result.stacked);
+  console.log("[RechartsCompatAdapter] Input:", { chartType, chartConfig, dataMapping });
+  console.log("[RechartsCompatAdapter] Output:", result);
+  console.log("[RechartsCompatAdapter] Series colors:", seriesColors);
+  console.log(
+    "[RechartsCompatAdapter] Stacked value:",
+    result.stacked,
+    "Type:",
+    typeof result.stacked
+  );
 
   return result;
 }

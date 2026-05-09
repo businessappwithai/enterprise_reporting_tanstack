@@ -20,7 +20,10 @@ export default function Loading() {
         </div>
       </div>
 
-      <div className="border rounded-lg p-4 flex items-center justify-center" style={{ height: '400px' }}>
+      <div
+        className="border rounded-lg p-4 flex items-center justify-center"
+        style={{ height: "400px" }}
+      >
         <div className="flex flex-col items-center gap-2">
           <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           <p className="text-sm text-muted-foreground">Loading SQL Editor...</p>

@@ -3,17 +3,17 @@
  * Executes a query against a data source and writes the result as a Parquet file.
  */
 
-import { writeFileSync, existsSync, statSync } from 'fs';
-import { nanoid } from 'nanoid';
-import { executeSourceQuery, estimateRowCount } from './source-connector';
-import { rowsToArrowFile } from './arrow-exporter';
-import { getExportPath, ensureExportDir } from './storage';
+import { writeFileSync, existsSync, statSync } from "fs";
+import { nanoid } from "nanoid";
+import { executeSourceQuery, estimateRowCount } from "./source-connector";
+import { rowsToArrowFile } from "./arrow-exporter";
+import { getExportPath, ensureExportDir } from "./storage";
 import type {
   ParquetExportConfig,
   ParquetExportResult,
   ExportProgress,
   ColumnSchema,
-} from '@/types/wasm';
+} from "@/types/wasm";
 
 // In-memory progress tracker
 const progressMap = new Map<string, ExportProgress>();
@@ -27,29 +27,24 @@ const progressMap = new Map<string, ExportProgress>();
  * When a server-side Parquet writer (e.g. parquet-wasm Node build) is
  * added, this function will produce true Parquet files.
  */
-export async function exportToParquet(
-  config: ParquetExportConfig,
-): Promise<ParquetExportResult> {
+export async function exportToParquet(config: ParquetExportConfig): Promise<ParquetExportResult> {
   const exportId = nanoid();
   const startTime = Date.now();
 
   progressMap.set(exportId, {
     exportId,
-    status: 'processing',
+    status: "processing",
     progress: 0,
     rowsProcessed: 0,
   });
 
   try {
     // Estimate size
-    const estimatedRows = await estimateRowCount(
-      config.dataSourceId,
-      config.query,
-    );
+    const estimatedRows = await estimateRowCount(config.dataSourceId, config.query);
 
     progressMap.set(exportId, {
       exportId,
-      status: 'processing',
+      status: "processing",
       progress: 0.1,
       rowsProcessed: 0,
       totalRows: estimatedRows,
@@ -60,7 +55,7 @@ export async function exportToParquet(
 
     progressMap.set(exportId, {
       exportId,
-      status: 'processing',
+      status: "processing",
       progress: 0.6,
       rowsProcessed: result.rowCount,
       totalRows: estimatedRows,
@@ -75,9 +70,7 @@ export async function exportToParquet(
     const filePath = getExportPath(fileName);
     writeFileSync(filePath, arrowBuffer);
 
-    const fileSize = existsSync(filePath)
-      ? statSync(filePath).size
-      : arrowBuffer.byteLength;
+    const fileSize = existsSync(filePath) ? statSync(filePath).size : arrowBuffer.byteLength;
 
     const schema: ColumnSchema[] = result.columns.map((c) => ({
       name: c.name,
@@ -89,7 +82,7 @@ export async function exportToParquet(
 
     progressMap.set(exportId, {
       exportId,
-      status: 'completed',
+      status: "completed",
       progress: 1,
       rowsProcessed: result.rowCount,
       totalRows: result.rowCount,
@@ -108,7 +101,7 @@ export async function exportToParquet(
   } catch (err) {
     progressMap.set(exportId, {
       exportId,
-      status: 'failed',
+      status: "failed",
       progress: 0,
       rowsProcessed: 0,
       error: err instanceof Error ? err.message : String(err),
@@ -129,7 +122,7 @@ export function getExportProgress(exportId: string): ExportProgress | null {
  */
 export function cancelExport(exportId: string): void {
   const progress = progressMap.get(exportId);
-  if (progress && progress.status === 'processing') {
-    progressMap.set(exportId, { ...progress, status: 'failed', error: 'Cancelled' });
+  if (progress && progress.status === "processing") {
+    progressMap.set(exportId, { ...progress, status: "failed", error: "Cancelled" });
   }
 }

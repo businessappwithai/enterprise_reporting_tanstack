@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useState, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -13,13 +13,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -28,16 +28,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Plus,
   MoreHorizontal,
@@ -48,46 +48,49 @@ import {
   LineChart,
   PieChart,
   AreaChart,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { formatDateTime } from '@/lib/utils';
-import type { ChartDefinition, SavedQuery, ChartType } from '@/types/database';
-import { useCanCreate, useCanEdit, useCanDelete } from '@/lib/hooks/usePermissions';
+} from "lucide-react";
+import { toast } from "sonner";
+import { formatDateTime } from "@/lib/utils";
+import type { ChartDefinition, SavedQuery, ChartType } from "@/types/database";
+import { useCanCreate, useCanEdit, useCanDelete } from "@/lib/hooks/usePermissions";
 
 export default function ChartsPage() {
   const queryClient = useQueryClient();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [newChartName, setNewChartName] = useState('');
-  const [newChartType, setNewChartType] = useState<ChartType>('bar');
-  const [selectedQueryId, setSelectedQueryId] = useState('');
+  const [newChartName, setNewChartName] = useState("");
+  const [newChartType, setNewChartType] = useState<ChartType>("bar");
+  const [selectedQueryId, setSelectedQueryId] = useState("");
 
   // Permission hooks
-  const canCreateChart = useCanCreate('chart');
-  const canEditCharts = useCanEdit('chart');
-  const canDeleteCharts = useCanDelete('chart');
+  const canCreateChart = useCanCreate("chart");
+  const canEditCharts = useCanEdit("chart");
+  const canDeleteCharts = useCanDelete("chart");
 
-  const chartTypeIcons = useMemo<Record<ChartType, React.ReactNode>>(() => ({
-    bar: <BarChart3 className="h-4 w-4" />,
-    line: <LineChart className="h-4 w-4" />,
-    area: <AreaChart className="h-4 w-4" />,
-    pie: <PieChart className="h-4 w-4" />,
-    scatter: <BarChart3 className="h-4 w-4" />,
-    composed: <BarChart3 className="h-4 w-4" />,
-  }), []);
+  const chartTypeIcons = useMemo<Record<ChartType, React.ReactNode>>(
+    () => ({
+      bar: <BarChart3 className="h-4 w-4" />,
+      line: <LineChart className="h-4 w-4" />,
+      area: <AreaChart className="h-4 w-4" />,
+      pie: <PieChart className="h-4 w-4" />,
+      scatter: <BarChart3 className="h-4 w-4" />,
+      composed: <BarChart3 className="h-4 w-4" />,
+    }),
+    []
+  );
 
   const { data: charts, isLoading } = useQuery<ChartDefinition[]>({
-    queryKey: ['charts'],
+    queryKey: ["charts"],
     queryFn: async () => {
-      const res = await fetch('/api/charts');
+      const res = await fetch("/api/charts");
       const data = await res.json();
       return data.data?.items || [];
     },
   });
 
   const { data: queries } = useQuery<SavedQuery[]>({
-    queryKey: ['queries'],
+    queryKey: ["queries"],
     queryFn: async () => {
-      const res = await fetch('/api/queries');
+      const res = await fetch("/api/queries");
       const data = await res.json();
       return data.data?.items || [];
     },
@@ -95,46 +98,46 @@ export default function ChartsPage() {
 
   const createMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch('/api/charts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/charts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: newChartName,
           chartType: newChartType,
           savedQueryId: selectedQueryId || undefined,
           chartConfig: { legend: { show: true }, tooltip: { enabled: true } },
-          dataMapping: { xAxis: { field: '' }, yAxis: [] },
+          dataMapping: { xAxis: { field: "" }, yAxis: [] },
         }),
       });
       return res.json();
     },
     onSuccess: (data) => {
       if (data.success) {
-        toast.success('Chart created successfully');
-        queryClient.invalidateQueries({ queryKey: ['charts'] });
+        toast.success("Chart created successfully");
+        queryClient.invalidateQueries({ queryKey: ["charts"] });
         setCreateDialogOpen(false);
-        setNewChartName('');
-        setNewChartType('bar');
-        setSelectedQueryId('');
+        setNewChartName("");
+        setNewChartType("bar");
+        setSelectedQueryId("");
         // Redirect to the new editor
         window.location.href = `/charts/editor/${data.data.id}`;
       } else {
-        toast.error(data.error?.message || 'Failed to create chart');
+        toast.error(data.error?.message || "Failed to create chart");
       }
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/charts/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/charts/${id}`, { method: "DELETE" });
       return res.json();
     },
     onSuccess: (data) => {
       if (data.success) {
-        toast.success('Chart deleted successfully');
-        queryClient.invalidateQueries({ queryKey: ['charts'] });
+        toast.success("Chart deleted successfully");
+        queryClient.invalidateQueries({ queryKey: ["charts"] });
       } else {
-        toast.error(data.error?.message || 'Failed to delete chart');
+        toast.error(data.error?.message || "Failed to delete chart");
       }
     },
   });
@@ -144,9 +147,7 @@ export default function ChartsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Charts</h1>
-          <p className="text-muted-foreground">
-            Create and manage data visualizations
-          </p>
+          <p className="text-muted-foreground">Create and manage data visualizations</p>
         </div>
 
         <div className="flex gap-2">
@@ -185,7 +186,10 @@ export default function ChartsPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="type">Chart Type</Label>
-                    <Select value={newChartType} onValueChange={(v) => setNewChartType(v as ChartType)}>
+                    <Select
+                      value={newChartType}
+                      onValueChange={(v) => setNewChartType(v as ChartType)}
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -223,7 +227,7 @@ export default function ChartsPage() {
                     onClick={() => createMutation.mutate()}
                     disabled={!newChartName || createMutation.isPending}
                   >
-                    {createMutation.isPending ? 'Creating...' : 'Create Chart'}
+                    {createMutation.isPending ? "Creating..." : "Create Chart"}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -241,9 +245,7 @@ export default function ChartsPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Loading charts...
-            </div>
+            <div className="text-center py-8 text-muted-foreground">Loading charts...</div>
           ) : charts?.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               No charts created yet. Create your first chart to get started.

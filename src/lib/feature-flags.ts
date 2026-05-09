@@ -17,20 +17,16 @@ export interface FeatureFlags {
 }
 
 export const featureFlags: FeatureFlags = {
-  wasmEnabled: process.env.NEXT_PUBLIC_WASM_ENABLED === 'true',
-  echartsEnabled: process.env.NEXT_PUBLIC_ECHARTS_ENABLED === 'true',
-  crossFilterEnabled:
-    process.env.NEXT_PUBLIC_CROSSFILTER_ENABLED === 'true',
-  offlineEnabled: process.env.NEXT_PUBLIC_OFFLINE_ENABLED === 'true',
-  progressiveEnabled:
-    process.env.NEXT_PUBLIC_PROGRESSIVE_ENABLED === 'true',
+  wasmEnabled: process.env.NEXT_PUBLIC_WASM_ENABLED === "true",
+  echartsEnabled: process.env.NEXT_PUBLIC_ECHARTS_ENABLED === "true",
+  crossFilterEnabled: process.env.NEXT_PUBLIC_CROSSFILTER_ENABLED === "true",
+  offlineEnabled: process.env.NEXT_PUBLIC_OFFLINE_ENABLED === "true",
+  progressiveEnabled: process.env.NEXT_PUBLIC_PROGRESSIVE_ENABLED === "true",
 };
 
 /**
  * Check if a specific feature flag is enabled.
  */
-export function isFeatureEnabled(
-  flag: keyof FeatureFlags,
-): boolean {
+export function isFeatureEnabled(flag: keyof FeatureFlags): boolean {
   return featureFlags[flag];
 }

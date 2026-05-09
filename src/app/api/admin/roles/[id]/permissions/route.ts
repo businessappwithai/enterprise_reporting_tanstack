@@ -1,18 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth/config';
-import { getDb } from '@/lib/db/config';
-import { isAdmin } from '@/lib/permissions/permissions';
+import { type NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth/config";
+import { getDb } from "@/lib/db/config";
+import { isAdmin } from "@/lib/permissions/permissions";
 
 // GET - Fetch resource permissions for a role
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
     if (!session?.user) {
       return NextResponse.json(
-        { success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } },
+        { success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } },
         { status: 401 }
       );
     }
@@ -20,7 +17,7 @@ export async function GET(
     const admin = await isAdmin(session.user.id);
     if (!admin) {
       return NextResponse.json(
-        { success: false, error: { code: 'FORBIDDEN', message: 'Admin access required' } },
+        { success: false, error: { code: "FORBIDDEN", message: "Admin access required" } },
         { status: 403 }
       );
     }
@@ -30,23 +27,19 @@ export async function GET(
 
     // Fetch all resources that can have permissions assigned
     const [reports, charts, dashboards] = await Promise.all([
-      db('report_definitions')
-        .select('id', 'name as title')
+      db("report_definitions")
+        .select("id", "name as title")
         .select(db.raw("'report' as type"))
-        .where('is_deleted', 0),
-      db('chart_definitions')
-        .select('id', 'name as title')
-        .select(db.raw("'chart' as type")),
-      db('dashboard_layouts')
-        .select('id', 'name as title')
-        .select(db.raw("'dashboard' as type")),
+        .where("is_deleted", 0),
+      db("chart_definitions").select("id", "name as title").select(db.raw("'chart' as type")),
+      db("dashboard_layouts").select("id", "name as title").select(db.raw("'dashboard' as type")),
     ]);
 
     // Fetch existing resource permissions for this role
-    const resourcePermissions = await db('resource_permissions as rp')
-      .join('roles as r', 'rp.role_id', 'r.id')
-      .where('rp.role_id', id)
-      .select('rp.*');
+    const resourcePermissions = await db("resource_permissions as rp")
+      .join("roles as r", "rp.role_id", "r.id")
+      .where("rp.role_id", id)
+      .select("rp.*");
 
     return NextResponse.json({
       success: true,
@@ -60,24 +53,21 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Error fetching role permissions:', error);
+    console.error("Error fetching role permissions:", error);
     return NextResponse.json(
-      { success: false, error: { code: 'SERVER_ERROR', message: 'Failed to fetch permissions' } },
+      { success: false, error: { code: "SERVER_ERROR", message: "Failed to fetch permissions" } },
       { status: 500 }
     );
   }
 }
 
 // POST - Update resource permissions for a role
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
     if (!session?.user) {
       return NextResponse.json(
-        { success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } },
+        { success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } },
         { status: 401 }
       );
     }
@@ -85,7 +75,7 @@ export async function POST(
     const admin = await isAdmin(session.user.id);
     if (!admin) {
       return NextResponse.json(
-        { success: false, error: { code: 'FORBIDDEN', message: 'Admin access required' } },
+        { success: false, error: { code: "FORBIDDEN", message: "Admin access required" } },
         { status: 403 }
       );
     }
@@ -96,7 +86,10 @@ export async function POST(
 
     if (!Array.isArray(permissions)) {
       return NextResponse.json(
-        { success: false, error: { code: 'INVALID_INPUT', message: 'Permissions must be an array' } },
+        {
+          success: false,
+          error: { code: "INVALID_INPUT", message: "Permissions must be an array" },
+        },
         { status: 400 }
       );
     }
@@ -104,20 +97,20 @@ export async function POST(
     const db = getDb();
 
     // Check if role exists
-    const role = await db('roles').where('id', id).first();
+    const role = await db("roles").where("id", id).first();
     if (!role) {
       return NextResponse.json(
-        { success: false, error: { code: 'NOT_FOUND', message: 'Role not found' } },
+        { success: false, error: { code: "NOT_FOUND", message: "Role not found" } },
         { status: 404 }
       );
     }
 
     // Delete existing resource permissions for this role
-    await db('resource_permissions').where('role_id', id).delete();
+    await db("resource_permissions").where("role_id", id).delete();
 
     // Insert new resource permissions
     if (permissions.length > 0) {
-      const permissionsToInsert = permissions.map(p => ({
+      const permissionsToInsert = permissions.map((p) => ({
         id: generateId(),
         role_id: id,
         resource_type: p.resourceType,
@@ -126,14 +119,14 @@ export async function POST(
         created_at: new Date().toISOString(),
       }));
 
-      await db('resource_permissions').insert(permissionsToInsert);
+      await db("resource_permissions").insert(permissionsToInsert);
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error updating role permissions:', error);
+    console.error("Error updating role permissions:", error);
     return NextResponse.json(
-      { success: false, error: { code: 'SERVER_ERROR', message: 'Failed to update permissions' } },
+      { success: false, error: { code: "SERVER_ERROR", message: "Failed to update permissions" } },
       { status: 500 }
     );
   }

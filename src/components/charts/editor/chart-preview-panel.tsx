@@ -1,6 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChartRenderer } from '@/components/charts/chart-renderer';
-import type { ChartConfig, ChartType, DataMapping } from '@/types/database';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartRenderer } from "@/components/charts/chart-renderer";
+import type { ChartConfig, ChartType, DataMapping } from "@/types/database";
 
 interface ChartPreviewPanelProps {
   previewData: Record<string, unknown>[];
@@ -62,7 +62,9 @@ export function ChartPreviewPanel({
                 <thead>
                   <tr className="border-b">
                     {availableFields.slice(0, 5).map((field) => (
-                      <th key={field} className="p-2 text-left font-medium">{field}</th>
+                      <th key={field} className="p-2 text-left font-medium">
+                        {field}
+                      </th>
                     ))}
                   </tr>
                 </thead>
@@ -70,7 +72,9 @@ export function ChartPreviewPanel({
                   {previewData.slice(0, 5).map((row, i) => (
                     <tr key={i} className="border-b">
                       {availableFields.slice(0, 5).map((field) => (
-                        <td key={field} className="p-2">{String(row[field] ?? '')}</td>
+                        <td key={field} className="p-2">
+                          {String(row[field] ?? "")}
+                        </td>
                       ))}
                     </tr>
                   ))}

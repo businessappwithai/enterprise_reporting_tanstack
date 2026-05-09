@@ -25,12 +25,7 @@ export interface UserRole {
 }
 
 // Data Source Types
-export type DatabaseClientType =
-  | 'pg'
-  | 'mysql'
-  | 'mssql'
-  | 'sqlite3'
-  | 'oracledb';
+export type DatabaseClientType = "pg" | "mysql" | "mssql" | "sqlite3" | "oracledb";
 
 export interface DataSource {
   id: string;
@@ -39,8 +34,8 @@ export interface DataSource {
   client_type: DatabaseClientType;
   connection_config: string;
   is_active: boolean;
-  is_editable?: boolean;  // Allow CRUD operations on entity data
-  is_inspected?: boolean;  // Whether schema has been inspected
+  is_editable?: boolean; // Allow CRUD operations on entity data
+  is_inspected?: boolean; // Whether schema has been inspected
   created_by?: string;
   created_at: string;
   updated_at: string;
@@ -77,7 +72,7 @@ export interface SavedQuery {
 
 export interface QueryParameter {
   name: string;
-  type: 'string' | 'number' | 'boolean' | 'date' | 'datetime';
+  type: "string" | "number" | "boolean" | "date" | "datetime";
   label?: string;
   defaultValue?: unknown;
   required?: boolean;
@@ -88,7 +83,7 @@ export interface QueryParameter {
 export interface ReportColorTheme {
   headerBackgroundColor?: string;
   headerTextColor?: string;
-  headerFontWeight?: 'normal' | 'bold' | '600' | '700';
+  headerFontWeight?: "normal" | "bold" | "600" | "700";
   rowBackgroundColor?: string;
   rowTextColor?: string;
   alternatingRowBackgroundColor?: string;
@@ -133,14 +128,14 @@ export interface ColumnDefinition {
 }
 
 export type FormatterType =
-  | 'text'
-  | 'number'
-  | 'currency'
-  | 'percentage'
-  | 'date'
-  | 'datetime'
-  | 'boolean'
-  | 'custom';
+  | "text"
+  | "number"
+  | "currency"
+  | "percentage"
+  | "date"
+  | "datetime"
+  | "boolean"
+  | "custom";
 
 export interface FormatterDefinition {
   type: FormatterType;
@@ -167,44 +162,39 @@ export interface ConditionalFormat {
   style: {
     backgroundColor?: string;
     textColor?: string;
-    fontWeight?: 'normal' | 'bold';
+    fontWeight?: "normal" | "bold";
     icon?: string;
     iconColor?: string;
   };
 }
 
 export type ConditionalOperator =
-  | 'eq'
-  | 'neq'
-  | 'gt'
-  | 'gte'
-  | 'lt'
-  | 'lte'
-  | 'contains'
-  | 'startsWith'
-  | 'endsWith'
-  | 'between'
-  | 'in';
+  | "eq"
+  | "neq"
+  | "gt"
+  | "gte"
+  | "lt"
+  | "lte"
+  | "contains"
+  | "startsWith"
+  | "endsWith"
+  | "between"
+  | "in";
 
-export type AggregationType = 'sum' | 'avg' | 'count' | 'min' | 'max';
+export type AggregationType = "sum" | "avg" | "count" | "min" | "max";
 
-export type CellRendererType =
-  | 'default'
-  | 'link'
-  | 'badge'
-  | 'progress'
-  | 'custom';
+export type CellRendererType = "default" | "link" | "badge" | "progress" | "custom";
 
 // Chart Types
 export type ChartType =
-  | 'bar'
-  | 'line'
-  | 'area'
-  | 'pie'
-  | 'scatter'
-  | 'column'
-  | 'doughnut'
-  | 'composed';
+  | "bar"
+  | "line"
+  | "area"
+  | "pie"
+  | "scatter"
+  | "column"
+  | "doughnut"
+  | "composed";
 
 export interface ChartDefinition {
   id: string;
@@ -229,7 +219,7 @@ export interface ChartConfig {
   };
   legend?: {
     show: boolean;
-    position: 'top' | 'bottom';
+    position: "top" | "bottom";
   };
   xAxis?: AxisConfig;
   yAxis?: AxisConfig;
@@ -245,7 +235,7 @@ export interface ChartConfig {
 export interface AxisConfig {
   label?: string;
   tickFormatter?: string;
-  domain?: [number | 'auto', number | 'auto'];
+  domain?: [number | "auto", number | "auto"];
   hide?: boolean;
 }
 
@@ -275,22 +265,22 @@ export interface FieldMapping {
 }
 
 // Filter Types
-export type FilterFieldType = 'id' | 'number' | 'date' | 'text';
+export type FilterFieldType = "id" | "number" | "date" | "text";
 
 export type FilterOperator =
-  | 'in'                    // For ID fields: IN clause with multiselect
-  | 'equals'                // For numbers: ==
-  | 'less_than'             // For numbers: <
-  | 'less_than_equal'       // For numbers: <=
-  | 'greater_than'          // For numbers: >
-  | 'greater_than_equal'    // For numbers: >=
-  | 'between'               // For dates: BETWEEN
-  | 'starts_with'           // For text: STARTS WITH
-  | 'contains';             // For text: CONTAINS
+  | "in" // For ID fields: IN clause with multiselect
+  | "equals" // For numbers: ==
+  | "less_than" // For numbers: <
+  | "less_than_equal" // For numbers: <=
+  | "greater_than" // For numbers: >
+  | "greater_than_equal" // For numbers: >=
+  | "between" // For dates: BETWEEN
+  | "starts_with" // For text: STARTS WITH
+  | "contains"; // For text: CONTAINS
 
 export interface DateValidationConfig {
-  max_from_date?: string;  // From date must be <= this date (ISO format)
-  min_to_date?: string;    // To date must be >= this date (ISO format)
+  max_from_date?: string; // From date must be <= this date (ISO format)
+  min_to_date?: string; // To date must be >= this date (ISO format)
 }
 
 export interface FilterDefinition {
@@ -386,7 +376,7 @@ export interface DashboardRefreshConfig {
   pauseOnHidden: boolean;
 }
 
-export type WidgetType = 'report' | 'chart' | 'metric' | 'text';
+export type WidgetType = "report" | "chart" | "metric" | "text";
 
 export interface DashboardWidget {
   id: string;
@@ -410,14 +400,9 @@ export interface WidgetConfig {
 }
 
 // Job Types
-export type JobType = 'report' | 'chart' | 'export';
+export type JobType = "report" | "chart" | "export";
 
-export type JobStatus =
-  | 'pending'
-  | 'running'
-  | 'completed'
-  | 'failed'
-  | 'cancelled';
+export type JobStatus = "pending" | "running" | "completed" | "failed" | "cancelled";
 
 export interface JobDefinition {
   id: string;
@@ -452,23 +437,23 @@ export interface JobNotificationConfig {
 
 // Permission Types
 export type ResourceType =
-  | 'data_source'
-  | 'query'
-  | 'report'
-  | 'chart'
-  | 'filter'
-  | 'dashboard'
-  | 'dashboard_widget'
-  | 'job'
-  | 'queue'
-  | 'user'
-  | 'role'
-  | 'ds_role'
-  | 'ds_entity_permission'
-  | 'nl_query'
-  | 'metadata_entity';  // NEW - Entity metadata management
+  | "data_source"
+  | "query"
+  | "report"
+  | "chart"
+  | "filter"
+  | "dashboard"
+  | "dashboard_widget"
+  | "job"
+  | "queue"
+  | "user"
+  | "role"
+  | "ds_role"
+  | "ds_entity_permission"
+  | "nl_query"
+  | "metadata_entity"; // NEW - Entity metadata management
 
-export type PermissionLevel = 'view' | 'edit' | 'execute' | 'admin';
+export type PermissionLevel = "view" | "edit" | "execute" | "admin";
 
 export interface ResourcePermission {
   id: string;
@@ -481,16 +466,16 @@ export interface ResourcePermission {
 
 // Audit Types
 export type AuditAction =
-  | 'create'
-  | 'update'
-  | 'delete'
-  | 'execute'
-  | 'view'
-  | 'export'
-  | 'retry'
-  | 'pause'
-  | 'resume'
-  | 'clean';
+  | "create"
+  | "update"
+  | "delete"
+  | "execute"
+  | "view"
+  | "export"
+  | "retry"
+  | "pause"
+  | "resume"
+  | "clean";
 
 export interface AuditLog {
   id: string;
@@ -505,9 +490,9 @@ export interface AuditLog {
 }
 
 // Data Source RBAC Types
-export type DsEntityPermissionLevel = 'select' | 'insert' | 'update' | 'delete' | 'all';
-export type DsEntityType = 'table' | 'view';
-export type NlAccessCheckResult = 'granted' | 'denied' | 'pending' | 'error';
+export type DsEntityPermissionLevel = "select" | "insert" | "update" | "delete" | "all";
+export type DsEntityType = "table" | "view";
+export type NlAccessCheckResult = "granted" | "denied" | "pending" | "error";
 
 export interface DsRole {
   id: string;
@@ -573,7 +558,7 @@ export interface ParsedSqlEntity {
   name: string;
   schema?: string;
   alias?: string;
-  type: 'table' | 'view' | 'subquery';
+  type: "table" | "view" | "subquery";
 }
 
 // Access check result detail
@@ -665,7 +650,7 @@ export interface QueryHistoryEntry {
 
 // Chart configuration for NL results visualization
 export interface NlChartConfig {
-  chartType: 'bar' | 'line' | 'area' | 'pie' | 'scatter';
+  chartType: "bar" | "line" | "area" | "pie" | "scatter";
   title: string;
   xAxis: { field: string; label: string };
   yAxis: { field: string; label: string }[];
@@ -731,7 +716,7 @@ export interface MetadataEntityHeader {
   data_source_id: string;
   entity_name: string;
   entity_schema?: string;
-  entity_type: 'table' | 'view';
+  entity_type: "table" | "view";
   description?: string;
   schema_metadata: string; // JSON
   is_active: boolean;
@@ -761,8 +746,8 @@ export interface MetadataEntityField {
   is_display_field: boolean;
   is_searchable: boolean;
   display_order?: number;
-  section_name?: string | null;  // Group fields into visual sections
-  relationship_ui_type?: 'dropdown' | 'popup' | 'tab' | null;  // FK UI configuration
+  section_name?: string | null; // Group fields into visual sections
+  relationship_ui_type?: "dropdown" | "popup" | "tab" | null; // FK UI configuration
   created_at: string;
   updated_at: string;
 }
@@ -783,7 +768,7 @@ export interface MetadataEntityWithFields extends MetadataEntityHeader {
 export interface EntitySchemaMetadata {
   tableName: string;
   schema?: string;
-  entityType: 'table' | 'view';
+  entityType: "table" | "view";
   primaryKey?: string[];
   foreignKeys?: Array<{
     columns: string[];
@@ -815,4 +800,3 @@ export interface MetadataEntityListParams {
   page?: number;
   limit?: number;
 }
-

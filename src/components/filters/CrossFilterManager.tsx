@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
 /**
  * Cross-widget filter manager UI.
  * Displays active cross-filters and lets users remove them.
  */
 
-import React from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import type { ActiveFilter } from '@/types/wasm';
+import React from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import type { ActiveFilter } from "@/types/wasm";
 
 interface CrossFilterManagerProps {
   activeFilters: ActiveFilter[];
@@ -29,10 +29,10 @@ export function CrossFilterManager({
       {activeFilters.map((filter) => (
         <Badge key={filter.id} variant="secondary" className="gap-1">
           <span>
-            {filter.column} {filter.operator}{' '}
+            {filter.column} {filter.operator}{" "}
             {filter.values.length === 1
               ? String(filter.values[0])
-              : `[${filter.values.join(', ')}]`}
+              : `[${filter.values.join(", ")}]`}
           </span>
           <button
             className="ml-1 text-muted-foreground hover:text-foreground"
@@ -43,7 +43,7 @@ export function CrossFilterManager({
         </Badge>
       ))}
       <span className="text-xs text-muted-foreground">
-        {activeFilters.length} filter{activeFilters.length !== 1 ? 's' : ''} applied
+        {activeFilters.length} filter{activeFilters.length !== 1 ? "s" : ""} applied
       </span>
       <Button variant="ghost" size="sm" className="ml-auto h-6 text-xs" onClick={onClearAll}>
         Clear All

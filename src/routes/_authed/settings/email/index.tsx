@@ -1,93 +1,81 @@
-import { useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
-import { useQuery, useMutation } from '@tanstack/react-query'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
-import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { toast } from 'sonner'
-import {
-  Mail,
-  CheckCircle,
-  XCircle,
-  RefreshCw,
-  Send,
-  Settings,
-  Bell,
-} from 'lucide-react'
+import { useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
+import { Mail, CheckCircle, XCircle, RefreshCw, Send, Settings, Bell } from "lucide-react";
 
-export const Route = createFileRoute('/_authed/settings/email/')({
+export const Route = createFileRoute("/_authed/settings/email/")({
   component: EmailSettingsPage,
-})
+});
 
 function EmailSettingsPage() {
-  const [testEmail, setTestEmail] = useState('')
+  const [testEmail, setTestEmail] = useState("");
 
   const { data: config, isLoading } = useQuery({
-    queryKey: ['email-config'],
+    queryKey: ["email-config"],
     queryFn: async () => {
-      const res = await fetch('/api/settings/email')
-      const data = await res.json()
-      return data.data
+      const res = await fetch("/api/settings/email");
+      const data = await res.json();
+      return data.data;
     },
-  })
+  });
 
   const verifyMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch('/api/settings/email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'verify' }),
-      })
-      return res.json()
+      const res = await fetch("/api/settings/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "verify" }),
+      });
+      return res.json();
     },
     onSuccess: (data) => {
       if (data.success) {
-        toast.success('Email configuration verified successfully')
+        toast.success("Email configuration verified successfully");
       } else {
-        toast.error(data.error?.message || 'Verification failed')
+        toast.error(data.error?.message || "Verification failed");
       }
     },
-  })
+  });
 
   const testMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch('/api/settings/email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'test', to: testEmail }),
-      })
-      return res.json()
+      const res = await fetch("/api/settings/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "test", to: testEmail }),
+      });
+      return res.json();
     },
     onSuccess: (data) => {
       if (data.success) {
-        toast.success('Test email sent successfully')
+        toast.success("Test email sent successfully");
       } else {
-        toast.error(data.error?.message || 'Failed to send test email')
+        toast.error(data.error?.message || "Failed to send test email");
       }
     },
-  })
+  });
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Email Settings</h1>
-          <p className="text-muted-foreground">
-            Configure email notifications for job completion
-          </p>
+          <p className="text-muted-foreground">Configure email notifications for job completion</p>
         </div>
         <Button
           variant="outline"
           onClick={() => verifyMutation.mutate()}
           disabled={verifyMutation.isPending}
         >
-          <RefreshCw
-            className={`h-4 w-4 mr-2 ${verifyMutation.isPending ? 'animate-spin' : ''}`}
-          />
+          <RefreshCw className={`h-4 w-4 mr-2 ${verifyMutation.isPending ? "animate-spin" : ""}`} />
           Verify Connection
         </Button>
       </div>
@@ -122,7 +110,7 @@ function EmailSettingsPage() {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <Label>Status</Label>
-                        <Badge variant={config?.configured ? 'default' : 'secondary'}>
+                        <Badge variant={config?.configured ? "default" : "secondary"}>
                           {config?.configured ? (
                             <>
                               <CheckCircle className="h-3 w-3 mr-1" />
@@ -139,14 +127,14 @@ function EmailSettingsPage() {
                     </div>
                     <div className="space-y-2">
                       <Label>SMTP Host</Label>
-                      <Input value={config?.host || ''} disabled placeholder="smtp.gmail.com" />
+                      <Input value={config?.host || ""} disabled placeholder="smtp.gmail.com" />
                       <p className="text-xs text-muted-foreground">
                         Set via SMTP_HOST environment variable
                       </p>
                     </div>
                     <div className="space-y-2">
                       <Label>SMTP Port</Label>
-                      <Input value={config?.port || ''} disabled placeholder="587" />
+                      <Input value={config?.port || ""} disabled placeholder="587" />
                       <p className="text-xs text-muted-foreground">
                         Set via SMTP_PORT environment variable
                       </p>
@@ -175,7 +163,7 @@ function EmailSettingsPage() {
                     <div className="space-y-2">
                       <Label>From Email</Label>
                       <Input
-                        value={config?.from || ''}
+                        value={config?.from || ""}
                         disabled
                         placeholder="noreply@example.com"
                       />
@@ -186,7 +174,7 @@ function EmailSettingsPage() {
                     <div className="space-y-2">
                       <Label>From Name</Label>
                       <Input
-                        value={config?.fromName || ''}
+                        value={config?.fromName || ""}
                         disabled
                         placeholder="Enterprise Reporting System"
                       />
@@ -197,13 +185,9 @@ function EmailSettingsPage() {
                     <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                       <h4 className="font-medium text-sm mb-2">📧 Configuration Instructions</h4>
                       <ol className="text-xs space-y-1 list-decimal list-inside text-muted-foreground">
-                        <li>
-                          Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS in your .env file
-                        </li>
+                        <li>Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS in your .env file</li>
                         <li>Set EMAIL_FROM and optionally EMAIL_FROM_NAME</li>
-                        <li>
-                          For Gmail, use an App Password: enable 2FA → generate App Password
-                        </li>
+                        <li>For Gmail, use an App Password: enable 2FA → generate App Password</li>
                         <li>For Outlook, use SMTP with your Microsoft account</li>
                         <li>Click &ldquo;Verify Connection&rdquo; to test your configuration</li>
                       </ol>
@@ -224,9 +208,9 @@ function EmailSettingsPage() {
               </p>
               <div className="grid gap-4 md:grid-cols-3">
                 {[
-                  { value: '5', label: 'Max Connections' },
-                  { value: '100', label: 'Max Messages per Connection' },
-                  { value: '∞', label: 'Automatic Reuse' },
+                  { value: "5", label: "Max Connections" },
+                  { value: "100", label: "Max Messages per Connection" },
+                  { value: "∞", label: "Automatic Reuse" },
                 ].map(({ value, label }) => (
                   <div key={label} className="bg-muted p-4 rounded-lg">
                     <p className="text-2xl font-bold">{value}</p>
@@ -249,24 +233,24 @@ function EmailSettingsPage() {
                   {[
                     {
                       icon: <Bell className="h-4 w-4" />,
-                      title: 'Job Completed Notification',
-                      badge: 'Auto-sent',
-                      desc: 'Sent when a scheduled job completes successfully. Includes job details, execution time, and download link for the report.',
-                      vars: 'jobName, userName, status, completedAt, duration, rowCount, resultUrl',
+                      title: "Job Completed Notification",
+                      badge: "Auto-sent",
+                      desc: "Sent when a scheduled job completes successfully. Includes job details, execution time, and download link for the report.",
+                      vars: "jobName, userName, status, completedAt, duration, rowCount, resultUrl",
                     },
                     {
                       icon: <XCircle className="h-4 w-4 text-destructive" />,
-                      title: 'Job Failed Notification',
-                      badge: 'Auto-sent',
-                      desc: 'Sent when a scheduled job fails. Includes error details and troubleshooting information.',
-                      vars: 'jobName, userName, failedAt, errorMessage',
+                      title: "Job Failed Notification",
+                      badge: "Auto-sent",
+                      desc: "Sent when a scheduled job fails. Includes error details and troubleshooting information.",
+                      vars: "jobName, userName, failedAt, errorMessage",
                     },
                     {
                       icon: <Mail className="h-4 w-4" />,
-                      title: 'Test Email',
-                      badge: 'Manual',
+                      title: "Test Email",
+                      badge: "Manual",
                       desc: "Template for testing email configuration. Confirms SMTP settings are working correctly.",
-                      vars: 'smtpHost, smtpPort, fromEmail, sentAt',
+                      vars: "smtpHost, smtpPort, fromEmail, sentAt",
                     },
                   ].map(({ icon, title, badge, desc, vars }) => (
                     <div key={title} className="border rounded-lg p-4">
@@ -312,7 +296,7 @@ function EmailSettingsPage() {
                 className="w-full"
               >
                 <Send className="h-4 w-4 mr-2" />
-                {testMutation.isPending ? 'Sending...' : 'Send Test Email'}
+                {testMutation.isPending ? "Sending..." : "Send Test Email"}
               </Button>
               <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
                 <h4 className="font-medium text-sm mb-2">💡 Tips</h4>
@@ -328,5 +312,5 @@ function EmailSettingsPage() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

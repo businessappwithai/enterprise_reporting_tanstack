@@ -1,27 +1,22 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/lib/db/config';
-import { getConnection } from '@/lib/db/connection-manager';
-import type { ChartDefinition } from '@/types/database';
+import { type NextRequest, NextResponse } from "next/server";
+import { getDb } from "@/lib/db/config";
+import { getConnection } from "@/lib/db/connection-manager";
+import type { ChartDefinition } from "@/types/database";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const { searchParams } = new URL(request.url);
-    const execute = searchParams.get('execute') === 'true';
+    const execute = searchParams.get("execute") === "true";
 
     const db = getDb();
 
     // Get chart with public status
-    const chart = await db<ChartDefinition>('chart_definitions')
-      .where('id', id)
-      .first();
+    const chart = await db<ChartDefinition>("chart_definitions").where("id", id).first();
 
     if (!chart) {
       return NextResponse.json(
-        { success: false, error: { code: 'NOT_FOUND', message: 'Chart not found' } },
+        { success: false, error: { code: "NOT_FOUND", message: "Chart not found" } },
         { status: 404 }
       );
     }
@@ -29,7 +24,7 @@ export async function GET(
     // Check if chart is public
     if (!chart.is_public) {
       return NextResponse.json(
-        { success: false, error: { code: 'PRIVATE', message: 'This chart is private' } },
+        { success: false, error: { code: "PRIVATE", message: "This chart is private" } },
         { status: 403 }
       );
     }
@@ -49,12 +44,12 @@ export async function GET(
 
     // If execute=true, also fetch the chart data
     if (execute && chart.saved_query_id) {
-      const query = await db('saved_queries').where('id', chart.saved_query_id).first();
+      const query = await db("saved_queries").where("id", chart.saved_query_id).first();
       if (query) {
         try {
-          const dataSource = await db('data_sources')
-            .where('id', query.data_source_id)
-            .where('is_active', true)
+          const dataSource = await db("data_sources")
+            .where("id", query.data_source_id)
+            .where("is_active", true)
             .first();
 
           if (dataSource) {
@@ -76,18 +71,18 @@ export async function GET(
             };
           }
         } catch (error) {
-          console.error('Error executing query for public chart:', error);
+          console.error("Error executing query for public chart:", error);
           response.data.results = null;
-          response.data.executionError = 'Failed to load chart data';
+          response.data.executionError = "Failed to load chart data";
         }
       }
     }
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Error fetching public chart:', error);
+    console.error("Error fetching public chart:", error);
     return NextResponse.json(
-      { success: false, error: { code: 'SERVER_ERROR', message: 'Failed to fetch chart' } },
+      { success: false, error: { code: "SERVER_ERROR", message: "Failed to fetch chart" } },
       { status: 500 }
     );
   }

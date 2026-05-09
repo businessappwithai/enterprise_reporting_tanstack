@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth/config';
-import { getDb } from '@/lib/db/config';
-import { getConnection } from '@/lib/db/connection-manager';
-import { isReadOnlyQuery } from '@/lib/sql/validator';
-import { logAudit } from '@/lib/security/audit';
-import { paginationConfig, validatePageSize, sqlEditorConfig } from '@/lib/config/pagination';
-import type { DataSource } from '@/types/database';
+import { type NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth/config";
+import { getDb } from "@/lib/db/config";
+import { getConnection } from "@/lib/db/connection-manager";
+import { isReadOnlyQuery } from "@/lib/sql/validator";
+import { logAudit } from "@/lib/security/audit";
+import { paginationConfig, validatePageSize, sqlEditorConfig } from "@/lib/config/pagination";
+import type { DataSource } from "@/types/database";
 
 const DEFAULT_TIMEOUT = 30000; // 30 seconds
 
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     const session = await auth();
     if (!session?.user) {
       return NextResponse.json(
-        { success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } },
+        { success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } },
         { status: 401 }
       );
     }
@@ -28,14 +28,14 @@ export async function POST(request: NextRequest) {
 
     if (!sql) {
       return NextResponse.json(
-        { success: false, error: { code: 'INVALID_INPUT', message: 'SQL content is required' } },
+        { success: false, error: { code: "INVALID_INPUT", message: "SQL content is required" } },
         { status: 400 }
       );
     }
 
     if (!dataSourceId) {
       return NextResponse.json(
-        { success: false, error: { code: 'INVALID_INPUT', message: 'Data source ID is required' } },
+        { success: false, error: { code: "INVALID_INPUT", message: "Data source ID is required" } },
         { status: 400 }
       );
     }
@@ -46,8 +46,8 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           error: {
-            code: 'FORBIDDEN',
-            message: 'Only SELECT queries are allowed in the SQL editor',
+            code: "FORBIDDEN",
+            message: "Only SELECT queries are allowed in the SQL editor",
           },
         },
         { status: 403 }
@@ -55,25 +55,30 @@ export async function POST(request: NextRequest) {
     }
 
     // Get data source
-    console.warn('[SQL EXECUTE] Getting data source from database, ID:', dataSourceId);
+    console.warn("[SQL EXECUTE] Getting data source from database, ID:", dataSourceId);
     const db = getDb();
-    const dataSource = await db<DataSource>('data_sources')
-      .where('id', dataSourceId)
-      .where('is_active', true)
+    const dataSource = await db<DataSource>("data_sources")
+      .where("id", dataSourceId)
+      .where("is_active", true)
       .first();
 
     if (!dataSource) {
-      console.error('[SQL EXECUTE ERROR] Data source not found, ID:', dataSourceId);
+      console.error("[SQL EXECUTE ERROR] Data source not found, ID:", dataSourceId);
       return NextResponse.json(
-        { success: false, error: { code: 'NOT_FOUND', message: 'Data source not found' } },
+        { success: false, error: { code: "NOT_FOUND", message: "Data source not found" } },
         { status: 404 }
       );
     }
 
-    console.warn('[SQL EXECUTE] Data source found:', dataSource.name, 'Client type:', dataSource.client_type);
+    console.warn(
+      "[SQL EXECUTE] Data source found:",
+      dataSource.name,
+      "Client type:",
+      dataSource.client_type
+    );
 
     // Get connection
-    console.warn('[SQL EXECUTE] About to call getConnection for data source:', dataSource.id);
+    console.warn("[SQL EXECUTE] About to call getConnection for data source:", dataSource.id);
     const connection = await getConnection(dataSource);
 
     // Use SQL Editor pagination: 500 rows per page
@@ -82,11 +87,11 @@ export async function POST(request: NextRequest) {
 
     // First, check total row count to determine if dataset is too large
     let totalRowCount = 0;
-    const countSQL = `SELECT COUNT(*) as total FROM (${sql.replace(/;$/, '')}) as count_query`;
+    const countSQL = `SELECT COUNT(*) as total FROM (${sql.replace(/;$/, "")}) as count_query`;
 
     try {
       let countResult;
-      if (dataSource.client_type === 'sqlite3') {
+      if (dataSource.client_type === "sqlite3") {
         countResult = await connection.raw(countSQL);
       } else {
         countResult = await connection.raw(countSQL).timeout(5000);
@@ -96,7 +101,7 @@ export async function POST(request: NextRequest) {
         totalRowCount = Number(countResult[0].total) || 0;
       }
     } catch (countError) {
-      console.error('Could not count total rows:', countError);
+      console.error("Could not count total rows:", countError);
       // If count fails, proceed with execution but be cautious
     }
 
@@ -119,9 +124,9 @@ export async function POST(request: NextRequest) {
             serverSide: true,
           },
           warning: {
-            code: 'DATASET_TOO_LARGE',
+            code: "DATASET_TOO_LARGE",
             message: `Query returns ${totalRowCount.toLocaleString()} rows, which exceeds the interactive limit of ${MAX_CLIENT_ROWS.toLocaleString()} rows.`,
-            suggestion: 'Run this query as a background job instead.',
+            suggestion: "Run this query as a background job instead.",
             totalRows: totalRowCount,
             interactiveLimit: MAX_CLIENT_ROWS,
           },
@@ -135,14 +140,18 @@ export async function POST(request: NextRequest) {
     // Add LIMIT and OFFSET if not present (CRITICAL for server-side pagination)
     if (!/\bLIMIT\s+\d+/i.test(limitedSQL) && !/\bTOP\s+\d+/i.test(limitedSQL)) {
       // Remove trailing semicolon if present
-      if (limitedSQL.endsWith(';')) {
+      if (limitedSQL.endsWith(";")) {
         limitedSQL = limitedSQL.slice(0, -1);
       }
       // SERVER-SIDE: Add LIMIT and OFFSET to SQL query before sending to database
       limitedSQL = `${limitedSQL} LIMIT ${effectiveLimit} OFFSET ${effectiveOffset}`;
-    } else if (/\bLIMIT\s+\d+/i.test(limitedSQL) && !/\bOFFSET\s+\d+/i.test(limitedSQL) && effectiveOffset > 0) {
+    } else if (
+      /\bLIMIT\s+\d+/i.test(limitedSQL) &&
+      !/\bOFFSET\s+\d+/i.test(limitedSQL) &&
+      effectiveOffset > 0
+    ) {
       // Has LIMIT but no OFFSET, add OFFSET
-      if (limitedSQL.endsWith(';')) {
+      if (limitedSQL.endsWith(";")) {
         limitedSQL = limitedSQL.slice(0, -1);
       }
       limitedSQL = `${limitedSQL} OFFSET ${effectiveOffset}`;
@@ -162,7 +171,7 @@ export async function POST(request: NextRequest) {
     const startTime = Date.now();
 
     let result;
-    if (dataSource.client_type === 'sqlite3') {
+    if (dataSource.client_type === "sqlite3") {
       result = await connection.raw(limitedSQL);
     } else {
       result = await connection.raw(limitedSQL).timeout(timeout);
@@ -193,8 +202,8 @@ export async function POST(request: NextRequest) {
     // Log the query execution
     await logAudit({
       userId: session.user.id,
-      action: 'execute',
-      resourceType: 'query',
+      action: "execute",
+      resourceType: "query",
       resourceId: dataSourceId,
       details: {
         sql: sql.substring(0, 500),
@@ -216,26 +225,26 @@ export async function POST(request: NextRequest) {
           limit: PAGE_SIZE, // Always 500
           offset: effectiveOffset,
           totalRows: totalRowCount, // Total rows available
-          hasMore: totalRowCount > 0 ? (effectiveOffset + rows.length) < totalRowCount : false, // Can load more pages
+          hasMore: totalRowCount > 0 ? effectiveOffset + rows.length < totalRowCount : false, // Can load more pages
           serverSide: true,
           maxClientRows: MAX_CLIENT_ROWS, // Client can accumulate up to this many rows
         },
       },
     });
   } catch (error) {
-    console.error('[SQL EXECUTE ERROR] SQL execution error!');
-    console.error('[SQL EXECUTE ERROR] Error:', error);
+    console.error("[SQL EXECUTE ERROR] SQL execution error!");
+    console.error("[SQL EXECUTE ERROR] Error:", error);
     if (error instanceof Error) {
-      console.error('[SQL EXECUTE ERROR] Error name:', error.name);
-      console.error('[SQL EXECUTE ERROR] Error message:', error.message);
-      console.error('[SQL EXECUTE ERROR] Error stack:', error.stack);
+      console.error("[SQL EXECUTE ERROR] Error name:", error.name);
+      console.error("[SQL EXECUTE ERROR] Error message:", error.message);
+      console.error("[SQL EXECUTE ERROR] Error stack:", error.stack);
     }
     return NextResponse.json(
       {
         success: false,
         error: {
-          code: 'EXECUTION_ERROR',
-          message: error instanceof Error ? error.message : 'Unknown error',
+          code: "EXECUTION_ERROR",
+          message: error instanceof Error ? error.message : "Unknown error",
         },
       },
       { status: 500 }

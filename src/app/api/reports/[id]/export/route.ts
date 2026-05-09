@@ -1,18 +1,24 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth/config';
-import { getDb } from '@/lib/db/config';
-import { getConnection } from '@/lib/db/connection-manager';
-import { isReadOnlyQuery } from '@/lib/sql/validator';
-import type { ReportDefinition, SavedQuery, DataSource, ColumnDefinition, ReportColorTheme } from '@/types/database';
+import { type NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth/config";
+import { getDb } from "@/lib/db/config";
+import { getConnection } from "@/lib/db/connection-manager";
+import { isReadOnlyQuery } from "@/lib/sql/validator";
+import type {
+  ReportDefinition,
+  SavedQuery,
+  DataSource,
+  ColumnDefinition,
+  ReportColorTheme,
+} from "@/types/database";
 
 /**
  * Convert hex color to ARGB format for ExcelJS
  */
 function hexToARGB(hex: string | undefined): string {
-  if (!hex) return 'FFE0E0E0'; // Default gray
+  if (!hex) return "FFE0E0E0"; // Default gray
 
   // Remove # if present
-  const cleanHex = hex.replace('#', '');
+  const cleanHex = hex.replace("#", "");
 
   // If already 8 characters (ARGB), return with FF prefix
   if (cleanHex.length === 8) {
@@ -26,11 +32,14 @@ function hexToARGB(hex: string | undefined): string {
 
   // If 3 characters (short hex), expand and add FF prefix
   if (cleanHex.length === 3) {
-    const expanded = cleanHex.split('').map(c => c + c).join('');
+    const expanded = cleanHex
+      .split("")
+      .map((c) => c + c)
+      .join("");
     return `FF${expanded}`.toUpperCase();
   }
 
-  return 'FFE0E0E0'; // Default fallback
+  return "FFE0E0E0"; // Default fallback
 }
 
 /**
@@ -39,7 +48,7 @@ function hexToARGB(hex: string | undefined): string {
 function hexToRGB(hex: string | undefined): { r: number; g: number; b: number } {
   if (!hex) return { r: 240, g: 240, b: 240 }; // Default gray
 
-  const cleanHex = hex.replace('#', '');
+  const cleanHex = hex.replace("#", "");
 
   if (cleanHex.length === 6) {
     return {
@@ -50,7 +59,10 @@ function hexToRGB(hex: string | undefined): { r: number; g: number; b: number } 
   }
 
   if (cleanHex.length === 3) {
-    const expanded = cleanHex.split('').map(c => c + c).join('');
+    const expanded = cleanHex
+      .split("")
+      .map((c) => c + c)
+      .join("");
     return {
       r: parseInt(expanded.substring(0, 2), 16),
       g: parseInt(expanded.substring(2, 4), 16),
@@ -75,15 +87,25 @@ function parseColorTheme(report: ReportDefinition): ReportColorTheme | null {
 
 // Filter types
 type FilterOperator =
-  | 'equals' | 'not_equals'
-  | 'contains' | 'not_contains' | 'starts_with' | 'ends_with'
-  | 'greater_than' | 'less_than' | 'between'
-  | 'is_null' | 'is_not_null'
-  | 'in' | 'not_in'
-  | 'before' | 'after'
-  | 'is_true' | 'is_false';
+  | "equals"
+  | "not_equals"
+  | "contains"
+  | "not_contains"
+  | "starts_with"
+  | "ends_with"
+  | "greater_than"
+  | "less_than"
+  | "between"
+  | "is_null"
+  | "is_not_null"
+  | "in"
+  | "not_in"
+  | "before"
+  | "after"
+  | "is_true"
+  | "is_false";
 
-type FilterLogic = 'AND' | 'OR';
+type FilterLogic = "AND" | "OR";
 
 interface FilterCondition {
   id: string;
@@ -113,12 +135,12 @@ function escapeIdentifier(identifier: string): string {
  */
 function escapeLiteral(value: string | number | boolean | null | undefined): string {
   if (value === null || value === undefined) {
-    return 'NULL';
+    return "NULL";
   }
-  if (typeof value === 'boolean') {
-    return value ? '1' : '0';
+  if (typeof value === "boolean") {
+    return value ? "1" : "0";
   }
-  if (typeof value === 'number') {
+  if (typeof value === "number") {
     return String(value);
   }
 
@@ -126,15 +148,16 @@ function escapeLiteral(value: string | number | boolean | null | undefined): str
   const stringValue = String(value);
 
   // Check for SQL injection patterns: quote + semicolon + SQL keywords
-  const injectionPattern = /'(;|\s+)(DROP|DELETE|INSERT|UPDATE|CREATE|ALTER|TRUNCATE|EXEC|EXECUTE)\b/i;
+  const injectionPattern =
+    /'(;|\s+)(DROP|DELETE|INSERT|UPDATE|CREATE|ALTER|TRUNCATE|EXEC|EXECUTE)\b/i;
   if (injectionPattern.test(stringValue)) {
-    console.error('[SECURITY] Blocked SQL injection attempt:', stringValue);
+    console.error("[SECURITY] Blocked SQL injection attempt:", stringValue);
     return "''"; // Return empty string instead of the malicious value
   }
 
   // Check for comment markers (which could be used to hide SQL)
-  if (stringValue.includes('--') || stringValue.includes('/*')) {
-    console.error('[SECURITY] Blocked SQL comment marker:', stringValue);
+  if (stringValue.includes("--") || stringValue.includes("/*")) {
+    console.error("[SECURITY] Blocked SQL comment marker:", stringValue);
     return "''";
   }
 
@@ -151,44 +174,50 @@ function conditionToSQL(condition: FilterCondition): string {
   const field = escapeIdentifier(condition.field);
 
   switch (condition.operator) {
-    case 'equals':
+    case "equals":
       return `${field} = ${escapeLiteral(condition.value)}`;
-    case 'not_equals':
+    case "not_equals":
       return `${field} != ${escapeLiteral(condition.value)}`;
-    case 'contains':
+    case "contains":
       return `${field} LIKE ${escapeLiteral(`%${condition.value}%`)}`;
-    case 'not_contains':
+    case "not_contains":
       return `${field} NOT LIKE ${escapeLiteral(`%${condition.value}%`)}`;
-    case 'starts_with':
+    case "starts_with":
       return `${field} LIKE ${escapeLiteral(`${condition.value}%`)}`;
-    case 'ends_with':
+    case "ends_with":
       return `${field} LIKE ${escapeLiteral(`%${condition.value}`)}`;
-    case 'greater_than':
+    case "greater_than":
       return `${field} > ${escapeLiteral(condition.value)}`;
-    case 'less_than':
+    case "less_than":
       return `${field} < ${escapeLiteral(condition.value)}`;
-    case 'between':
+    case "between":
       return `${field} BETWEEN ${escapeLiteral(condition.value)} AND ${escapeLiteral(condition.value2!)}`;
-    case 'is_null':
+    case "is_null":
       return `${field} IS NULL`;
-    case 'is_not_null':
+    case "is_not_null":
       return `${field} IS NOT NULL`;
-    case 'in':
+    case "in": {
       const inValues = Array.isArray(condition.value)
         ? condition.value
-        : String(condition.value).split(',').map(v => v.trim());
-      return `${field} IN (${inValues.map(v => escapeLiteral(v)).join(',')})`;
-    case 'not_in':
+        : String(condition.value)
+            .split(",")
+            .map((v) => v.trim());
+      return `${field} IN (${inValues.map((v) => escapeLiteral(v)).join(",")})`;
+    }
+    case "not_in": {
       const notInValues = Array.isArray(condition.value)
         ? condition.value
-        : String(condition.value).split(',').map(v => v.trim());
-      return `${field} NOT IN (${notInValues.map(v => escapeLiteral(v)).join(',')})`;
-    case 'is_true':
+        : String(condition.value)
+            .split(",")
+            .map((v) => v.trim());
+      return `${field} NOT IN (${notInValues.map((v) => escapeLiteral(v)).join(",")})`;
+    }
+    case "is_true":
       return `(${field} = 1 OR ${field} = '1' OR ${field} = 'true')`;
-    case 'is_false':
+    case "is_false":
       return `(${field} = 0 OR ${field} = '0' OR ${field} = 'false' OR ${field} IS NULL)`;
     default:
-      return '1=1';
+      return "1=1";
   }
 }
 
@@ -196,12 +225,12 @@ function conditionToSQL(condition: FilterCondition): string {
  * Convert filter group to SQL WHERE clause
  */
 function filterGroupToSQL(group: FilterGroup): string {
-  const conditionSQLs = group.conditions.map(c => `(${conditionToSQL(c)})`);
-  const groupSQLs = (group.groups || []).map(g => `(${filterGroupToSQL(g)})`);
+  const conditionSQLs = group.conditions.map((c) => `(${conditionToSQL(c)})`);
+  const groupSQLs = (group.groups || []).map((g) => `(${filterGroupToSQL(g)})`);
   const allSQLs = [...conditionSQLs, ...groupSQLs];
 
   if (allSQLs.length === 0) {
-    return '1=1';
+    return "1=1";
   }
 
   return allSQLs.join(` ${group.logic} `);
@@ -212,22 +241,22 @@ function filterGroupToSQL(group: FilterGroup): string {
  */
 function buildSQLWithFilters(baseSQL: string, filterConfig: FilterGroup | null): string {
   // Remove existing WHERE clause but preserve ORDER BY, GROUP BY, HAVING, LIMIT, OFFSET
-  let cleanSQL = baseSQL.replace(/;$/, '').trim();
+  let cleanSQL = baseSQL.replace(/;$/, "").trim();
 
   if (!filterConfig || filterConfig.conditions.length === 0) {
     // Remove LIMIT and OFFSET even if no filters
     cleanSQL = cleanSQL
-      .replace(/\bLIMIT\s+\d+/i, '')
-      .replace(/\bOFFSET\s+\d+/i, '')
+      .replace(/\bLIMIT\s+\d+/i, "")
+      .replace(/\bOFFSET\s+\d+/i, "")
       .trim();
     return cleanSQL;
   }
 
   // Remove existing WHERE clause, LIMIT, OFFSET
   cleanSQL = cleanSQL
-    .replace(/\bWHERE\s+.*?(?=\bLIMIT\b|\bGROUP BY\b|\bORDER BY\b|\bHAVING\b|$)/i, '')
-    .replace(/\bLIMIT\s+\d+/i, '')
-    .replace(/\bOFFSET\s+\d+/i, '')
+    .replace(/\bWHERE\s+.*?(?=\bLIMIT\b|\bGROUP BY\b|\bORDER BY\b|\bHAVING\b|$)/i, "")
+    .replace(/\bLIMIT\s+\d+/i, "")
+    .replace(/\bOFFSET\s+\d+/i, "")
     .trim();
 
   // Convert filter group to SQL
@@ -240,9 +269,9 @@ function buildSQLWithFilters(baseSQL: string, filterConfig: FilterGroup | null):
 
   // Remove these clauses from the base SQL
   const baseQuery = cleanSQL
-    .replace(/\bORDER BY\s+[^;]+$/i, '')
-    .replace(/\bHAVING\s+[^;]+?(?=\bORDER BY\b|$)/i, '')
-    .replace(/\bGROUP BY\s+[^;]+?(?=\bORDER BY\b|\bHAVING\b|$)/i, '')
+    .replace(/\bORDER BY\s+[^;]+$/i, "")
+    .replace(/\bHAVING\s+[^;]+?(?=\bORDER BY\b|$)/i, "")
+    .replace(/\bGROUP BY\s+[^;]+?(?=\bORDER BY\b|\bHAVING\b|$)/i, "")
     .trim();
 
   // Rebuild the query with WHERE in the correct position (before GROUP BY)
@@ -272,38 +301,48 @@ function applyCondition(row: Record<string, unknown>, condition: FilterCondition
   const value = row[condition.field];
 
   switch (condition.operator) {
-    case 'equals':
+    case "equals":
       return value == condition.value;
-    case 'not_equals':
+    case "not_equals":
       return value != condition.value;
-    case 'contains':
+    case "contains":
       return String(value).toLowerCase().includes(String(condition.value).toLowerCase());
-    case 'not_contains':
+    case "not_contains":
       return !String(value).toLowerCase().includes(String(condition.value).toLowerCase());
-    case 'starts_with':
+    case "starts_with":
       return String(value).toLowerCase().startsWith(String(condition.value).toLowerCase());
-    case 'ends_with':
+    case "ends_with":
       return String(value).toLowerCase().endsWith(String(condition.value).toLowerCase());
-    case 'greater_than':
+    case "greater_than":
       return Number(value) > Number(condition.value);
-    case 'less_than':
+    case "less_than":
       return Number(value) < Number(condition.value);
-    case 'between':
+    case "between":
       return Number(value) >= Number(condition.value) && Number(value) <= Number(condition.value2!);
-    case 'is_null':
+    case "is_null":
       return value === null || value === undefined;
-    case 'is_not_null':
+    case "is_not_null":
       return value !== null && value !== undefined;
-    case 'in':
-      const inValues = Array.isArray(condition.value) ? condition.value : String(condition.value).split(',').map(v => v.trim());
+    case "in": {
+      const inValues = Array.isArray(condition.value)
+        ? condition.value
+        : String(condition.value)
+            .split(",")
+            .map((v) => v.trim());
       return inValues.includes(String(value));
-    case 'not_in':
-      const notInValues = Array.isArray(condition.value) ? condition.value : String(condition.value).split(',').map(v => v.trim());
+    }
+    case "not_in": {
+      const notInValues = Array.isArray(condition.value)
+        ? condition.value
+        : String(condition.value)
+            .split(",")
+            .map((v) => v.trim());
       return !notInValues.includes(String(value));
-    case 'is_true':
-      return value === true || value === 1 || value === '1' || value === 'true';
-    case 'is_false':
-      return value === false || value === 0 || value === '0' || value === 'false';
+    }
+    case "is_true":
+      return value === true || value === 1 || value === "1" || value === "true";
+    case "is_false":
+      return value === false || value === 0 || value === "0" || value === "false";
     default:
       return true;
   }
@@ -313,54 +352,54 @@ function applyCondition(row: Record<string, unknown>, condition: FilterCondition
  * Recursively apply filter group to rows
  */
 function applyFilterGroup(row: Record<string, unknown>, group: FilterGroup): boolean {
-  const conditionResults = group.conditions.map(condition => applyCondition(row, condition));
-  const groupResults = (group.groups || []).map(g => applyFilterGroup(row, g));
+  const conditionResults = group.conditions.map((condition) => applyCondition(row, condition));
+  const groupResults = (group.groups || []).map((g) => applyFilterGroup(row, g));
   const allResults = [...conditionResults, ...groupResults];
 
-  if (group.logic === 'AND') {
-    return allResults.every(result => result === true);
+  if (group.logic === "AND") {
+    return allResults.every((result) => result === true);
   } else {
-    return allResults.some(result => result === true);
+    return allResults.some((result) => result === true);
   }
 }
 
 /**
  * Apply filter configuration to rows
  */
-function applyFilters(rows: Record<string, unknown>[], filterConfig: FilterGroup | null): Record<string, unknown>[] {
+function applyFilters(
+  rows: Record<string, unknown>[],
+  filterConfig: FilterGroup | null
+): Record<string, unknown>[] {
   if (!filterConfig || filterConfig.conditions.length === 0) {
     return rows;
   }
-  return rows.filter(row => applyFilterGroup(row, filterConfig));
+  return rows.filter((row) => applyFilterGroup(row, filterConfig));
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
     if (!session?.user) {
       return NextResponse.json(
-        { success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } },
+        { success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } },
         { status: 401 }
       );
     }
 
     const { id } = await params;
     const body = await request.json();
-    const { format = 'csv' } = body;
+    const { format = "csv" } = body;
 
-    console.log('[API /reports/[id]/export] Export request:', { format, body });
+    console.log("[API /reports/[id]/export] Export request:", { format, body });
 
     const db = getDb();
 
     // Fetch report definition
-    const report = await db<ReportDefinition>('report_definitions').where('id', id).first();
+    const report = await db<ReportDefinition>("report_definitions").where("id", id).first();
 
     if (!report) {
       return NextResponse.json(
-        { success: false, error: { code: 'NOT_FOUND', message: 'Report not found' } },
+        { success: false, error: { code: "NOT_FOUND", message: "Report not found" } },
         { status: 404 }
       );
     }
@@ -371,28 +410,34 @@ export async function POST(
     if (report.export_formats) {
       try {
         const parsedFormats = JSON.parse(report.export_formats);
-        console.log('[API /reports/[id]/export] Parsed export formats:', parsedFormats);
+        console.log("[API /reports/[id]/export] Parsed export formats:", parsedFormats);
 
         // Handle array format
         if (Array.isArray(parsedFormats)) {
           // Map xlsx to excel for array format
-          const formatKey = format === 'xlsx' ? 'excel' : format;
+          const formatKey = format === "xlsx" ? "excel" : format;
           isFormatEnabled = parsedFormats.includes(formatKey);
         } else {
           // Handle object format
-          const formatKey = format === 'xlsx' ? 'excel' : format;
+          const formatKey = format === "xlsx" ? "excel" : format;
           isFormatEnabled = parsedFormats[formatKey] !== false;
         }
       } catch (error) {
-        console.error('Error parsing export formats:', error);
+        console.error("Error parsing export formats:", error);
       }
     }
 
-    console.log('[API /reports/[id]/export] Format enabled check:', { format, isFormatEnabled });
+    console.log("[API /reports/[id]/export] Format enabled check:", { format, isFormatEnabled });
 
     if (!isFormatEnabled) {
       return NextResponse.json(
-        { success: false, error: { code: 'FORBIDDEN', message: `${format.toUpperCase()} export is not enabled for this report` } },
+        {
+          success: false,
+          error: {
+            code: "FORBIDDEN",
+            message: `${format.toUpperCase()} export is not enabled for this report`,
+          },
+        },
         { status: 403 }
       );
     }
@@ -400,32 +445,36 @@ export async function POST(
     // Check if report has an associated query
     if (!report.saved_query_id) {
       return NextResponse.json(
-        { success: false, error: { code: 'NO_QUERY', message: 'Report has no associated query' } },
+        { success: false, error: { code: "NO_QUERY", message: "Report has no associated query" } },
         { status: 400 }
       );
     }
 
     // Fetch the saved query
-    const query = await db<SavedQuery>('saved_queries')
-      .where('id', report.saved_query_id)
-      .first();
+    const query = await db<SavedQuery>("saved_queries").where("id", report.saved_query_id).first();
 
     if (!query) {
       return NextResponse.json(
-        { success: false, error: { code: 'QUERY_NOT_FOUND', message: 'Associated query not found' } },
+        {
+          success: false,
+          error: { code: "QUERY_NOT_FOUND", message: "Associated query not found" },
+        },
         { status: 404 }
       );
     }
 
     // Get data source
-    const dataSource = await db<DataSource>('data_sources')
-      .where('id', query.data_source_id)
-      .where('is_active', true)
+    const dataSource = await db<DataSource>("data_sources")
+      .where("id", query.data_source_id)
+      .where("is_active", true)
       .first();
 
     if (!dataSource) {
       return NextResponse.json(
-        { success: false, error: { code: 'DATASOURCE_NOT_FOUND', message: 'Data source not found' } },
+        {
+          success: false,
+          error: { code: "DATASOURCE_NOT_FOUND", message: "Data source not found" },
+        },
         { status: 404 }
       );
     }
@@ -433,7 +482,10 @@ export async function POST(
     // Validate that it's a read-only query
     if (!isReadOnlyQuery(query.sql_content)) {
       return NextResponse.json(
-        { success: false, error: { code: 'INVALID_QUERY', message: 'Report query must be a SELECT query' } },
+        {
+          success: false,
+          error: { code: "INVALID_QUERY", message: "Report query must be a SELECT query" },
+        },
         { status: 400 }
       );
     }
@@ -447,7 +499,7 @@ export async function POST(
       try {
         filterConfig = JSON.parse(report.filter_config);
       } catch (error) {
-        console.error('Error parsing filter config:', error);
+        console.error("Error parsing filter config:", error);
       }
     }
 
@@ -455,7 +507,7 @@ export async function POST(
     const sqlWithFilters = buildSQLWithFilters(query.sql_content, filterConfig);
 
     // Execute the query with filters applied (no pagination for export)
-    const maxExportRows = parseInt(process.env.EXPORT_PAGE_SIZE || '1000');
+    const maxExportRows = parseInt(process.env.EXPORT_PAGE_SIZE || "1000");
     const result = await connection.raw(`${sqlWithFilters} LIMIT ${maxExportRows}`);
 
     // Extract rows
@@ -474,7 +526,7 @@ export async function POST(
       try {
         columnConfig = JSON.parse(report.column_config);
       } catch (error) {
-        console.error('Error parsing column config:', error);
+        console.error("Error parsing column config:", error);
       }
     }
 
@@ -503,63 +555,69 @@ export async function POST(
     }
 
     // Generate export based on format
-    if (format === 'csv') {
+    if (format === "csv") {
       // Generate CSV
       const csvRows = [
-        headers.join(','),
+        headers.join(","),
         ...filteredRows.map((row) =>
-          headers.map((header) => {
-            const colDef = columnConfig.find((c) => c.header === header);
-            const field = colDef?.field || header;
-            const value = row[field];
-            // Escape values with commas or quotes
-            const stringValue = value === null || value === undefined ? '' : String(value);
-            if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
-              return `"${stringValue.replace(/"/g, '""')}"`;
-            }
-            return stringValue;
-          }).join(',')
+          headers
+            .map((header) => {
+              const colDef = columnConfig.find((c) => c.header === header);
+              const field = colDef?.field || header;
+              const value = row[field];
+              // Escape values with commas or quotes
+              const stringValue = value === null || value === undefined ? "" : String(value);
+              if (
+                stringValue.includes(",") ||
+                stringValue.includes('"') ||
+                stringValue.includes("\n")
+              ) {
+                return `"${stringValue.replace(/"/g, '""')}"`;
+              }
+              return stringValue;
+            })
+            .join(",")
         ),
       ];
 
-      const csvContent = csvRows.join('\n');
+      const csvContent = csvRows.join("\n");
 
       return new NextResponse(csvContent, {
         headers: {
-          'Content-Type': 'text/csv',
-          'Content-Disposition': `attachment; filename="${report.name || 'report'}.csv"`,
+          "Content-Type": "text/csv",
+          "Content-Disposition": `attachment; filename="${report.name || "report"}.csv"`,
         },
       });
     }
 
-    if (format === 'excel' || format === 'xlsx') {
+    if (format === "excel" || format === "xlsx") {
       // Parse color theme
       const colorTheme = parseColorTheme(report);
 
       // Generate proper Excel file using ExcelJS
-      const ExcelJS = await import('exceljs');
+      const ExcelJS = await import("exceljs");
       const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet('Report Data');
+      const worksheet = workbook.addWorksheet("Report Data");
 
       // Add headers with styling from color theme
       const headerRow = worksheet.addRow(headers);
       headerRow.eachCell((cell) => {
         cell.font = {
-          bold: colorTheme?.headerFontWeight === 'bold' || colorTheme?.headerFontWeight === '700',
+          bold: colorTheme?.headerFontWeight === "bold" || colorTheme?.headerFontWeight === "700",
           color: {
             argb: hexToARGB(colorTheme?.headerTextColor),
           },
         };
         cell.fill = {
-          type: 'pattern',
-          pattern: 'solid',
+          type: "pattern",
+          pattern: "solid",
           fgColor: { argb: hexToARGB(colorTheme?.headerBackgroundColor) },
         };
         cell.border = {
-          top: { style: 'thin', color: { argb: hexToARGB(colorTheme?.borderColor) } },
-          left: { style: 'thin', color: { argb: hexToARGB(colorTheme?.borderColor) } },
-          bottom: { style: 'thin', color: { argb: hexToARGB(colorTheme?.borderColor) } },
-          right: { style: 'thin', color: { argb: hexToARGB(colorTheme?.borderColor) } },
+          top: { style: "thin", color: { argb: hexToARGB(colorTheme?.borderColor) } },
+          left: { style: "thin", color: { argb: hexToARGB(colorTheme?.borderColor) } },
+          bottom: { style: "thin", color: { argb: hexToARGB(colorTheme?.borderColor) } },
+          right: { style: "thin", color: { argb: hexToARGB(colorTheme?.borderColor) } },
         };
       });
 
@@ -570,7 +628,7 @@ export async function POST(
           const colDef = columnConfig.find((c) => c.header === header);
           const field = colDef?.field || header;
           const value = row[field];
-          return value === null || value === undefined ? '' : value;
+          return value === null || value === undefined ? "" : value;
         });
         const dataRow = worksheet.addRow(values);
 
@@ -578,19 +636,27 @@ export async function POST(
         dataRow.eachCell((cell) => {
           cell.font = {
             color: {
-              argb: hexToARGB(isAltRow ? colorTheme?.alternatingRowTextColor : colorTheme?.rowTextColor),
+              argb: hexToARGB(
+                isAltRow ? colorTheme?.alternatingRowTextColor : colorTheme?.rowTextColor
+              ),
             },
           };
           cell.fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: hexToARGB(isAltRow ? colorTheme?.alternatingRowBackgroundColor : colorTheme?.rowBackgroundColor) },
+            type: "pattern",
+            pattern: "solid",
+            fgColor: {
+              argb: hexToARGB(
+                isAltRow
+                  ? colorTheme?.alternatingRowBackgroundColor
+                  : colorTheme?.rowBackgroundColor
+              ),
+            },
           };
           cell.border = {
-            top: { style: 'thin', color: { argb: hexToARGB(colorTheme?.borderColor) } },
-            left: { style: 'thin', color: { argb: hexToARGB(colorTheme?.borderColor) } },
-            bottom: { style: 'thin', color: { argb: hexToARGB(colorTheme?.borderColor) } },
-            right: { style: 'thin', color: { argb: hexToARGB(colorTheme?.borderColor) } },
+            top: { style: "thin", color: { argb: hexToARGB(colorTheme?.borderColor) } },
+            left: { style: "thin", color: { argb: hexToARGB(colorTheme?.borderColor) } },
+            bottom: { style: "thin", color: { argb: hexToARGB(colorTheme?.borderColor) } },
+            right: { style: "thin", color: { argb: hexToARGB(colorTheme?.borderColor) } },
           };
         });
       });
@@ -612,22 +678,22 @@ export async function POST(
 
       return new NextResponse(Buffer.from(buffer), {
         headers: {
-          'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          'Content-Disposition': `attachment; filename="${report.name || 'report'}.xlsx"`,
+          "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "Content-Disposition": `attachment; filename="${report.name || "report"}.xlsx"`,
         },
       });
     }
 
-    if (format === 'pdf') {
+    if (format === "pdf") {
       // Parse color theme
       const colorTheme = parseColorTheme(report);
 
       // Generate PDF using jsPDF
-      const { jsPDF } = await import('jspdf');
+      const { jsPDF } = await import("jspdf");
       const doc = new jsPDF({
-        orientation: 'landscape',
-        unit: 'mm',
-        format: 'a4',
+        orientation: "landscape",
+        unit: "mm",
+        format: "a4",
       });
 
       const pageWidth = doc.internal.pageSize.getWidth();
@@ -639,17 +705,17 @@ export async function POST(
 
       // Add title
       doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text(report.name || 'Report', margin, 15);
+      doc.setFont("helvetica", "bold");
+      doc.text(report.name || "Report", margin, 15);
 
       // Add timestamp
       doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
+      doc.setFont("helvetica", "normal");
       doc.text(`Generated: ${new Date().toLocaleString()}`, margin, 22);
 
       // Calculate column widths
       const numColumns = headers.length;
-      const columnWidth = (pageWidth - (2 * margin)) / numColumns;
+      const columnWidth = (pageWidth - 2 * margin) / numColumns;
 
       let yPosition = tableTop;
 
@@ -666,20 +732,20 @@ export async function POST(
       ) => {
         // Draw background
         doc.setFillColor(bgColor.r, bgColor.g, bgColor.b);
-        doc.rect(x, y - rowHeight + cellPadding, width, rowHeight, 'F');
+        doc.rect(x, y - rowHeight + cellPadding, width, rowHeight, "F");
 
         // Draw text
         doc.setTextColor(textColor.r, textColor.g, textColor.b);
-        doc.setFont('helvetica', isBold ? 'bold' : 'normal');
+        doc.setFont("helvetica", isBold ? "bold" : "normal");
 
         // Truncate text if too long
-        const maxWidth = width - (2 * cellPadding);
+        const maxWidth = width - 2 * cellPadding;
         let displayText = text;
         if (doc.getTextWidth(text) > maxWidth) {
-          while (doc.getTextWidth(displayText + '...') > maxWidth && displayText.length > 0) {
+          while (doc.getTextWidth(displayText + "...") > maxWidth && displayText.length > 0) {
             displayText = displayText.slice(0, -1);
           }
-          displayText = displayText + '...';
+          displayText = displayText + "...";
         }
 
         doc.text(displayText, x + cellPadding, y);
@@ -689,12 +755,22 @@ export async function POST(
       doc.setFontSize(8);
       const headerBgColor = hexToRGB(colorTheme?.headerBackgroundColor);
       const headerTextColor = hexToRGB(colorTheme?.headerTextColor);
-      const headerFontBold = colorTheme?.headerFontWeight === 'bold' || colorTheme?.headerFontWeight === '700';
+      const headerFontBold =
+        colorTheme?.headerFontWeight === "bold" || colorTheme?.headerFontWeight === "700";
 
       headers.forEach((header, index) => {
-        const x = margin + (index * columnWidth);
+        const x = margin + index * columnWidth;
         const text = String(header);
-        drawCell(x, yPosition, columnWidth, rowHeight, text, headerBgColor, headerTextColor, headerFontBold);
+        drawCell(
+          x,
+          yPosition,
+          columnWidth,
+          rowHeight,
+          text,
+          headerBgColor,
+          headerTextColor,
+          headerFontBold
+        );
       });
 
       yPosition += rowHeight;
@@ -704,8 +780,12 @@ export async function POST(
 
       filteredRows.forEach((row, rowIndex) => {
         const isAltRow = rowIndex % 2 !== 0;
-        const rowBgColor = hexToRGB(isAltRow ? colorTheme?.alternatingRowBackgroundColor : colorTheme?.rowBackgroundColor);
-        const rowTextColor = hexToRGB(isAltRow ? colorTheme?.alternatingRowTextColor : colorTheme?.rowTextColor);
+        const rowBgColor = hexToRGB(
+          isAltRow ? colorTheme?.alternatingRowBackgroundColor : colorTheme?.rowBackgroundColor
+        );
+        const rowTextColor = hexToRGB(
+          isAltRow ? colorTheme?.alternatingRowTextColor : colorTheme?.rowTextColor
+        );
 
         // Check if we need a new page
         if (yPosition > pageHeight - margin) {
@@ -714,9 +794,18 @@ export async function POST(
 
           // Redraw headers on new page
           headers.forEach((header, index) => {
-            const x = margin + (index * columnWidth);
+            const x = margin + index * columnWidth;
             const text = String(header);
-            drawCell(x, yPosition, columnWidth, rowHeight, text, headerBgColor, headerTextColor, headerFontBold);
+            drawCell(
+              x,
+              yPosition,
+              columnWidth,
+              rowHeight,
+              text,
+              headerBgColor,
+              headerTextColor,
+              headerFontBold
+            );
           });
 
           yPosition += rowHeight;
@@ -727,10 +816,19 @@ export async function POST(
           const colDef = columnConfig.find((c) => c.header === header);
           const field = colDef?.field || header;
           const value = row[field];
-          const stringValue = value === null || value === undefined ? '' : String(value);
-          const x = margin + (colIndex * columnWidth);
+          const stringValue = value === null || value === undefined ? "" : String(value);
+          const x = margin + colIndex * columnWidth;
 
-          drawCell(x, yPosition, columnWidth, rowHeight, stringValue, rowBgColor, rowTextColor, false);
+          drawCell(
+            x,
+            yPosition,
+            columnWidth,
+            rowHeight,
+            stringValue,
+            rowBgColor,
+            rowTextColor,
+            false
+          );
         });
 
         yPosition += rowHeight;
@@ -741,29 +839,29 @@ export async function POST(
       for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i);
         doc.setFontSize(8);
-        doc.setFont('helvetica', 'normal');
+        doc.setFont("helvetica", "normal");
         doc.setTextColor(0, 0, 0); // Reset to black for footer
         doc.text(
           `Page ${i} of ${totalPages} | Total rows: ${filteredRows.length}`,
           pageWidth / 2,
           pageHeight - 5,
-          { align: 'center' }
+          { align: "center" }
         );
       }
 
-      const pdfBytes = doc.output('arraybuffer');
+      const pdfBytes = doc.output("arraybuffer");
 
       return new NextResponse(Buffer.from(pdfBytes), {
         headers: {
-          'Content-Type': 'application/pdf',
-          'Content-Disposition': `attachment; filename="${report.name || 'report'}.pdf"`,
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="${report.name || "report"}.pdf"`,
         },
       });
     }
   } catch (error) {
-    console.error('Error exporting report:', error);
+    console.error("Error exporting report:", error);
     return NextResponse.json(
-      { success: false, error: { code: 'SERVER_ERROR', message: 'Failed to export report' } },
+      { success: false, error: { code: "SERVER_ERROR", message: "Failed to export report" } },
       { status: 500 }
     );
   }

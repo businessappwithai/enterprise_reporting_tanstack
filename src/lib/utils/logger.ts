@@ -4,10 +4,10 @@
  */
 
 export enum LogLevel {
-  DEBUG = 'DEBUG',
-  INFO = 'INFO',
-  WARN = 'WARN',
-  ERROR = 'ERROR',
+  DEBUG = "DEBUG",
+  INFO = "INFO",
+  WARN = "WARN",
+  ERROR = "ERROR",
 }
 
 interface LogContext {
@@ -29,8 +29,9 @@ class Logger {
 
   private constructor() {
     // Generate unique request ID for each server instance
-    if (typeof process !== 'undefined') {
-      this.requestId = process.env.REQUEST_ID || `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    if (typeof process !== "undefined") {
+      this.requestId =
+        process.env.REQUEST_ID || `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     }
   }
 
@@ -42,9 +43,9 @@ class Logger {
   }
 
   private formatMessage(entry: LogEntry): string {
-    const contextStr = entry.context ? ` ${JSON.stringify(entry.context)}` : '';
-    const requestIdStr = entry.requestId ? ` [${entry.requestId}]` : '';
-    const userIdStr = entry.userId ? ` [User:${entry.userId}]` : '';
+    const contextStr = entry.context ? ` ${JSON.stringify(entry.context)}` : "";
+    const requestIdStr = entry.requestId ? ` [${entry.requestId}]` : "";
+    const userIdStr = entry.userId ? ` [User:${entry.userId}]` : "";
     return `[${entry.timestamp}] [${entry.level}]${requestIdStr}${userIdStr} ${entry.message}${contextStr}`;
   }
 
@@ -89,64 +90,86 @@ class Logger {
   }
 
   error(message: string, context?: LogContext, error?: Error): void {
-    const errorContext = error ? {
-      ...context,
-      error: {
-        name: error.name,
-        message: error.message,
-        stack: error.stack,
-      },
-    } : context;
+    const errorContext = error
+      ? {
+          ...context,
+          error: {
+            name: error.name,
+            message: error.message,
+            stack: error.stack,
+          },
+        }
+      : context;
     this.log(LogLevel.ERROR, message, errorContext);
   }
 
   // API-specific logging methods
   apiRequest(method: string, path: string, userId?: string, context?: LogContext): void {
-    this.info(`${method} ${path}`, { ...context, type: 'API_REQUEST' });
+    this.info(`${method} ${path}`, { ...context, type: "API_REQUEST" });
   }
 
-  apiResponse(method: string, path: string, statusCode: number, duration?: number, context?: LogContext): void {
+  apiResponse(
+    method: string,
+    path: string,
+    statusCode: number,
+    duration?: number,
+    context?: LogContext
+  ): void {
     this.info(`${method} ${path} - ${statusCode}`, {
       ...context,
-      type: 'API_RESPONSE',
+      type: "API_RESPONSE",
       statusCode,
       duration,
     });
   }
 
-  apiError(method: string, path: string, statusCode: number, error?: Error, context?: LogContext): void {
-    this.error(`${method} ${path} - ${statusCode}`, {
-      ...context,
-      type: 'API_ERROR',
-      statusCode,
-    }, error);
+  apiError(
+    method: string,
+    path: string,
+    statusCode: number,
+    error?: Error,
+    context?: LogContext
+  ): void {
+    this.error(
+      `${method} ${path} - ${statusCode}`,
+      {
+        ...context,
+        type: "API_ERROR",
+        statusCode,
+      },
+      error
+    );
   }
 
   // Database logging methods
   dbQuery(operation: string, table: string, context?: LogContext): void {
-    this.debug(`DB Query: ${operation} on ${table}`, { ...context, type: 'DB_QUERY' });
+    this.debug(`DB Query: ${operation} on ${table}`, { ...context, type: "DB_QUERY" });
   }
 
   dbError(operation: string, table: string, error?: Error, context?: LogContext): void {
-    this.error(`DB Error: ${operation} on ${table}`, { ...context, type: 'DB_ERROR', table, operation }, error);
+    this.error(
+      `DB Error: ${operation} on ${table}`,
+      { ...context, type: "DB_ERROR", table, operation },
+      error
+    );
   }
 
   // Authentication logging methods
   authEvent(event: string, userId?: string, context?: LogContext): void {
-    this.info(`Auth: ${event}`, { ...context, type: 'AUTH_EVENT', userId });
+    this.info(`Auth: ${event}`, { ...context, type: "AUTH_EVENT", userId });
   }
 
   authError(event: string, error?: Error, context?: LogContext): void {
-    this.error(`Auth Error: ${event}`, { ...context, type: 'AUTH_ERROR' }, error);
+    this.error(`Auth Error: ${event}`, { ...context, type: "AUTH_ERROR" }, error);
   }
 
   // Encryption logging methods
   encryptionEvent(event: string, context?: LogContext): void {
-    this.debug(`Encryption: ${event}`, { ...context, type: 'ENCRYPTION_EVENT' });
+    this.debug(`Encryption: ${event}`, { ...context, type: "ENCRYPTION_EVENT" });
   }
 
   encryptionError(event: string, error?: Error, context?: LogContext): void {
-    this.error(`Encryption Error: ${event}`, { ...context, type: 'ENCRYPTION_ERROR' }, error);
+    this.error(`Encryption Error: ${event}`, { ...context, type: "ENCRYPTION_ERROR" }, error);
   }
 }
 
@@ -158,13 +181,24 @@ export const log = {
   debug: (message: string, context?: LogContext) => logger.debug(message, context),
   info: (message: string, context?: LogContext) => logger.info(message, context),
   warn: (message: string, context?: LogContext) => logger.warn(message, context),
-  error: (message: string, context?: LogContext, error?: Error) => logger.error(message, context, error),
+  error: (message: string, context?: LogContext, error?: Error) =>
+    logger.error(message, context, error),
   apiRequest: (method: string, path: string, userId?: string, context?: LogContext) =>
     logger.apiRequest(method, path, userId, context),
-  apiResponse: (method: string, path: string, statusCode: number, duration?: number, context?: LogContext) =>
-    logger.apiResponse(method, path, statusCode, duration, context),
-  apiError: (method: string, path: string, statusCode: number, error?: Error, context?: LogContext) =>
-    logger.apiError(method, path, statusCode, error, context),
+  apiResponse: (
+    method: string,
+    path: string,
+    statusCode: number,
+    duration?: number,
+    context?: LogContext
+  ) => logger.apiResponse(method, path, statusCode, duration, context),
+  apiError: (
+    method: string,
+    path: string,
+    statusCode: number,
+    error?: Error,
+    context?: LogContext
+  ) => logger.apiError(method, path, statusCode, error, context),
   dbQuery: (operation: string, table: string, context?: LogContext) =>
     logger.dbQuery(operation, table, context),
   dbError: (operation: string, table: string, error?: Error, context?: LogContext) =>
@@ -173,8 +207,7 @@ export const log = {
     logger.authEvent(event, undefined, context),
   authError: (event: string, error?: Error, context?: LogContext) =>
     logger.authError(event, error, context),
-  encryptionEvent: (event: string, context?: LogContext) =>
-    logger.encryptionEvent(event, context),
+  encryptionEvent: (event: string, context?: LogContext) => logger.encryptionEvent(event, context),
   encryptionError: (event: string, error?: Error, context?: LogContext) =>
     logger.encryptionError(event, error, context),
 };

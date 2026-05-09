@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { Sidebar } from './sidebar';
-import { Header } from './header';
-import { cn } from '@/lib/utils';
-import { ActiveDataSourceProvider } from '@/lib/hooks/use-active-datasource';
+import { useState } from "react";
+import { Sidebar } from "./sidebar";
+import { Header } from "./header";
+import { cn } from "@/lib/utils";
+import { ActiveDataSourceProvider } from "@/lib/hooks/use-active-datasource";
 
 interface User {
   name?: string | null;
@@ -21,16 +21,8 @@ export function AppShell({ children, user }: AppShellProps) {
   return (
     <ActiveDataSourceProvider>
       <div className="min-h-screen bg-background">
-        <Sidebar
-          collapsed={sidebarCollapsed}
-          onCollapse={setSidebarCollapsed}
-        />
-        <div
-          className={cn(
-            'transition-all duration-300',
-            sidebarCollapsed ? 'ml-16' : 'ml-64'
-          )}
-        >
+        <Sidebar collapsed={sidebarCollapsed} onCollapse={setSidebarCollapsed} />
+        <div className={cn("transition-all duration-300", sidebarCollapsed ? "ml-16" : "ml-64")}>
           <Header user={user} />
           <main className="p-6">{children}</main>
         </div>

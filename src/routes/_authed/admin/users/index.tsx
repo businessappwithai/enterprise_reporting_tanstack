@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { createFileRoute } from '@tanstack/react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -11,7 +11,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -19,41 +19,41 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { UserPlus, Shield, ShieldCheck, Trash2, Key } from 'lucide-react';
-import { toast } from 'sonner';
-import { formatDateTime } from '@/lib/utils';
-import type { User, Role } from '@/types/database';
+} from "@/components/ui/select";
+import { UserPlus, Shield, ShieldCheck, Trash2, Key } from "lucide-react";
+import { toast } from "sonner";
+import { formatDateTime } from "@/lib/utils";
+import type { User, Role } from "@/types/database";
 
-export const Route = createFileRoute('/_authed/admin/users/')({
+export const Route = createFileRoute("/_authed/admin/users/")({
   component: UsersManagementPage,
-})
+});
 
 function UsersManagementPage() {
   const queryClient = useQueryClient();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [assignRoleDialogOpen, setAssignRoleDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [newUserName, setNewUserName] = useState('');
-  const [newUserEmail, setNewUserEmail] = useState('');
-  const [newUserPassword, setNewUserPassword] = useState('');
+  const [newUserName, setNewUserName] = useState("");
+  const [newUserEmail, setNewUserEmail] = useState("");
+  const [newUserPassword, setNewUserPassword] = useState("");
   const [isUserActive, setIsUserActive] = useState(true);
 
   // Fetch users
   const { data: users, isLoading: isLoadingUsers } = useQuery<User[]>({
-    queryKey: ['admin-users'],
+    queryKey: ["admin-users"],
     queryFn: async () => {
-      const res = await fetch('/api/admin/users');
+      const res = await fetch("/api/admin/users");
       const data = await res.json();
       return data.data || [];
     },
@@ -61,9 +61,9 @@ function UsersManagementPage() {
 
   // Fetch roles for dropdown
   const { data: roles = [] } = useQuery<Role[]>({
-    queryKey: ['roles'],
+    queryKey: ["roles"],
     queryFn: async () => {
-      const res = await fetch('/api/admin/roles');
+      const res = await fetch("/api/admin/roles");
       const data = await res.json();
       return data.data || [];
     },
@@ -71,7 +71,7 @@ function UsersManagementPage() {
 
   // Fetch user roles for selected user
   const { data: userRoles = [], refetch: refetchUserRoles } = useQuery({
-    queryKey: ['user-roles', selectedUser?.id],
+    queryKey: ["user-roles", selectedUser?.id],
     queryFn: async () => {
       if (!selectedUser) return [];
       const res = await fetch(`/api/admin/users/${selectedUser.id}/roles`);
@@ -84,9 +84,9 @@ function UsersManagementPage() {
   // Create user mutation
   const createMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch('/api/admin/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: newUserName,
           email: newUserEmail,
@@ -96,17 +96,17 @@ function UsersManagementPage() {
       });
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(error.error?.message || 'Failed to create user');
+        throw new Error(error.error?.message || "Failed to create user");
       }
       return res.json();
     },
     onSuccess: () => {
-      toast.success('User created successfully');
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast.success("User created successfully");
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
       setCreateDialogOpen(false);
-      setNewUserName('');
-      setNewUserEmail('');
-      setNewUserPassword('');
+      setNewUserName("");
+      setNewUserEmail("");
+      setNewUserPassword("");
       setIsUserActive(true);
     },
     onError: (error: Error) => {
@@ -119,18 +119,18 @@ function UsersManagementPage() {
     mutationFn: async ({ roleId }: { roleId: string }) => {
       if (!selectedUser) return;
       const res = await fetch(`/api/admin/users/${selectedUser.id}/roles`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ roleId }),
       });
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(error.error?.message || 'Failed to assign role');
+        throw new Error(error.error?.message || "Failed to assign role");
       }
       return res.json();
     },
     onSuccess: () => {
-      toast.success('Role assigned successfully');
+      toast.success("Role assigned successfully");
       refetchUserRoles();
     },
     onError: (error: Error) => {
@@ -143,18 +143,18 @@ function UsersManagementPage() {
     mutationFn: async ({ roleId }: { roleId: string }) => {
       if (!selectedUser) return;
       const res = await fetch(`/api/admin/users/${selectedUser.id}/roles`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ roleId }),
       });
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(error.error?.message || 'Failed to remove role');
+        throw new Error(error.error?.message || "Failed to remove role");
       }
       return res.json();
     },
     onSuccess: () => {
-      toast.success('Role removed successfully');
+      toast.success("Role removed successfully");
       refetchUserRoles();
     },
     onError: (error: Error) => {
@@ -166,19 +166,19 @@ function UsersManagementPage() {
   const toggleActiveMutation = useMutation({
     mutationFn: async (user: User) => {
       const res = await fetch(`/api/admin/users/${user.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isActive: !user.is_active }),
       });
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(error.error?.message || 'Failed to update user');
+        throw new Error(error.error?.message || "Failed to update user");
       }
       return res.json();
     },
     onSuccess: () => {
-      toast.success('User updated successfully');
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast.success("User updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -190,9 +190,7 @@ function UsersManagementPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">User Management</h1>
-          <p className="text-muted-foreground">
-            Manage user accounts and assign roles
-          </p>
+          <p className="text-muted-foreground">Manage user accounts and assign roles</p>
         </div>
         <Button onClick={() => setCreateDialogOpen(true)}>
           <UserPlus className="h-4 w-4 mr-2" />
@@ -230,8 +228,8 @@ function UsersManagementPage() {
                     <TableCell className="font-medium">{user.display_name}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
-                      <Badge variant={user.is_active ? 'default' : 'secondary'}>
-                        {user.is_active ? 'Active' : 'Inactive'}
+                      <Badge variant={user.is_active ? "default" : "secondary"}>
+                        {user.is_active ? "Active" : "Inactive"}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -263,7 +261,7 @@ function UsersManagementPage() {
                         size="sm"
                         onClick={() => toggleActiveMutation.mutate(user)}
                       >
-                        {user.is_active ? 'Disable' : 'Enable'}
+                        {user.is_active ? "Disable" : "Enable"}
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -312,11 +310,7 @@ function UsersManagementPage() {
               />
             </div>
             <div className="flex items-center space-x-2">
-              <Switch
-                id="user-active"
-                checked={isUserActive}
-                onCheckedChange={setIsUserActive}
-              />
+              <Switch id="user-active" checked={isUserActive} onCheckedChange={setIsUserActive} />
               <Label htmlFor="user-active">Active</Label>
             </div>
           </div>
@@ -326,9 +320,11 @@ function UsersManagementPage() {
             </Button>
             <Button
               onClick={() => createMutation.mutate()}
-              disabled={!newUserName || !newUserEmail || !newUserPassword || createMutation.isPending}
+              disabled={
+                !newUserName || !newUserEmail || !newUserPassword || createMutation.isPending
+              }
             >
-              {createMutation.isPending ? 'Creating...' : 'Create User'}
+              {createMutation.isPending ? "Creating..." : "Create User"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -351,7 +347,10 @@ function UsersManagementPage() {
                   <p className="text-sm text-muted-foreground">No roles assigned</p>
                 ) : (
                   userRoles.map((ur: any) => (
-                    <div key={ur.role_id} className="flex items-center justify-between p-2 border rounded">
+                    <div
+                      key={ur.role_id}
+                      className="flex items-center justify-between p-2 border rounded"
+                    >
                       <Badge variant="secondary">{ur.role_name}</Badge>
                       <Button
                         variant="ghost"
@@ -380,7 +379,7 @@ function UsersManagementPage() {
                     .filter((r) => !userRoles.some((ur: any) => ur.role_id === r.id))
                     .map((role) => (
                       <SelectItem key={role.id} value={role.id}>
-                        {role.name} - {role.description || 'No description'}
+                        {role.name} - {role.description || "No description"}
                       </SelectItem>
                     ))}
                 </SelectContent>

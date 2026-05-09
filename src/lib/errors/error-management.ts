@@ -1,9 +1,9 @@
-import { getDb } from '@/lib/db/config';
+import { getDb } from "@/lib/db/config";
 
 export interface ErrorMessage {
   id: string;
   error_code: string;
-  severity: 'error' | 'warning' | 'info';
+  severity: "error" | "warning" | "info";
   title: string;
   message: string;
   user_message?: string;
@@ -23,7 +23,7 @@ export interface WarningConfig {
   description?: string;
   trigger_type: string;
   trigger_config?: Record<string, any>;
-  severity: 'info' | 'warning' | 'critical';
+  severity: "info" | "warning" | "critical";
   message_template: string;
   suggestions_template?: string[];
   is_active: boolean;
@@ -58,9 +58,9 @@ class ErrorManagementService {
    */
   async getErrorMessage(errorCode: string): Promise<ErrorMessage | null> {
     const db = getDb();
-    const result = await db<ErrorMessage>('error_messages')
-      .where('error_code', errorCode)
-      .where('is_active', true)
+    const result = await db<ErrorMessage>("error_messages")
+      .where("error_code", errorCode)
+      .where("is_active", true)
       .first();
 
     if (result && result.suggestions) {
@@ -78,10 +78,10 @@ class ErrorManagementService {
    */
   async getAllErrorMessages(): Promise<ErrorMessage[]> {
     const db = getDb();
-    const results = await db<ErrorMessage>('error_messages')
-      .where('is_active', true)
-      .orderBy('category')
-      .orderBy('error_code');
+    const results = await db<ErrorMessage>("error_messages")
+      .where("is_active", true)
+      .orderBy("category")
+      .orderBy("error_code");
 
     return results.map((msg) => ({
       ...msg,
@@ -95,10 +95,10 @@ class ErrorManagementService {
    */
   async getErrorMessagesByCategory(category: string): Promise<ErrorMessage[]> {
     const db = getDb();
-    const results = await db<ErrorMessage>('error_messages')
-      .where('category', category)
-      .where('is_active', true)
-      .orderBy('error_code');
+    const results = await db<ErrorMessage>("error_messages")
+      .where("category", category)
+      .where("is_active", true)
+      .orderBy("error_code");
 
     return results.map((msg) => ({
       ...msg,
@@ -126,15 +126,15 @@ class ErrorManagementService {
       data.metadata = JSON.stringify(updates.metadata);
     }
 
-    await db<ErrorMessage>('error_messages')
-      .where('id', id)
-      .update(data);
+    await db<ErrorMessage>("error_messages").where("id", id).update(data);
   }
 
   /**
    * Create new error message
    */
-  async createErrorMessage(message: Omit<ErrorMessage, 'id' | 'created_at' | 'updated_at'>): Promise<ErrorMessage> {
+  async createErrorMessage(
+    message: Omit<ErrorMessage, "id" | "created_at" | "updated_at">
+  ): Promise<ErrorMessage> {
     const db = getDb();
 
     const data: any = {
@@ -151,7 +151,7 @@ class ErrorManagementService {
       data.metadata = JSON.stringify(message.metadata);
     }
 
-    const [id] = await db<ErrorMessage>('error_messages').insert(data);
+    const [id] = await db<ErrorMessage>("error_messages").insert(data);
 
     return this.getErrorMessage(message.error_code) as Promise<ErrorMessage>;
   }
@@ -161,9 +161,9 @@ class ErrorManagementService {
    */
   async getWarningConfig(warningCode: string): Promise<WarningConfig | null> {
     const db = getDb();
-    const result = await db<WarningConfig>('warning_configs')
-      .where('warning_code', warningCode)
-      .where('is_active', true)
+    const result = await db<WarningConfig>("warning_configs")
+      .where("warning_code", warningCode)
+      .where("is_active", true)
       .first();
 
     if (result) {
@@ -186,15 +186,17 @@ class ErrorManagementService {
    */
   async getAllWarningConfigs(): Promise<WarningConfig[]> {
     const db = getDb();
-    const results = await db<WarningConfig>('warning_configs')
-      .where('is_active', true)
-      .orderBy('severity', 'desc')
-      .orderBy('warning_code');
+    const results = await db<WarningConfig>("warning_configs")
+      .where("is_active", true)
+      .orderBy("severity", "desc")
+      .orderBy("warning_code");
 
     return results.map((config) => ({
       ...config,
       trigger_config: config.trigger_config ? JSON.parse(config.trigger_config as any) : undefined,
-      suggestions_template: config.suggestions_template ? JSON.parse(config.suggestions_template as any) : undefined,
+      suggestions_template: config.suggestions_template
+        ? JSON.parse(config.suggestions_template as any)
+        : undefined,
       metadata: config.metadata ? JSON.parse(config.metadata as any) : undefined,
     }));
   }
@@ -206,7 +208,7 @@ class ErrorManagementService {
     let message = template;
     for (const [key, value] of Object.entries(variables)) {
       const placeholder = `{${key}}`;
-      message = message.replace(new RegExp(placeholder, 'g'), String(value));
+      message = message.replace(new RegExp(placeholder, "g"), String(value));
     }
     return message;
   }
@@ -214,7 +216,9 @@ class ErrorManagementService {
   /**
    * Log error occurrence
    */
-  async logErrorOccurrence(occurrence: Omit<ErrorOccurrence, 'id' | 'created_at'>): Promise<string> {
+  async logErrorOccurrence(
+    occurrence: Omit<ErrorOccurrence, "id" | "created_at">
+  ): Promise<string> {
     const db = getDb();
 
     const data = {
@@ -223,7 +227,7 @@ class ErrorManagementService {
       created_at: new Date().toISOString(),
     };
 
-    const [id] = await db<ErrorOccurrence>('error_occurrences').insert(data);
+    const [id] = await db<ErrorOccurrence>("error_occurrences").insert(data);
 
     return id as string;
   }
@@ -233,9 +237,7 @@ class ErrorManagementService {
    */
   async markErrorAsReported(id: string): Promise<void> {
     const db = getDb();
-    await db<ErrorOccurrence>('error_occurrences')
-      .where('id', id)
-      .update({ is_reported: true });
+    await db<ErrorOccurrence>("error_occurrences").where("id", id).update({ is_reported: true });
   }
 
   /**
@@ -246,12 +248,12 @@ class ErrorManagementService {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
 
-    const stats = await db<ErrorOccurrence>('error_occurrences')
-      .where('created_at', '>=', cutoffDate.toISOString())
-      .select('error_code')
-      .count('* as count')
-      .groupBy('error_code')
-      .orderBy('count', 'desc')
+    const stats = await db<ErrorOccurrence>("error_occurrences")
+      .where("created_at", ">=", cutoffDate.toISOString())
+      .select("error_code")
+      .count("* as count")
+      .groupBy("error_code")
+      .orderBy("count", "desc")
       .limit(10);
 
     return stats.map((stat: any) => ({
@@ -265,12 +267,10 @@ class ErrorManagementService {
    */
   async resolveErrorOccurrence(id: string): Promise<void> {
     const db = getDb();
-    await db<ErrorOccurrence>('error_occurrences')
-      .where('id', id)
-      .update({
-        is_resolved: true,
-        resolved_at: new Date().toISOString(),
-      });
+    await db<ErrorOccurrence>("error_occurrences").where("id", id).update({
+      is_resolved: true,
+      resolved_at: new Date().toISOString(),
+    });
   }
 }
 

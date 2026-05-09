@@ -1,10 +1,10 @@
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Plus, X } from 'lucide-react';
-import type { ChartConfig, ChartType } from '@/types/database';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Plus, X } from "lucide-react";
+import type { ChartConfig, ChartType } from "@/types/database";
 
 interface ChartAppearanceProps {
   chartConfig: ChartConfig;
@@ -12,7 +12,11 @@ interface ChartAppearanceProps {
   onChartConfigChange: (config: ChartConfig) => void;
 }
 
-export function ChartAppearance({ chartConfig, chartType, onChartConfigChange }: ChartAppearanceProps) {
+export function ChartAppearance({
+  chartConfig,
+  chartType,
+  onChartConfigChange,
+}: ChartAppearanceProps) {
   return (
     <Card>
       <CardHeader>
@@ -25,7 +29,10 @@ export function ChartAppearance({ chartConfig, chartType, onChartConfigChange }:
             id="show-title"
             checked={chartConfig.title.show}
             onCheckedChange={(checked) =>
-              onChartConfigChange({ ...chartConfig, title: { ...chartConfig.title, show: checked } })
+              onChartConfigChange({
+                ...chartConfig,
+                title: { ...chartConfig.title, show: checked },
+              })
             }
           />
         </div>
@@ -33,7 +40,10 @@ export function ChartAppearance({ chartConfig, chartType, onChartConfigChange }:
           <Input
             value={chartConfig.title.text}
             onChange={(e) =>
-              onChartConfigChange({ ...chartConfig, title: { ...chartConfig.title, text: e.target.value } })
+              onChartConfigChange({
+                ...chartConfig,
+                title: { ...chartConfig.title, text: e.target.value },
+              })
             }
             placeholder="Chart title"
           />
@@ -45,7 +55,10 @@ export function ChartAppearance({ chartConfig, chartType, onChartConfigChange }:
             id="show-legend"
             checked={chartConfig.legend.show}
             onCheckedChange={(checked) =>
-              onChartConfigChange({ ...chartConfig, legend: { ...chartConfig.legend, show: checked } })
+              onChartConfigChange({
+                ...chartConfig,
+                legend: { ...chartConfig.legend, show: checked },
+              })
             }
           />
         </div>
@@ -66,11 +79,13 @@ export function ChartAppearance({ chartConfig, chartType, onChartConfigChange }:
           <Switch
             id="enable-animation"
             checked={chartConfig.animation}
-            onCheckedChange={(checked) => onChartConfigChange({ ...chartConfig, animation: checked })}
+            onCheckedChange={(checked) =>
+              onChartConfigChange({ ...chartConfig, animation: checked })
+            }
           />
         </div>
 
-        {(chartType === 'bar' || chartType === 'column') && (
+        {(chartType === "bar" || chartType === "column") && (
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="enable-stacked">Stacked Chart</Label>
@@ -81,14 +96,18 @@ export function ChartAppearance({ chartConfig, chartType, onChartConfigChange }:
             <Switch
               id="enable-stacked"
               checked={chartConfig.stacked || false}
-              onCheckedChange={(checked) => onChartConfigChange({ ...chartConfig, stacked: checked })}
+              onCheckedChange={(checked) =>
+                onChartConfigChange({ ...chartConfig, stacked: checked })
+              }
             />
           </div>
         )}
 
         <div>
           <Label>Chart Colors</Label>
-          <p className="text-xs text-gray-500 mb-2">Customize the color palette for your chart. Click to edit.</p>
+          <p className="text-xs text-gray-500 mb-2">
+            Customize the color palette for your chart. Click to edit.
+          </p>
           <div className="flex flex-wrap gap-2">
             {chartConfig.colors.map((color, index) => (
               <div key={index} className="flex items-center gap-1">
@@ -109,7 +128,10 @@ export function ChartAppearance({ chartConfig, chartType, onChartConfigChange }:
                   className="h-6 w-6 p-0"
                   onClick={() => {
                     const newColors = chartConfig.colors.filter((_, i) => i !== index);
-                    onChartConfigChange({ ...chartConfig, colors: newColors.length > 0 ? newColors : chartConfig.colors });
+                    onChartConfigChange({
+                      ...chartConfig,
+                      colors: newColors.length > 0 ? newColors : chartConfig.colors,
+                    });
                   }}
                   disabled={chartConfig.colors.length <= 1}
                   title="Remove color"
@@ -121,7 +143,9 @@ export function ChartAppearance({ chartConfig, chartType, onChartConfigChange }:
             <Button
               size="sm"
               variant="outline"
-              onClick={() => onChartConfigChange({ ...chartConfig, colors: [...chartConfig.colors, '#64748b'] })}
+              onClick={() =>
+                onChartConfigChange({ ...chartConfig, colors: [...chartConfig.colors, "#64748b"] })
+              }
               disabled={chartConfig.colors.length >= 12}
             >
               <Plus className="h-3 w-3 mr-1" />
@@ -135,7 +159,16 @@ export function ChartAppearance({ chartConfig, chartType, onChartConfigChange }:
             onClick={() =>
               onChartConfigChange({
                 ...chartConfig,
-                colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'],
+                colors: [
+                  "#3b82f6",
+                  "#10b981",
+                  "#f59e0b",
+                  "#ef4444",
+                  "#8b5cf6",
+                  "#ec4899",
+                  "#06b6d4",
+                  "#84cc16",
+                ],
               })
             }
           >

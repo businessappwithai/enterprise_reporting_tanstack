@@ -23,9 +23,9 @@ import { Plus, Pencil, Trash2 } from "lucide-react";
 import type { FilterDefinition } from "@/types/database";
 import { FilterFormFields, type FilterFormData } from "@/components/filters/filter-form-fields";
 
-export const Route = createFileRoute('/_authed/filters/')({
+export const Route = createFileRoute("/_authed/filters/")({
   component: FiltersPage,
-})
+});
 
 const DEFAULT_FORM: FilterFormData = {
   name: "",
@@ -194,10 +194,12 @@ function FiltersPage() {
     if (filter.date_validation_config) {
       try {
         dateValidationConfig = JSON.parse(filter.date_validation_config);
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }
     const matchingQuery = savedQueries?.find(
-      (q: { sql_content: string }) => q.sql_content === filter.filter_query,
+      (q: { sql_content: string }) => q.sql_content === filter.filter_query
     );
     setFormData({
       name: filter.name,
@@ -251,7 +253,9 @@ function FiltersPage() {
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Create New Filter</DialogTitle>
-              <DialogDescription>Create a reusable filter for reports and charts.</DialogDescription>
+              <DialogDescription>
+                Create a reusable filter for reports and charts.
+              </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
               <FilterFormFields
@@ -268,7 +272,10 @@ function FiltersPage() {
               <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={() => createFilter.mutate(formData)} disabled={createFilter.isPending}>
+              <Button
+                onClick={() => createFilter.mutate(formData)}
+                disabled={createFilter.isPending}
+              >
                 {createFilter.isPending ? "Creating..." : "Create Filter"}
               </Button>
             </DialogFooter>
@@ -300,15 +307,23 @@ function FiltersPage() {
               filters?.map((filter) => (
                 <TableRow key={filter.id}>
                   <TableCell className="font-medium">{filter.name}</TableCell>
-                  <TableCell className="text-muted-foreground">{filter.description || "-"}</TableCell>
-                  <TableCell>
-                    {dataSources?.find((ds: { id: string; name: string }) => ds.id === filter.data_source_id)?.name || filter.data_source_id}
+                  <TableCell className="text-muted-foreground">
+                    {filter.description || "-"}
                   </TableCell>
                   <TableCell>
-                    <code className="bg-muted px-1.5 py-0.5 rounded text-xs">{filter.display_field}</code>
+                    {dataSources?.find(
+                      (ds: { id: string; name: string }) => ds.id === filter.data_source_id
+                    )?.name || filter.data_source_id}
                   </TableCell>
                   <TableCell>
-                    <code className="bg-muted px-1.5 py-0.5 rounded text-xs">{filter.value_field}</code>
+                    <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                      {filter.display_field}
+                    </code>
+                  </TableCell>
+                  <TableCell>
+                    <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                      {filter.value_field}
+                    </code>
                   </TableCell>
                   <TableCell>
                     <code className="text-xs bg-muted px-1.5 py-0.5 rounded block max-w-[300px] truncate">
@@ -354,7 +369,9 @@ function FiltersPage() {
               Cancel
             </Button>
             <Button
-              onClick={() => editingFilter && updateFilter.mutate({ id: editingFilter.id, data: formData })}
+              onClick={() =>
+                editingFilter && updateFilter.mutate({ id: editingFilter.id, data: formData })
+              }
               disabled={updateFilter.isPending}
             >
               {updateFilter.isPending ? "Updating..." : "Update Filter"}

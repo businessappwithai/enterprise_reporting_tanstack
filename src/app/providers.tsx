@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from 'next-themes';
-import { SessionProvider } from 'next-auth/react';
-import { useState } from 'react';
-import { DuckDBProvider } from '@/components/duckdb/DuckDBProvider';
-import { isFeatureEnabled } from '@/lib/feature-flags';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ThemeProvider } from "next-themes";
+import { SessionProvider } from "next-auth/react";
+import { useState } from "react";
+import { DuckDBProvider } from "@/components/duckdb/DuckDBProvider";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -20,15 +20,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
       })
   );
 
-  const wasmEnabled = isFeatureEnabled('wasmEnabled');
+  const wasmEnabled = isFeatureEnabled("wasmEnabled");
 
   const inner = (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-      disableTransitionOnChange
-    >
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       {children}
     </ThemeProvider>
   );
@@ -36,11 +31,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider refetchInterval={0} refetchOnWindowFocus={false}>
       <QueryClientProvider client={queryClient}>
-        {wasmEnabled ? (
-          <DuckDBProvider>{inner}</DuckDBProvider>
-        ) : (
-          inner
-        )}
+        {wasmEnabled ? <DuckDBProvider>{inner}</DuckDBProvider> : inner}
       </QueryClientProvider>
     </SessionProvider>
   );

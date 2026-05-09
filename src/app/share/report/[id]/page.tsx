@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
 /**
  * Public Report Viewer - No authentication required
  * Displays reports that are marked as public (is_public = true)
  */
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Lock, Home, AlertCircle, Download, BarChart3 } from 'lucide-react';
-import Link from 'next/link';
-import { DataTable } from '@/components/reporting/data-table';
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Lock, Home, AlertCircle, Download, BarChart3 } from "lucide-react";
+import Link from "next/link";
+import { DataTable } from "@/components/reporting/data-table";
 
 interface ReportColumn {
   name: string;
@@ -57,24 +57,27 @@ function PublicReportContent() {
         const res = await fetch(`/api/share/report/${reportId}?execute=true`);
 
         if (res.status === 404) {
-          setError({ code: 'NOT_FOUND', message: 'Report not found' });
+          setError({ code: "NOT_FOUND", message: "Report not found" });
           return;
         }
 
         if (res.status === 403) {
-          setError({ code: 'PRIVATE', message: 'This report is private. Please log in to view it.' });
+          setError({
+            code: "PRIVATE",
+            message: "This report is private. Please log in to view it.",
+          });
           return;
         }
 
         if (!res.ok) {
-          throw new Error('Failed to load report');
+          throw new Error("Failed to load report");
         }
 
         const data = await res.json();
         setReport(data.data);
       } catch (err) {
-        console.error('Error loading report:', err);
-        setError({ code: 'ERROR', message: 'Failed to load report' });
+        console.error("Error loading report:", err);
+        setError({ code: "ERROR", message: "Failed to load report" });
       } finally {
         setIsLoading(false);
       }
@@ -116,7 +119,7 @@ function PublicReportContent() {
         <Card className="max-w-md w-full">
           <CardContent className="pt-6">
             <div className="flex flex-col items-center text-center space-y-4">
-              {error.code === 'PRIVATE' ? (
+              {error.code === "PRIVATE" ? (
                 <>
                   <div className="p-3 bg-muted rounded-full">
                     <Lock className="h-6 w-6 text-muted-foreground" />
@@ -136,7 +139,7 @@ function PublicReportContent() {
                   </div>
                   <div>
                     <h2 className="text-lg font-semibold">
-                      {error.code === 'NOT_FOUND' ? 'Report Not Found' : 'Error Loading Report'}
+                      {error.code === "NOT_FOUND" ? "Report Not Found" : "Error Loading Report"}
                     </h2>
                     <p className="text-sm text-muted-foreground mt-2">{error.message}</p>
                   </div>
@@ -201,8 +204,7 @@ function PublicReportContent() {
             You are viewing a public report. Some features may be limited.
             <Button asChild variant="link" className="ml-2 h-auto p-0" size="sm">
               <Link href="/login">Log in</Link>
-            </Button>
-            {' '}
+            </Button>{" "}
             for full access.
           </AlertDescription>
         </Alert>
@@ -228,7 +230,7 @@ function PublicReportContent() {
             <CardContent>
               <DataTable
                 data={report.results.rows}
-                columns={report.results.columns.map(c => ({
+                columns={report.results.columns.map((c) => ({
                   name: c.name,
                   type: c.type as any,
                   nullable: true,

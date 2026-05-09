@@ -31,7 +31,7 @@ export function validateDuckDBQuery(sql: string): ValidationResult {
   const trimmed = sql.trim();
 
   if (!trimmed) {
-    errors.push({ message: 'Query is empty' });
+    errors.push({ message: "Query is empty" });
     return { valid: false, errors, warnings };
   }
 
@@ -50,15 +50,15 @@ export function validateDuckDBQuery(sql: string): ValidationResult {
   // Check for balanced parentheses
   let depth = 0;
   for (let i = 0; i < trimmed.length; i++) {
-    if (trimmed[i] === '(') depth++;
-    if (trimmed[i] === ')') depth--;
+    if (trimmed[i] === "(") depth++;
+    if (trimmed[i] === ")") depth--;
     if (depth < 0) {
-      errors.push({ message: 'Unbalanced parentheses' });
+      errors.push({ message: "Unbalanced parentheses" });
       break;
     }
   }
   if (depth > 0) {
-    errors.push({ message: 'Unclosed parenthesis' });
+    errors.push({ message: "Unclosed parenthesis" });
   }
 
   // Check for unmatched quotes
@@ -69,16 +69,18 @@ export function validateDuckDBQuery(sql: string): ValidationResult {
     if (ch === "'" && !inDoubleQuote) inSingleQuote = !inSingleQuote;
     if (ch === '"' && !inSingleQuote) inDoubleQuote = !inDoubleQuote;
   }
-  if (inSingleQuote) errors.push({ message: 'Unmatched single quote' });
-  if (inDoubleQuote) errors.push({ message: 'Unmatched double quote' });
+  if (inSingleQuote) errors.push({ message: "Unmatched single quote" });
+  if (inDoubleQuote) errors.push({ message: "Unmatched double quote" });
 
   // Warnings
   if (/\bSELECT\s+\*/i.test(trimmed)) {
-    warnings.push({ message: 'SELECT * may return more data than needed. Consider specifying columns.' });
+    warnings.push({
+      message: "SELECT * may return more data than needed. Consider specifying columns.",
+    });
   }
 
   if (!/\bLIMIT\b/i.test(trimmed) && /\bSELECT\b/i.test(trimmed)) {
-    warnings.push({ message: 'No LIMIT clause. Large result sets may use significant memory.' });
+    warnings.push({ message: "No LIMIT clause. Large result sets may use significant memory." });
   }
 
   return { valid: errors.length === 0, errors, warnings };

@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { createFileRoute } from '@tanstack/react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -11,7 +11,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -19,34 +19,34 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Key, Trash2, Plus } from 'lucide-react';
-import { toast } from 'sonner';
-import type { ResourceType, PermissionLevel } from '@/types/database';
+} from "@/components/ui/select";
+import { Key, Trash2, Plus } from "lucide-react";
+import { toast } from "sonner";
+import type { ResourceType, PermissionLevel } from "@/types/database";
 
 const RESOURCE_TYPES: { value: ResourceType; label: string }[] = [
-  { value: 'dashboard', label: 'Dashboard' },
-  { value: 'chart', label: 'Chart' },
-  { value: 'report', label: 'Report' },
-  { value: 'query', label: 'Query' },
-  { value: 'data_source', label: 'Data Source' },
-  { value: 'filter', label: 'Filter' },
-  { value: 'job', label: 'Job' },
+  { value: "dashboard", label: "Dashboard" },
+  { value: "chart", label: "Chart" },
+  { value: "report", label: "Report" },
+  { value: "query", label: "Query" },
+  { value: "data_source", label: "Data Source" },
+  { value: "filter", label: "Filter" },
+  { value: "job", label: "Job" },
 ];
 
 const PERMISSION_LEVELS: { value: PermissionLevel; label: string; description: string }[] = [
-  { value: 'view', label: 'View', description: 'Can only view the resource' },
-  { value: 'execute', label: 'Execute', description: 'Can execute/run the resource' },
-  { value: 'edit', label: 'Edit', description: 'Can modify the resource' },
-  { value: 'admin', label: 'Admin', description: 'Full control including delete' },
+  { value: "view", label: "View", description: "Can only view the resource" },
+  { value: "execute", label: "Execute", description: "Can execute/run the resource" },
+  { value: "edit", label: "Edit", description: "Can modify the resource" },
+  { value: "admin", label: "Admin", description: "Full control including delete" },
 ];
 
 interface Permission {
@@ -70,23 +70,23 @@ interface Resource {
   name: string;
 }
 
-export const Route = createFileRoute('/_authed/admin/permissions/')({
+export const Route = createFileRoute("/_authed/admin/permissions/")({
   component: PermissionsManagementPage,
-})
+});
 
 function PermissionsManagementPage() {
   const queryClient = useQueryClient();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [selectedResourceType, setSelectedResourceType] = useState<ResourceType>('dashboard');
-  const [selectedResourceId, setSelectedResourceId] = useState<string>('');
-  const [selectedRoleId, setSelectedRoleId] = useState<string>('');
-  const [selectedPermissionLevel, setSelectedPermissionLevel] = useState<PermissionLevel>('view');
+  const [selectedResourceType, setSelectedResourceType] = useState<ResourceType>("dashboard");
+  const [selectedResourceId, setSelectedResourceId] = useState<string>("");
+  const [selectedRoleId, setSelectedRoleId] = useState<string>("");
+  const [selectedPermissionLevel, setSelectedPermissionLevel] = useState<PermissionLevel>("view");
 
   // Fetch permissions
   const { data: permissions, isLoading: isLoadingPermissions } = useQuery<Permission[]>({
-    queryKey: ['admin-permissions'],
+    queryKey: ["admin-permissions"],
     queryFn: async () => {
-      const res = await fetch('/api/admin/permissions');
+      const res = await fetch("/api/admin/permissions");
       const data = await res.json();
       return data.data || [];
     },
@@ -94,9 +94,9 @@ function PermissionsManagementPage() {
 
   // Fetch roles
   const { data: roles } = useQuery<Role[]>({
-    queryKey: ['roles'],
+    queryKey: ["roles"],
     queryFn: async () => {
-      const res = await fetch('/api/admin/roles');
+      const res = await fetch("/api/admin/roles");
       const data = await res.json();
       return data.data || [];
     },
@@ -104,23 +104,24 @@ function PermissionsManagementPage() {
 
   // Fetch resources based on type
   const { data: resources = [], isLoading: isLoadingResources } = useQuery<Resource[]>({
-    queryKey: ['resources', selectedResourceType],
+    queryKey: ["resources", selectedResourceType],
     queryFn: async () => {
-      const endpoint = selectedResourceType === 'data_source'
-        ? '/api/data-sources'
-        : selectedResourceType === 'query'
-        ? '/api/queries'
-        : selectedResourceType === 'dashboard'
-        ? '/api/dashboards'
-        : selectedResourceType === 'chart'
-        ? '/api/charts'
-        : selectedResourceType === 'report'
-        ? '/api/reports'
-        : selectedResourceType === 'filter'
-        ? '/api/filters'
-        : selectedResourceType === 'job'
-        ? '/api/jobs'
-        : null;
+      const endpoint =
+        selectedResourceType === "data_source"
+          ? "/api/data-sources"
+          : selectedResourceType === "query"
+            ? "/api/queries"
+            : selectedResourceType === "dashboard"
+              ? "/api/dashboards"
+              : selectedResourceType === "chart"
+                ? "/api/charts"
+                : selectedResourceType === "report"
+                  ? "/api/reports"
+                  : selectedResourceType === "filter"
+                    ? "/api/filters"
+                    : selectedResourceType === "job"
+                      ? "/api/jobs"
+                      : null;
 
       if (!endpoint) return [];
 
@@ -134,7 +135,7 @@ function PermissionsManagementPage() {
         const items = data?.data?.items || data?.data || data?.items || data;
         return Array.isArray(items) ? items : [];
       } catch (error) {
-        console.error('Failed to fetch resources:', error);
+        console.error("Failed to fetch resources:", error);
         return [];
       }
     },
@@ -144,9 +145,9 @@ function PermissionsManagementPage() {
   // Create permission mutation
   const createMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch('/api/admin/permissions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/admin/permissions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           resourceType: selectedResourceType,
           resourceId: selectedResourceId,
@@ -156,13 +157,13 @@ function PermissionsManagementPage() {
       });
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(error.error?.message || 'Failed to create permission');
+        throw new Error(error.error?.message || "Failed to create permission");
       }
       return res.json();
     },
     onSuccess: () => {
-      toast.success('Permission created successfully');
-      queryClient.invalidateQueries({ queryKey: ['admin-permissions'] });
+      toast.success("Permission created successfully");
+      queryClient.invalidateQueries({ queryKey: ["admin-permissions"] });
       setCreateDialogOpen(false);
       resetForm();
     },
@@ -174,20 +175,20 @@ function PermissionsManagementPage() {
   // Delete permission mutation
   const deleteMutation = useMutation({
     mutationFn: async (permissionId: string) => {
-      const res = await fetch('/api/admin/permissions', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/admin/permissions", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: permissionId }),
       });
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(error.error?.message || 'Failed to delete permission');
+        throw new Error(error.error?.message || "Failed to delete permission");
       }
       return res.json();
     },
     onSuccess: () => {
-      toast.success('Permission deleted successfully');
-      queryClient.invalidateQueries({ queryKey: ['admin-permissions'] });
+      toast.success("Permission deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["admin-permissions"] });
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -195,10 +196,10 @@ function PermissionsManagementPage() {
   });
 
   const resetForm = () => {
-    setSelectedResourceType('dashboard');
-    setSelectedResourceId('');
-    setSelectedRoleId('');
-    setSelectedPermissionLevel('view');
+    setSelectedResourceType("dashboard");
+    setSelectedResourceId("");
+    setSelectedRoleId("");
+    setSelectedPermissionLevel("view");
   };
 
   const getResourceName = (type: ResourceType, id: string) => {
@@ -209,16 +210,16 @@ function PermissionsManagementPage() {
 
   const getPermissionBadgeColor = (level: PermissionLevel) => {
     switch (level) {
-      case 'view':
-        return 'secondary';
-      case 'execute':
-        return 'outline';
-      case 'edit':
-        return 'default';
-      case 'admin':
-        return 'destructive';
+      case "view":
+        return "secondary";
+      case "execute":
+        return "outline";
+      case "edit":
+        return "default";
+      case "admin":
+        return "destructive";
       default:
-        return 'outline';
+        return "outline";
     }
   };
 
@@ -227,9 +228,7 @@ function PermissionsManagementPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Permission Management</h1>
-          <p className="text-muted-foreground">
-            Manage resource-level permissions for roles
-          </p>
+          <p className="text-muted-foreground">Manage resource-level permissions for roles</p>
         </div>
         <Button onClick={() => setCreateDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
@@ -267,7 +266,7 @@ function PermissionsManagementPage() {
                       <Badge variant="outline">{permission.role_name}</Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {permission.resource_type.replace(/_/g, ' ')}
+                      {permission.resource_type.replace(/_/g, " ")}
                     </TableCell>
                     <TableCell>
                       {(() => {
@@ -292,7 +291,7 @@ function PermissionsManagementPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => {
-                          if (confirm('Are you sure you want to delete this permission?')) {
+                          if (confirm("Are you sure you want to delete this permission?")) {
                             deleteMutation.mutate(permission.id);
                           }
                         }}
@@ -314,9 +313,7 @@ function PermissionsManagementPage() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Assign Permission</DialogTitle>
-            <DialogDescription>
-              Grant a role access to a specific resource
-            </DialogDescription>
+            <DialogDescription>Grant a role access to a specific resource</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -346,16 +343,17 @@ function PermissionsManagementPage() {
                 disabled={isLoadingResources || !Array.isArray(resources) || resources.length === 0}
               >
                 <SelectTrigger id="resource">
-                  <SelectValue placeholder={
-                    isLoadingResources ? 'Loading resources...' : 'Select resource'
-                  } />
+                  <SelectValue
+                    placeholder={isLoadingResources ? "Loading resources..." : "Select resource"}
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  {Array.isArray(resources) && resources.map((resource) => (
-                    <SelectItem key={resource.id} value={resource.id}>
-                      {resource.name}
-                    </SelectItem>
-                  ))}
+                  {Array.isArray(resources) &&
+                    resources.map((resource) => (
+                      <SelectItem key={resource.id} value={resource.id}>
+                        {resource.name}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
               {!isLoadingResources && Array.isArray(resources) && resources.length === 0 && (
@@ -409,13 +407,9 @@ function PermissionsManagementPage() {
             </Button>
             <Button
               onClick={() => createMutation.mutate()}
-              disabled={
-                !selectedResourceId ||
-                !selectedRoleId ||
-                createMutation.isPending
-              }
+              disabled={!selectedResourceId || !selectedRoleId || createMutation.isPending}
             >
-              {createMutation.isPending ? 'Assigning...' : 'Assign Permission'}
+              {createMutation.isPending ? "Assigning..." : "Assign Permission"}
             </Button>
           </DialogFooter>
         </DialogContent>

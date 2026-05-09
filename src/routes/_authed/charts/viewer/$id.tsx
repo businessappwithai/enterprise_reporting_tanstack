@@ -1,46 +1,46 @@
-import { useState } from 'react'
-import { createFileRoute, Link, useLocation } from '@tanstack/react-router'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChartRenderer } from '@/components/charts/chart-renderer'
-import { FilterBar } from '@/components/reporting/filter-bar'
-import { ShareDialog } from '@/components/share/ShareDialog'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Breadcrumb } from '@/components/layout/breadcrumb'
-import { RefreshCw, Settings, Download } from 'lucide-react'
-import { toast } from 'sonner'
-import type { ChartDefinition, ChartConfig, DataMapping } from '@/types/database'
+import { useState } from "react";
+import { createFileRoute, Link, useLocation } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ChartRenderer } from "@/components/charts/chart-renderer";
+import { FilterBar } from "@/components/reporting/filter-bar";
+import { ShareDialog } from "@/components/share/ShareDialog";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Breadcrumb } from "@/components/layout/breadcrumb";
+import { RefreshCw, Settings, Download } from "lucide-react";
+import { toast } from "sonner";
+import type { ChartDefinition, ChartConfig, DataMapping } from "@/types/database";
 
-export const Route = createFileRoute('/_authed/charts/viewer/$id')({
+export const Route = createFileRoute("/_authed/charts/viewer/$id")({
   component: ChartViewerPage,
-})
+});
 
 function ChartViewerPage() {
-  const { id: chartId } = Route.useParams()
-  const location = useLocation()
-  const queryClient = useQueryClient()
-  const [shareDialogOpen, setShareDialogOpen] = useState(false)
+  const { id: chartId } = Route.useParams();
+  const location = useLocation();
+  const queryClient = useQueryClient();
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
-  const searchParams = new URLSearchParams(location.search)
+  const searchParams = new URLSearchParams(location.search);
 
   const { data: chart, isLoading: isLoadingChart } = useQuery<ChartDefinition>({
-    queryKey: ['chart', chartId],
+    queryKey: ["chart", chartId],
     queryFn: async () => {
-      const res = await fetch(`/api/charts/${chartId}`)
-      const data = await res.json()
-      return data.data
+      const res = await fetch(`/api/charts/${chartId}`);
+      const data = await res.json();
+      return data.data;
     },
-  })
+  });
 
   const { data: chartFilters } = useQuery({
-    queryKey: ['chart-filters', chartId],
+    queryKey: ["chart-filters", chartId],
     queryFn: async () => {
-      const res = await fetch(`/api/charts/${chartId}/filters`)
-      if (!res.ok) return []
-      return res.json()
+      const res = await fetch(`/api/charts/${chartId}/filters`);
+      if (!res.ok) return [];
+      return res.json();
     },
     enabled: !!chartId,
-  })
+  });
 
   const {
     data: chartData,
@@ -48,35 +48,35 @@ function ChartViewerPage() {
     refetch,
     error: dataError,
   } = useQuery({
-    queryKey: ['chart-data', chartId, location.search],
+    queryKey: ["chart-data", chartId, location.search],
     queryFn: async () => {
-      const url = new URL(`/api/charts/${chartId}/data`, window.location.origin)
+      const url = new URL(`/api/charts/${chartId}/data`, window.location.origin);
       for (const [key, value] of searchParams.entries()) {
-        if (key.startsWith('filter_')) {
-          url.searchParams.set(key, value)
+        if (key.startsWith("filter_")) {
+          url.searchParams.set(key, value);
         }
       }
-      const res = await fetch(url.toString())
+      const res = await fetch(url.toString());
       if (!res.ok) {
-        throw new Error(`Failed to fetch chart data: ${res.statusText}`)
+        throw new Error(`Failed to fetch chart data: ${res.statusText}`);
       }
-      const data = await res.json()
-      return data.data
+      const data = await res.json();
+      return data.data;
     },
     enabled: !!chartId,
     refetchInterval: chart?.refresh_interval ? chart.refresh_interval * 1000 : undefined,
-  })
+  });
 
-  const handleExport = async (_format: 'png' | 'svg') => {
-    toast.info('Export feature coming soon')
-  }
+  const handleExport = async (_format: "png" | "svg") => {
+    toast.info("Export feature coming soon");
+  };
 
   if (isLoadingChart) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-muted-foreground">Loading chart...</div>
       </div>
-    )
+    );
   }
 
   if (!chart) {
@@ -84,54 +84,50 @@ function ChartViewerPage() {
       <div className="flex items-center justify-center h-64">
         <div className="text-muted-foreground">Chart not found</div>
       </div>
-    )
+    );
   }
 
-  let chartConfig: ChartConfig | null = null
-  let dataMapping: DataMapping | null = null
+  let chartConfig: ChartConfig | null = null;
+  let dataMapping: DataMapping | null = null;
 
   try {
-    let configStr = chart.chart_config
-    if (typeof configStr === 'object' && configStr !== null) {
-      chartConfig = configStr
-    } else if (typeof configStr === 'string') {
+    let configStr = chart.chart_config;
+    if (typeof configStr === "object" && configStr !== null) {
+      chartConfig = configStr;
+    } else if (typeof configStr === "string") {
       if (configStr.startsWith('"') && configStr.includes('\\"')) {
-        configStr = JSON.parse(configStr)
+        configStr = JSON.parse(configStr);
       }
-      chartConfig = JSON.parse(configStr)
+      chartConfig = JSON.parse(configStr);
     }
   } catch (e) {
-    chartConfig = null
+    chartConfig = null;
   }
 
   try {
-    let mappingStr = chart.data_mapping
-    if (typeof mappingStr === 'object' && mappingStr !== null) {
-      dataMapping = mappingStr
-    } else if (typeof mappingStr === 'string') {
+    let mappingStr = chart.data_mapping;
+    if (typeof mappingStr === "object" && mappingStr !== null) {
+      dataMapping = mappingStr;
+    } else if (typeof mappingStr === "string") {
       if (mappingStr.startsWith('"') && mappingStr.includes('\\"')) {
-        mappingStr = JSON.parse(mappingStr)
+        mappingStr = JSON.parse(mappingStr);
       }
-      dataMapping = JSON.parse(mappingStr)
+      dataMapping = JSON.parse(mappingStr);
     }
   } catch (e) {
-    dataMapping = null
+    dataMapping = null;
   }
 
-  const isStacked = chartConfig?.stacked === true
+  const isStacked = chartConfig?.stacked === true;
 
   return (
     <div className="space-y-6">
-      <Breadcrumb
-        items={[{ label: 'Charts', href: '/charts' }, { label: chart.name }]}
-      />
+      <Breadcrumb items={[{ label: "Charts", href: "/charts" }, { label: chart.name }]} />
 
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">{chart.name}</h1>
-          {chart.description && (
-            <p className="text-muted-foreground">{chart.description}</p>
-          )}
+          {chart.description && <p className="text-muted-foreground">{chart.description}</p>}
         </div>
 
         <div className="flex items-center gap-2">
@@ -142,7 +138,7 @@ function ChartViewerPage() {
           <Button variant="outline" size="sm" onClick={() => setShareDialogOpen(true)}>
             Share
           </Button>
-          <Button variant="outline" size="sm" onClick={() => handleExport('png')}>
+          <Button variant="outline" size="sm" onClick={() => handleExport("png")}>
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
@@ -183,20 +179,18 @@ function ChartViewerPage() {
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground mb-3 pb-2 border-b">
                 <span>📊 {chartData.rows?.length || 0} rows</span>
                 <span>
-                  X-Axis:{' '}
+                  X-Axis:{" "}
                   <strong>
-                    {dataMapping?.xAxis?.label || dataMapping?.xAxis?.field || 'none'}
+                    {dataMapping?.xAxis?.label || dataMapping?.xAxis?.field || "none"}
                   </strong>
                 </span>
                 <span>
                   Y-Axis: <strong>{dataMapping?.yAxis?.length || 0}</strong> series
                 </span>
                 <span>
-                  Stacked:{' '}
-                  <strong
-                    className={isStacked ? 'text-primary' : 'text-muted-foreground'}
-                  >
-                    {isStacked ? '✓ Yes' : '✗ No'}
+                  Stacked:{" "}
+                  <strong className={isStacked ? "text-primary" : "text-muted-foreground"}>
+                    {isStacked ? "✓ Yes" : "✗ No"}
                   </strong>
                 </span>
                 <span>
@@ -223,11 +217,11 @@ function ChartViewerPage() {
         isPublic={chart?.is_public || false}
         onTogglePublic={(newState) => {
           if (chart) {
-            chart.is_public = newState
-            queryClient.invalidateQueries({ queryKey: ['chart', chartId] })
+            chart.is_public = newState;
+            queryClient.invalidateQueries({ queryKey: ["chart", chartId] });
           }
         }}
       />
     </div>
-  )
+  );
 }

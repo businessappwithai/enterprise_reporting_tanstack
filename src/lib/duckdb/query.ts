@@ -2,16 +2,16 @@
  * DuckDB query execution utilities.
  */
 
-import type { AsyncDuckDBConnection } from './types';
-import type { DuckDBQueryResult } from './types';
-import { createConnection } from './instance';
+import type { AsyncDuckDBConnection } from "./types";
+import type { DuckDBQueryResult } from "./types";
+import { createConnection } from "./instance";
 
 /**
  * Execute a SQL query against DuckDB-Wasm and return typed results.
  */
 export async function executeQuery(
   sql: string,
-  conn?: AsyncDuckDBConnection,
+  conn?: AsyncDuckDBConnection
 ): Promise<DuckDBQueryResult> {
   const ownConnection = !conn;
   const connection = conn ?? (await createConnection());
@@ -54,10 +54,7 @@ export async function executeQuery(
 /**
  * Execute a SQL query and return the raw Apache Arrow Table.
  */
-export async function executeQueryArrow(
-  sql: string,
-  conn?: AsyncDuckDBConnection,
-) {
+export async function executeQueryArrow(sql: string, conn?: AsyncDuckDBConnection) {
   const ownConnection = !conn;
   const connection = conn ?? (await createConnection());
 
@@ -76,14 +73,14 @@ export async function executeQueryArrow(
 export async function loadParquetFromUrl(
   tableName: string,
   url: string,
-  conn?: AsyncDuckDBConnection,
+  conn?: AsyncDuckDBConnection
 ): Promise<void> {
   const ownConnection = !conn;
   const connection = conn ?? (await createConnection());
 
   try {
     await connection.query(
-      `CREATE OR REPLACE TABLE "${tableName}" AS SELECT * FROM read_parquet('${url}')`,
+      `CREATE OR REPLACE TABLE "${tableName}" AS SELECT * FROM read_parquet('${url}')`
     );
   } finally {
     if (ownConnection) {
@@ -98,8 +95,8 @@ export async function loadParquetFromUrl(
 export async function loadParquetFromBuffer(
   tableName: string,
   buffer: Uint8Array,
-  db: import('@duckdb/duckdb-wasm').AsyncDuckDB,
-  conn?: AsyncDuckDBConnection,
+  db: import("@duckdb/duckdb-wasm").AsyncDuckDB,
+  conn?: AsyncDuckDBConnection
 ): Promise<void> {
   const fileName = `${tableName}.parquet`;
   await db.registerFileBuffer(fileName, buffer);
@@ -109,7 +106,7 @@ export async function loadParquetFromBuffer(
 
   try {
     await connection.query(
-      `CREATE OR REPLACE TABLE "${tableName}" AS SELECT * FROM read_parquet('${fileName}')`,
+      `CREATE OR REPLACE TABLE "${tableName}" AS SELECT * FROM read_parquet('${fileName}')`
     );
   } finally {
     if (ownConnection) {
@@ -121,10 +118,7 @@ export async function loadParquetFromBuffer(
 /**
  * Drop a table from DuckDB.
  */
-export async function dropTable(
-  tableName: string,
-  conn?: AsyncDuckDBConnection,
-): Promise<void> {
+export async function dropTable(tableName: string, conn?: AsyncDuckDBConnection): Promise<void> {
   const ownConnection = !conn;
   const connection = conn ?? (await createConnection());
 

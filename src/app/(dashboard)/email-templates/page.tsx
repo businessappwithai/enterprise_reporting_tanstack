@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -12,24 +12,24 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { toast } from 'sonner';
-import { Plus, Edit, Trash, Mail, Eye, FileText, Database, MoreHorizontal } from 'lucide-react';
-import { TemplateEditor } from '@/components/email/template-editor';
-import type { EmailTemplate } from '@/lib/email/email-service';
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
+import { Plus, Edit, Trash, Mail, Eye, FileText, Database, MoreHorizontal } from "lucide-react";
+import { TemplateEditor } from "@/components/email/template-editor";
+import type { EmailTemplate } from "@/lib/email/email-service";
 
 export default function EmailTemplatesPage() {
   const queryClient = useQueryClient();
@@ -37,9 +37,9 @@ export default function EmailTemplatesPage() {
   const [editingTemplate, setEditingTemplate] = useState<EmailTemplate | null>(null);
 
   const { data: templates, isLoading } = useQuery<EmailTemplate[]>({
-    queryKey: ['email-templates'],
+    queryKey: ["email-templates"],
     queryFn: async () => {
-      const res = await fetch('/api/email-templates');
+      const res = await fetch("/api/email-templates");
       const data = await res.json();
       return data.data?.items || [];
     },
@@ -48,16 +48,16 @@ export default function EmailTemplatesPage() {
   const deleteMutation = useMutation({
     mutationFn: async (templateId: string) => {
       const res = await fetch(`/api/email-templates/${templateId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
       return res.json();
     },
     onSuccess: (data) => {
       if (data.success) {
-        toast.success('Template deleted');
-        queryClient.invalidateQueries({ queryKey: ['email-templates'] });
+        toast.success("Template deleted");
+        queryClient.invalidateQueries({ queryKey: ["email-templates"] });
       } else {
-        toast.error(data.error?.message || 'Failed to delete template');
+        toast.error(data.error?.message || "Failed to delete template");
       }
     },
   });
@@ -73,7 +73,7 @@ export default function EmailTemplatesPage() {
   };
 
   const handleDelete = (templateId: string) => {
-    if (confirm('Are you sure you want to delete this template?')) {
+    if (confirm("Are you sure you want to delete this template?")) {
       deleteMutation.mutate(templateId);
     }
   };
@@ -116,9 +116,7 @@ export default function EmailTemplatesPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Loading templates...
-            </div>
+            <div className="text-center py-8 text-muted-foreground">Loading templates...</div>
           ) : !templates || templates.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -163,9 +161,7 @@ export default function EmailTemplatesPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => handleEdit(template)}
-                          >
+                          <DropdownMenuItem onClick={() => handleEdit(template)}>
                             <Edit className="h-4 w-4 mr-2" />
                             Edit
                           </DropdownMenuItem>
@@ -197,21 +193,22 @@ export default function EmailTemplatesPage() {
       </Card>
 
       {/* Template Editor Dialog */}
-      <Dialog open={editorOpen} onOpenChange={(open) => {
-        if (!open) {
-          setEditingTemplate(null);
-        }
-        setEditorOpen(open);
-      }}>
+      <Dialog
+        open={editorOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingTemplate(null);
+          }
+          setEditorOpen(open);
+        }}
+      >
         <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              {editingTemplate ? 'Edit Template' : 'Create Email Template'}
-            </DialogTitle>
+            <DialogTitle>{editingTemplate ? "Edit Template" : "Create Email Template"}</DialogTitle>
             <DialogDescription>
               {editingTemplate
-                ? 'Modify your email template and placeholder mappings'
-                : 'Create a new email template with query-based placeholders'}
+                ? "Modify your email template and placeholder mappings"
+                : "Create a new email template with query-based placeholders"}
             </DialogDescription>
           </DialogHeader>
 
@@ -238,7 +235,8 @@ export default function EmailTemplatesPage() {
                 <p className="text-sm">Create Template</p>
               </div>
               <p className="text-xs text-muted-foreground">
-                Add placeholders like <code className="bg-muted px-1 rounded">{{customer_name}}</code> to your email
+                Add placeholders like{" "}
+                <code className="bg-muted px-1 rounded">{{ customer_name }}</code> to your email
               </p>
             </div>
 
@@ -262,7 +260,8 @@ export default function EmailTemplatesPage() {
                 <p className="text-sm">Map Columns</p>
               </div>
               <p className="text-xs text-muted-foreground">
-                Map query columns to template placeholders (e.g., customer_name column → {{customer_name}})
+                Map query columns to template placeholders (e.g., customer_name column →{" "}
+                {{ customer_name }})
               </p>
             </div>
 
@@ -285,10 +284,19 @@ export default function EmailTemplatesPage() {
               For a billing report to 5 customers:
             </p>
             <ol className="text-xs space-y-1 list-decimal list-inside text-muted-foreground">
-              <li><strong>Query:</strong> Returns 5 rows with customer data</li>
-              <li><strong>Template:</strong> Has placeholders like <code>{{customer_name}}</code>, <code>{{amount}}</code></li>
-              <li><strong>Job:</strong> Scheduled to run monthly</li>
-              <li><strong>Result:</strong> 5 personalized emails sent, each with customer&apos;s data</li>
+              <li>
+                <strong>Query:</strong> Returns 5 rows with customer data
+              </li>
+              <li>
+                <strong>Template:</strong> Has placeholders like <code>{{ customer_name }}</code>,{" "}
+                <code>{{ amount }}</code>
+              </li>
+              <li>
+                <strong>Job:</strong> Scheduled to run monthly
+              </li>
+              <li>
+                <strong>Result:</strong> 5 personalized emails sent, each with customer&apos;s data
+              </li>
             </ol>
           </div>
         </CardContent>

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Hook for loading and managing datasets in DuckDB-Wasm.
@@ -6,10 +6,10 @@
  * caching in IndexedDB, and memory tracking.
  */
 
-import { useCallback, useState } from 'react';
-import { useDuckDB } from '@/components/duckdb/DuckDBProvider';
-import { fetchParquetBuffer } from '@/lib/arrow/parquet';
-import type { DatasetInfo } from '@/types/wasm';
+import { useCallback, useState } from "react";
+import { useDuckDB } from "@/components/duckdb/DuckDBProvider";
+import { fetchParquetBuffer } from "@/lib/arrow/parquet";
+import type { DatasetInfo } from "@/types/wasm";
 
 interface UseDatasetReturn {
   datasets: DatasetInfo[];
@@ -32,13 +32,8 @@ export function useDataset(): UseDatasetReturn {
   const [error, setError] = useState<Error | null>(null);
 
   const loadDataset = useCallback(
-    async (params: {
-      id: string;
-      name: string;
-      dataSourceId: string;
-      url: string;
-    }) => {
-      if (status !== 'ready') throw new Error('DuckDB not ready');
+    async (params: { id: string; name: string; dataSourceId: string; url: string }) => {
+      if (status !== "ready") throw new Error("DuckDB not ready");
 
       setIsLoading(true);
       setError(null);
@@ -54,7 +49,7 @@ export function useDataset(): UseDatasetReturn {
         fileSize: 0,
         memorySize: 0,
         schema: [],
-        cacheStatus: 'not-cached',
+        cacheStatus: "not-cached",
         isLoading: true,
         loadProgress: 0,
         loadedAt: new Date(),
@@ -67,10 +62,8 @@ export function useDataset(): UseDatasetReturn {
         const buffer = await fetchParquetBuffer(params.url, (loaded, total) => {
           setDatasets((prev) =>
             prev.map((d) =>
-              d.id === params.id
-                ? { ...d, loadProgress: total > 0 ? loaded / total : 0 }
-                : d,
-            ),
+              d.id === params.id ? { ...d, loadProgress: total > 0 ? loaded / total : 0 } : d
+            )
           );
         });
 
@@ -89,17 +82,17 @@ export function useDataset(): UseDatasetReturn {
                   fileSize: buffer.byteLength,
                   memorySize: buffer.byteLength,
                   schema: schema.columns,
-                  cacheStatus: 'cached' as const,
+                  cacheStatus: "cached" as const,
                   isLoading: false,
                   loadProgress: 1,
                 }
-              : d,
-          ),
+              : d
+          )
         );
 
         // Try to cache in IndexedDB
         try {
-          const { set } = await import('idb-keyval');
+          const { set } = await import("idb-keyval");
           await set(`parquet_${params.id}`, buffer);
         } catch {
           // IndexedDB caching is best-effort
@@ -112,7 +105,7 @@ export function useDataset(): UseDatasetReturn {
         setIsLoading(false);
       }
     },
-    [status, loadParquetBuffer, getTableSchema],
+    [status, loadParquetBuffer, getTableSchema]
   );
 
   const unloadDataset = useCallback(
@@ -123,7 +116,7 @@ export function useDataset(): UseDatasetReturn {
         setDatasets((prev) => prev.filter((d) => d.id !== datasetId));
       }
     },
-    [datasets, dropTable],
+    [datasets, dropTable]
   );
 
   const refreshDataset = useCallback(
@@ -138,7 +131,7 @@ export function useDataset(): UseDatasetReturn {
         url,
       });
     },
-    [datasets, unloadDataset, loadDataset],
+    [datasets, unloadDataset, loadDataset]
   );
 
   return { datasets, isLoading, error, loadDataset, unloadDataset, refreshDataset };

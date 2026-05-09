@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
 /**
  * DuckDB-aware filter bar.
  * Allows building WHERE clauses that execute against DuckDB-Wasm.
  */
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import type { TableFilterState, ColumnSchema } from '@/types/wasm';
+} from "@/components/ui/select";
+import type { TableFilterState, ColumnSchema } from "@/types/wasm";
 
 interface DuckDBFilterBarProps {
   columns: ColumnSchema[];
@@ -24,34 +24,34 @@ interface DuckDBFilterBarProps {
 }
 
 const OPERATORS = [
-  { value: 'eq', label: '=' },
-  { value: 'ne', label: '!=' },
-  { value: 'gt', label: '>' },
-  { value: 'lt', label: '<' },
-  { value: 'gte', label: '>=' },
-  { value: 'lte', label: '<=' },
-  { value: 'contains', label: 'contains' },
-  { value: 'startsWith', label: 'starts with' },
+  { value: "eq", label: "=" },
+  { value: "ne", label: "!=" },
+  { value: "gt", label: ">" },
+  { value: "lt", label: "<" },
+  { value: "gte", label: ">=" },
+  { value: "lte", label: "<=" },
+  { value: "contains", label: "contains" },
+  { value: "startsWith", label: "starts with" },
 ] as const;
 
 export function DuckDBFilterBar({ columns, onApply, onClear }: DuckDBFilterBarProps) {
   const [filters, setFilters] = useState<TableFilterState[]>([]);
-  const [column, setColumn] = useState<string>('');
-  const [operator, setOperator] = useState<string>('eq');
-  const [value, setValue] = useState<string>('');
+  const [column, setColumn] = useState<string>("");
+  const [operator, setOperator] = useState<string>("eq");
+  const [value, setValue] = useState<string>("");
 
   const addFilter = () => {
     if (!column || !value) return;
     const newFilter: TableFilterState = {
       columnId: column,
-      operator: operator as TableFilterState['operator'],
+      operator: operator as TableFilterState["operator"],
       value,
     };
     const updated = [...filters, newFilter];
     setFilters(updated);
     onApply(updated);
-    setColumn('');
-    setValue('');
+    setColumn("");
+    setValue("");
   };
 
   const removeFilter = (index: number) => {
@@ -99,7 +99,7 @@ export function DuckDBFilterBar({ columns, onApply, onClear }: DuckDBFilterBarPr
           onChange={(e) => setValue(e.target.value)}
           placeholder="Value"
           className="w-[160px]"
-          onKeyDown={(e) => e.key === 'Enter' && addFilter()}
+          onKeyDown={(e) => e.key === "Enter" && addFilter()}
         />
 
         <Button size="sm" onClick={addFilter}>

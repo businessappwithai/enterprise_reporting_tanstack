@@ -3,7 +3,7 @@
  * and streams results for conversion to Parquet/Arrow.
  */
 
-import { getDb } from '@/lib/db/config';
+import { getDb } from "@/lib/db/config";
 
 export interface SourceRow {
   [key: string]: unknown;
@@ -21,14 +21,12 @@ export interface SourceQueryResult {
  */
 export async function executeSourceQuery(
   dataSourceId: string,
-  query: string,
+  query: string
 ): Promise<SourceQueryResult> {
   const db = getDb();
 
   // Resolve the data source connection info
-  const dataSource = await db('data_sources')
-    .where({ id: dataSourceId })
-    .first();
+  const dataSource = await db("data_sources").where({ id: dataSourceId }).first();
 
   if (!dataSource) {
     throw new Error(`Data source not found: ${dataSourceId}`);
@@ -45,7 +43,7 @@ export async function executeSourceQuery(
     resultRows.length > 0
       ? Object.keys(resultRows[0]).map((name) => ({
           name,
-          type: typeof resultRows[0][name] === 'number' ? 'double' : 'varchar',
+          type: typeof resultRows[0][name] === "number" ? "double" : "varchar",
         }))
       : [];
 
@@ -59,15 +57,10 @@ export async function executeSourceQuery(
 /**
  * Estimate the row count for a query (uses COUNT wrapper).
  */
-export async function estimateRowCount(
-  dataSourceId: string,
-  query: string,
-): Promise<number> {
+export async function estimateRowCount(dataSourceId: string, query: string): Promise<number> {
   const db = getDb();
   try {
-    const result = await db.raw(
-      `SELECT COUNT(*) as cnt FROM (${query}) AS _count_sub`,
-    );
+    const result = await db.raw(`SELECT COUNT(*) as cnt FROM (${query}) AS _count_sub`);
     const rows = Array.isArray(result) ? result : [];
     return Number(rows[0]?.cnt ?? 0);
   } catch {

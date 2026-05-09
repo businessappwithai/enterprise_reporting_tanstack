@@ -1,36 +1,30 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth/config';
-import { getDb } from '@/lib/db/config';
-import { logAudit } from '@/lib/security/audit';
-import { filterAccessibleResources, canCreateResource } from '@/lib/permissions/permissions';
-import { v4 as uuidv4 } from 'uuid';
-import type { ChartDefinition } from '@/types/database';
+import { type NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth/config";
+import { getDb } from "@/lib/db/config";
+import { logAudit } from "@/lib/security/audit";
+import { filterAccessibleResources, canCreateResource } from "@/lib/permissions/permissions";
+import { v4 as uuidv4 } from "uuid";
+import type { ChartDefinition } from "@/types/database";
 
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user) {
       return NextResponse.json(
-        { success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } },
+        { success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } },
         { status: 401 }
       );
     }
 
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '0', 10);
-    const pageSize = parseInt(searchParams.get('pageSize') || '20', 10);
+    const page = parseInt(searchParams.get("page") || "0", 10);
+    const pageSize = parseInt(searchParams.get("pageSize") || "20", 10);
 
     const db = getDb();
-    let charts = await db<ChartDefinition>('chart_definitions')
-      .orderBy('created_at', 'desc');
+    let charts = await db<ChartDefinition>("chart_definitions").orderBy("created_at", "desc");
 
     // Filter based on user permissions
-    charts = await filterAccessibleResources(
-      session.user.id,
-      charts,
-      'chart',
-      'view'
-    );
+    charts = await filterAccessibleResources(session.user.id, charts, "chart", "view");
 
     // Apply pagination after filtering
     const paginatedCharts = charts.slice(page * pageSize, (page + 1) * pageSize);
@@ -44,9 +38,9 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching charts:', error);
+    console.error("Error fetching charts:", error);
     return NextResponse.json(
-      { success: false, error: { code: 'SERVER_ERROR', message: 'Failed to fetch charts' } },
+      { success: false, error: { code: "SERVER_ERROR", message: "Failed to fetch charts" } },
       { status: 500 }
     );
   }
@@ -57,26 +51,40 @@ export async function POST(request: NextRequest) {
     const session = await auth();
     if (!session?.user) {
       return NextResponse.json(
-        { success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } },
+        { success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } },
         { status: 401 }
       );
     }
 
     // Check if user can create charts
-    const canCreate = await canCreateResource(session.user.id, 'chart');
+    const canCreate = await canCreateResource(session.user.id, "chart");
     if (!canCreate) {
       return NextResponse.json(
-        { success: false, error: { code: 'FORBIDDEN', message: 'You do not have permission to create charts' } },
+        {
+          success: false,
+          error: { code: "FORBIDDEN", message: "You do not have permission to create charts" },
+        },
         { status: 403 }
       );
     }
 
     const body = await request.json();
-    const { name, description, savedQueryId, chartType, chartConfig, dataMapping, refreshInterval } = body;
+    const {
+      name,
+      description,
+      savedQueryId,
+      chartType,
+      chartConfig,
+      dataMapping,
+      refreshInterval,
+    } = body;
 
     if (!name || !chartType) {
       return NextResponse.json(
-        { success: false, error: { code: 'INVALID_INPUT', message: 'Name and chart type are required' } },
+        {
+          success: false,
+          error: { code: "INVALID_INPUT", message: "Name and chart type are required" },
+        },
         { status: 400 }
       );
     }
@@ -84,33 +92,33 @@ export async function POST(request: NextRequest) {
     const db = getDb();
     const id = uuidv4();
 
-    await db<ChartDefinition>('chart_definitions').insert({
+    await db<ChartDefinition>("chart_definitions").insert({
       id,
       name,
       description,
       saved_query_id: savedQueryId,
       chart_type: chartType,
       chart_config: JSON.stringify(chartConfig || {}),
-      data_mapping: JSON.stringify(dataMapping || { xAxis: { field: '' }, yAxis: [] }),
+      data_mapping: JSON.stringify(dataMapping || { xAxis: { field: "" }, yAxis: [] }),
       refresh_interval: refreshInterval,
       created_by: session.user.id,
     });
 
     await logAudit({
       userId: session.user.id,
-      action: 'create',
-      resourceType: 'chart',
+      action: "create",
+      resourceType: "chart",
       resourceId: id,
       details: { name, chartType },
     });
 
-    const chart = await db<ChartDefinition>('chart_definitions').where('id', id).first();
+    const chart = await db<ChartDefinition>("chart_definitions").where("id", id).first();
 
     return NextResponse.json({ success: true, data: chart });
   } catch (error) {
-    console.error('Error creating chart:', error);
+    console.error("Error creating chart:", error);
     return NextResponse.json(
-      { success: false, error: { code: 'SERVER_ERROR', message: 'Failed to create chart' } },
+      { success: false, error: { code: "SERVER_ERROR", message: "Failed to create chart" } },
       { status: 500 }
     );
   }

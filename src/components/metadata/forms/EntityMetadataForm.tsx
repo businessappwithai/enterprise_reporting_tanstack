@@ -5,17 +5,17 @@
  * Uses TanStack Form with Zod validation.
  */
 
-import { useForm } from '@tanstack/react-form';
-import { z } from 'zod';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
+import { useForm } from "@tanstack/react-form";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 
 const entityMetadataSchema = z.object({
-  description: z.string().max(5000, 'Description must not exceed 5000 characters').optional(),
+  description: z.string().max(5000, "Description must not exceed 5000 characters").optional(),
   is_active: z.boolean(),
   is_hidden: z.boolean(),
 });
@@ -36,7 +36,7 @@ interface EntityMetadataFormProps {
 export function EntityMetadataForm({
   entityId: _entityId,
   entityName,
-  initialDescription = '',
+  initialDescription = "",
   initialIsActive = false,
   initialIsHidden = true,
   onSubmit,
@@ -60,7 +60,8 @@ export function EntityMetadataForm({
       <CardHeader>
         <CardTitle>Entity Metadata: {entityName}</CardTitle>
         <CardDescription>
-          Configure metadata settings for this entity. Only description, active status, and visibility can be modified.
+          Configure metadata settings for this entity. Only description, active status, and
+          visibility can be modified.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -78,7 +79,7 @@ export function EntityMetadataForm({
               onChange: ({ value }) => {
                 const result = z
                   .string()
-                  .max(5000, 'Description must not exceed 5000 characters')
+                  .max(5000, "Description must not exceed 5000 characters")
                   .optional()
                   .safeParse(value);
                 return result.success ? undefined : result.error.issues[0]?.message;
@@ -92,7 +93,7 @@ export function EntityMetadataForm({
                   id={field.name}
                   placeholder="Enter a description for this entity..."
                   className="min-h-[100px] resize-y"
-                  value={field.state.value ?? ''}
+                  value={field.state.value ?? ""}
                   onChange={(e) => field.handleChange(e.target.value)}
                   onBlur={field.handleBlur}
                 />
@@ -118,7 +119,8 @@ export function EntityMetadataForm({
                 <div className="space-y-1 leading-none">
                   <Label htmlFor="is_active">Active</Label>
                   <p className="text-sm text-muted-foreground">
-                    When enabled, this entity will be visible and accessible in the system. Entities are inactive by default.
+                    When enabled, this entity will be visible and accessible in the system. Entities
+                    are inactive by default.
                   </p>
                 </div>
               </div>
@@ -137,7 +139,8 @@ export function EntityMetadataForm({
                 <div className="space-y-1 leading-none">
                   <Label htmlFor="is_hidden">Hidden</Label>
                   <p className="text-sm text-muted-foreground">
-                    When enabled, this entity will be hidden from standard views. Hidden entities are still accessible via direct links or API.
+                    When enabled, this entity will be hidden from standard views. Hidden entities
+                    are still accessible via direct links or API.
                   </p>
                 </div>
               </div>
@@ -147,12 +150,7 @@ export function EntityMetadataForm({
           {/* Form Actions */}
           <div className="flex items-center justify-end gap-3 pt-4 border-t">
             {onCancel && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onCancel}
-                disabled={isLoading}
-              >
+              <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
                 Cancel
               </Button>
             )}

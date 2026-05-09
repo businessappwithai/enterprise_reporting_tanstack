@@ -1,28 +1,26 @@
-import { Job } from 'bullmq';
-import { getDb } from '@/lib/db/config';
-import { getConnection } from '@/lib/db/connection-manager';
-import type { ExportJobData, JobResult } from '../queue';
-import type { SavedQuery, DataSource } from '@/types/database';
-import ExcelJS from 'exceljs';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import fs from 'fs/promises';
-import path from 'path';
+import type { Job } from "bullmq";
+import { getDb } from "@/lib/db/config";
+import { getConnection } from "@/lib/db/connection-manager";
+import type { ExportJobData, JobResult } from "../queue";
+import type { SavedQuery, DataSource } from "@/types/database";
+import ExcelJS from "exceljs";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import fs from "fs/promises";
+import path from "path";
 
-const OUTPUT_DIR = process.env.JOB_OUTPUT_PATH || './job-outputs';
+const OUTPUT_DIR = process.env.JOB_OUTPUT_PATH || "./job-outputs";
 
 export async function processExportJob(job: Job<ExportJobData>): Promise<JobResult> {
   const startTime = Date.now();
-  const { queryId, _userId, format = 'csv', _parameters } = job.data;
+  const { queryId, _userId, format = "csv", _parameters } = job.data;
 
   try {
     await job.updateProgress(10);
 
     // Get the saved query
     const db = getDb();
-    const query = await db<SavedQuery>('saved_queries')
-      .where('id', queryId)
-      .first();
+    const query = await db<SavedQuery>("saved_queries").where("id", queryId).first();
 
     if (!query) {
       throw new Error(`Query not found: ${queryId}`);
@@ -31,12 +29,12 @@ export async function processExportJob(job: Job<ExportJobData>): Promise<JobResu
     await job.updateProgress(30);
 
     // Get the data source
-    const dataSource = await db<DataSource>('data_sources')
-      .where('id', query.data_source_id)
+    const dataSource = await db<DataSource>("data_sources")
+      .where("id", query.data_source_id)
       .first();
 
     if (!dataSource) {
-      throw new Error('Data source not found');
+      throw new Error("Data source not found");
     }
 
     await job.updateProgress(40);
@@ -63,11 +61,11 @@ export async function processExportJob(job: Job<ExportJobData>): Promise<JobResu
 
     // Export based on format
     let rowCount = 0;
-    if (format === 'csv') {
+    if (format === "csv") {
       rowCount = await exportToCsv(rows, outputPath);
-    } else if (format === 'xlsx') {
+    } else if (format === "xlsx") {
       rowCount = await exportToExcel(rows, outputPath);
-    } else if (format === 'pdf') {
+    } else if (format === "pdf") {
       rowCount = await exportToPdf(rows, outputPath);
     } else {
       throw new Error(`Unsupported format: ${format}`);
@@ -85,10 +83,10 @@ export async function processExportJob(job: Job<ExportJobData>): Promise<JobResu
     };
   } catch (error) {
     const duration = Date.now() - startTime;
-    console.error('Export job failed:', error);
+    console.error("Export job failed:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : "Unknown error",
       duration,
     };
   }
@@ -99,31 +97,31 @@ async function exportToCsv(rows: Record<string, unknown>[], outputPath: string):
 
   const headers = Object.keys(rows[0]);
   const csvContent = [
-    headers.join(','),
+    headers.join(","),
     ...rows.map((row) =>
       headers
         .map((header) => {
           const value = row[header];
           // Escape values containing commas or quotes
           if (
-            typeof value === 'string' &&
-            (value.includes(',') || value.includes('"') || value.includes('\n'))
+            typeof value === "string" &&
+            (value.includes(",") || value.includes('"') || value.includes("\n"))
           ) {
             return `"${value.replace(/"/g, '""')}"`;
           }
-          return value ?? '';
+          return value ?? "";
         })
-        .join(',')
-    )
-  ].join('\n');
+        .join(",")
+    ),
+  ].join("\n");
 
-  await fs.writeFile(outputPath, csvContent, 'utf8');
+  await fs.writeFile(outputPath, csvContent, "utf8");
   return rows.length;
 }
 
 async function exportToExcel(rows: Record<string, unknown>[], outputPath: string): Promise<number> {
   const workbook = new ExcelJS.Workbook();
-  const worksheet = workbook.addWorksheet('Data');
+  const worksheet = workbook.addWorksheet("Data");
 
   if (rows.length === 0) {
     await workbook.xlsx.writeFile(outputPath);
@@ -138,9 +136,9 @@ async function exportToExcel(rows: Record<string, unknown>[], outputPath: string
   const headerRow = worksheet.getRow(1);
   headerRow.font = { bold: true };
   headerRow.fill = {
-    type: 'pattern',
-    pattern: 'solid',
-    fgColor: { argb: 'FFE0E0E0' },
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FFE0E0E0" },
   };
 
   // Add data

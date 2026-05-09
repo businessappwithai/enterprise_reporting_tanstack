@@ -16,7 +16,7 @@ export type {
   JobOptions,
   ScheduledJobOptions,
   QueueConfig,
-} from './types';
+} from "./types";
 
 // Queue Manager - Main API
 export {
@@ -36,14 +36,20 @@ export {
   isQueuePaused,
   retryJob,
   removeJob,
-} from './queue-manager';
+} from "./queue-manager";
 
 // Bull Board Integration
 export {
   getBullBoardBasePath,
   isBullBoardAuthEnabled,
   getBullBoardCredentials,
-} from './bull-board';
+} from "./bull-board";
 
 // Config
-export { QUEUE_NAME, DEFAULT_QUEUE_CONFIG, WORKER_CONCURRENCY, RATE_LIMITER, BULL_BOARD_CONFIG } from './config';
+export {
+  QUEUE_NAME,
+  DEFAULT_QUEUE_CONFIG,
+  WORKER_CONCURRENCY,
+  RATE_LIMITER,
+  BULL_BOARD_CONFIG,
+} from "./config";

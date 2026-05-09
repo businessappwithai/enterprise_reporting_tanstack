@@ -3,35 +3,30 @@
  * DELETE /api/datasets/[id] — Delete a dataset.
  */
 
-import { NextResponse } from 'next/server';
-import { getDb } from '@/lib/db/config';
-import { deleteExportFile } from '@/lib/export/storage';
+import { NextResponse } from "next/server";
+import { getDb } from "@/lib/db/config";
+import { deleteExportFile } from "@/lib/export/storage";
 
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const db = getDb();
 
-    const dataset = await db('dataset_cache')
-      .leftJoin('data_sources', 'dataset_cache.data_source_id', 'data_sources.id')
-      .select('dataset_cache.*', 'data_sources.name as data_source_name')
-      .where('dataset_cache.id', id)
+    const dataset = await db("dataset_cache")
+      .leftJoin("data_sources", "dataset_cache.data_source_id", "data_sources.id")
+      .select("dataset_cache.*", "data_sources.name as data_source_name")
+      .where("dataset_cache.id", id)
       .first();
 
     if (!dataset) {
       return NextResponse.json(
-        { success: false, error: { code: 'RES_001', message: 'Dataset not found' } },
-        { status: 404 },
+        { success: false, error: { code: "RES_001", message: "Dataset not found" } },
+        { status: 404 }
       );
     }
 
     // Update last accessed timestamp
-    await db('dataset_cache')
-      .where({ id })
-      .update({ last_accessed_at: new Date().toISOString() });
+    await db("dataset_cache").where({ id }).update({ last_accessed_at: new Date().toISOString() });
 
     return NextResponse.json({
       success: true,
@@ -49,7 +44,7 @@ export async function GET(
           dataset.file_size > 0
             ? dataset.file_size / (dataset.compressed_size || dataset.file_size)
             : 1,
-        columns: JSON.parse(dataset.schema || '[]'),
+        columns: JSON.parse(dataset.schema || "[]"),
         createdAt: dataset.created_at,
         updatedAt: dataset.updated_at,
         lastAccessedAt: dataset.last_accessed_at,
@@ -59,35 +54,32 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Failed to get dataset:', error);
+    console.error("Failed to get dataset:", error);
     return NextResponse.json(
-      { success: false, error: { code: 'SRV_001', message: 'Failed to get dataset' } },
-      { status: 500 },
+      { success: false, error: { code: "SRV_001", message: "Failed to get dataset" } },
+      { status: 500 }
     );
   }
 }
 
-export async function DELETE(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const db = getDb();
 
-    const dataset = await db('dataset_cache').where({ id }).first();
+    const dataset = await db("dataset_cache").where({ id }).first();
     if (!dataset) {
       return NextResponse.json(
-        { success: false, error: { code: 'RES_001', message: 'Dataset not found' } },
-        { status: 404 },
+        { success: false, error: { code: "RES_001", message: "Dataset not found" } },
+        { status: 404 }
       );
     }
 
     // Delete refresh jobs
-    await db('dataset_refresh_jobs').where({ dataset_id: id }).del();
+    await db("dataset_refresh_jobs").where({ dataset_id: id }).del();
 
     // Delete the database record
-    await db('dataset_cache').where({ id }).del();
+    await db("dataset_cache").where({ id }).del();
 
     // Delete the file
     if (dataset.file_path) {
@@ -100,10 +92,10 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, data: { id, deleted: true } });
   } catch (error) {
-    console.error('Failed to delete dataset:', error);
+    console.error("Failed to delete dataset:", error);
     return NextResponse.json(
-      { success: false, error: { code: 'SRV_001', message: 'Failed to delete dataset' } },
-      { status: 500 },
+      { success: false, error: { code: "SRV_001", message: "Failed to delete dataset" } },
+      { status: 500 }
     );
   }
 }

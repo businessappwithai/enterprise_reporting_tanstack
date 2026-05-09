@@ -5,11 +5,11 @@
  * metadata_entity_header and metadata_entity_field records.
  */
 
-import { getDb } from '@/lib/db/config';
-import { getConnection } from '@/lib/db/connection-manager';
-import { introspectSchema } from '@/lib/sql/schema-introspection';
-import type { MetadataEntityField } from '@/types/database';
-import type { TableInfo } from '@/lib/sql/schema-introspection';
+import { getDb } from "@/lib/db/config";
+import { getConnection } from "@/lib/db/connection-manager";
+import { introspectSchema } from "@/lib/sql/schema-introspection";
+import type { MetadataEntityField } from "@/types/database";
+import type { TableInfo } from "@/lib/sql/schema-introspection";
 
 /**
  * Sync Service
@@ -36,9 +36,7 @@ export class SyncService {
 
     try {
       // Fetch datasource info
-      const dataSource = await trx('data_sources')
-        .where('id', dataSourceId)
-        .first();
+      const dataSource = await trx("data_sources").where("id", dataSourceId).first();
 
       if (!dataSource) {
         throw new Error(`Data source ${dataSourceId} not found`);
@@ -48,8 +46,8 @@ export class SyncService {
       const connection = await getConnection({
         id: dataSourceId,
         name: dataSource.name,
-        client_type: dataSource.client_type as 'pg' | 'mysql' | 'sqlite3' | 'mssql',
-        type: dataSource.type as 'DB_QUERY' | 'API_REQUEST',
+        client_type: dataSource.client_type as "pg" | "mysql" | "sqlite3" | "mssql",
+        type: dataSource.type as "DB_QUERY" | "API_REQUEST",
         connection_config: dataSource.connection_config,
         is_active: dataSource.is_active,
         created_at: dataSource.created_at,
@@ -57,13 +55,13 @@ export class SyncService {
       });
 
       if (!connection) {
-        throw new Error('Failed to establish connection to datasource');
+        throw new Error("Failed to establish connection to datasource");
       }
 
       // Perform schema introspection
       const introspectionResult = await introspectSchema(
         connection,
-        dataSource.client_type as 'pg' | 'mysql' | 'sqlite3' | 'mssql'
+        dataSource.client_type as "pg" | "mysql" | "sqlite3" | "mssql"
       );
 
       let entitiesCreated = 0;
@@ -76,7 +74,7 @@ export class SyncService {
       for (const tableInfo of introspectionResult.schema.tables) {
         try {
           // Check if entity already exists
-          const existingEntity = await trx('metadata_entity_header')
+          const existingEntity = await trx("metadata_entity_header")
             .where({
               data_source_id: dataSourceId,
               entity_name: tableInfo.name,
@@ -88,7 +86,7 @@ export class SyncService {
           const schemaMetadata = JSON.stringify({
             tableName: tableInfo.name,
             schema: tableInfo.schema,
-            entityType: 'table',
+            entityType: "table",
             primaryKey: tableInfo.primaryKey,
             foreignKeys: tableInfo.foreignKeys || [],
             indexes: tableInfo.indexes || [],
@@ -97,16 +95,14 @@ export class SyncService {
 
           if (existingEntity) {
             // Update existing entity
-            await trx('metadata_entity_header')
-              .where('id', existingEntity.id)
-              .update({
-                schema_metadata: schemaMetadata,
-                last_introspected_at: trx.fn.now(),
-                updated_at: trx.fn.now(),
-              });
+            await trx("metadata_entity_header").where("id", existingEntity.id).update({
+              schema_metadata: schemaMetadata,
+              last_introspected_at: trx.fn.now(),
+              updated_at: trx.fn.now(),
+            });
 
             // Process fields (add new, update existing)
-            const fieldResult = await this.syncFields(
+            const fieldResult = await SyncService.syncFields(
               trx,
               existingEntity.id,
               tableInfo,
@@ -118,24 +114,24 @@ export class SyncService {
             fieldsUpdated += fieldResult.updated;
           } else {
             // Create new entity
-            const [newEntity] = await trx('metadata_entity_header')
+            const [newEntity] = await trx("metadata_entity_header")
               .insert({
                 data_source_id: dataSourceId,
                 entity_name: tableInfo.name,
                 entity_schema: tableInfo.schema || null,
-                entity_type: 'table',
+                entity_type: "table",
                 schema_metadata: schemaMetadata,
                 last_introspected_at: trx.fn.now(),
-                is_active: false,  // Default: entities start inactive
-                is_hidden: true,   // Default: entities start hidden
+                is_active: false, // Default: entities start inactive
+                is_hidden: true, // Default: entities start hidden
                 created_by: userId,
                 updated_at: trx.fn.now(),
                 created_at: trx.fn.now(),
               })
-              .returning('*');
+              .returning("*");
 
             // Process fields
-            const fieldResult = await this.syncFields(
+            const fieldResult = await SyncService.syncFields(
               trx,
               newEntity.id,
               tableInfo,
@@ -154,13 +150,13 @@ export class SyncService {
 
       // Log sync operation to audit
       if (userId) {
-        await trx('audit_log').insert({
+        await trx("audit_log").insert({
           user_id: userId,
-          action: 'create',
-          resource_type: 'metadata_entity',
+          action: "create",
+          resource_type: "metadata_entity",
           resource_id: dataSourceId,
           details: JSON.stringify({
-            operation: 'sync_datasource',
+            operation: "sync_datasource",
             entitiesCreated,
             entitiesUpdated,
             fieldsCreated,
@@ -204,9 +200,9 @@ export class SyncService {
     // Build a map of existing fields for quick lookup
     const existingFieldsMap = new Map<string, MetadataEntityField>();
     if (!isNewEntity) {
-      const existingFields = await trx('metadata_entity_field')
-        .where('entity_header_id', entityHeaderId)
-        .select('*');
+      const existingFields = await trx("metadata_entity_field")
+        .where("entity_header_id", entityHeaderId)
+        .select("*");
 
       for (const field of existingFields) {
         existingFieldsMap.set(field.field_name, field);
@@ -220,7 +216,7 @@ export class SyncService {
       const fieldData = {
         entity_header_id: entityHeaderId,
         field_name: column.name,
-        data_type: column.type || 'unknown',
+        data_type: column.type || "unknown",
         is_nullable: column.nullable ?? true,
         is_primary_key: tableInfo.primaryKey?.includes(column.name) ?? false,
         is_foreign_key: false, // Will be set below
@@ -230,37 +226,33 @@ export class SyncService {
       };
 
       // Check if this column is a foreign key
-      const fkInfo = tableInfo.foreignKeys?.find(
-        fk => fk.columns.includes(column.name)
-      );
+      const fkInfo = tableInfo.foreignKeys?.find((fk) => fk.columns.includes(column.name));
 
       if (fkInfo) {
         fieldData.is_foreign_key = true;
         fieldData.foreign_key_table = fkInfo.referencedTable;
-        fieldData.foreign_key_column = fkInfo.referencedColumns[0] || 'id';
+        fieldData.foreign_key_column = fkInfo.referencedColumns[0] || "id";
       }
 
       if (existingField) {
         // Update existing field (preserve user-editable metadata)
-        await trx('metadata_entity_field')
-          .where('id', existingField.id)
-          .update({
-            // Update schema-derived fields
-            data_type: fieldData.data_type,
-            is_nullable: fieldData.is_nullable,
-            is_primary_key: fieldData.is_primary_key,
-            is_foreign_key: fieldData.is_foreign_key,
-            foreign_key_table: fieldData.foreign_key_table,
-            foreign_key_column: fieldData.foreign_key_column,
-            default_value: fieldData.default_value,
-            // Preserve user-provided metadata
-            // description, is_display_field, is_searchable, display_order, relationship_ui_type remain unchanged
-            updated_at: trx.fn.now(),
-          });
+        await trx("metadata_entity_field").where("id", existingField.id).update({
+          // Update schema-derived fields
+          data_type: fieldData.data_type,
+          is_nullable: fieldData.is_nullable,
+          is_primary_key: fieldData.is_primary_key,
+          is_foreign_key: fieldData.is_foreign_key,
+          foreign_key_table: fieldData.foreign_key_table,
+          foreign_key_column: fieldData.foreign_key_column,
+          default_value: fieldData.default_value,
+          // Preserve user-provided metadata
+          // description, is_display_field, is_searchable, display_order, relationship_ui_type remain unchanged
+          updated_at: trx.fn.now(),
+        });
         updated++;
       } else {
         // Create new field with defaults
-        await trx('metadata_entity_field').insert({
+        await trx("metadata_entity_field").insert({
           ...fieldData,
           description: null,
           is_display_field: false,
@@ -288,18 +280,16 @@ export class SyncService {
     // 2. Have entities with stale metadata (last_introspected_at > threshold)
 
     // This is a simplified version - in production you'd want to optimize this
-    const dataSources = await getDb()('data_sources')
-      .where('is_active', true)
-      .select('id', 'name');
+    const dataSources = await getDb()("data_sources").where("is_active", true).select("id", "name");
 
     const staleSources: Array<{ id: string; name: string; last_synced?: string }> = [];
 
     for (const ds of dataSources) {
       // Check if datasource has any entities
-      const entities = await getDb()('metadata_entity_header')
-        .where('data_source_id', ds.id)
-        .select('last_introspected_at')
-        .orderBy('last_introspected_at', 'desc')
+      const entities = await getDb()("metadata_entity_header")
+        .where("data_source_id", ds.id)
+        .select("last_introspected_at")
+        .orderBy("last_introspected_at", "desc")
         .limit(1);
 
       if (entities.length === 0) {
@@ -339,17 +329,27 @@ export class SyncService {
     processed: number;
     succeeded: number;
     failed: number;
-    details: Array<{ dataSourceId: string; dataSourceName: string; success: boolean; error?: string }>;
+    details: Array<{
+      dataSourceId: string;
+      dataSourceName: string;
+      success: boolean;
+      error?: string;
+    }>;
   }> {
-    const staleSources = await this.getStaleDataSources(staleThresholdHours);
+    const staleSources = await SyncService.getStaleDataSources(staleThresholdHours);
 
-    const details: Array<{ dataSourceId: string; dataSourceName: string; success: boolean; error?: string }> = [];
+    const details: Array<{
+      dataSourceId: string;
+      dataSourceName: string;
+      success: boolean;
+      error?: string;
+    }> = [];
     let succeeded = 0;
     let failed = 0;
 
     for (const ds of staleSources) {
       try {
-        await this.syncDataSource(ds.id, userId);
+        await SyncService.syncDataSource(ds.id, userId);
         details.push({
           dataSourceId: ds.id,
           dataSourceName: ds.name,

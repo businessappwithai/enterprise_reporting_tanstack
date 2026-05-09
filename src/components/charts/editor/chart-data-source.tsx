@@ -1,15 +1,15 @@
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Info } from 'lucide-react';
-import type { SavedQuery } from '@/types/database';
+} from "@/components/ui/select";
+import { Info } from "lucide-react";
+import type { SavedQuery } from "@/types/database";
 
 interface ChartDataSourceProps {
   queries: SavedQuery[] | undefined;
@@ -18,7 +18,12 @@ interface ChartDataSourceProps {
   onQueryChange: (queryId: string) => void;
 }
 
-export function ChartDataSource({ queries, selectedQueryId, availableFields, onQueryChange }: ChartDataSourceProps) {
+export function ChartDataSource({
+  queries,
+  selectedQueryId,
+  availableFields,
+  onQueryChange,
+}: ChartDataSourceProps) {
   const selectedQuery = queries?.find((q) => q.id === selectedQueryId);
 
   return (
@@ -38,7 +43,9 @@ export function ChartDataSource({ queries, selectedQueryId, availableFields, onQ
                 <SelectItem key={query.id} value={query.id}>
                   <div className="flex flex-col">
                     <span className="font-medium">{query.name}</span>
-                    <span className="text-xs text-gray-500">{query.description || 'No description'}</span>
+                    <span className="text-xs text-gray-500">
+                      {query.description || "No description"}
+                    </span>
                   </div>
                 </SelectItem>
               ))}

@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useMemo } from 'react';
+import { useMemo } from "react";
 import {
   BarChart,
   Bar,
@@ -19,8 +19,8 @@ import {
   Legend,
   ResponsiveContainer,
   Cell,
-} from 'recharts';
-import type { NlChartConfig } from '@/types/database';
+} from "recharts";
+import type { NlChartConfig } from "@/types/database";
 
 interface NlResultsChartProps {
   data: Record<string, unknown>[];
@@ -28,8 +28,16 @@ interface NlResultsChartProps {
 }
 
 const DEFAULT_COLORS = [
-  '#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#a4de6c',
-  '#d0ed57', '#8dd1e1', '#83a6ed', '#8e4585', '#ff6b6b',
+  "#8884d8",
+  "#82ca9d",
+  "#ffc658",
+  "#ff7300",
+  "#a4de6c",
+  "#d0ed57",
+  "#8dd1e1",
+  "#83a6ed",
+  "#8e4585",
+  "#ff6b6b",
 ];
 
 export function NlResultsChart({ data, config }: NlResultsChartProps) {
@@ -43,7 +51,7 @@ export function NlResultsChart({ data, config }: NlResultsChartProps) {
 
       for (const yField of config.yAxis) {
         const val = row[yField.field];
-        point[yField.field] = typeof val === 'number' ? val : Number(val) || 0;
+        point[yField.field] = typeof val === "number" ? val : Number(val) || 0;
       }
 
       return point;
@@ -52,7 +60,7 @@ export function NlResultsChart({ data, config }: NlResultsChartProps) {
 
   const renderChart = () => {
     switch (config.chartType) {
-      case 'bar':
+      case "bar":
         return (
           <BarChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
@@ -77,7 +85,7 @@ export function NlResultsChart({ data, config }: NlResultsChartProps) {
           </BarChart>
         );
 
-      case 'line':
+      case "line":
         return (
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
@@ -105,7 +113,7 @@ export function NlResultsChart({ data, config }: NlResultsChartProps) {
           </LineChart>
         );
 
-      case 'area':
+      case "area":
         return (
           <AreaChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
@@ -133,21 +141,19 @@ export function NlResultsChart({ data, config }: NlResultsChartProps) {
           </AreaChart>
         );
 
-      case 'pie':
+      case "pie":
         return (
           <PieChart>
             <Tooltip />
             <Legend />
             <Pie
               data={chartData}
-              dataKey={config.yAxis[0]?.field || ''}
+              dataKey={config.yAxis[0]?.field || ""}
               nameKey={config.xAxis.field}
               cx="50%"
               cy="50%"
               outerRadius={150}
-              label={({ name, percent }) =>
-                `${name}: ${(percent * 100).toFixed(1)}%`
-              }
+              label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
             >
               {chartData.map((_, idx) => (
                 <Cell key={`cell-${idx}`} fill={colors[idx % colors.length]} />
@@ -156,27 +162,19 @@ export function NlResultsChart({ data, config }: NlResultsChartProps) {
           </PieChart>
         );
 
-      case 'scatter':
+      case "scatter":
         return (
           <ScatterChart>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis
-              dataKey={config.xAxis.field}
-              name={config.xAxis.label}
-              tick={{ fontSize: 12 }}
-            />
+            <XAxis dataKey={config.xAxis.field} name={config.xAxis.label} tick={{ fontSize: 12 }} />
             <YAxis
               dataKey={config.yAxis[0]?.field}
               name={config.yAxis[0]?.label}
               tick={{ fontSize: 12 }}
             />
-            <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+            <Tooltip cursor={{ strokeDasharray: "3 3" }} />
             <Legend />
-            <Scatter
-              name={config.title}
-              data={chartData}
-              fill={colors[0]}
-            />
+            <Scatter name={config.title} data={chartData} fill={colors[0]} />
           </ScatterChart>
         );
 
@@ -192,10 +190,8 @@ export function NlResultsChart({ data, config }: NlResultsChartProps) {
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-center">{config.title}</h3>
-      <div style={{ width: '100%', height: 400 }}>
-        <ResponsiveContainer>
-          {renderChart()}
-        </ResponsiveContainer>
+      <div style={{ width: "100%", height: 400 }}>
+        <ResponsiveContainer>{renderChart()}</ResponsiveContainer>
       </div>
       <p className="text-xs text-center text-muted-foreground">
         {chartData.length} data points &middot; {config.chartType} chart

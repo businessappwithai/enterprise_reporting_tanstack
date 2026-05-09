@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -9,12 +9,12 @@ import {
   flexRender,
   type ColumnDef,
   type SortingState,
-} from '@tanstack/react-table';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ArrowUpDown, Search, Download, Loader2 } from 'lucide-react';
+} from "@tanstack/react-table";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ArrowUpDown, Search, Download, Loader2 } from "lucide-react";
 
 interface NlResultsTableProps {
   columns: string[];
@@ -24,7 +24,7 @@ interface NlResultsTableProps {
 
 export function NlResultsTable({ columns, rows, totalRows }: NlResultsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [globalFilter, setGlobalFilter] = useState('');
+  const [globalFilter, setGlobalFilter] = useState("");
   const [displayedRowCount, setDisplayedRowCount] = useState(50);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -35,7 +35,7 @@ export function NlResultsTable({ columns, rows, totalRows }: NlResultsTableProps
       header: ({ column }) => (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="h-8 px-2 text-xs font-semibold"
         >
           {col}
@@ -47,11 +47,11 @@ export function NlResultsTable({ columns, rows, totalRows }: NlResultsTableProps
         if (value === null || value === undefined) {
           return <span className="text-muted-foreground italic">NULL</span>;
         }
-        if (typeof value === 'number') {
+        if (typeof value === "number") {
           return <span className="font-mono text-right">{value.toLocaleString()}</span>;
         }
-        if (typeof value === 'boolean') {
-          return <Badge variant={value ? 'default' : 'secondary'}>{String(value)}</Badge>;
+        if (typeof value === "boolean") {
+          return <Badge variant={value ? "default" : "secondary"}>{String(value)}</Badge>;
         }
         const strValue = String(value);
         if (strValue.length > 100) {
@@ -97,31 +97,33 @@ export function NlResultsTable({ columns, rows, totalRows }: NlResultsTableProps
       }
     };
 
-    scrollContainer.addEventListener('scroll', handleScroll);
-    return () => scrollContainer.removeEventListener('scroll', handleScroll);
+    scrollContainer.addEventListener("scroll", handleScroll);
+    return () => scrollContainer.removeEventListener("scroll", handleScroll);
   }, [rows.length]);
 
   const handleExportCsv = () => {
     const csvContent = [
-      columns.join(','),
+      columns.join(","),
       ...rows.map((row) =>
-        columns.map((col) => {
-          const val = row[col];
-          if (val === null || val === undefined) return '';
-          const strVal = String(val);
-          if (strVal.includes(',') || strVal.includes('"') || strVal.includes('\n')) {
-            return `"${strVal.replace(/"/g, '""')}"`;
-          }
-          return strVal;
-        }).join(',')
+        columns
+          .map((col) => {
+            const val = row[col];
+            if (val === null || val === undefined) return "";
+            const strVal = String(val);
+            if (strVal.includes(",") || strVal.includes('"') || strVal.includes("\n")) {
+              return `"${strVal.replace(/"/g, '""')}"`;
+            }
+            return strVal;
+          })
+          .join(",")
       ),
-    ].join('\n');
+    ].join("\n");
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `nl-query-results-${Date.now()}.csv`);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `nl-query-results-${Date.now()}.csv`);
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -154,7 +156,7 @@ export function NlResultsTable({ columns, rows, totalRows }: NlResultsTableProps
       <div
         ref={scrollRef}
         className="border rounded-md overflow-auto"
-        style={{ maxHeight: '500px' }}
+        style={{ maxHeight: "500px" }}
       >
         <table className="w-full text-sm">
           <thead className="sticky top-0 bg-muted/95 backdrop-blur z-10">
@@ -177,7 +179,7 @@ export function NlResultsTable({ columns, rows, totalRows }: NlResultsTableProps
             {table.getRowModel().rows.map((row, idx) => (
               <tr
                 key={row.id}
-                className={`border-b hover:bg-muted/50 ${idx % 2 === 0 ? 'bg-background' : 'bg-muted/20'}`}
+                className={`border-b hover:bg-muted/50 ${idx % 2 === 0 ? "bg-background" : "bg-muted/20"}`}
               >
                 {row.getVisibleCells().map((cell) => (
                   <td key={cell.id} className="px-2 py-1.5 whitespace-nowrap">
@@ -199,4 +201,3 @@ export function NlResultsTable({ columns, rows, totalRows }: NlResultsTableProps
     </div>
   );
 }
-

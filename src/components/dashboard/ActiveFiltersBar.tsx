@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
 /**
  * Active filters bar component.
  * Displays currently active cross-widget filters and allows removal.
  */
 
-import React from 'react';
-import { X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { useDashboardState } from './DashboardState';
-import { isFeatureEnabled } from '@/lib/feature-flags';
+import React from "react";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useDashboardState } from "./DashboardState";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 export function ActiveFiltersBar() {
   const { activeFilters, removeFilter, clearFilters } = useDashboardState();
 
-  if (!isFeatureEnabled('crossFilterEnabled')) {
+  if (!isFeatureEnabled("crossFilterEnabled")) {
     return null;
   }
 
@@ -25,15 +25,9 @@ export function ActiveFiltersBar() {
 
   return (
     <div className="flex items-center gap-2 px-4 py-2 bg-muted/50 border-b flex-wrap">
-      <span className="text-sm font-medium text-muted-foreground">
-        Active Filters:
-      </span>
+      <span className="text-sm font-medium text-muted-foreground">Active Filters:</span>
       {activeFilters.map((filter) => (
-        <Badge
-          key={filter.id}
-          variant="secondary"
-          className="flex items-center gap-1 px-2 py-1"
-        >
+        <Badge key={filter.id} variant="secondary" className="flex items-center gap-1 px-2 py-1">
           <span className="text-xs">
             {filter.column}: {formatFilterValue(filter)}
           </span>
@@ -47,27 +41,19 @@ export function ActiveFiltersBar() {
           </Button>
         </Badge>
       ))}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={clearFilters}
-        className="h-7 text-xs"
-      >
+      <Button variant="ghost" size="sm" onClick={clearFilters} className="h-7 text-xs">
         Clear All
       </Button>
     </div>
   );
 }
 
-function formatFilterValue(filter: {
-  values: unknown[];
-  operator: string;
-}): string {
-  if (filter.operator === 'range' && filter.values.length === 2) {
+function formatFilterValue(filter: { values: unknown[]; operator: string }): string {
+  if (filter.operator === "range" && filter.values.length === 2) {
     return `${filter.values[0]} - ${filter.values[1]}`;
   }
   if (filter.values.length > 2) {
     return `${filter.values.length} items`;
   }
-  return filter.values.map(String).join(', ');
+  return filter.values.map(String).join(", ");
 }

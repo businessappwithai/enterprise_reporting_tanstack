@@ -2,7 +2,7 @@
  * Internal DuckDB-Wasm type definitions.
  */
 
-import type * as duckdb from '@duckdb/duckdb-wasm';
+import type * as duckdb from "@duckdb/duckdb-wasm";
 
 export type DuckDBBundle = duckdb.DuckDBBundle;
 export type AsyncDuckDB = duckdb.AsyncDuckDB;
@@ -29,6 +29,6 @@ export interface DuckDBInstanceOptions {
 
 export const DEFAULT_DUCKDB_OPTIONS: DuckDBInstanceOptions = {
   maxMemory: 2 * 1024 * 1024 * 1024, // 2 GB
-  threads: typeof navigator !== 'undefined' ? navigator.hardwareConcurrency ?? 4 : 4,
+  threads: typeof navigator !== "undefined" ? (navigator.hardwareConcurrency ?? 4) : 4,
   enableLogging: false,
 };

@@ -5,13 +5,13 @@
  * All operations are transaction-safe and include audit logging.
  */
 
-import { getDb } from '@/lib/db/config';
-import type { Knex } from 'knex';
+import { getDb } from "@/lib/db/config";
+import type { Knex } from "knex";
 import type {
   MetadataEntityHeader,
   MetadataEntityWithFields,
   MetadataEntityListParams,
-} from '@/types/database';
+} from "@/types/database";
 
 /**
  * Query builder for metadata_entity_header with optional filters
@@ -20,14 +20,14 @@ export class EntityQueryBuilder {
   private query: Knex.Query;
 
   constructor() {
-    this.query = getDb()('metadata_entity_header');
+    this.query = getDb()("metadata_entity_header");
   }
 
   /**
    * Filter by data source ID
    */
   byDataSource(dataSourceId: string): EntityQueryBuilder {
-    this.query = this.query.where('data_source_id', dataSourceId);
+    this.query = this.query.where("data_source_id", dataSourceId);
     return this;
   }
 
@@ -35,7 +35,7 @@ export class EntityQueryBuilder {
    * Filter by active status
    */
   byActive(isActive: boolean): EntityQueryBuilder {
-    this.query = this.query.where('is_active', isActive);
+    this.query = this.query.where("is_active", isActive);
     return this;
   }
 
@@ -43,15 +43,15 @@ export class EntityQueryBuilder {
    * Filter by hidden status
    */
   byHidden(isHidden: boolean): EntityQueryBuilder {
-    this.query = this.query.where('is_hidden', isHidden);
+    this.query = this.query.where("is_hidden", isHidden);
     return this;
   }
 
   /**
    * Filter by entity type
    */
-  byEntityType(entityType: 'table' | 'view'): EntityQueryBuilder {
-    this.query = this.query.where('entity_type', entityType);
+  byEntityType(entityType: "table" | "view"): EntityQueryBuilder {
+    this.query = this.query.where("entity_type", entityType);
     return this;
   }
 
@@ -61,8 +61,8 @@ export class EntityQueryBuilder {
   search(searchTerm: string): EntityQueryBuilder {
     this.query = this.query.where((builder: Knex.Query) => {
       builder
-        .where('entity_name', 'like', `%${searchTerm}%`)
-        .orWhere('description', 'like', `%${searchTerm}%`);
+        .where("entity_name", "like", `%${searchTerm}%`)
+        .orWhere("description", "like", `%${searchTerm}%`);
     });
     return this;
   }
@@ -87,7 +87,7 @@ export class EntityQueryBuilder {
   /**
    * Order by field
    */
-  orderBy(column: string, direction: 'asc' | 'desc' = 'asc'): EntityQueryBuilder {
+  orderBy(column: string, direction: "asc" | "desc" = "asc"): EntityQueryBuilder {
     this.query = this.query.orderBy(column, direction);
     return this;
   }
@@ -96,19 +96,19 @@ export class EntityQueryBuilder {
    * Execute query and return results
    */
   async execute(): Promise<MetadataEntityHeader[]> {
-    return await this.query.select('*');
+    return await this.query.select("*");
   }
 
   /**
    * Execute query with count
    */
   async withCount(): Promise<{ entities: MetadataEntityHeader[]; total: number }> {
-    const entities = await this.query.select('*');
+    const entities = await this.query.select("*");
 
     // Clone query for count
     const countQuery = this.query.clone();
     countQuery.clearSelect().clearOrder().clearGroup();
-    const [{ total }] = await countQuery.count('* as total');
+    const [{ total }] = await countQuery.count("* as total");
 
     return { entities, total };
   }
@@ -148,7 +148,7 @@ export class EntityService {
     builder.paginate(page, limit);
 
     // Apply default ordering
-    builder.orderBy('entity_name', 'asc');
+    builder.orderBy("entity_name", "asc");
 
     return await builder.withCount();
   }
@@ -157,19 +157,17 @@ export class EntityService {
    * Get single entity by ID with fields
    */
   static async getById(id: string): Promise<MetadataEntityWithFields | null> {
-    const entity = await getDb()('metadata_entity_header')
-      .where('id', id)
-      .first();
+    const entity = await getDb()("metadata_entity_header").where("id", id).first();
 
     if (!entity) {
       return null;
     }
 
     // Fetch fields for this entity
-    const fields = await getDb()('metadata_entity_field')
-      .where('entity_header_id', id)
-      .orderBy('display_order', 'asc')
-      .select('*');
+    const fields = await getDb()("metadata_entity_field")
+      .where("entity_header_id", id)
+      .orderBy("display_order", "asc")
+      .select("*");
 
     return {
       ...entity,
@@ -185,7 +183,7 @@ export class EntityService {
     entityName: string,
     entitySchema?: string
   ): Promise<MetadataEntityWithFields | null> {
-    const entity = await getDb()('metadata_entity_header')
+    const entity = await getDb()("metadata_entity_header")
       .where({
         data_source_id: dataSourceId,
         entity_name: entityName,
@@ -198,10 +196,10 @@ export class EntityService {
     }
 
     // Fetch fields for this entity
-    const fields = await getDb()('metadata_entity_field')
-      .where('entity_header_id', entity.id)
-      .orderBy('display_order', 'asc')
-      .select('*');
+    const fields = await getDb()("metadata_entity_field")
+      .where("entity_header_id", entity.id)
+      .orderBy("display_order", "asc")
+      .select("*");
 
     return {
       ...entity,
@@ -214,14 +212,14 @@ export class EntityService {
    * Note: This is typically called during datasource inspection, not manually
    */
   static async create(
-    data: Omit<MetadataEntityHeader, 'id' | 'created_at' | 'updated_at'>
+    data: Omit<MetadataEntityHeader, "id" | "created_at" | "updated_at">
   ): Promise<MetadataEntityHeader> {
-    const [entity] = await getDb()('metadata_entity_header')
+    const [entity] = await getDb()("metadata_entity_header")
       .insert({
         ...data,
         updated_at: getDb().fn.now(),
       })
-      .returning('*');
+      .returning("*");
 
     return entity;
   }
@@ -232,16 +230,16 @@ export class EntityService {
    */
   static async update(
     id: string,
-    data: Partial<Pick<MetadataEntityHeader, 'description' | 'is_active' | 'is_hidden'>>,
+    data: Partial<Pick<MetadataEntityHeader, "description" | "is_active" | "is_hidden">>,
     userId?: string
   ): Promise<MetadataEntityHeader | null> {
-    const [entity] = await getDb()('metadata_entity_header')
-      .where('id', id)
+    const [entity] = await getDb()("metadata_entity_header")
+      .where("id", id)
       .update({
         ...data,
         updated_at: getDb().fn.now(),
       })
-      .returning('*');
+      .returning("*");
 
     if (!entity) {
       return null;
@@ -249,10 +247,10 @@ export class EntityService {
 
     // Log to audit trail
     if (userId) {
-      await getDb()('audit_log').insert({
+      await getDb()("audit_log").insert({
         user_id: userId,
-        action: 'update',
-        resource_type: 'metadata_entity',
+        action: "update",
+        resource_type: "metadata_entity",
         resource_id: id,
         details: JSON.stringify({
           updated_fields: Object.keys(data),
@@ -269,19 +267,17 @@ export class EntityService {
    * Note: This is a destructive operation
    */
   static async delete(id: string, userId?: string): Promise<boolean> {
-    const count = await getDb()('metadata_entity_header')
-      .where('id', id)
-      .delete();
+    const count = await getDb()("metadata_entity_header").where("id", id).delete();
 
     if (count > 0 && userId) {
       // Log to audit trail
-      await getDb()('audit_log').insert({
+      await getDb()("audit_log").insert({
         user_id: userId,
-        action: 'delete',
-        resource_type: 'metadata_entity',
+        action: "delete",
+        resource_type: "metadata_entity",
         resource_id: id,
         details: JSON.stringify({
-          deleted: 'entity_metadata'
+          deleted: "entity_metadata",
         }),
         created_at: getDb().fn.now(),
       });
@@ -298,7 +294,7 @@ export class EntityService {
     entityName: string,
     entitySchema?: string
   ): Promise<boolean> {
-    const result = await getDb()('metadata_entity_header')
+    const result = await getDb()("metadata_entity_header")
       .where({
         data_source_id: dataSourceId,
         entity_name: entityName,
@@ -313,13 +309,13 @@ export class EntityService {
    * Get active entities count for a datasource
    */
   static async countActive(dataSourceId: string): Promise<number> {
-    const [{ count }] = await getDb()('metadata_entity_header')
+    const [{ count }] = await getDb()("metadata_entity_header")
       .where({
         data_source_id: dataSourceId,
         is_active: true,
         is_hidden: false,
       })
-      .count('* as count');
+      .count("* as count");
 
     return count;
   }
@@ -334,10 +330,10 @@ export class EntityService {
     const staleDate = new Date();
     staleDate.setHours(staleDate.getHours() - staleThresholdHours);
 
-    return await getDb()('metadata_entity_header')
-      .where('data_source_id', dataSourceId)
-      .where('last_introspected_at', '<', staleDate)
-      .select('*');
+    return await getDb()("metadata_entity_header")
+      .where("data_source_id", dataSourceId)
+      .where("last_introspected_at", "<", staleDate)
+      .select("*");
   }
 
   /**

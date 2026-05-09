@@ -1,28 +1,23 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/lib/db/config';
-import { decrypt } from '@/lib/security/encryption';
-import { getConnection } from '@/lib/db/connection-manager';
-import type { ReportDefinition } from '@/types/database';
+import { type NextRequest, NextResponse } from "next/server";
+import { getDb } from "@/lib/db/config";
+import { decrypt } from "@/lib/security/encryption";
+import { getConnection } from "@/lib/db/connection-manager";
+import type { ReportDefinition } from "@/types/database";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const { searchParams } = new URL(request.url);
-    const execute = searchParams.get('execute') === 'true';
+    const execute = searchParams.get("execute") === "true";
 
     const db = getDb();
 
     // Get report with public status
-    const report = await db<ReportDefinition>('report_definitions')
-      .where('id', id)
-      .first();
+    const report = await db<ReportDefinition>("report_definitions").where("id", id).first();
 
     if (!report) {
       return NextResponse.json(
-        { success: false, error: { code: 'NOT_FOUND', message: 'Report not found' } },
+        { success: false, error: { code: "NOT_FOUND", message: "Report not found" } },
         { status: 404 }
       );
     }
@@ -30,7 +25,7 @@ export async function GET(
     // Check if report is public
     if (!report.is_public) {
       return NextResponse.json(
-        { success: false, error: { code: 'PRIVATE', message: 'This report is private' } },
+        { success: false, error: { code: "PRIVATE", message: "This report is private" } },
         { status: 403 }
       );
     }
@@ -51,12 +46,12 @@ export async function GET(
 
     // If execute=true, also fetch the report data
     if (execute && report.saved_query_id) {
-      const query = await db('saved_queries').where('id', report.saved_query_id).first();
+      const query = await db("saved_queries").where("id", report.saved_query_id).first();
       if (query) {
         try {
-          const dataSource = await db('data_sources')
-            .where('id', query.data_source_id)
-            .where('is_active', true)
+          const dataSource = await db("data_sources")
+            .where("id", query.data_source_id)
+            .where("is_active", true)
             .first();
 
           if (dataSource) {
@@ -73,10 +68,13 @@ export async function GET(
             }
 
             // Get column info
-            const columns = rows.length > 0 ? Object.keys(rows[0]).map((name) => ({
-              name,
-              type: typeof rows[0][name],
-            })) : [];
+            const columns =
+              rows.length > 0
+                ? Object.keys(rows[0]).map((name) => ({
+                    name,
+                    type: typeof rows[0][name],
+                  }))
+                : [];
 
             response.data.results = {
               columns,
@@ -85,18 +83,18 @@ export async function GET(
             };
           }
         } catch (error) {
-          console.error('Error executing query for public report:', error);
+          console.error("Error executing query for public report:", error);
           response.data.results = null;
-          response.data.executionError = 'Failed to load report data';
+          response.data.executionError = "Failed to load report data";
         }
       }
     }
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Error fetching public report:', error);
+    console.error("Error fetching public report:", error);
     return NextResponse.json(
-      { success: false, error: { code: 'SERVER_ERROR', message: 'Failed to fetch report' } },
+      { success: false, error: { code: "SERVER_ERROR", message: "Failed to fetch report" } },
       { status: 500 }
     );
   }

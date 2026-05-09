@@ -5,30 +5,37 @@
  * Uses server-side pagination.
  */
 
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo } from "react";
 import {
-  ColumnDef,
+  type ColumnDef,
   getCoreRowModel,
   useReactTable,
-  PaginationState,
-  SortingState,
-} from '@tanstack/react-table';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+  type PaginationState,
+  type SortingState,
+} from "@tanstack/react-table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Search, Edit, Trash2 } from 'lucide-react';
-import { useEntityRecords } from '@/hooks/metadata/use-metadata-queries';
-import type { MetadataEntityWithFields } from '@/types/database';
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Loader2, Search, Edit, Trash2 } from "lucide-react";
+import { useEntityRecords } from "@/hooks/metadata/use-metadata-queries";
+import type { MetadataEntityWithFields } from "@/types/database";
 
 interface RecordListProps {
   dataSourceId: string;
@@ -47,20 +54,16 @@ export function RecordList({
 }: RecordListProps) {
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 50 });
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
 
   // Query records
-  const { data, isLoading, isError, error } = useEntityRecords(
-    dataSourceId,
-    entity.id,
-    {
-      page: pagination.pageIndex + 1,
-      limit: pagination.pageSize,
-      search: search || undefined,
-      sort: sorting[0]?.id,
-      order: sorting[0]?.desc ? 'desc' : 'asc',
-    }
-  );
+  const { data, isLoading, isError, error } = useEntityRecords(dataSourceId, entity.id, {
+    page: pagination.pageIndex + 1,
+    limit: pagination.pageSize,
+    search: search || undefined,
+    sort: sorting[0]?.id,
+    order: sorting[0]?.desc ? "desc" : "asc",
+  });
 
   const records = data?.data?.records || [];
   const total = data?.data?.total || 0;
@@ -72,7 +75,7 @@ export function RecordList({
 
     // Get display fields
     const displayFields = entity.fields
-      .filter(f => f.is_display_field || f.is_primary_key)
+      .filter((f) => f.is_display_field || f.is_primary_key)
       .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
 
     for (const field of displayFields) {
@@ -88,11 +91,11 @@ export function RecordList({
 
     // Actions column
     cols.push({
-      id: 'actions',
-      header: 'Actions',
+      id: "actions",
+      header: "Actions",
       cell: ({ row }) => {
-        const pkField = entity.fields.find(f => f.is_primary_key);
-        const recordId = pkField ? row.getValue(pkField.field_name) as string | number : null;
+        const pkField = entity.fields.find((f) => f.is_primary_key);
+        const recordId = pkField ? (row.getValue(pkField.field_name) as string | number) : null;
 
         return (
           <div className="flex items-center gap-2">
@@ -106,11 +109,7 @@ export function RecordList({
               </Button>
             )}
             {onDeleteRecord && recordId && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onDeleteRecord(recordId)}
-              >
+              <Button variant="ghost" size="sm" onClick={() => onDeleteRecord(recordId)}>
                 <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
             )}
@@ -141,12 +140,10 @@ export function RecordList({
           <div>
             <CardTitle>{entity.entity_name} Records</CardTitle>
             <CardDescription>
-              {total} {total === 1 ? 'record' : 'records'} found
+              {total} {total === 1 ? "record" : "records"} found
             </CardDescription>
           </div>
-          {onCreateRecord && (
-            <Button onClick={onCreateRecord}>Create Record</Button>
-          )}
+          {onCreateRecord && <Button onClick={onCreateRecord}>Create Record</Button>}
         </div>
       </CardHeader>
       <CardContent>
@@ -207,9 +204,7 @@ export function RecordList({
                   <TableRow key={headerGroup.id}>
                     {headerGroup.headers.map((header) => (
                       <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : header.column.columnDef.header?.toString()}
+                        {header.isPlaceholder ? null : header.column.columnDef.header?.toString()}
                       </TableHead>
                     ))}
                   </TableRow>
@@ -242,7 +237,7 @@ export function RecordList({
         {pageCount > 1 && (
           <div className="flex items-center justify-between space-x-2 py-4">
             <div className="text-sm text-muted-foreground">
-              Showing {pagination.pageIndex * pagination.pageSize + 1} to{' '}
+              Showing {pagination.pageIndex * pagination.pageSize + 1} to{" "}
               {Math.min((pagination.pageIndex + 1) * pagination.pageSize, total)} of {total} records
             </div>
             <div className="flex items-center space-x-2">
@@ -291,15 +286,15 @@ function formatCellValue(value: unknown, _dataType: string): React.ReactNode {
     return <span className="text-muted-foreground italic">null</span>;
   }
 
-  if (typeof value === 'boolean') {
-    return value ? 'true' : 'false';
+  if (typeof value === "boolean") {
+    return value ? "true" : "false";
   }
 
-  if (typeof value === 'object') {
+  if (typeof value === "object") {
     return <span className="text-xs">{JSON.stringify(value)}</span>;
   }
 
-  if (typeof value === 'string' && value.length > 100) {
+  if (typeof value === "string" && value.length > 100) {
     return <span className="text-xs">{value.substring(0, 100)}...</span>;
   }
 
@@ -307,7 +302,7 @@ function formatCellValue(value: unknown, _dataType: string): React.ReactNode {
 }
 
 function flexRender<T>(Comp: ((props: T) => React.ReactNode) | string, props: T): React.ReactNode {
-  if (typeof Comp === 'string') {
+  if (typeof Comp === "string") {
     return Comp;
   }
   return <Comp {...props} />;

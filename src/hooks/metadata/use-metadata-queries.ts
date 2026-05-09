@@ -4,7 +4,6 @@
  * React Query queries for fetching entity and field metadata.
  */
 
-
 interface ApiResponse<T> {
   success: boolean;
   data?: T;
@@ -27,30 +26,32 @@ export function useEntityList(params: {
   limit?: number;
 }) {
   const queryParams = new URLSearchParams();
-  if (params.data_source_id) queryParams.set('data_source_id', params.data_source_id);
-  if (params.is_active !== undefined) queryParams.set('is_active', String(params.is_active));
-  if (params.is_hidden !== undefined) queryParams.set('is_hidden', String(params.is_hidden));
-  if (params.include_hidden) queryParams.set('include_hidden', 'true');
-  if (params.search) queryParams.set('search', params.search);
-  if (params.page) queryParams.set('page', String(params.page));
-  if (params.limit) queryParams.set('limit', String(params.limit));
+  if (params.data_source_id) queryParams.set("data_source_id", params.data_source_id);
+  if (params.is_active !== undefined) queryParams.set("is_active", String(params.is_active));
+  if (params.is_hidden !== undefined) queryParams.set("is_hidden", String(params.is_hidden));
+  if (params.include_hidden) queryParams.set("include_hidden", "true");
+  if (params.search) queryParams.set("search", params.search);
+  if (params.page) queryParams.set("page", String(params.page));
+  if (params.limit) queryParams.set("limit", String(params.limit));
 
   return useQuery({
-    queryKey: ['metadata-entities', params],
+    queryKey: ["metadata-entities", params],
     queryFn: async () => {
       const response = await fetch(`/api/metadata/entities?${queryParams.toString()}`);
 
       if (!response.ok) {
         const error: ApiResponse<never> = await response.json();
-        throw new Error(error.error?.message || 'Failed to fetch entities');
+        throw new Error(error.error?.message || "Failed to fetch entities");
       }
 
-      return response.json() as Promise<ApiResponse<{
-        entities: any[];
-        total: number;
-        page: number;
-        limit: number;
-      }>>;
+      return response.json() as Promise<
+        ApiResponse<{
+          entities: any[];
+          total: number;
+          page: number;
+          limit: number;
+        }>
+      >;
     },
   });
 }
@@ -60,13 +61,13 @@ export function useEntityList(params: {
  */
 export function useEntity(entityId: string) {
   return useQuery({
-    queryKey: ['metadata-entity', entityId],
+    queryKey: ["metadata-entity", entityId],
     queryFn: async () => {
       const response = await fetch(`/api/metadata/entities/${entityId}`);
 
       if (!response.ok) {
         const error: ApiResponse<never> = await response.json();
-        throw new Error(error.error?.message || 'Failed to fetch entity');
+        throw new Error(error.error?.message || "Failed to fetch entity");
       }
 
       return response.json() as Promise<ApiResponse<any>>;
@@ -80,13 +81,13 @@ export function useEntity(entityId: string) {
  */
 export function useEntityFields(entityId: string) {
   return useQuery({
-    queryKey: ['entity-fields', entityId],
+    queryKey: ["entity-fields", entityId],
     queryFn: async () => {
       const response = await fetch(`/api/metadata/entities/${entityId}/fields`);
 
       if (!response.ok) {
         const error: ApiResponse<never> = await response.json();
-        throw new Error(error.error?.message || 'Failed to fetch entity fields');
+        throw new Error(error.error?.message || "Failed to fetch entity fields");
       }
 
       return response.json() as Promise<ApiResponse<any[]>>;
@@ -100,13 +101,13 @@ export function useEntityFields(entityId: string) {
  */
 export function useEntityPermissions(entityId: string) {
   return useQuery({
-    queryKey: ['entity-permissions', entityId],
+    queryKey: ["entity-permissions", entityId],
     queryFn: async () => {
       const response = await fetch(`/api/metadata/entities/${entityId}/permissions`);
 
       if (!response.ok) {
         const error: ApiResponse<never> = await response.json();
-        throw new Error(error.error?.message || 'Failed to fetch entity permissions');
+        throw new Error(error.error?.message || "Failed to fetch entity permissions");
       }
 
       return response.json() as Promise<ApiResponse<any>>;
@@ -120,13 +121,13 @@ export function useEntityPermissions(entityId: string) {
  */
 export function useDatasourceConfig(dataSourceId: string) {
   return useQuery({
-    queryKey: ['datasource-config', dataSourceId],
+    queryKey: ["datasource-config", dataSourceId],
     queryFn: async () => {
       const response = await fetch(`/api/data-sources/${dataSourceId}/config`);
 
       if (!response.ok) {
         const error: ApiResponse<never> = await response.json();
-        throw new Error(error.error?.message || 'Failed to fetch datasource config');
+        throw new Error(error.error?.message || "Failed to fetch datasource config");
       }
 
       return response.json() as Promise<ApiResponse<any>>;
@@ -138,25 +139,32 @@ export function useDatasourceConfig(dataSourceId: string) {
 /**
  * Fetch entities for datasource (for CRUD interface)
  */
-export function useDatasourceEntities(dataSourceId: string, options?: { includeFields?: boolean; activeOnly?: boolean }) {
+export function useDatasourceEntities(
+  dataSourceId: string,
+  options?: { includeFields?: boolean; activeOnly?: boolean }
+) {
   const queryParams = new URLSearchParams();
-  if (options?.includeFields) queryParams.set('include_fields', 'true');
-  if (options?.activeOnly !== false) queryParams.set('active_only', 'true');
+  if (options?.includeFields) queryParams.set("include_fields", "true");
+  if (options?.activeOnly !== false) queryParams.set("active_only", "true");
 
   return useQuery({
-    queryKey: ['datasource-entities', dataSourceId, options],
+    queryKey: ["datasource-entities", dataSourceId, options],
     queryFn: async () => {
-      const response = await fetch(`/api/data-sources/${dataSourceId}/entities?${queryParams.toString()}`);
+      const response = await fetch(
+        `/api/data-sources/${dataSourceId}/entities?${queryParams.toString()}`
+      );
 
       if (!response.ok) {
         const error: ApiResponse<never> = await response.json();
-        throw new Error(error.error?.message || 'Failed to fetch datasource entities');
+        throw new Error(error.error?.message || "Failed to fetch datasource entities");
       }
 
-      return response.json() as Promise<ApiResponse<{
-        entities: any[];
-        total: number;
-      }>>;
+      return response.json() as Promise<
+        ApiResponse<{
+          entities: any[];
+          total: number;
+        }>
+      >;
     },
     enabled: !!dataSourceId,
   });
@@ -173,18 +181,18 @@ export function useEntityRecords(
     limit?: number;
     search?: string;
     sort?: string;
-    order?: 'asc' | 'desc';
+    order?: "asc" | "desc";
   }
 ) {
   const queryParams = new URLSearchParams();
-  if (params.page) queryParams.set('page', String(params.page));
-  if (params.limit) queryParams.set('limit', String(params.limit));
-  if (params.search) queryParams.set('search', params.search);
-  if (params.sort) queryParams.set('sort', params.sort);
-  if (params.order) queryParams.set('order', params.order);
+  if (params.page) queryParams.set("page", String(params.page));
+  if (params.limit) queryParams.set("limit", String(params.limit));
+  if (params.search) queryParams.set("search", params.search);
+  if (params.sort) queryParams.set("sort", params.sort);
+  if (params.order) queryParams.set("order", params.order);
 
   return useQuery({
-    queryKey: ['entity-records', dataSourceId, entityId, params],
+    queryKey: ["entity-records", dataSourceId, entityId, params],
     queryFn: async () => {
       const response = await fetch(
         `/api/data-sources/${dataSourceId}/entities/${entityId}/records?${queryParams.toString()}`
@@ -192,16 +200,18 @@ export function useEntityRecords(
 
       if (!response.ok) {
         const error: ApiResponse<never> = await response.json();
-        throw new Error(error.error?.message || 'Failed to fetch entity records');
+        throw new Error(error.error?.message || "Failed to fetch entity records");
       }
 
-      return response.json() as Promise<ApiResponse<{
-        records: any[];
-        total: number;
-        pageCount: number;
-        page: number;
-        limit: number;
-      }>>;
+      return response.json() as Promise<
+        ApiResponse<{
+          records: any[];
+          total: number;
+          pageCount: number;
+          page: number;
+          limit: number;
+        }>
+      >;
     },
     enabled: !!dataSourceId && !!entityId,
   });

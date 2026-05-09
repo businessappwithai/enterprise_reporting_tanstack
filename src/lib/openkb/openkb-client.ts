@@ -5,8 +5,8 @@
  * Uses Redis with semantic vector embeddings for discovery
  */
 
-import { createClient, type RedisClientType } from 'redis';
-import { EmbeddingService } from './embedding-service';
+import { createClient, type RedisClientType } from "redis";
+import { EmbeddingService } from "./embedding-service";
 
 export interface OpenKBQuery {
   nlQuestion: string;
@@ -32,7 +32,7 @@ export class OpenKBClient {
 
   constructor() {
     this.redis = createClient({
-      url: process.env.REDIS_URL || 'redis://localhost:6379',
+      url: process.env.REDIS_URL || "redis://localhost:6379",
     });
     this.embeddingService = new EmbeddingService();
   }
@@ -46,9 +46,9 @@ export class OpenKBClient {
     try {
       await this.redis.connect();
       this.isInitialized = true;
-      console.log('[OpenKB] Connected to Redis');
+      console.log("[OpenKB] Connected to Redis");
     } catch (error) {
-      console.error('[OpenKB] Failed to connect to Redis:', error);
+      console.error("[OpenKB] Failed to connect to Redis:", error);
       throw error;
     }
   }
@@ -86,23 +86,16 @@ export class OpenKBClient {
       );
 
       // Add to time-indexed sorted set (for recent queries)
-      await this.redis.zAdd(
-        `openkb:${roleId}:queries`,
-        { score: timestamp, value: queryId }
-      );
+      await this.redis.zAdd(`openkb:${roleId}:queries`, { score: timestamp, value: queryId });
 
       // Generate embedding and store (D21: semantic embeddings)
       const embedding = await this.embeddingService.embed(query.nlQuestion);
-      await this.redis.hSet(
-        `openkb:${roleId}:embeddings`,
-        queryId,
-        JSON.stringify(embedding)
-      );
+      await this.redis.hSet(`openkb:${roleId}:embeddings`, queryId, JSON.stringify(embedding));
 
       console.log(`[OpenKB] Logged query ${queryId} for role ${roleId}`);
       return queryId;
     } catch (error) {
-      console.error('[OpenKB] Failed to log query:', error);
+      console.error("[OpenKB] Failed to log query:", error);
       throw error;
     }
   }
@@ -110,11 +103,7 @@ export class OpenKBClient {
   /**
    * Find similar queries in OpenKB using semantic search (D21: semantic embeddings, D24: top 3 suggestions)
    */
-  async findSimilar(
-    roleId: string,
-    query: string,
-    topK: number = 3
-  ): Promise<SimilarQuery[]> {
+  async findSimilar(roleId: string, query: string, topK: number = 3): Promise<SimilarQuery[]> {
     await this.ensureInitialized();
 
     try {
@@ -122,9 +111,7 @@ export class OpenKBClient {
       const queryEmbedding = await this.embeddingService.embed(query);
 
       // Get all embeddings for this role
-      const storedEmbeddingsRaw = await this.redis.hGetAll(
-        `openkb:${roleId}:embeddings`
-      );
+      const storedEmbeddingsRaw = await this.redis.hGetAll(`openkb:${roleId}:embeddings`);
 
       if (Object.keys(storedEmbeddingsRaw).length === 0) {
         return []; // No queries in knowledge base yet
@@ -143,17 +130,12 @@ export class OpenKBClient {
       }
 
       // Sort by similarity and get top K
-      const topResults = similarities
-        .sort((a, b) => b.similarity - a.similarity)
-        .slice(0, topK);
+      const topResults = similarities.sort((a, b) => b.similarity - a.similarity).slice(0, topK);
 
       // Fetch metadata for top results
       const results: SimilarQuery[] = [];
       for (const { queryId, similarity } of topResults) {
-        const metadataJson = await this.redis.hGet(
-          `openkb:${roleId}:metadata`,
-          queryId
-        );
+        const metadataJson = await this.redis.hGet(`openkb:${roleId}:metadata`, queryId);
 
         if (metadataJson) {
           try {
@@ -172,7 +154,7 @@ export class OpenKBClient {
 
       return results;
     } catch (error) {
-      console.error('[OpenKB] Failed to find similar queries:', error);
+      console.error("[OpenKB] Failed to find similar queries:", error);
       return [];
     }
   }
@@ -180,26 +162,16 @@ export class OpenKBClient {
   /**
    * Get recent queries for a role (discovery/browsing)
    */
-  async getRecentQueries(
-    roleId: string,
-    limit: number = 20
-  ): Promise<OpenKBStoredQuery[]> {
+  async getRecentQueries(roleId: string, limit: number = 20): Promise<OpenKBStoredQuery[]> {
     await this.ensureInitialized();
 
     try {
       // Get recent query IDs from sorted set (most recent first)
-      const queryIds = await this.redis.zRevRange(
-        `openkb:${roleId}:queries`,
-        0,
-        limit - 1
-      );
+      const queryIds = await this.redis.zRevRange(`openkb:${roleId}:queries`, 0, limit - 1);
 
       const results: OpenKBStoredQuery[] = [];
       for (const queryId of queryIds) {
-        const metadataJson = await this.redis.hGet(
-          `openkb:${roleId}:metadata`,
-          queryId
-        );
+        const metadataJson = await this.redis.hGet(`openkb:${roleId}:metadata`, queryId);
 
         if (metadataJson) {
           try {
@@ -217,7 +189,7 @@ export class OpenKBClient {
 
       return results;
     } catch (error) {
-      console.error('[OpenKB] Failed to get recent queries:', error);
+      console.error("[OpenKB] Failed to get recent queries:", error);
       return [];
     }
   }
@@ -238,7 +210,7 @@ export class OpenKBClient {
       console.log(`[OpenKB] Deleted query ${queryId} from role ${roleId}`);
       return true;
     } catch (error) {
-      console.error('[OpenKB] Failed to delete query:', error);
+      console.error("[OpenKB] Failed to delete query:", error);
       return false;
     }
   }
@@ -259,7 +231,7 @@ export class OpenKBClient {
       console.log(`[OpenKB] Cleared all data for role ${roleId}`);
       return true;
     } catch (error) {
-      console.error('[OpenKB] Failed to clear role:', error);
+      console.error("[OpenKB] Failed to clear role:", error);
       return false;
     }
   }
@@ -277,19 +249,16 @@ export class OpenKBClient {
     try {
       const queryCount = await this.redis.zCard(`openkb:${roleId}:queries`);
 
-      const range = await this.redis.zRange(
-        `openkb:${roleId}:queries`,
-        0,
-        -1,
-        { withScores: true }
-      );
+      const range = await this.redis.zRange(`openkb:${roleId}:queries`, 0, -1, {
+        withScores: true,
+      });
 
       let oldestQuery: number | undefined;
       let newestQuery: number | undefined;
 
       if (range.length > 0) {
-        oldestQuery = Math.min(...range.map(r => typeof r === 'number' ? r : 0));
-        newestQuery = Math.max(...range.map(r => typeof r === 'number' ? r : 0));
+        oldestQuery = Math.min(...range.map((r) => (typeof r === "number" ? r : 0)));
+        newestQuery = Math.max(...range.map((r) => (typeof r === "number" ? r : 0)));
       }
 
       return {
@@ -298,7 +267,7 @@ export class OpenKBClient {
         newestQuery,
       };
     } catch (error) {
-      console.error('[OpenKB] Failed to get stats:', error);
+      console.error("[OpenKB] Failed to get stats:", error);
       return { queryCount: 0 };
     }
   }

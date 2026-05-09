@@ -1,23 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/lib/db/config';
-import type { DashboardLayout } from '@/types/database';
+import { type NextRequest, NextResponse } from "next/server";
+import { getDb } from "@/lib/db/config";
+import type { DashboardLayout } from "@/types/database";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const db = getDb();
 
     // Get dashboard with public status
-    const dashboard = await db<DashboardLayout>('dashboard_layouts')
-      .where('id', id)
-      .first();
+    const dashboard = await db<DashboardLayout>("dashboard_layouts").where("id", id).first();
 
     if (!dashboard) {
       return NextResponse.json(
-        { success: false, error: { code: 'NOT_FOUND', message: 'Dashboard not found' } },
+        { success: false, error: { code: "NOT_FOUND", message: "Dashboard not found" } },
         { status: 404 }
       );
     }
@@ -25,18 +20,18 @@ export async function GET(
     // Check if dashboard is public
     if (!dashboard.is_public) {
       return NextResponse.json(
-        { success: false, error: { code: 'PRIVATE', message: 'This dashboard is private' } },
+        { success: false, error: { code: "PRIVATE", message: "This dashboard is private" } },
         { status: 403 }
       );
     }
 
     // Get widgets for the dashboard
-    const widgets = await db('dashboard_widgets')
-      .where('dashboard_id', id)
-      .orderBy('created_at', 'asc');
+    const widgets = await db("dashboard_widgets")
+      .where("dashboard_id", id)
+      .orderBy("created_at", "asc");
 
     // Parse widget data from JSON columns
-    const parsedWidgets = widgets.map(w => {
+    const parsedWidgets = widgets.map((w) => {
       let position = { x: 0, y: 0, w: 4, h: 4, minW: 2, minH: 2 };
       let widgetConfig = {};
 
@@ -85,9 +80,9 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Error fetching public dashboard:', error);
+    console.error("Error fetching public dashboard:", error);
     return NextResponse.json(
-      { success: false, error: { code: 'SERVER_ERROR', message: 'Failed to fetch dashboard' } },
+      { success: false, error: { code: "SERVER_ERROR", message: "Failed to fetch dashboard" } },
       { status: 500 }
     );
   }

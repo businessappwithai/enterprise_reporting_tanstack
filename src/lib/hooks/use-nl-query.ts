@@ -9,22 +9,22 @@
  * - Pagination and infinite scroll support
  */
 
-import { useQuery, useMutation, useQueryClient, type UseQueryOptions } from '@tanstack/react-query';
-import { useState } from 'react';
-import { toast } from 'sonner';
+import { useQuery, useMutation, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
+import { useState } from "react";
+import { toast } from "sonner";
 import {
   fetchActiveDataSources,
   fetchDataSourceSchema,
   executeNlQuery,
   fetchQueryHistory,
   nlQueryKeys,
-} from '@/lib/api/nl-query-client';
+} from "@/lib/api/nl-query-client";
 import type {
   DataSourceListItem,
   SchemaOverviewResponse,
   NlQueryPipelineResult,
   QueryHistoryEntry,
-} from '@/types/database';
+} from "@/types/database";
 
 // ============================================================================
 // Data Source Hooks
@@ -40,7 +40,7 @@ import type {
  * - Automatic retry on failure
  */
 export function useActiveDataSources(
-  options?: Omit<UseQueryOptions<DataSourceListItem[], Error>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<DataSourceListItem[], Error>, "queryKey" | "queryFn">
 ) {
   return useQuery<DataSourceListItem[], Error>({
     queryKey: nlQueryKeys.dataSources(),
@@ -87,9 +87,9 @@ export function useDataSourceSchema(
   options?: { refresh?: boolean; enabled?: boolean }
 ) {
   return useQuery<SchemaOverviewResponse, Error>({
-    queryKey: nlQueryKeys.schema(dataSourceId || ''),
+    queryKey: nlQueryKeys.schema(dataSourceId || ""),
     queryFn: () => fetchDataSourceSchema(dataSourceId!, { refresh: options?.refresh }),
-    enabled: !!dataSourceId && (options?.enabled !== false),
+    enabled: !!dataSourceId && options?.enabled !== false,
     staleTime: 10 * 60 * 1000, // 10 minutes - schema doesn't change often
     gcTime: 30 * 60 * 1000, // 30 minutes
     refetchOnWindowFocus: false,
@@ -152,14 +152,14 @@ export function useExecuteNlQuery() {
 
       // Show success toast if query was successful
       if (data.accessGranted && data.queryResults) {
-        const rowText = `${data.queryResults.totalRows} row${data.queryResults.totalRows !== 1 ? 's' : ''}`;
+        const rowText = `${data.queryResults.totalRows} row${data.queryResults.totalRows !== 1 ? "s" : ""}`;
         const timeText = `${data.queryResults.executionTimeMs}ms`;
         toast.success(`Query returned ${rowText} in ${timeText}`);
       }
 
       // If access was denied, show warning
       if (!data.accessGranted) {
-        toast.warning(data.error || 'Access denied to some entities in this query');
+        toast.warning(data.error || "Access denied to some entities in this query");
       }
 
       // If there was an execution error (but access was granted), show error
@@ -180,7 +180,7 @@ export function useExecuteNlQuery() {
  */
 export function useQueryResult(queryId: string | null) {
   return useQuery<NlQueryPipelineResult | null, Error>({
-    queryKey: nlQueryKeys.result(queryId || ''),
+    queryKey: nlQueryKeys.result(queryId || ""),
     queryFn: () => Promise.resolve(null),
     enabled: false, // This is only for reading from cache
     staleTime: Infinity,
@@ -216,11 +216,11 @@ export function useQueryHistory(
 ) {
   return useQuery<QueryHistoryEntry[], Error>({
     queryKey: [
-      ...nlQueryKeys.historyForDataSource(dataSourceId || ''),
+      ...nlQueryKeys.historyForDataSource(dataSourceId || ""),
       { limit: options?.limit, offset: options?.offset },
     ],
     queryFn: () => fetchQueryHistory(dataSourceId, options),
-    enabled: !!dataSourceId && (options?.enabled !== false),
+    enabled: !!dataSourceId && options?.enabled !== false,
     staleTime: 30 * 1000, // 30 seconds - history can change frequently
     gcTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
@@ -256,7 +256,9 @@ export function useInvalidateQueryHistory() {
  * Useful for components that need multiple pieces of state
  */
 export function useNlQueryState(dataSourceId: string | undefined) {
-  const [selectedDataSourceId, setSelectedDataSourceId] = useState<string | undefined>(dataSourceId);
+  const [selectedDataSourceId, setSelectedDataSourceId] = useState<string | undefined>(
+    dataSourceId
+  );
   const queryClient = useQueryClient();
 
   const dataSourcesQuery = useActiveDataSources();

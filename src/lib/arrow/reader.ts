@@ -2,7 +2,7 @@
  * Arrow IPC reader utilities.
  */
 
-import * as Arrow from 'apache-arrow';
+import * as Arrow from "apache-arrow";
 
 /**
  * Read an Arrow IPC buffer (stream format) into a Table.

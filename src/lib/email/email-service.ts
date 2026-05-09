@@ -1,6 +1,6 @@
-import nodemailer from 'nodemailer';
-import { promises as fs } from 'fs';
-import path from 'path';
+import nodemailer from "nodemailer";
+import { promises as fs } from "fs";
+import path from "path";
 
 export interface EmailTemplate {
   id: string;
@@ -22,7 +22,7 @@ export interface EmailAttachment {
 // Built-in templates
 const builtInTemplates = {
   jobCompleted: {
-    subject: 'Job Completed: {{jobName}}',
+    subject: "Job Completed: {{jobName}}",
     htmlBody: `
       <!DOCTYPE html>
       <html>
@@ -94,7 +94,7 @@ const builtInTemplates = {
   },
 
   jobFailed: {
-    subject: '❌ Job Failed: {{jobName}}',
+    subject: "❌ Job Failed: {{jobName}}",
     htmlBody: `
       <!DOCTYPE html>
       <html>
@@ -146,8 +146,8 @@ export function renderTemplate(
 
   // Replace simple variables first
   Object.entries(variables).forEach(([key, value]) => {
-    const regex = new RegExp(`{{${key}}}`, 'g');
-    result = result.replace(regex, String(value ?? ''));
+    const regex = new RegExp(`{{${key}}}`, "g");
+    result = result.replace(regex, String(value ?? ""));
   });
 
   // Handle query results placeholder
@@ -155,39 +155,40 @@ export function renderTemplate(
     const columns = Object.keys(queryResults[0]);
 
     // Check if template has queryResults placeholder
-    if (result.includes('{{queryResults}}')) {
+    if (result.includes("{{queryResults}}")) {
       // Generate HTML table from query results
       let tableHtml = '<table class="data-table">\n<thead>\n<tr>\n';
-      tableHtml += columns.map(col => `<th>${col}</th>`).join('\n');
-      tableHtml += '\n</tr>\n</thead>\n<tbody>\n';
+      tableHtml += columns.map((col) => `<th>${col}</th>`).join("\n");
+      tableHtml += "\n</tr>\n</thead>\n<tbody>\n";
 
-      queryResults.slice(0, 10).forEach(row => { // Limit to 10 rows for email
-        tableHtml += '<tr>\n';
-        tableHtml += columns.map(col => `<td>${row[col] ?? ''}</td>`).join('\n');
-        tableHtml += '\n</tr>\n';
+      queryResults.slice(0, 10).forEach((row) => {
+        // Limit to 10 rows for email
+        tableHtml += "<tr>\n";
+        tableHtml += columns.map((col) => `<td>${row[col] ?? ""}</td>`).join("\n");
+        tableHtml += "\n</tr>\n";
       });
 
       if (queryResults.length > 10) {
         tableHtml += `<tr><td colspan="${columns.length}" style="text-align: center; color: #6b7280;">... and ${queryResults.length - 10} more rows</td></tr>`;
       }
 
-      tableHtml += '\n</tbody>\n</table>';
+      tableHtml += "\n</tbody>\n</table>";
 
-      result = result.replace('{{queryResults}}', tableHtml);
+      result = result.replace("{{queryResults}}", tableHtml);
     }
 
     // Replace individual column placeholders like {{column_name}}
     if (queryResults.length > 0) {
-      columns.forEach(col => {
-        const regex = new RegExp(`{{${col}}}`, 'g');
-        result = result.replace(regex, String(queryResults[0][col] ?? ''));
+      columns.forEach((col) => {
+        const regex = new RegExp(`{{${col}}}`, "g");
+        result = result.replace(regex, String(queryResults[0][col] ?? ""));
       });
     }
   }
 
   // Handle conditionals {{#if var}}...{{/if}}
   result = result.replace(/{{#if (\w+)}}([\s\S]*?){{\/if}}/g, (_, varName, content) => {
-    return variables[varName] ? content : '';
+    return variables[varName] ? content : "";
   });
 
   return result;
@@ -196,15 +197,15 @@ export function renderTemplate(
 // Get transporter with connection pooling
 function getTransporter() {
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'localhost',
+    host: process.env.SMTP_HOST || "localhost",
     port: Number(process.env.SMTP_PORT || 587),
-    secure: process.env.SMTP_SECURE === 'true',
+    secure: process.env.SMTP_SECURE === "true",
     pool: true,
     maxConnections: 5,
     maxMessages: 100,
     auth: {
-      user: process.env.SMTP_USER || '',
-      pass: process.env.SMTP_PASS || '',
+      user: process.env.SMTP_USER || "",
+      pass: process.env.SMTP_PASS || "",
     },
   });
 }
@@ -224,7 +225,7 @@ export async function sendEmail(
     const transporter = getTransporter();
     const from = process.env.EMAIL_FROM_NAME
       ? `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM}>`
-      : process.env.EMAIL_FROM || 'noreply@example.com';
+      : process.env.EMAIL_FROM || "noreply@example.com";
 
     // Render template with variables and query results
     const html = renderTemplate(template.htmlBody, variables, queryResults);
@@ -232,10 +233,10 @@ export async function sendEmail(
 
     const mailOptions = {
       from,
-      to: Array.isArray(to) ? to.join(', ') : to,
+      to: Array.isArray(to) ? to.join(", ") : to,
       subject,
       html,
-      attachments: attachments?.map(att => ({
+      attachments: attachments?.map((att) => ({
         filename: att.filename,
         path: att.path,
         content: att.content,
@@ -249,10 +250,10 @@ export async function sendEmail(
       messageId: info.messageId,
     };
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error("Error sending email:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : "Unknown error",
     };
   }
 }
@@ -267,22 +268,28 @@ export async function sendEmailWithTemplate(
 ): Promise<{ success: boolean; error?: string; messageId?: string }> {
   const template = builtInTemplates[templateName];
 
-  return await sendEmail(to, {
-    subject: template.subject,
-    htmlBody: template.html,
-  }, variables, queryResults, attachments);
+  return await sendEmail(
+    to,
+    {
+      subject: template.subject,
+      htmlBody: template.html,
+    },
+    variables,
+    queryResults,
+    attachments
+  );
 }
 
 // Test email configuration
 export async function sendTestEmail(to: string): Promise<{ success: boolean; error?: string }> {
   const variables = {
-    smtpHost: process.env.SMTP_HOST || 'localhost',
+    smtpHost: process.env.SMTP_HOST || "localhost",
     smtpPort: process.env.SMTP_PORT || 587,
-    fromEmail: process.env.EMAIL_FROM || 'noreply@example.com',
+    fromEmail: process.env.EMAIL_FROM || "noreply@example.com",
     sentAt: new Date().toISOString(),
   };
 
-  return await sendEmailWithTemplate(to, 'jobCompleted', variables);
+  return await sendEmailWithTemplate(to, "jobCompleted", variables);
 }
 
 // Verify email configuration
@@ -294,7 +301,7 @@ export async function verifyEmailConfig(): Promise<{ success: boolean; error?: s
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Connection failed',
+      error: error instanceof Error ? error.message : "Connection failed",
     };
   }
 }

@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getSecurityContext, hasPermission } from '@/lib/auth/rbac';
-import { getDsRole, updateDsRole, deleteDsRole } from '@/lib/permissions/ds-rbac';
+import { type NextRequest, NextResponse } from "next/server";
+import { getSecurityContext, hasPermission } from "@/lib/auth/rbac";
+import { getDsRole, updateDsRole, deleteDsRole } from "@/lib/permissions/ds-rbac";
 
 export async function GET(
   request: NextRequest,
@@ -10,7 +10,7 @@ export async function GET(
     const context = await getSecurityContext();
     if (!context) {
       return NextResponse.json(
-        { success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } },
+        { success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } },
         { status: 401 }
       );
     }
@@ -20,16 +20,22 @@ export async function GET(
 
     if (!role) {
       return NextResponse.json(
-        { success: false, error: { code: 'NOT_FOUND', message: 'Role not found' } },
+        { success: false, error: { code: "NOT_FOUND", message: "Role not found" } },
         { status: 404 }
       );
     }
 
     return NextResponse.json({ success: true, data: role });
   } catch (error) {
-    console.error('Error fetching DS role:', error);
+    console.error("Error fetching DS role:", error);
     return NextResponse.json(
-      { success: false, error: { code: 'INTERNAL_ERROR', message: error instanceof Error ? error.message : 'Unknown error' } },
+      {
+        success: false,
+        error: {
+          code: "INTERNAL_ERROR",
+          message: error instanceof Error ? error.message : "Unknown error",
+        },
+      },
       { status: 500 }
     );
   }
@@ -43,14 +49,14 @@ export async function PUT(
     const context = await getSecurityContext();
     if (!context) {
       return NextResponse.json(
-        { success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } },
+        { success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } },
         { status: 401 }
       );
     }
 
-    if (!hasPermission(context, 'data_source:admin') && !hasPermission(context, 'admin:*')) {
+    if (!hasPermission(context, "data_source:admin") && !hasPermission(context, "admin:*")) {
       return NextResponse.json(
-        { success: false, error: { code: 'FORBIDDEN', message: 'Insufficient permissions' } },
+        { success: false, error: { code: "FORBIDDEN", message: "Insufficient permissions" } },
         { status: 403 }
       );
     }
@@ -63,16 +69,22 @@ export async function PUT(
 
     if (!updated) {
       return NextResponse.json(
-        { success: false, error: { code: 'NOT_FOUND', message: 'Role not found' } },
+        { success: false, error: { code: "NOT_FOUND", message: "Role not found" } },
         { status: 404 }
       );
     }
 
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {
-    console.error('Error updating DS role:', error);
+    console.error("Error updating DS role:", error);
     return NextResponse.json(
-      { success: false, error: { code: 'INTERNAL_ERROR', message: error instanceof Error ? error.message : 'Unknown error' } },
+      {
+        success: false,
+        error: {
+          code: "INTERNAL_ERROR",
+          message: error instanceof Error ? error.message : "Unknown error",
+        },
+      },
       { status: 500 }
     );
   }
@@ -86,14 +98,14 @@ export async function DELETE(
     const context = await getSecurityContext();
     if (!context) {
       return NextResponse.json(
-        { success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } },
+        { success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } },
         { status: 401 }
       );
     }
 
-    if (!hasPermission(context, 'data_source:admin') && !hasPermission(context, 'admin:*')) {
+    if (!hasPermission(context, "data_source:admin") && !hasPermission(context, "admin:*")) {
       return NextResponse.json(
-        { success: false, error: { code: 'FORBIDDEN', message: 'Insufficient permissions' } },
+        { success: false, error: { code: "FORBIDDEN", message: "Insufficient permissions" } },
         { status: 403 }
       );
     }
@@ -103,9 +115,15 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting DS role:', error);
+    console.error("Error deleting DS role:", error);
     return NextResponse.json(
-      { success: false, error: { code: 'INTERNAL_ERROR', message: error instanceof Error ? error.message : 'Unknown error' } },
+      {
+        success: false,
+        error: {
+          code: "INTERNAL_ERROR",
+          message: error instanceof Error ? error.message : "Unknown error",
+        },
+      },
       { status: 500 }
     );
   }

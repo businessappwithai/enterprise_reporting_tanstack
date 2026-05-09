@@ -5,8 +5,8 @@
  * All operations are transaction-safe and include audit logging.
  */
 
-import { getDb } from '@/lib/db/config';
-import type { MetadataEntityField } from '@/types/database';
+import { getDb } from "@/lib/db/config";
+import type { MetadataEntityField } from "@/types/database";
 
 /**
  * Field Service
@@ -16,19 +16,17 @@ export class FieldService {
    * Get fields by entity header ID
    */
   static async getByEntityId(entityHeaderId: string): Promise<MetadataEntityField[]> {
-    return await getDb()('metadata_entity_field')
-      .where('entity_header_id', entityHeaderId)
-      .orderBy('display_order', 'asc')
-      .select('*');
+    return await getDb()("metadata_entity_field")
+      .where("entity_header_id", entityHeaderId)
+      .orderBy("display_order", "asc")
+      .select("*");
   }
 
   /**
    * Get single field by ID
    */
   static async getById(id: string): Promise<MetadataEntityField | null> {
-    return await getDb()('metadata_entity_field')
-      .where('id', id)
-      .first();
+    return await getDb()("metadata_entity_field").where("id", id).first();
   }
 
   /**
@@ -36,14 +34,14 @@ export class FieldService {
    * Note: This is typically called during datasource inspection
    */
   static async create(
-    data: Omit<MetadataEntityField, 'id' | 'created_at' | 'updated_at'>
+    data: Omit<MetadataEntityField, "id" | "created_at" | "updated_at">
   ): Promise<MetadataEntityField> {
-    const [field] = await getDb()('metadata_entity_field')
+    const [field] = await getDb()("metadata_entity_field")
       .insert({
         ...data,
         updated_at: getDb().fn.now(),
       })
-      .returning('*');
+      .returning("*");
 
     return field;
   }
@@ -52,7 +50,7 @@ export class FieldService {
    * Bulk create fields (transaction)
    */
   static async bulkCreate(
-    fields: Array<Omit<MetadataEntityField, 'id' | 'created_at' | 'updated_at'>>
+    fields: Array<Omit<MetadataEntityField, "id" | "created_at" | "updated_at">>
   ): Promise<MetadataEntityField[]> {
     if (fields.length === 0) {
       return [];
@@ -60,14 +58,12 @@ export class FieldService {
 
     const now = getDb().fn.now();
 
-    const fieldData = fields.map(field => ({
+    const fieldData = fields.map((field) => ({
       ...field,
       updated_at: now,
     }));
 
-    return await getDb()('metadata_entity_field')
-      .insert(fieldData)
-      .returning('*');
+    return await getDb()("metadata_entity_field").insert(fieldData).returning("*");
   }
 
   /**
@@ -76,19 +72,25 @@ export class FieldService {
    */
   static async update(
     id: string,
-    data: Partial<Pick<
-      MetadataEntityField,
-      'description' | 'is_display_field' | 'is_searchable' | 'display_order' | 'relationship_ui_type'
-    >>,
+    data: Partial<
+      Pick<
+        MetadataEntityField,
+        | "description"
+        | "is_display_field"
+        | "is_searchable"
+        | "display_order"
+        | "relationship_ui_type"
+      >
+    >,
     userId?: string
   ): Promise<MetadataEntityField | null> {
-    const [field] = await getDb()('metadata_entity_field')
-      .where('id', id)
+    const [field] = await getDb()("metadata_entity_field")
+      .where("id", id)
       .update({
         ...data,
         updated_at: getDb().fn.now(),
       })
-      .returning('*');
+      .returning("*");
 
     if (!field) {
       return null;
@@ -96,10 +98,10 @@ export class FieldService {
 
     // Log to audit trail
     if (userId) {
-      await getDb()('audit_log').insert({
+      await getDb()("audit_log").insert({
         user_id: userId,
-        action: 'update',
-        resource_type: 'metadata_entity',
+        action: "update",
+        resource_type: "metadata_entity",
         resource_id: id,
         details: JSON.stringify({
           updated_fields: Object.keys(data),
@@ -118,10 +120,16 @@ export class FieldService {
   static async bulkUpdate(
     updates: Array<{
       id: string;
-      data: Partial<Pick<
-        MetadataEntityField,
-        'description' | 'is_display_field' | 'is_searchable' | 'display_order' | 'relationship_ui_type'
-      >>;
+      data: Partial<
+        Pick<
+          MetadataEntityField,
+          | "description"
+          | "is_display_field"
+          | "is_searchable"
+          | "display_order"
+          | "relationship_ui_type"
+        >
+      >;
     }>,
     userId?: string
   ): Promise<MetadataEntityField[]> {
@@ -135,13 +143,13 @@ export class FieldService {
       const results: MetadataEntityField[] = [];
 
       for (const update of updates) {
-        const [field] = await trx('metadata_entity_field')
-          .where('id', update.id)
+        const [field] = await trx("metadata_entity_field")
+          .where("id", update.id)
           .update({
             ...update.data,
             updated_at: getDb().fn.now(),
           })
-          .returning('*');
+          .returning("*");
 
         if (field) {
           results.push(field);
@@ -150,14 +158,14 @@ export class FieldService {
 
       // Single audit log entry for the batch update
       if (userId && results.length > 0) {
-        await trx('audit_log').insert({
+        await trx("audit_log").insert({
           user_id: userId,
-          action: 'update',
-          resource_type: 'metadata_entity',
-          resource_id: 'bulk_field_update',
+          action: "update",
+          resource_type: "metadata_entity",
+          resource_id: "bulk_field_update",
           details: JSON.stringify({
             updated_field_count: results.length,
-            field_ids: results.map(f => f.id),
+            field_ids: results.map((f) => f.id),
           }),
           created_at: getDb().fn.now(),
         });
@@ -175,19 +183,17 @@ export class FieldService {
    * Delete field metadata
    */
   static async delete(id: string, userId?: string): Promise<boolean> {
-    const count = await getDb()('metadata_entity_field')
-      .where('id', id)
-      .delete();
+    const count = await getDb()("metadata_entity_field").where("id", id).delete();
 
     if (count > 0 && userId) {
       // Log to audit trail
-      await getDb()('audit_log').insert({
+      await getDb()("audit_log").insert({
         user_id: userId,
-        action: 'delete',
-        resource_type: 'metadata_entity',
+        action: "delete",
+        resource_type: "metadata_entity",
         resource_id: id,
         details: JSON.stringify({
-          deleted: 'field_metadata'
+          deleted: "field_metadata",
         }),
         created_at: getDb().fn.now(),
       });
@@ -200,8 +206,8 @@ export class FieldService {
    * Delete all fields for an entity (cascade)
    */
   static async deleteByEntityId(entityHeaderId: string): Promise<number> {
-    return await getDb()('metadata_entity_field')
-      .where('entity_header_id', entityHeaderId)
+    return await getDb()("metadata_entity_field")
+      .where("entity_header_id", entityHeaderId)
       .delete();
   }
 
@@ -209,31 +215,31 @@ export class FieldService {
    * Get display fields for an entity
    */
   static async getDisplayFields(entityHeaderId: string): Promise<MetadataEntityField[]> {
-    return await getDb()('metadata_entity_field')
-      .where('entity_header_id', entityHeaderId)
-      .where('is_display_field', true)
-      .orderBy('display_order', 'asc')
-      .select('*');
+    return await getDb()("metadata_entity_field")
+      .where("entity_header_id", entityHeaderId)
+      .where("is_display_field", true)
+      .orderBy("display_order", "asc")
+      .select("*");
   }
 
   /**
    * Get foreign key fields for an entity
    */
   static async getForeignKeyFields(entityHeaderId: string): Promise<MetadataEntityField[]> {
-    return await getDb()('metadata_entity_field')
-      .where('entity_header_id', entityHeaderId)
-      .where('is_foreign_key', true)
-      .select('*');
+    return await getDb()("metadata_entity_field")
+      .where("entity_header_id", entityHeaderId)
+      .where("is_foreign_key", true)
+      .select("*");
   }
 
   /**
    * Get searchable fields for an entity
    */
   static async getSearchableFields(entityHeaderId: string): Promise<MetadataEntityField[]> {
-    return await getDb()('metadata_entity_field')
-      .where('entity_header_id', entityHeaderId)
-      .where('is_searchable', true)
-      .orderBy('display_order', 'asc')
-      .select('*');
+    return await getDb()("metadata_entity_field")
+      .where("entity_header_id", entityHeaderId)
+      .where("is_searchable", true)
+      .orderBy("display_order", "asc")
+      .select("*");
   }
 }

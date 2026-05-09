@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
 /**
  * Hook for managing cross-widget filtering on dashboards.
  */
 
-import { useCallback, useMemo, useState } from 'react';
-import type { ActiveFilter, CrossFilterConfig, WidgetFilterConfig } from '@/types/wasm';
-import { nanoid } from 'nanoid';
+import { useCallback, useMemo, useState } from "react";
+import type { ActiveFilter, CrossFilterConfig, WidgetFilterConfig } from "@/types/wasm";
+import { nanoid } from "nanoid";
 
 interface UseCrossFilterReturn {
   activeFilters: ActiveFilter[];
-  applyFilter: (filter: Omit<ActiveFilter, 'id' | 'affectedWidgets'>) => void;
+  applyFilter: (filter: Omit<ActiveFilter, "id" | "affectedWidgets">) => void;
   removeFilter: (filterId: string) => void;
   clearFilters: () => void;
   getFilteredQuery: (widgetId: string, baseQuery: string) => string;
@@ -29,7 +29,7 @@ export function useCrossFilter(config: CrossFilterConfig): UseCrossFilterReturn 
   }, [config.widgets]);
 
   const applyFilter = useCallback(
-    (filter: Omit<ActiveFilter, 'id' | 'affectedWidgets'>) => {
+    (filter: Omit<ActiveFilter, "id" | "affectedWidgets">) => {
       // Determine affected widgets
       const affected: string[] = [];
       for (const widget of config.widgets) {
@@ -51,16 +51,12 @@ export function useCrossFilter(config: CrossFilterConfig): UseCrossFilterReturn 
       setActiveFilters((prev) => {
         // Replace existing filter from the same source on the same column
         const filtered = prev.filter(
-          (f) =>
-            !(
-              f.sourceWidgetId === filter.sourceWidgetId &&
-              f.column === filter.column
-            ),
+          (f) => !(f.sourceWidgetId === filter.sourceWidgetId && f.column === filter.column)
         );
         return [...filtered, newFilter];
       });
     },
-    [config.widgets],
+    [config.widgets]
   );
 
   const removeFilter = useCallback((filterId: string) => {
@@ -82,39 +78,34 @@ export function useCrossFilter(config: CrossFilterConfig): UseCrossFilterReturn 
         if (!filter.affectedWidgets.includes(widgetId)) continue;
 
         // Find the column mapping for this widget
-        const link = widget.filterLinks.find(
-          (l) => l.sourceWidgetId === filter.sourceWidgetId,
-        );
+        const link = widget.filterLinks.find((l) => l.sourceWidgetId === filter.sourceWidgetId);
         if (!link) continue;
 
         const targetColumn = link.columnMapping[filter.column] ?? filter.column;
 
-        if (filter.operator === 'eq' && filter.values.length === 1) {
-          const val = typeof filter.values[0] === 'string'
-            ? `'${filter.values[0].replace(/'/g, "''")}'`
-            : filter.values[0];
+        if (filter.operator === "eq" && filter.values.length === 1) {
+          const val =
+            typeof filter.values[0] === "string"
+              ? `'${filter.values[0].replace(/'/g, "''")}'`
+              : filter.values[0];
           clauses.push(`"${targetColumn}" = ${val}`);
-        } else if (filter.operator === 'in') {
+        } else if (filter.operator === "in") {
           const vals = filter.values
-            .map((v) =>
-              typeof v === 'string' ? `'${v.replace(/'/g, "''")}'` : v,
-            )
-            .join(', ');
+            .map((v) => (typeof v === "string" ? `'${v.replace(/'/g, "''")}'` : v))
+            .join(", ");
           clauses.push(`"${targetColumn}" IN (${vals})`);
-        } else if (filter.operator === 'range' && filter.values.length === 2) {
-          clauses.push(
-            `"${targetColumn}" BETWEEN ${filter.values[0]} AND ${filter.values[1]}`,
-          );
+        } else if (filter.operator === "range" && filter.values.length === 2) {
+          clauses.push(`"${targetColumn}" BETWEEN ${filter.values[0]} AND ${filter.values[1]}`);
         }
       }
 
       if (clauses.length === 0) return baseQuery;
 
-      const whereClause = clauses.join(' AND ');
+      const whereClause = clauses.join(" AND ");
       // Wrap the base query and apply filters
       return `SELECT * FROM (${baseQuery}) AS _sub WHERE ${whereClause}`;
     },
-    [activeFilters, widgetMap],
+    [activeFilters, widgetMap]
   );
 
   return { activeFilters, applyFilter, removeFilter, clearFilters, getFilteredQuery };

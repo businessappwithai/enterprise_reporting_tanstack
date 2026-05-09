@@ -2,11 +2,10 @@
  * File storage management for exported Parquet/Arrow files.
  */
 
-import { existsSync, mkdirSync, unlinkSync, readdirSync, statSync } from 'fs';
-import path from 'path';
+import { existsSync, mkdirSync, unlinkSync, readdirSync, statSync } from "fs";
+import path from "path";
 
-const EXPORT_DIR =
-  process.env.DATASET_EXPORT_PATH || './data/exports';
+const EXPORT_DIR = process.env.DATASET_EXPORT_PATH || "./data/exports";
 
 /**
  * Ensure the export directory exists.
@@ -43,7 +42,7 @@ export function listExportFiles(): { name: string; size: number; modified: Date 
   if (!existsSync(dir)) return [];
 
   return readdirSync(dir)
-    .filter((f) => f.endsWith('.parquet') || f.endsWith('.arrow'))
+    .filter((f) => f.endsWith(".parquet") || f.endsWith(".arrow"))
     .map((name) => {
       const st = statSync(path.join(dir, name));
       return { name, size: st.size, modified: st.mtime };

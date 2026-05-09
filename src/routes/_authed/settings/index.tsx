@@ -1,13 +1,13 @@
-import { createFileRoute, Link, redirect } from '@tanstack/react-router'
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Mail, Database, Bell, Users as UsersIcon } from 'lucide-react'
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Mail, Database, Bell, Users as UsersIcon } from "lucide-react";
 
-export const Route = createFileRoute('/_authed/settings/')({
+export const Route = createFileRoute("/_authed/settings/")({
   beforeLoad: () => {
-    throw redirect({ to: '/settings/email' })
+    throw redirect({ to: "/settings/email" });
   },
   component: SettingsPage,
-})
+});
 
 function SettingsPage() {
   return (
@@ -61,5 +61,5 @@ function SettingsPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

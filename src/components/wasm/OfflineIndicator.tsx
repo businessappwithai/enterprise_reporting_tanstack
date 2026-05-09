@@ -1,18 +1,20 @@
-'use client';
+"use client";
 
 /**
  * Offline indicator component.
  * Shows whether the app is offline/online and displays cached data status.
  */
 
-import React, { useEffect, useState } from 'react';
-import { Wifi, WifiOff, Database } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { useDataset } from '@/hooks/useDataset';
-import { isFeatureEnabled } from '@/lib/feature-flags';
+import React, { useEffect, useState } from "react";
+import { Wifi, WifiOff, Database } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { useDataset } from "@/hooks/useDataset";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 export function OfflineIndicator() {
-  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator !== "undefined" ? navigator.onLine : true
+  );
   const { datasets } = useDataset();
   const [cachedCount, setCachedCount] = useState(0);
 
@@ -20,15 +22,17 @@ export function OfflineIndicator() {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     // Count cached datasets
     const countCached = async () => {
       try {
-        const { keys } = await import('idb-keyval');
+        const { keys } = await import("idb-keyval");
         const allKeys = await keys();
-        const parquetKeys = allKeys.filter((k) => typeof k === 'string' && k.startsWith('parquet_'));
+        const parquetKeys = allKeys.filter(
+          (k) => typeof k === "string" && k.startsWith("parquet_")
+        );
         setCachedCount(parquetKeys.length);
       } catch {
         // IndexedDB not available
@@ -38,12 +42,12 @@ export function OfflineIndicator() {
     countCached();
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
   }, [datasets]);
 
-  if (!isFeatureEnabled('offlineEnabled')) {
+  if (!isFeatureEnabled("offlineEnabled")) {
     return null;
   }
 
@@ -65,7 +69,9 @@ export function OfflineIndicator() {
       {cachedCount > 0 && (
         <div className="flex items-center gap-1.5 text-muted-foreground">
           <Database className="h-3.5 w-3.5" />
-          <span>{cachedCount} cached dataset{cachedCount !== 1 ? 's' : ''}</span>
+          <span>
+            {cachedCount} cached dataset{cachedCount !== 1 ? "s" : ""}
+          </span>
         </div>
       )}
       {!isOnline && datasets.length === 0 && (

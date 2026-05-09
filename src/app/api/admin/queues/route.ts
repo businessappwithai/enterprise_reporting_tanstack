@@ -3,10 +3,10 @@
  * Provides the Bull Board UI for monitoring BullMQ queues
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { getQueue } from '@/lib/queue';
+import { type NextRequest, NextResponse } from "next/server";
+import { getQueue } from "@/lib/queue";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 /**
  * GET handler - Serve the Bull Board HTML
@@ -59,7 +59,7 @@ export async function GET(_request: NextRequest) {
 
   return new NextResponse(html, {
     headers: {
-      'Content-Type': 'text/html; charset=utf-8',
+      "Content-Type": "text/html; charset=utf-8",
     },
   });
 }

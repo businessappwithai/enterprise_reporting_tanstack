@@ -4,11 +4,11 @@
  * Stores schema information in the ds_schema_cache table.
  */
 
-import { getDb } from '@/lib/db/config';
-import { getConnection } from '@/lib/db/connection-manager';
-import { introspectSchema } from '@/lib/sql/schema-introspection';
-import type { DataSource, DsSchemaCache } from '@/types/database';
-import type { SchemaInfo } from '@/types/api';
+import { getDb } from "@/lib/db/config";
+import { getConnection } from "@/lib/db/connection-manager";
+import { introspectSchema } from "@/lib/sql/schema-introspection";
+import type { DataSource, DsSchemaCache } from "@/types/database";
+import type { SchemaInfo } from "@/types/api";
 
 interface SchemaContext {
   schemaInfo: SchemaInfo;
@@ -29,7 +29,7 @@ export async function introspectAndCacheSchema(dataSource: DataSource): Promise<
 
   for (const table of schemaInfo.tables) {
     try {
-      const rows = await connection(table.name).select('*').limit(5);
+      const rows = await connection(table.name).select("*").limit(5);
       sampleData[table.name] = rows;
     } catch (error) {
       console.warn(`Failed to fetch sample data for table ${table.name}:`, error);
@@ -44,7 +44,7 @@ export async function introspectAndCacheSchema(dataSource: DataSource): Promise<
   const db = getDb();
   const now = new Date().toISOString();
 
-  await db('ds_schema_cache')
+  await db("ds_schema_cache")
     .insert({
       id: crypto.randomUUID(),
       data_source_id: dataSource.id,
@@ -55,7 +55,7 @@ export async function introspectAndCacheSchema(dataSource: DataSource): Promise<
       created_at: now,
       updated_at: now,
     })
-    .onConflict('data_source_id')
+    .onConflict("data_source_id")
     .merge({
       schema_metadata: JSON.stringify(schemaInfo),
       sample_data: JSON.stringify(sampleData),
@@ -74,8 +74,8 @@ export async function introspectAndCacheSchema(dataSource: DataSource): Promise<
 export async function getSchemaContext(dataSource: DataSource): Promise<SchemaContext> {
   const db = getDb();
 
-  const cached = await db<DsSchemaCache>('ds_schema_cache')
-    .where('data_source_id', dataSource.id)
+  const cached = await db<DsSchemaCache>("ds_schema_cache")
+    .where("data_source_id", dataSource.id)
     .first();
 
   if (cached) {
@@ -100,30 +100,30 @@ function buildSchemaText(
 ): string {
   const parts: string[] = [];
 
-  parts.push('=== DATABASE SCHEMA ===\n');
+  parts.push("=== DATABASE SCHEMA ===\n");
 
   // Tables
   for (const table of schemaInfo.tables) {
-    parts.push(`TABLE: ${table.schema ? table.schema + '.' : ''}${table.name}`);
-    parts.push('Columns:');
+    parts.push(`TABLE: ${table.schema ? table.schema + "." : ""}${table.name}`);
+    parts.push("Columns:");
 
     for (const col of table.columns) {
       const constraints: string[] = [];
-      if (col.isPrimaryKey) constraints.push('PRIMARY KEY');
-      if (!col.nullable) constraints.push('NOT NULL');
+      if (col.isPrimaryKey) constraints.push("PRIMARY KEY");
+      if (!col.nullable) constraints.push("NOT NULL");
       if (col.defaultValue) constraints.push(`DEFAULT ${col.defaultValue}`);
-      const constraintStr = constraints.length > 0 ? ` [${constraints.join(', ')}]` : '';
+      const constraintStr = constraints.length > 0 ? ` [${constraints.join(", ")}]` : "";
       parts.push(`  - ${col.name}: ${col.type}${constraintStr}`);
     }
 
     // Primary key info
     if (table.primaryKey && table.primaryKey.length > 0) {
-      parts.push(`Primary Key: (${table.primaryKey.join(', ')})`);
+      parts.push(`Primary Key: (${table.primaryKey.join(", ")})`);
     }
 
     // Foreign keys
     if (table.foreignKeys && table.foreignKeys.length > 0) {
-      parts.push('Foreign Keys:');
+      parts.push("Foreign Keys:");
       for (const fk of table.foreignKeys) {
         parts.push(`  - ${fk.column} -> ${fk.referencedTable}(${fk.referencedColumn})`);
       }
@@ -136,46 +136,47 @@ function buildSchemaText(
       for (const row of samples.slice(0, 3)) {
         const entries = Object.entries(row)
           .map(([k, v]) => {
-            const val = v === null ? 'NULL' : typeof v === 'string' ? `'${v.substring(0, 50)}'` : String(v);
+            const val =
+              v === null ? "NULL" : typeof v === "string" ? `'${v.substring(0, 50)}'` : String(v);
             return `${k}=${val}`;
           })
-          .join(', ');
+          .join(", ");
         parts.push(`  ${entries}`);
       }
     }
 
-    parts.push('');
+    parts.push("");
   }
 
   // Views
   if (schemaInfo.views && schemaInfo.views.length > 0) {
-    parts.push('=== VIEWS ===\n');
+    parts.push("=== VIEWS ===\n");
     for (const view of schemaInfo.views) {
-      parts.push(`VIEW: ${view.schema ? view.schema + '.' : ''}${view.name}`);
+      parts.push(`VIEW: ${view.schema ? view.schema + "." : ""}${view.name}`);
       if (view.definition) {
         parts.push(`Definition: ${view.definition.substring(0, 500)}`);
       }
       if (view.columns && view.columns.length > 0) {
-        parts.push('Columns:');
+        parts.push("Columns:");
         for (const col of view.columns) {
           parts.push(`  - ${col.name}: ${col.type}`);
         }
       }
-      parts.push('');
+      parts.push("");
     }
   }
 
   // Relationship summary
   const relationships = extractRelationships(schemaInfo);
   if (relationships.length > 0) {
-    parts.push('=== TABLE RELATIONSHIPS ===\n');
+    parts.push("=== TABLE RELATIONSHIPS ===\n");
     for (const rel of relationships) {
       parts.push(`${rel.from}.${rel.fromColumn} -> ${rel.to}.${rel.toColumn}`);
     }
-    parts.push('');
+    parts.push("");
   }
 
-  return parts.join('\n');
+  return parts.join("\n");
 }
 
 interface Relationship {
@@ -209,7 +210,7 @@ function extractRelationships(schemaInfo: SchemaInfo): Relationship[] {
  */
 export async function invalidateSchemaCache(dataSourceId: string): Promise<void> {
   const db = getDb();
-  await db('ds_schema_cache').where('data_source_id', dataSourceId).delete();
+  await db("ds_schema_cache").where("data_source_id", dataSourceId).delete();
 }
 
 /**
@@ -217,8 +218,8 @@ export async function invalidateSchemaCache(dataSourceId: string): Promise<void>
  */
 export async function getCachedEntityNames(dataSourceId: string): Promise<string[]> {
   const db = getDb();
-  const cached = await db<DsSchemaCache>('ds_schema_cache')
-    .where('data_source_id', dataSourceId)
+  const cached = await db<DsSchemaCache>("ds_schema_cache")
+    .where("data_source_id", dataSourceId)
     .first();
 
   if (!cached) return [];

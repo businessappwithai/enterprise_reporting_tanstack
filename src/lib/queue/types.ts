@@ -3,34 +3,34 @@
  * Centralized type definitions for the modular queue system
  */
 
-export type JobType = 'report:generate' | 'chart:render' | 'data:export' | 'scheduled:refresh';
+export type JobType = "report:generate" | "chart:render" | "data:export" | "scheduled:refresh";
 
 export interface ReportJobData {
-  type: 'report:generate';
+  type: "report:generate";
   reportId: string;
   userId: string;
   parameters?: Record<string, unknown>;
-  format?: 'csv' | 'xlsx' | 'pdf';
+  format?: "csv" | "xlsx" | "pdf";
 }
 
 export interface ChartJobData {
-  type: 'chart:render';
+  type: "chart:render";
   chartId: string;
   userId: string;
-  format?: 'png' | 'svg';
+  format?: "png" | "svg";
 }
 
 export interface ExportJobData {
-  type: 'data:export';
+  type: "data:export";
   queryId: string;
   userId: string;
-  format: 'csv' | 'xlsx' | 'pdf';
+  format: "csv" | "xlsx" | "pdf";
   parameters?: Record<string, unknown>;
 }
 
 export interface ScheduledRefreshData {
-  type: 'scheduled:refresh';
-  targetType: 'report' | 'chart' | 'dashboard';
+  type: "scheduled:refresh";
+  targetType: "report" | "chart" | "dashboard";
   targetId: string;
   userId: string;
 }
@@ -65,16 +65,18 @@ export interface ScheduledJobOptions {
 }
 
 export interface QueueConfig {
-  connection: {
-    host: string;
-    port: number;
-    db?: number;
-    password?: string;
-  } | string;
+  connection:
+    | {
+        host: string;
+        port: number;
+        db?: number;
+        password?: string;
+      }
+    | string;
   defaultJobOptions?: {
     attempts?: number;
     backoff?: {
-      type: 'exponential' | 'fixed';
+      type: "exponential" | "fixed";
       delay: number;
     };
     removeOnComplete?: {

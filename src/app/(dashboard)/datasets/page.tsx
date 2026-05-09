@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
 /**
  * Datasets management page.
  * Lists server-side datasets and allows loading into DuckDB-Wasm.
  */
 
-import React, { useEffect, useState } from 'react';
-import { DatasetManager } from '@/components/datasets/DatasetManager';
-import { Button } from '@/components/ui/button';
-import { useDuckDB } from '@/components/duckdb/DuckDBProvider';
-import { useDataset } from '@/hooks/useDataset';
-import type { DatasetInfo } from '@/types/wasm';
-import { isFeatureEnabled } from '@/lib/feature-flags';
+import React, { useEffect, useState } from "react";
+import { DatasetManager } from "@/components/datasets/DatasetManager";
+import { Button } from "@/components/ui/button";
+import { useDuckDB } from "@/components/duckdb/DuckDBProvider";
+import { useDataset } from "@/hooks/useDataset";
+import type { DatasetInfo } from "@/types/wasm";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 interface ServerDataset {
   id: string;
@@ -24,7 +24,7 @@ interface ServerDataset {
 }
 
 export default function DatasetsPage() {
-  const wasmEnabled = isFeatureEnabled('wasmEnabled');
+  const wasmEnabled = isFeatureEnabled("wasmEnabled");
   const { status: duckdbStatus } = useDuckDB();
   const { datasets, loadDataset, unloadDataset } = useDataset();
   const [serverDatasets, setServerDatasets] = useState<ServerDataset[]>([]);
@@ -33,13 +33,13 @@ export default function DatasetsPage() {
   useEffect(() => {
     async function fetchDatasets() {
       try {
-        const res = await fetch('/api/datasets?pageSize=100');
+        const res = await fetch("/api/datasets?pageSize=100");
         const json = await res.json();
         if (json.success) {
           setServerDatasets(json.data.datasets);
         }
       } catch (err) {
-        console.error('Failed to fetch datasets:', err);
+        console.error("Failed to fetch datasets:", err);
       } finally {
         setIsLoadingList(false);
       }
@@ -62,7 +62,7 @@ export default function DatasetsPage() {
       fileSize: sd.fileSize,
       memorySize: 0,
       schema: sd.columns,
-      cacheStatus: 'not-cached' as const,
+      cacheStatus: "not-cached" as const,
       isLoading: false,
     };
   });
@@ -103,9 +103,7 @@ export default function DatasetsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">
-            DuckDB: {duckdbStatus}
-          </span>
+          <span className="text-sm text-muted-foreground">DuckDB: {duckdbStatus}</span>
           <Button variant="outline" onClick={() => window.location.reload()}>
             Refresh List
           </Button>
@@ -115,11 +113,7 @@ export default function DatasetsPage() {
       {isLoadingList ? (
         <div className="text-sm text-muted-foreground">Loading datasets…</div>
       ) : (
-        <DatasetManager
-          datasets={merged}
-          onLoad={handleLoad}
-          onUnload={handleUnload}
-        />
+        <DatasetManager datasets={merged} onLoad={handleLoad} onUnload={handleUnload} />
       )}
     </div>
   );

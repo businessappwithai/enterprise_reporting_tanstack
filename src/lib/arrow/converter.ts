@@ -2,8 +2,8 @@
  * Conversion utilities between JS objects and Apache Arrow tables.
  */
 
-import * as Arrow from 'apache-arrow';
-import { resolveArrowType } from './types';
+import * as Arrow from "apache-arrow";
+import { resolveArrowType } from "./types";
 
 /**
  * Convert an array of plain JS objects to an Arrow Table.
@@ -11,7 +11,7 @@ import { resolveArrowType } from './types';
  */
 export function objectsToArrow(
   rows: Record<string, unknown>[],
-  columnTypes?: Record<string, string>,
+  columnTypes?: Record<string, string>
 ): Arrow.Table {
   if (rows.length === 0) {
     return Arrow.tableFromArrays({});
@@ -30,7 +30,7 @@ export function objectsToArrow(
     const batches: Arrow.Vector[] = [];
 
     for (const [name, values] of Object.entries(columns)) {
-      const sqlType = columnTypes[name] ?? 'text';
+      const sqlType = columnTypes[name] ?? "text";
       const arrowType = resolveArrowType(sqlType);
       fields.push(new Arrow.Field(name, arrowType, true));
       batches.push(Arrow.vectorFromArray(values));

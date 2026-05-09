@@ -3,7 +3,7 @@
  * Streams data in chunks and renders partial results.
  */
 
-import type { ColumnSchema } from '@/types/wasm';
+import type { ColumnSchema } from "@/types/wasm";
 
 export interface ProgressiveLoadConfig {
   /** Total number of rows in the dataset */
@@ -39,24 +39,23 @@ export interface ProgressiveLoadOptions {
  * Useful for large datasets where you want to show partial results quickly.
  */
 export async function progressiveLoad<T = unknown>(
-  dataLoader: (offset: number, limit: number) => Promise<{
+  dataLoader: (
+    offset: number,
+    limit: number
+  ) => Promise<{
     rows: T[];
     columns: ColumnSchema[];
     totalRows: number;
   }>,
   config: ProgressiveLoadConfig,
-  options: ProgressiveLoadOptions = {},
+  options: ProgressiveLoadOptions = {}
 ): Promise<ProgressiveLoadResult<T>> {
-  const {
-    initialChunkSize = 1000,
-    chunkSize = 5000,
-    chunkDelay = 100,
-    maxChunks = 0,
-  } = config;
+  const { initialChunkSize = 1000, chunkSize = 5000, chunkDelay = 100, maxChunks = 0 } = config;
 
-  const totalChunks = maxChunks > 0
-    ? Math.min(maxChunks, Math.ceil(config.totalRows / chunkSize))
-    : Math.ceil(config.totalRows / chunkSize);
+  const totalChunks =
+    maxChunks > 0
+      ? Math.min(maxChunks, Math.ceil(config.totalRows / chunkSize))
+      : Math.ceil(config.totalRows / chunkSize);
 
   let allRows: T[] = [];
   let columns: ColumnSchema[] = [];
@@ -125,15 +124,18 @@ export async function progressiveLoad<T = unknown>(
  */
 export function createProgressiveFetcher(
   datasetId: string,
-  baseUrl: string,
-): (offset: number, limit: number) => Promise<{
+  baseUrl: string
+): (
+  offset: number,
+  limit: number
+) => Promise<{
   rows: unknown[];
   columns: ColumnSchema[];
   totalRows: number;
 }> {
   return async (offset: number, limit: number) => {
     const response = await fetch(
-      `${baseUrl}/api/datasets/${datasetId}?offset=${offset}&limit=${limit}`,
+      `${baseUrl}/api/datasets/${datasetId}?offset=${offset}&limit=${limit}`
     );
 
     if (!response.ok) {
@@ -152,16 +154,13 @@ export function createProgressiveFetcher(
 /**
  * Estimate if progressive loading should be used based on dataset size.
  */
-export function shouldUseProgressiveLoading(
-  rowCount: number,
-  fileSize: number,
-): boolean {
+export function shouldUseProgressiveLoading(rowCount: number, fileSize: number): boolean {
   // Use progressive loading for:
   // - More than 100K rows, OR
   // - More than 10MB file size
   // Only if feature flag is enabled
   return (
     (rowCount > 100000 || fileSize > 10 * 1024 * 1024) &&
-    process.env.NEXT_PUBLIC_PROGRESSIVE_ENABLED === 'true'
+    process.env.NEXT_PUBLIC_PROGRESSIVE_ENABLED === "true"
   );
 }

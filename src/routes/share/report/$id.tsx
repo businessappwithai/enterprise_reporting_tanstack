@@ -1,27 +1,27 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { createServerFn } from '@tanstack/react-start'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Lock, Home, FileText } from 'lucide-react'
-import { Link } from '@tanstack/react-router'
+import { createFileRoute } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Lock, Home, FileText } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 
-const getPublicReportFn = createServerFn({ method: 'GET' })
+const getPublicReportFn = createServerFn({ method: "GET" })
   .inputValidator((id: string) => id)
   .handler(async ({ data: id }) => {
-    const { getDb } = await import('@/lib/db/config')
-    const db = getDb()
-    const report = await db('report_definitions').where('id', id).where('is_public', true).first()
-    if (!report) return null
-    return report
-  })
+    const { getDb } = await import("@/lib/db/config");
+    const db = getDb();
+    const report = await db("report_definitions").where("id", id).where("is_public", true).first();
+    if (!report) return null;
+    return report;
+  });
 
-export const Route = createFileRoute('/share/report/$id')({
+export const Route = createFileRoute("/share/report/$id")({
   loader: ({ params }) => getPublicReportFn({ data: params.id }),
   component: PublicReportPage,
-})
+});
 
 function PublicReportPage() {
-  const report = Route.useLoaderData()
+  const report = Route.useLoaderData();
 
   if (!report) {
     return (
@@ -34,7 +34,9 @@ function PublicReportPage() {
             <CardTitle>Report Not Available</CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
-            <p className="text-muted-foreground">This report is not publicly accessible or does not exist.</p>
+            <p className="text-muted-foreground">
+              This report is not publicly accessible or does not exist.
+            </p>
             <Link to="/">
               <Button variant="outline">
                 <Home className="h-4 w-4 mr-2" />
@@ -44,7 +46,7 @@ function PublicReportPage() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
@@ -61,12 +63,10 @@ function PublicReportPage() {
         </div>
         <Card>
           <CardContent className="p-6">
-            <p className="text-muted-foreground text-center py-8">
-              Report: {report.name}
-            </p>
+            <p className="text-muted-foreground text-center py-8">Report: {report.name}</p>
           </CardContent>
         </Card>
       </div>
     </div>
-  )
+  );
 }

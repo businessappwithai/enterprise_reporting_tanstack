@@ -1,27 +1,30 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { createServerFn } from '@tanstack/react-start'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Lock, Home, LayoutDashboard } from 'lucide-react'
-import { Link } from '@tanstack/react-router'
+import { createFileRoute } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Lock, Home, LayoutDashboard } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 
-const getPublicDashboardFn = createServerFn({ method: 'GET' })
+const getPublicDashboardFn = createServerFn({ method: "GET" })
   .inputValidator((id: string) => id)
   .handler(async ({ data: id }) => {
-    const { getDb } = await import('@/lib/db/config')
-    const db = getDb()
-    const dashboard = await db('dashboard_layouts').where('id', id).where('is_public', true).first()
-    if (!dashboard) return null
-    return dashboard
-  })
+    const { getDb } = await import("@/lib/db/config");
+    const db = getDb();
+    const dashboard = await db("dashboard_layouts")
+      .where("id", id)
+      .where("is_public", true)
+      .first();
+    if (!dashboard) return null;
+    return dashboard;
+  });
 
-export const Route = createFileRoute('/share/dashboard/$id')({
+export const Route = createFileRoute("/share/dashboard/$id")({
   loader: ({ params }) => getPublicDashboardFn({ data: params.id }),
   component: PublicDashboardPage,
-})
+});
 
 function PublicDashboardPage() {
-  const dashboard = Route.useLoaderData()
+  const dashboard = Route.useLoaderData();
 
   if (!dashboard) {
     return (
@@ -34,7 +37,9 @@ function PublicDashboardPage() {
             <CardTitle>Dashboard Not Available</CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
-            <p className="text-muted-foreground">This dashboard is not publicly accessible or does not exist.</p>
+            <p className="text-muted-foreground">
+              This dashboard is not publicly accessible or does not exist.
+            </p>
             <Link to="/">
               <Button variant="outline">
                 <Home className="h-4 w-4 mr-2" />
@@ -44,7 +49,7 @@ function PublicDashboardPage() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
@@ -61,12 +66,10 @@ function PublicDashboardPage() {
         </div>
         <Card>
           <CardContent className="p-6">
-            <p className="text-muted-foreground text-center py-8">
-              Dashboard: {dashboard.name}
-            </p>
+            <p className="text-muted-foreground text-center py-8">Dashboard: {dashboard.name}</p>
           </CardContent>
         </Card>
       </div>
     </div>
-  )
+  );
 }

@@ -10,7 +10,7 @@ import type {
   SchemaOverviewResponse,
   NlQueryPipelineResult,
   QueryHistoryEntry,
-} from '@/types/database';
+} from "@/types/database";
 
 // ============================================================================
 // API Client Functions
@@ -20,15 +20,15 @@ import type {
  * Fetch all active data sources
  */
 export async function fetchActiveDataSources(): Promise<DataSourceListItem[]> {
-  const res = await fetch('/api/data-sources', {
-    credentials: 'include',
+  const res = await fetch("/api/data-sources", {
+    credentials: "include",
   });
   if (!res.ok) {
     throw new Error(`Failed to fetch data sources: ${res.statusText}`);
   }
   const json = await res.json();
   if (!json.success) {
-    throw new Error(json.error?.message || 'Failed to fetch data sources');
+    throw new Error(json.error?.message || "Failed to fetch data sources");
   }
   // Filter to only active data sources
   return (json.data?.items || []).filter((ds: DataSourceListItem) => ds.is_active);
@@ -41,10 +41,10 @@ export async function fetchDataSourceSchema(
   dataSourceId: string,
   options: { refresh?: boolean } = {}
 ): Promise<SchemaOverviewResponse> {
-  const res = await fetch('/api/nl-query/schema', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
+  const res = await fetch("/api/nl-query/schema", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify({
       data_source_id: dataSourceId,
       refresh: options.refresh || false,
@@ -55,7 +55,7 @@ export async function fetchDataSourceSchema(
   }
   const json = await res.json();
   if (!json.success) {
-    throw new Error(json.error?.message || 'Failed to fetch schema');
+    throw new Error(json.error?.message || "Failed to fetch schema");
   }
   return json.data;
 }
@@ -68,10 +68,10 @@ export async function executeNlQuery(params: {
   dataSourceId: string;
   generatedSql?: string;
 }): Promise<NlQueryPipelineResult> {
-  const res = await fetch('/api/nl-query/execute', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
+  const res = await fetch("/api/nl-query/execute", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify({
       query: params.query,
       data_source_id: params.dataSourceId,
@@ -83,7 +83,7 @@ export async function executeNlQuery(params: {
   }
   const json = await res.json();
   if (!json.success) {
-    throw new Error(json.error?.message || 'Failed to execute query');
+    throw new Error(json.error?.message || "Failed to execute query");
   }
   return json.data;
 }
@@ -96,19 +96,19 @@ export async function fetchQueryHistory(
   options: { limit?: number; offset?: number } = {}
 ): Promise<QueryHistoryEntry[]> {
   const params = new URLSearchParams();
-  if (dataSourceId) params.append('data_source_id', dataSourceId);
-  if (options.limit) params.append('limit', String(options.limit));
-  if (options.offset) params.append('offset', String(options.offset));
+  if (dataSourceId) params.append("data_source_id", dataSourceId);
+  if (options.limit) params.append("limit", String(options.limit));
+  if (options.offset) params.append("offset", String(options.offset));
 
   const res = await fetch(`/api/nl-query/history?${params.toString()}`, {
-    credentials: 'include',
+    credentials: "include",
   });
   if (!res.ok) {
     throw new Error(`Failed to fetch history: ${res.statusText}`);
   }
   const json = await res.json();
   if (!json.success) {
-    throw new Error(json.error?.message || 'Failed to fetch history');
+    throw new Error(json.error?.message || "Failed to fetch history");
   }
   return json.data || [];
 }
@@ -131,22 +131,22 @@ export function invalidateNlQueryCaches() {
  */
 export const nlQueryKeys = {
   // All NL Query related keys
-  all: ['nl-query'] as const,
+  all: ["nl-query"] as const,
 
   // Data sources
-  dataSources: () => [...nlQueryKeys.all, 'data-sources'] as const,
-  dataSource: (id: string) => [...nlQueryKeys.all, 'data-source', id] as const,
+  dataSources: () => [...nlQueryKeys.all, "data-sources"] as const,
+  dataSource: (id: string) => [...nlQueryKeys.all, "data-source", id] as const,
 
   // Schema
-  schemas: () => [...nlQueryKeys.all, 'schemas'] as const,
+  schemas: () => [...nlQueryKeys.all, "schemas"] as const,
   schema: (dataSourceId: string) => [...nlQueryKeys.schemas(), dataSourceId] as const,
 
   // Query results
-  results: () => [...nlQueryKeys.all, 'results'] as const,
+  results: () => [...nlQueryKeys.all, "results"] as const,
   result: (queryId: string) => [...nlQueryKeys.results(), queryId] as const,
 
   // History
-  history: () => [...nlQueryKeys.all, 'history'] as const,
+  history: () => [...nlQueryKeys.all, "history"] as const,
   historyForDataSource: (dataSourceId: string) =>
-    [...nlQueryKeys.history(), 'data-source', dataSourceId] as const,
+    [...nlQueryKeys.history(), "data-source", dataSourceId] as const,
 } as const;

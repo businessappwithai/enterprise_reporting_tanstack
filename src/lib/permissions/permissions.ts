@@ -1,9 +1,9 @@
-import { getDb } from '@/lib/db/config';
-import type { PermissionLevel, ResourceType } from '@/types/database';
+import { getDb } from "@/lib/db/config";
+import type { PermissionLevel, ResourceType } from "@/types/database";
 
 export interface PermissionCheck {
   resourceType: ResourceType;
-  action: 'view' | 'edit' | 'execute' | 'admin' | 'delete';
+  action: "view" | "edit" | "execute" | "admin" | "delete";
   resourceId?: string;
 }
 
@@ -14,10 +14,10 @@ export async function getUserPermissions(userId: string) {
   const db = getDb();
 
   // Get user's roles
-  const userRoles = await db('user_roles')
-    .join('roles', 'user_roles.role_id', 'roles.id')
-    .where('user_roles.user_id', userId)
-    .select('roles.*');
+  const userRoles = await db("user_roles")
+    .join("roles", "user_roles.role_id", "roles.id")
+    .where("user_roles.user_id", userId)
+    .select("roles.*");
 
   // Parse role permissions
   const rolePermissions: string[] = [];
@@ -27,15 +27,18 @@ export async function getUserPermissions(userId: string) {
         const perms = JSON.parse(role.permissions);
         rolePermissions.push(...perms);
       } catch (e) {
-        console.error('Failed to parse permissions for role:', role.name, e);
+        console.error("Failed to parse permissions for role:", role.name, e);
       }
     }
   }
 
   // Get resource-level permissions
-  const resourcePermissions = await db('resource_permissions')
-    .whereIn('role_id', userRoles.map((r: any) => r.id))
-    .select('*');
+  const resourcePermissions = await db("resource_permissions")
+    .whereIn(
+      "role_id",
+      userRoles.map((r: any) => r.id)
+    )
+    .select("*");
 
   return {
     userId,
@@ -51,10 +54,10 @@ export async function getUserPermissions(userId: string) {
 export async function isAdmin(userId: string): Promise<boolean> {
   const db = getDb();
 
-  const hasAdminRole = await db('user_roles')
-    .join('roles', 'user_roles.role_id', 'roles.id')
-    .where('user_roles.user_id', userId)
-    .where('roles.name', 'Administrator')
+  const hasAdminRole = await db("user_roles")
+    .join("roles", "user_roles.role_id", "roles.id")
+    .where("user_roles.user_id", userId)
+    .where("roles.name", "Administrator")
     .first();
 
   return !!hasAdminRole;
@@ -70,7 +73,7 @@ export function hasPermission(
   action: string
 ): boolean {
   // Check for admin wildcard
-  if (permissions.includes('admin:*')) {
+  if (permissions.includes("admin:*")) {
     return true;
   }
 
@@ -85,7 +88,7 @@ export function hasPermission(
   }
 
   // Check for wildcard action on any resource
-  if (permissions.includes('*:*')) {
+  if (permissions.includes("*:*")) {
     return true;
   }
 
@@ -100,7 +103,7 @@ export async function hasResourceAccess(
   userId: string,
   resourceType: ResourceType,
   resourceId: string,
-  requiredAction: 'view' | 'edit' | 'execute' | 'admin' | 'delete' = 'view'
+  requiredAction: "view" | "edit" | "execute" | "admin" | "delete" = "view"
 ): Promise<boolean> {
   // Check if user is admin
   if (await isAdmin(userId)) {
@@ -146,7 +149,7 @@ export async function filterAccessibleResources<T extends { id: string }>(
   userId: string,
   resources: T[],
   resourceType: ResourceType,
-  action: 'view' | 'edit' | 'execute' | 'admin' | 'delete' = 'view'
+  action: "view" | "edit" | "execute" | "admin" | "delete" = "view"
 ): Promise<T[]> {
   if (await isAdmin(userId)) {
     return resources;
@@ -194,9 +197,9 @@ export async function canCreateResource(
 
   // Check if user has edit or admin permission on resource type
   return (
-    hasPermission(rolePermissions, resourceType, 'edit') ||
-    hasPermission(rolePermissions, resourceType, 'admin') ||
-    hasPermission(rolePermissions, resourceType, 'create') // Support create action explicitly
+    hasPermission(rolePermissions, resourceType, "edit") ||
+    hasPermission(rolePermissions, resourceType, "admin") ||
+    hasPermission(rolePermissions, resourceType, "create") // Support create action explicitly
   );
 }
 
@@ -208,7 +211,7 @@ export async function canDeleteResource(
   resourceType: ResourceType,
   resourceId: string
 ): Promise<boolean> {
-  return hasResourceAccess(userId, resourceType, resourceId, 'admin');
+  return hasResourceAccess(userId, resourceType, resourceId, "admin");
 }
 
 /**
@@ -216,7 +219,7 @@ export async function canDeleteResource(
  */
 export function requirePermission(
   resourceType: ResourceType,
-  action: 'view' | 'edit' | 'execute' | 'admin' | 'delete' = 'view'
+  action: "view" | "edit" | "execute" | "admin" | "delete" = "view"
 ) {
   return async (userId: string, resourceId?: string) => {
     // Admin always has access

@@ -3,13 +3,9 @@
  * Creates and manages a singleton DuckDB instance running in a Web Worker.
  */
 
-import * as duckdb from '@duckdb/duckdb-wasm';
-import type {
-  AsyncDuckDB,
-  AsyncDuckDBConnection,
-  DuckDBInstanceOptions,
-} from './types';
-import { DEFAULT_DUCKDB_OPTIONS } from './types';
+import * as duckdb from "@duckdb/duckdb-wasm";
+import type { AsyncDuckDB, AsyncDuckDBConnection, DuckDBInstanceOptions } from "./types";
+import { DEFAULT_DUCKDB_OPTIONS } from "./types";
 
 let dbInstance: AsyncDuckDB | null = null;
 let initPromise: Promise<AsyncDuckDB> | null = null;
@@ -26,9 +22,7 @@ async function selectBundle(): Promise<duckdb.DuckDBBundle> {
  * Initialize and return a singleton DuckDB-Wasm instance.
  * If already initialized, returns the existing instance.
  */
-export async function initDuckDB(
-  options: DuckDBInstanceOptions = {},
-): Promise<AsyncDuckDB> {
+export async function initDuckDB(options: DuckDBInstanceOptions = {}): Promise<AsyncDuckDB> {
   if (dbInstance) return dbInstance;
   if (initPromise) return initPromise;
 
@@ -39,9 +33,7 @@ export async function initDuckDB(
 
     const worker = new Worker(bundle.mainWorker!);
     const logger = new duckdb.ConsoleLogger(
-      opts.enableLogging
-        ? duckdb.LogLevel.INFO
-        : duckdb.LogLevel.WARNING,
+      opts.enableLogging ? duckdb.LogLevel.INFO : duckdb.LogLevel.WARNING
     );
 
     const db = new duckdb.AsyncDuckDB(logger, worker);

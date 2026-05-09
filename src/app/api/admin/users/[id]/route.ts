@@ -1,17 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth/config';
-import { getDb } from '@/lib/db/config';
-import { isAdmin } from '@/lib/permissions/permissions';
+import { type NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth/config";
+import { getDb } from "@/lib/db/config";
+import { isAdmin } from "@/lib/permissions/permissions";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
     if (!session?.user) {
       return NextResponse.json(
-        { success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } },
+        { success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } },
         { status: 401 }
       );
     }
@@ -20,7 +17,7 @@ export async function GET(
     const admin = await isAdmin(session.user.id);
     if (!admin) {
       return NextResponse.json(
-        { success: false, error: { code: 'FORBIDDEN', message: 'Admin access required' } },
+        { success: false, error: { code: "FORBIDDEN", message: "Admin access required" } },
         { status: 403 }
       );
     }
@@ -28,33 +25,30 @@ export async function GET(
     const { id } = await params;
     const db = getDb();
 
-    const user = await db('users').where('id', id).first();
+    const user = await db("users").where("id", id).first();
     if (!user) {
       return NextResponse.json(
-        { success: false, error: { code: 'NOT_FOUND', message: 'User not found' } },
+        { success: false, error: { code: "NOT_FOUND", message: "User not found" } },
         { status: 404 }
       );
     }
 
     return NextResponse.json({ success: true, data: user });
   } catch (error) {
-    console.error('Error fetching user:', error);
+    console.error("Error fetching user:", error);
     return NextResponse.json(
-      { success: false, error: { code: 'SERVER_ERROR', message: 'Failed to fetch user' } },
+      { success: false, error: { code: "SERVER_ERROR", message: "Failed to fetch user" } },
       { status: 500 }
     );
   }
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
     if (!session?.user) {
       return NextResponse.json(
-        { success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } },
+        { success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } },
         { status: 401 }
       );
     }
@@ -63,7 +57,7 @@ export async function PUT(
     const admin = await isAdmin(session.user.id);
     if (!admin) {
       return NextResponse.json(
-        { success: false, error: { code: 'FORBIDDEN', message: 'Admin access required' } },
+        { success: false, error: { code: "FORBIDDEN", message: "Admin access required" } },
         { status: 403 }
       );
     }
@@ -76,15 +70,15 @@ export async function PUT(
     const updates: Partial<User> = { updated_at: new Date().toISOString() };
     if (isActive !== undefined) updates.is_active = isActive;
 
-    await db('users').where('id', id).update(updates);
+    await db("users").where("id", id).update(updates);
 
-    const user = await db('users').where('id', id).first();
+    const user = await db("users").where("id", id).first();
 
     return NextResponse.json({ success: true, data: user });
   } catch (error) {
-    console.error('Error updating user:', error);
+    console.error("Error updating user:", error);
     return NextResponse.json(
-      { success: false, error: { code: 'SERVER_ERROR', message: 'Failed to update user' } },
+      { success: false, error: { code: "SERVER_ERROR", message: "Failed to update user" } },
       { status: 500 }
     );
   }

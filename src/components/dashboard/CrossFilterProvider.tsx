@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
 /**
  * Cross-filter provider for dashboard widgets.
  * Wraps the dashboard and enables linked filtering across widgets.
  */
 
-import React from 'react';
-import { DashboardStateProvider } from './DashboardState';
-import type { CrossFilterConfig } from '@/types/wasm';
+import React from "react";
+import { DashboardStateProvider } from "./DashboardState";
+import type { CrossFilterConfig } from "@/types/wasm";
 
 interface CrossFilterProviderProps {
   dashboardId: string;
   widgets: Array<{
     id: string;
-    type: 'chart' | 'table' | 'metric';
+    type: "chart" | "table" | "metric";
     datasetId?: string;
     baseQuery?: string;
     filterableColumns?: string[];
@@ -22,11 +22,7 @@ interface CrossFilterProviderProps {
   children: React.ReactNode;
 }
 
-export function CrossFilterProvider({
-  dashboardId,
-  widgets,
-  children,
-}: CrossFilterProviderProps) {
+export function CrossFilterProvider({ dashboardId, widgets, children }: CrossFilterProviderProps) {
   // Build cross-filter config from widget definitions
   const config: CrossFilterConfig = React.useMemo(() => {
     return {
@@ -34,8 +30,8 @@ export function CrossFilterProvider({
       widgets: widgets.map((w) => ({
         widgetId: w.id,
         type: w.type,
-        datasetId: w.datasetId ?? '',
-        baseQuery: w.baseQuery ?? 'SELECT * FROM data',
+        datasetId: w.datasetId ?? "",
+        baseQuery: w.baseQuery ?? "SELECT * FROM data",
         filterLinks: [], // Populated dynamically when filters are applied
         broadcastsFilters: w.broadcastsFilters ?? true,
         filterableColumns: w.filterableColumns,
@@ -43,9 +39,5 @@ export function CrossFilterProvider({
     };
   }, [dashboardId, widgets]);
 
-  return (
-    <DashboardStateProvider config={config}>
-      {children}
-    </DashboardStateProvider>
-  );
+  return <DashboardStateProvider config={config}>{children}</DashboardStateProvider>;
 }

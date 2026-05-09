@@ -1,52 +1,38 @@
-'use client';
+"use client";
 
 /**
  * Dashboard viewer page with WASM enhancements.
  * Supports cross-widget filtering, offline mode, and progressive loading.
  */
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { DashboardGrid } from '@/components/dashboard/dashboard-grid';
-import { AddWidgetDialog } from '@/components/dashboard/add-widget-dialog';
-import { ConfigureWidgetDialog } from '@/components/dashboard/configure-widget-dialog';
-import { CrossFilterProvider } from '@/components/dashboard/CrossFilterProvider';
-import { ActiveFiltersBar } from '@/components/dashboard/ActiveFiltersBar';
-import { OfflineIndicator } from '@/components/wasm/OfflineIndicator';
-import { ShareDialog } from '@/components/share/ShareDialog';
-import { useDashboardState } from '@/components/dashboard/DashboardState';
-import type { ActiveFilter as ActiveFilterType } from '@/types/wasm';
-import {
-  ArrowLeft,
-  Edit,
-  Eye,
-  Save,
-  Plus,
-  Globe,
-  Lock,
-  RefreshCw,
-  Share2,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { Skeleton } from '@/components/ui/skeleton';
-import { isFeatureEnabled } from '@/lib/feature-flags';
-import type { DashboardLayout, DashboardWidget } from '@/types/database';
-import type { Layout } from 'react-grid-layout';
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { useParams } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { DashboardGrid } from "@/components/dashboard/dashboard-grid";
+import { AddWidgetDialog } from "@/components/dashboard/add-widget-dialog";
+import { ConfigureWidgetDialog } from "@/components/dashboard/configure-widget-dialog";
+import { CrossFilterProvider } from "@/components/dashboard/CrossFilterProvider";
+import { ActiveFiltersBar } from "@/components/dashboard/ActiveFiltersBar";
+import { OfflineIndicator } from "@/components/wasm/OfflineIndicator";
+import { ShareDialog } from "@/components/share/ShareDialog";
+import { useDashboardState } from "@/components/dashboard/DashboardState";
+import type { ActiveFilter as ActiveFilterType } from "@/types/wasm";
+import { ArrowLeft, Edit, Eye, Save, Plus, Globe, Lock, RefreshCw, Share2 } from "lucide-react";
+import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
+import { isFeatureEnabled } from "@/lib/feature-flags";
+import type { DashboardLayout, DashboardWidget } from "@/types/database";
+import type { Layout } from "react-grid-layout";
 
 interface WidgetWithData extends DashboardWidget {
   title?: string;
 }
 
-function DashboardViewerContent({
-  dashboardId,
-}: {
-  dashboardId: string;
-}) {
+function DashboardViewerContent({ dashboardId }: { dashboardId: string }) {
   const queryClient = useQueryClient();
   const { applyFilter } = useDashboardState();
 
@@ -54,13 +40,15 @@ function DashboardViewerContent({
   const [addWidgetDialogOpen, setAddWidgetDialogOpen] = useState(false);
   const [configureWidgetDialogOpen, setConfigureWidgetDialogOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
-  const [selectedWidget, setSelectedWidget] = useState<(DashboardWidget & { dashboard_id: string }) | null>(null);
+  const [selectedWidget, setSelectedWidget] = useState<
+    (DashboardWidget & { dashboard_id: string }) | null
+  >(null);
   const [layout, setLayout] = useState<Layout[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
 
   // Fetch dashboard
   const { data: dashboard, isLoading: isLoadingDashboard } = useQuery<DashboardLayout>({
-    queryKey: ['dashboard', dashboardId],
+    queryKey: ["dashboard", dashboardId],
     queryFn: async () => {
       const res = await fetch(`/api/dashboards/${dashboardId}`);
       const data = await res.json();
@@ -70,7 +58,7 @@ function DashboardViewerContent({
 
   // Fetch widgets
   const { data: widgets = [], isLoading: isLoadingWidgets } = useQuery<DashboardWidget[]>({
-    queryKey: ['dashboard-widgets', dashboardId],
+    queryKey: ["dashboard-widgets", dashboardId],
     queryFn: async () => {
       const res = await fetch(`/api/dashboards/${dashboardId}/widgets`);
       const data = await res.json();
@@ -88,22 +76,22 @@ function DashboardViewerContent({
       widgetConfig?: { title?: string; content?: string };
     }) => {
       const res = await fetch(`/api/dashboards/${dashboardId}/widgets`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(widgetData),
       });
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(error.error?.message || 'Failed to add widget');
+        throw new Error(error.error?.message || "Failed to add widget");
       }
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['dashboard-widgets'] });
-      toast.success('Widget added successfully');
+      queryClient.invalidateQueries({ queryKey: ["dashboard-widgets"] });
+      toast.success("Widget added successfully");
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to add widget');
+      toast.error(error.message || "Failed to add widget");
     },
   });
 
@@ -116,7 +104,7 @@ function DashboardViewerContent({
           setLayout(layoutConfig.layouts.lg);
         }
       } catch (error) {
-        console.error('Error parsing layout config:', error);
+        console.error("Error parsing layout config:", error);
       }
     } else if (widgets.length > 0) {
       // Build layout from widgets' position_config
@@ -164,8 +152,8 @@ function DashboardViewerContent({
   const handleSaveLayout = async () => {
     try {
       const res = await fetch(`/api/dashboards/${dashboardId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           layoutConfig: {
             cols: { lg: 12, md: 10, sm: 6, xs: 4 },
@@ -177,28 +165,28 @@ function DashboardViewerContent({
         }),
       });
 
-      if (!res.ok) throw new Error('Failed to save layout');
+      if (!res.ok) throw new Error("Failed to save layout");
 
-      toast.success('Layout saved successfully');
+      toast.success("Layout saved successfully");
       setHasChanges(false);
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     } catch (error) {
-      toast.error('Failed to save layout');
+      toast.error("Failed to save layout");
     }
   };
 
   const handleRemoveWidget = async (widgetId: string) => {
     try {
       const res = await fetch(`/api/dashboards/${dashboardId}/widgets/${widgetId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
-      if (!res.ok) throw new Error('Failed to remove widget');
+      if (!res.ok) throw new Error("Failed to remove widget");
 
-      toast.success('Widget removed successfully');
-      queryClient.invalidateQueries({ queryKey: ['dashboard-widgets'] });
+      toast.success("Widget removed successfully");
+      queryClient.invalidateQueries({ queryKey: ["dashboard-widgets"] });
     } catch (error) {
-      toast.error('Failed to remove widget');
+      toast.error("Failed to remove widget");
     }
   };
 
@@ -223,9 +211,12 @@ function DashboardViewerContent({
   };
 
   // Handler for cross-filter application
-  const handleFilterApply = useCallback((filter: Omit<ActiveFilterType, 'id' | 'affectedWidgets'>) => {
-    applyFilter(filter);
-  }, [applyFilter]);
+  const handleFilterApply = useCallback(
+    (filter: Omit<ActiveFilterType, "id" | "affectedWidgets">) => {
+      applyFilter(filter);
+    },
+    [applyFilter]
+  );
 
   if (isLoadingDashboard) {
     return (
@@ -258,7 +249,7 @@ function DashboardViewerContent({
   return (
     <div className="space-y-6">
       {/* Offline indicator (if enabled) */}
-      {isFeatureEnabled('offlineEnabled') && <OfflineIndicator />}
+      {isFeatureEnabled("offlineEnabled") && <OfflineIndicator />}
 
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -293,16 +284,14 @@ function DashboardViewerContent({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => queryClient.invalidateQueries({ queryKey: ['dashboard', 'dashboard-widgets'] })}
+            onClick={() =>
+              queryClient.invalidateQueries({ queryKey: ["dashboard", "dashboard-widgets"] })
+            }
           >
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShareDialogOpen(true)}
-          >
+          <Button variant="outline" size="sm" onClick={() => setShareDialogOpen(true)}>
             <Share2 className="h-4 w-4 mr-2" />
             Share
           </Button>
@@ -333,7 +322,7 @@ function DashboardViewerContent({
       </div>
 
       {/* Active filters bar (if cross-filtering is enabled) */}
-      {isFeatureEnabled('crossFilterEnabled') && <ActiveFiltersBar />}
+      {isFeatureEnabled("crossFilterEnabled") && <ActiveFiltersBar />}
 
       {/* Empty state */}
       {widgetsWithData.length === 0 && !isLoadingWidgets ? (
@@ -418,7 +407,7 @@ export default function DashboardViewerPage() {
   const params = useParams();
   const dashboardId = params.id as string;
 
-  const crossFilterEnabled = isFeatureEnabled('crossFilterEnabled');
+  const crossFilterEnabled = isFeatureEnabled("crossFilterEnabled");
 
   // Build widget configurations for cross-filtering
   const widgetConfigs = useMemo(() => {

@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getAuthSession } from '@/lib/auth/config';
-import { getConfigDB } from '@/lib/db/config';
+import { type NextRequest, NextResponse } from "next/server";
+import { getAuthSession } from "@/lib/auth/config";
+import { getConfigDB } from "@/lib/db/config";
 
 // PUT update report filter (target column or order)
 export async function PUT(
@@ -10,7 +10,7 @@ export async function PUT(
   try {
     const session = await getAuthSession();
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await req.json();
@@ -22,25 +22,19 @@ export async function PUT(
 
     const { id: reportId, filterLinkId } = await params;
     const db = getConfigDB();
-    const filterLink = await db('report_filters')
-      .where('id', filterLinkId)
-      .where('report_id', reportId)
+    const filterLink = await db("report_filters")
+      .where("id", filterLinkId)
+      .where("report_id", reportId)
       .update(updateData);
 
     if (!filterLink) {
-      return NextResponse.json(
-        { error: 'Report filter not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Report filter not found" }, { status: 404 });
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error updating report filter:', error);
-    return NextResponse.json(
-      { error: 'Failed to update report filter' },
-      { status: 500 }
-    );
+    console.error("Error updating report filter:", error);
+    return NextResponse.json({ error: "Failed to update report filter" }, { status: 500 });
   }
 }
 
@@ -52,29 +46,23 @@ export async function DELETE(
   try {
     const session = await getAuthSession();
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { id: reportId, filterLinkId } = await params;
     const db = getConfigDB();
-    const filterLink = await db('report_filters')
-      .where('id', filterLinkId)
-      .where('report_id', reportId)
+    const filterLink = await db("report_filters")
+      .where("id", filterLinkId)
+      .where("report_id", reportId)
       .del();
 
     if (!filterLink) {
-      return NextResponse.json(
-        { error: 'Report filter not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Report filter not found" }, { status: 404 });
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting report filter:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete report filter' },
-      { status: 500 }
-    );
+    console.error("Error deleting report filter:", error);
+    return NextResponse.json({ error: "Failed to delete report filter" }, { status: 500 });
   }
 }

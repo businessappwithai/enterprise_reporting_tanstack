@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * NL Query Workspace Component
@@ -17,20 +17,20 @@
  * - Reduced server load
  */
 
-import { useState, useCallback } from 'react';
-import { useCopilotAction, useCopilotReadable } from '@copilotkit/react-core';
-import { CopilotSidebar } from '@copilotkit/react-ui';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { useState, useCallback } from "react";
+import { useCopilotAction, useCopilotReadable } from "@copilotkit/react-core";
+import { CopilotSidebar } from "@copilotkit/react-ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Database,
   RefreshCw,
@@ -42,17 +42,17 @@ import {
   AlertCircle,
   CheckCircle2,
   XCircle,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { NlResultsTable } from './nl-results-table';
-import { NlResultsChart } from './nl-results-chart';
+} from "lucide-react";
+import { toast } from "sonner";
+import { NlResultsTable } from "./nl-results-table";
+import { NlResultsChart } from "./nl-results-chart";
 import {
   useActiveDataSources,
   useDataSourceSchema,
   useExecuteNlQuery,
   useQueryHistory,
   useRefreshSchema,
-} from '@/lib/hooks/use-nl-query';
+} from "@/lib/hooks/use-nl-query";
 import type {
   NlQueryPipelineResult,
   AccessCheckDetail,
@@ -62,14 +62,14 @@ import type {
   QueryHistoryEntry,
   NlChartConfig,
   SchemaColumnSummary,
-} from '@/types/database';
+} from "@/types/database";
 
 export function NlQueryWorkspace() {
   // Local state
-  const [selectedDataSourceId, setSelectedDataSourceId] = useState<string>('');
+  const [selectedDataSourceId, setSelectedDataSourceId] = useState<string>("");
   const [queryResult, setQueryResult] = useState<NlQueryPipelineResult | null>(null);
   const [chartConfig, setChartConfig] = useState<NlChartConfig | null>(null);
-  const [activeTab, setActiveTab] = useState('results');
+  const [activeTab, setActiveTab] = useState("results");
 
   // ============================================================================
   // TanStack Query Hooks - Client-side caching and state management
@@ -91,10 +91,10 @@ export function NlQueryWorkspace() {
   } = useDataSourceSchema(selectedDataSourceId);
 
   // Query history with caching (30 sec stale time)
-  const {
-    data: queryHistory = [],
-    isLoading: historyLoading,
-  } = useQueryHistory(selectedDataSourceId, { limit: 20 });
+  const { data: queryHistory = [], isLoading: historyLoading } = useQueryHistory(
+    selectedDataSourceId,
+    { limit: 20 }
+  );
 
   // Query execution mutation with automatic cache invalidation
   const executeMutation = useExecuteNlQuery();
@@ -110,47 +110,57 @@ export function NlQueryWorkspace() {
 
   // Expose state to CopilotKit for AI context
   useCopilotReadable({
-    description: 'Currently selected data source and its schema information for natural language SQL queries',
+    description:
+      "Currently selected data source and its schema information for natural language SQL queries",
     value: {
       selectedDataSourceId,
       selectedDataSourceName: selectedDs?.name,
       schemaText: schemaInfo?.schemaText || null,
-      schemaInfo: schemaInfo ? {
-        tableCount: schemaInfo.tableCount,
-        viewCount: schemaInfo.viewCount,
-        tables: schemaInfo.tables?.map((t: SchemaTableSummary) => ({
-          name: t.name,
-          columns: t.columns?.map((c: SchemaColumnSummary) => `${c.name} (${c.type})`).join(', '),
-        })),
-      } : null,
-      lastQueryResult: queryResult ? {
-        accessGranted: queryResult.accessGranted,
-        rowCount: queryResult.queryResults?.totalRows,
-        error: queryResult.error,
-      } : null,
+      schemaInfo: schemaInfo
+        ? {
+            tableCount: schemaInfo.tableCount,
+            viewCount: schemaInfo.viewCount,
+            tables: schemaInfo.tables?.map((t: SchemaTableSummary) => ({
+              name: t.name,
+              columns: t.columns
+                ?.map((c: SchemaColumnSummary) => `${c.name} (${c.type})`)
+                .join(", "),
+            })),
+          }
+        : null,
+      lastQueryResult: queryResult
+        ? {
+            accessGranted: queryResult.accessGranted,
+            rowCount: queryResult.queryResults?.totalRows,
+            error: queryResult.error,
+          }
+        : null,
     },
   });
 
   // CopilotKit action: Execute NL query
   useCopilotAction({
-    name: 'executeNaturalLanguageQuery',
-    description: 'Execute a natural language query against the selected data source. Generates SQL, checks RBAC permissions, and returns results. IMPORTANT: Use the exact table and column names from the schemaText in context. Do not guess or pluralize table names - use them exactly as specified in the DATABASE SCHEMA section.',
+    name: "executeNaturalLanguageQuery",
+    description:
+      "Execute a natural language query against the selected data source. Generates SQL, checks RBAC permissions, and returns results. IMPORTANT: Use the exact table and column names from the schemaText in context. Do not guess or pluralize table names - use them exactly as specified in the DATABASE SCHEMA section.",
     parameters: [
       {
-        name: 'query',
-        type: 'string',
-        description: 'The natural language query to execute (e.g., "Show me top 10 customers by revenue")',
+        name: "query",
+        type: "string",
+        description:
+          'The natural language query to execute (e.g., "Show me top 10 customers by revenue")',
         required: true,
       },
       {
-        name: 'generatedSql',
-        type: 'string',
-        description: 'The SQL query generated from the natural language query. CRITICAL: Use ONLY the exact table names from the schemaText. For example, if the schema shows "regions" (plural), use "regions", not "region". Match table and column names exactly.',
+        name: "generatedSql",
+        type: "string",
+        description:
+          'The SQL query generated from the natural language query. CRITICAL: Use ONLY the exact table names from the schemaText. For example, if the schema shows "regions" (plural), use "regions", not "region". Match table and column names exactly.',
         required: true,
       },
     ],
     render: ({ status, args, result }) => {
-      if (status !== 'complete') {
+      if (status !== "complete") {
         return (
           <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -160,7 +170,7 @@ export function NlQueryWorkspace() {
       }
 
       const typedResult = result as NlQueryPipelineResult | { error: string } | undefined;
-      if (typedResult && 'error' in typedResult && typedResult.error) {
+      if (typedResult && "error" in typedResult && typedResult.error) {
         return (
           <div className="flex items-center gap-2 p-3 bg-destructive/10 text-destructive rounded-lg">
             <XCircle className="h-4 w-4" />
@@ -174,7 +184,7 @@ export function NlQueryWorkspace() {
         <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
           <CheckCircle2 className="h-4 w-4 text-green-600" />
           <span className="text-sm">
-            Query returned {pipelineResult?.queryResults?.totalRows || 0} rows in{' '}
+            Query returned {pipelineResult?.queryResults?.totalRows || 0} rows in{" "}
             {pipelineResult?.queryResults?.executionTimeMs || 0}ms. View results in the table below.
           </span>
         </div>
@@ -182,8 +192,8 @@ export function NlQueryWorkspace() {
     },
     handler: async ({ query, generatedSql }) => {
       if (!selectedDataSourceId) {
-        toast.error('Please select a data source first');
-        return { error: 'No data source selected' };
+        toast.error("Please select a data source first");
+        return { error: "No data source selected" };
       }
 
       try {
@@ -196,10 +206,10 @@ export function NlQueryWorkspace() {
 
         // Update local state
         setQueryResult(result);
-        setActiveTab('results');
+        setActiveTab("results");
         return result;
       } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        const errorMsg = error instanceof Error ? error.message : "Unknown error";
         return { error: errorMsg };
       }
     },
@@ -207,36 +217,37 @@ export function NlQueryWorkspace() {
 
   // CopilotKit action: Generate chart
   useCopilotAction({
-    name: 'generateChart',
-    description: 'Generate a chart visualization from the current query results. Use this when the user asks for a chart, graph, trend, or visualization of the data.',
+    name: "generateChart",
+    description:
+      "Generate a chart visualization from the current query results. Use this when the user asks for a chart, graph, trend, or visualization of the data.",
     parameters: [
       {
-        name: 'chartType',
-        type: 'string',
-        description: 'The type of chart to generate: bar, line, area, pie, or scatter',
+        name: "chartType",
+        type: "string",
+        description: "The type of chart to generate: bar, line, area, pie, or scatter",
         required: true,
       },
       {
-        name: 'title',
-        type: 'string',
-        description: 'The chart title',
+        name: "title",
+        type: "string",
+        description: "The chart title",
         required: true,
       },
       {
-        name: 'xAxisField',
-        type: 'string',
-        description: 'The column to use for the X axis',
+        name: "xAxisField",
+        type: "string",
+        description: "The column to use for the X axis",
         required: true,
       },
       {
-        name: 'yAxisFields',
-        type: 'string',
+        name: "yAxisFields",
+        type: "string",
         description: 'Comma-separated column names to use for the Y axis (e.g., "revenue,count")',
         required: true,
       },
     ],
     render: ({ status }) => {
-      if (status !== 'complete') {
+      if (status !== "complete") {
         return (
           <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -254,38 +265,39 @@ export function NlQueryWorkspace() {
     },
     handler: async ({ chartType, title, xAxisField, yAxisFields }) => {
       if (!queryResult?.queryResults) {
-        return { error: 'No query results available. Run a query first.' };
+        return { error: "No query results available. Run a query first." };
       }
 
-      const yFields = yAxisFields.split(',').map((f: string) => f.trim());
+      const yFields = yAxisFields.split(",").map((f: string) => f.trim());
 
       const config: NlChartConfig = {
-        chartType: chartType as NlChartConfig['chartType'],
+        chartType: chartType as NlChartConfig["chartType"],
         title,
         xAxis: { field: xAxisField, label: xAxisField },
         yAxis: yFields.map((f: string) => ({ field: f, label: f })),
-        colors: ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#a4de6c'],
+        colors: ["#8884d8", "#82ca9d", "#ffc658", "#ff7300", "#a4de6c"],
       };
 
       setChartConfig(config);
-      setActiveTab('chart');
+      setActiveTab("chart");
       return { success: true, config };
     },
   });
 
   // CopilotKit action: Refresh schema
   useCopilotAction({
-    name: 'refreshSchema',
-    description: 'Refresh the database schema cache. Use this when the user mentions schema changes or wants updated schema information.',
+    name: "refreshSchema",
+    description:
+      "Refresh the database schema cache. Use this when the user mentions schema changes or wants updated schema information.",
     parameters: [],
     handler: async () => {
       if (!selectedDataSourceId) {
-        return { error: 'No data source selected' };
+        return { error: "No data source selected" };
       }
 
       // Use TanStack Query's refreshSchema which invalidates cache and refetches
       await refreshSchema(selectedDataSourceId);
-      toast.success('Schema refreshed');
+      toast.success("Schema refreshed");
       return schemaInfo as SchemaOverviewResponse;
     },
   });
@@ -298,9 +310,9 @@ export function NlQueryWorkspace() {
     if (!selectedDataSourceId) return;
     try {
       await refreshSchema(selectedDataSourceId);
-      toast.success('Schema cache refreshed');
+      toast.success("Schema cache refreshed");
     } catch {
-      toast.error('Failed to refresh schema');
+      toast.error("Failed to refresh schema");
     }
   }, [selectedDataSourceId, refreshSchema]);
 
@@ -308,7 +320,7 @@ export function NlQueryWorkspace() {
     setSelectedDataSourceId(dsId);
     setQueryResult(null); // Clear previous results
     setChartConfig(null); // Clear previous chart
-    setActiveTab('results'); // Reset tab
+    setActiveTab("results"); // Reset tab
   }, []);
 
   // ============================================================================
@@ -329,14 +341,14 @@ IMPORTANT RULES:
 6. For trend analysis, use appropriate date grouping (daily, weekly, monthly).
 7. Always use proper JOINs when combining tables.
 
-The currently selected data source is: ${selectedDs?.name || 'None selected'}.
-${schemaInfo ? `It has ${schemaInfo.tableCount} tables and ${schemaInfo.viewCount} views.` : ''}`}
+The currently selected data source is: ${selectedDs?.name || "None selected"}.
+${schemaInfo ? `It has ${schemaInfo.tableCount} tables and ${schemaInfo.viewCount} views.` : ""}`}
       labels={{
-        title: 'NL Query Assistant',
+        title: "NL Query Assistant",
         initial: selectedDataSourceId
-          ? 'Ask me anything about your data! I can generate SQL queries, create charts, and help you explore your database.'
-          : 'Select a data source to get started, then ask me questions about your data.',
-        placeholder: 'Ask about your data...',
+          ? "Ask me anything about your data! I can generate SQL queries, create charts, and help you explore your database."
+          : "Select a data source to get started, then ask me questions about your data.",
+        placeholder: "Ask about your data...",
       }}
       defaultOpen={true}
     >
@@ -344,7 +356,8 @@ ${schemaInfo ? `It has ${schemaInfo.tableCount} tables and ${schemaInfo.viewCoun
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Natural Language Query</h1>
           <p className="text-muted-foreground">
-            Ask questions about your data in natural language. Powered by AI with RBAC-enforced access control.
+            Ask questions about your data in natural language. Powered by AI with RBAC-enforced
+            access control.
           </p>
         </div>
 
@@ -360,9 +373,11 @@ ${schemaInfo ? `It has ${schemaInfo.tableCount} tables and ${schemaInfo.viewCoun
             <div className="flex items-center gap-4">
               <Select value={selectedDataSourceId} onValueChange={handleDataSourceChange}>
                 <SelectTrigger className="w-[300px]" disabled={dataSourcesLoading}>
-                  <SelectValue placeholder={
-                    dataSourcesLoading ? 'Loading data sources...' : 'Select a data source'
-                  } />
+                  <SelectValue
+                    placeholder={
+                      dataSourcesLoading ? "Loading data sources..." : "Select a data source"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {dataSources.map((ds: DataSourceListItem) => (
@@ -374,8 +389,13 @@ ${schemaInfo ? `It has ${schemaInfo.tableCount} tables and ${schemaInfo.viewCoun
               </Select>
 
               {selectedDataSourceId && (
-                <Button variant="outline" size="sm" onClick={handleRefreshSchema} disabled={schemaLoading}>
-                  <RefreshCw className={`h-4 w-4 mr-2 ${schemaLoading ? 'animate-spin' : ''}`} />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRefreshSchema}
+                  disabled={schemaLoading}
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${schemaLoading ? "animate-spin" : ""}`} />
                   Refresh Schema
                 </Button>
               )}
@@ -458,7 +478,7 @@ ${schemaInfo ? `It has ${schemaInfo.tableCount} tables and ${schemaInfo.viewCoun
                     {queryResult.accessCheckResults.map((check: AccessCheckDetail, idx: number) => (
                       <Badge
                         key={idx}
-                        variant={check.hasAccess ? 'default' : 'destructive'}
+                        variant={check.hasAccess ? "default" : "destructive"}
                         className="text-xs"
                       >
                         {check.hasAccess ? (
@@ -467,7 +487,7 @@ ${schemaInfo ? `It has ${schemaInfo.tableCount} tables and ${schemaInfo.viewCoun
                           <XCircle className="h-3 w-3 mr-1" />
                         )}
                         {check.entity}
-                        {check.grantedBy ? ` (${check.grantedBy})` : ''}
+                        {check.grantedBy ? ` (${check.grantedBy})` : ""}
                       </Badge>
                     ))}
                   </div>
@@ -516,10 +536,7 @@ ${schemaInfo ? `It has ${schemaInfo.tableCount} tables and ${schemaInfo.viewCoun
 
                   <TabsContent value="chart" className="mt-4">
                     {chartConfig ? (
-                      <NlResultsChart
-                        data={queryResult.queryResults.rows}
-                        config={chartConfig}
-                      />
+                      <NlResultsChart data={queryResult.queryResults.rows} config={chartConfig} />
                     ) : (
                       <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                         <BarChart3 className="h-12 w-12 mb-4" />
@@ -567,11 +584,11 @@ ${schemaInfo ? `It has ${schemaInfo.tableCount} tables and ${schemaInfo.viewCoun
                     </div>
                     <Badge
                       variant={
-                        h.access_check_result === 'granted'
-                          ? 'default'
-                          : h.access_check_result === 'denied'
-                          ? 'destructive'
-                          : 'secondary'
+                        h.access_check_result === "granted"
+                          ? "default"
+                          : h.access_check_result === "denied"
+                            ? "destructive"
+                            : "secondary"
                       }
                       className="ml-2 flex-shrink-0"
                     >

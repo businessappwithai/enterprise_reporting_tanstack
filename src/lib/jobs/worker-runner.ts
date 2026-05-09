@@ -1,39 +1,38 @@
-import { Worker, Job } from 'bullmq';
-import Redis from 'ioredis';
-import { processReportJob } from './workers/report-worker';
-import { processEmailBatchJob } from './workers/email-batch-worker';
-import { processExportJob } from './workers/export-worker';
-import type { JobData, JobResult } from './queue';
-import { WORKER_CONCURRENCY, RATE_LIMITER } from '@/lib/queue/config';
+import { Worker, type Job } from "bullmq";
+import Redis from "ioredis";
+import { processReportJob } from "./workers/report-worker";
+import { processEmailBatchJob } from "./workers/email-batch-worker";
+import { processExportJob } from "./workers/export-worker";
+import type { JobData, JobResult } from "./queue";
+import { WORKER_CONCURRENCY, RATE_LIMITER } from "@/lib/queue/config";
 
-const redisConnection = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
+const redisConnection = new Redis(process.env.REDIS_URL || "redis://localhost:6379", {
   maxRetriesPerRequest: null,
 });
 
 const concurrency = WORKER_CONCURRENCY;
 
-
 async function processJob(job: Job<JobData>): Promise<JobResult> {
   console.log(`Processing job ${job.id} of type ${job.data.type}`);
 
   switch (job.data.type) {
-    case 'report:generate':
+    case "report:generate":
       return processReportJob(job as Job<typeof job.data>);
 
-    case 'email:batch':
+    case "email:batch":
       return processEmailBatchJob(job as Job<typeof job.data>);
 
-    case 'data:export':
+    case "data:export":
       return processExportJob(job as Job<typeof job.data>);
 
-    case 'chart:render':
+    case "chart:render":
       // Chart rendering would be implemented here
       return {
         success: true,
         duration: 0,
       };
 
-    case 'scheduled:refresh':
+    case "scheduled:refresh":
       // Scheduled refresh would be implemented here
       return {
         success: true,
@@ -46,11 +45,11 @@ async function processJob(job: Job<JobData>): Promise<JobResult> {
 }
 
 const worker = new Worker<JobData, JobResult>(
-  'reporting',
+  "reporting",
   async (job) => {
     try {
       const result = await processJob(job);
-      console.log(`Job ${job.id} completed:`, result.success ? 'success' : 'failed');
+      console.log(`Job ${job.id} completed:`, result.success ? "success" : "failed");
       return result;
     } catch (error) {
       console.error(`Job ${job.id} failed:`, error);
@@ -64,32 +63,32 @@ const worker = new Worker<JobData, JobResult>(
   }
 );
 
-worker.on('completed', (job, result) => {
+worker.on("completed", (job, result) => {
   console.log(`Job ${job.id} completed with result:`, result);
 });
 
-worker.on('failed', (job, err) => {
+worker.on("failed", (job, err) => {
   console.error(`Job ${job?.id} failed with error:`, err);
 });
 
-worker.on('error', (err) => {
-  console.error('Worker error:', err);
+worker.on("error", (err) => {
+  console.error("Worker error:", err);
 });
 
-worker.on('ready', () => {
-  console.log('Worker is ready and listening for jobs');
+worker.on("ready", () => {
+  console.log("Worker is ready and listening for jobs");
 });
 
 // Graceful shutdown
-process.on('SIGTERM', async () => {
-  console.log('Received SIGTERM, closing worker...');
+process.on("SIGTERM", async () => {
+  console.log("Received SIGTERM, closing worker...");
   await worker.close();
   await redisConnection.quit();
   process.exit(0);
 });
 
-process.on('SIGINT', async () => {
-  console.log('Received SIGINT, closing worker...');
+process.on("SIGINT", async () => {
+  console.log("Received SIGINT, closing worker...");
   await worker.close();
   await redisConnection.quit();
   process.exit(0);

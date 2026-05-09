@@ -1,31 +1,31 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { createServerFn } from '@tanstack/react-start'
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
-import { Lock, Home, AlertCircle, BarChart3 } from 'lucide-react'
-import { Link } from '@tanstack/react-router'
+import { createFileRoute } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Lock, Home, AlertCircle, BarChart3 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 
-const getPublicChartFn = createServerFn({ method: 'GET' })
+const getPublicChartFn = createServerFn({ method: "GET" })
   .inputValidator((id: string) => id)
   .handler(async ({ data: id }) => {
-    const { getDb } = await import('@/lib/db/config')
-    const db = getDb()
-    const chart = await db('chart_definitions').where('id', id).where('is_public', true).first()
-    if (!chart) return null
-    return chart
-  })
+    const { getDb } = await import("@/lib/db/config");
+    const db = getDb();
+    const chart = await db("chart_definitions").where("id", id).where("is_public", true).first();
+    if (!chart) return null;
+    return chart;
+  });
 
-export const Route = createFileRoute('/share/chart/$id')({
+export const Route = createFileRoute("/share/chart/$id")({
   loader: ({ params }) => getPublicChartFn({ data: params.id }),
   component: PublicChartPage,
-})
+});
 
 function PublicChartPage() {
-  const chart = Route.useLoaderData()
-  const { id } = Route.useParams()
+  const chart = Route.useLoaderData();
+  const { id } = Route.useParams();
 
   if (!chart) {
     return (
@@ -38,7 +38,9 @@ function PublicChartPage() {
             <CardTitle>Chart Not Available</CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
-            <p className="text-muted-foreground">This chart is not publicly accessible or does not exist.</p>
+            <p className="text-muted-foreground">
+              This chart is not publicly accessible or does not exist.
+            </p>
             <Link to="/">
               <Button variant="outline">
                 <Home className="h-4 w-4 mr-2" />
@@ -48,7 +50,7 @@ function PublicChartPage() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
@@ -72,5 +74,5 @@ function PublicChartPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

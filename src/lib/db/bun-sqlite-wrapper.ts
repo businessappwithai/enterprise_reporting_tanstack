@@ -4,9 +4,9 @@
  * in production environments running on Bun.
  */
 
-import Database from 'bun:sqlite';
-import fs from 'fs';
-import path from 'path';
+import Database from "bun:sqlite";
+import fs from "fs";
+import path from "path";
 
 class BunSQLiteWrapper {
   private db: Database.Database;
@@ -20,7 +20,7 @@ class BunSQLiteWrapper {
 
     this.db = new Database(dbPath);
     // Enable foreign keys
-    this.db.exec('PRAGMA foreign_keys = ON');
+    this.db.exec("PRAGMA foreign_keys = ON");
   }
 
   /**
@@ -59,7 +59,7 @@ let wrapperInstance: BunSQLiteWrapper | null = null;
 
 export function getBunSQLiteWrapper(dbPath?: string): BunSQLiteWrapper {
   if (!wrapperInstance) {
-    const path = dbPath || process.env.DATABASE_PATH || './data/config.sqlite';
+    const path = dbPath || process.env.DATABASE_PATH || "./data/config.sqlite";
     wrapperInstance = new BunSQLiteWrapper(path);
   }
   return wrapperInstance;

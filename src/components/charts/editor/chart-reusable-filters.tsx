@@ -1,15 +1,15 @@
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Plus, X } from 'lucide-react';
-import type { FilterDefinition } from '@/types/database';
+} from "@/components/ui/select";
+import { Plus, X } from "lucide-react";
+import type { FilterDefinition } from "@/types/database";
 
 interface ChartFilterLink {
   id: string;
@@ -82,7 +82,9 @@ export function ChartReusableFilters({
               </SelectTrigger>
               <SelectContent>
                 {availableFields.map((field) => (
-                  <SelectItem key={field} value={field}>{field}</SelectItem>
+                  <SelectItem key={field} value={field}>
+                    {field}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -112,8 +114,9 @@ export function ChartReusableFilters({
                     <div className="flex-1">
                       <div className="font-medium">{filterDef.name}</div>
                       <div className="text-sm text-gray-500">
-                        Filter: <code>{filterDef.display_field}</code> → <code>{filterDef.value_field}</code>
-                        {' '}| Target: <code>{cf.target_column}</code>
+                        Filter: <code>{filterDef.display_field}</code> →{" "}
+                        <code>{filterDef.value_field}</code> | Target:{" "}
+                        <code>{cf.target_column}</code>
                       </div>
                     </div>
                     <Button

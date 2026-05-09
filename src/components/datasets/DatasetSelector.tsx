@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
 /**
  * Dropdown selector for choosing a loaded dataset (DuckDB table).
  */
 
-import React from 'react';
+import React from "react";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import type { DatasetInfo } from '@/types/wasm';
+} from "@/components/ui/select";
+import type { DatasetInfo } from "@/types/wasm";
 
 interface DatasetSelectorProps {
   datasets: DatasetInfo[];
@@ -25,7 +25,7 @@ export function DatasetSelector({
   datasets,
   value,
   onValueChange,
-  placeholder = 'Select dataset…',
+  placeholder = "Select dataset…",
 }: DatasetSelectorProps) {
   const loaded = datasets.filter((d) => !d.isLoading && d.memorySize > 0);
 

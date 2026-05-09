@@ -3,7 +3,7 @@
  * Provides configuration for Bull Board UI (custom implementation)
  */
 
-import { BULL_BOARD_CONFIG } from './config';
+import { BULL_BOARD_CONFIG } from "./config";
 
 /**
  * Get the Bull Board base path

@@ -8,14 +8,14 @@
  */
 export async function fetchParquetBuffer(
   url: string,
-  onProgress?: (loaded: number, total: number) => void,
+  onProgress?: (loaded: number, total: number) => void
 ): Promise<Uint8Array> {
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`Failed to fetch Parquet file from ${url}: ${response.statusText}`);
   }
 
-  const contentLength = response.headers.get('content-length');
+  const contentLength = response.headers.get("content-length");
   const total = contentLength ? parseInt(contentLength, 10) : 0;
 
   if (!response.body) {
@@ -49,7 +49,7 @@ export async function fetchParquetBuffer(
  * Get the file size of a remote Parquet file via a HEAD request.
  */
 export async function getParquetFileSize(url: string): Promise<number> {
-  const response = await fetch(url, { method: 'HEAD' });
-  const contentLength = response.headers.get('content-length');
+  const response = await fetch(url, { method: "HEAD" });
+  const contentLength = response.headers.get("content-length");
   return contentLength ? parseInt(contentLength, 10) : 0;
 }

@@ -1,8 +1,8 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { errorLogger } from '@/lib/errors/error-logger';
-import { ErrorReportDialog } from './error-report-dialog';
-import { Button } from '@/components/ui/button';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+import React, { Component, type ErrorInfo, type ReactNode } from "react";
+import { errorLogger } from "@/lib/errors/error-logger";
+import { ErrorReportDialog } from "./error-report-dialog";
+import { Button } from "@/components/ui/button";
+import { AlertTriangle, RefreshCw } from "lucide-react";
 
 interface Props {
   children: ReactNode;
@@ -86,15 +86,14 @@ export class ErrorBoundary extends Component<Props, State> {
               <div className="space-y-2">
                 <h1 className="text-2xl font-bold">Something went wrong</h1>
                 <p className="text-muted-foreground">
-                  An unexpected error has occurred. Our team has been notified and we&apos;re working to fix it.
+                  An unexpected error has occurred. Our team has been notified and we&apos;re
+                  working to fix it.
                 </p>
               </div>
 
               {this.state.error && (
                 <div className="p-4 rounded-lg bg-muted border">
-                  <p className="text-sm font-mono text-left">
-                    {this.state.error.message}
-                  </p>
+                  <p className="text-sm font-mono text-left">{this.state.error.message}</p>
                 </div>
               )}
 

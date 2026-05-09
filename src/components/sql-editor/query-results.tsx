@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useMemo, useRef, useEffect, useCallback } from 'react';
+import { useMemo, useRef, useEffect, useCallback } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -8,9 +8,9 @@ import {
   flexRender,
   type ColumnDef,
   type SortingState,
-} from '@tanstack/react-table';
-import { useVirtualizer } from '@tanstack/react-virtual';
-import { useState } from 'react';
+} from "@tanstack/react-table";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { useState } from "react";
 import {
   Table,
   TableBody,
@@ -18,12 +18,12 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, Play } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import type { SQLExecutionResponse, ColumnInfo, QueryPagination } from '@/types/api';
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { cn } from "@/lib/utils";
+import type { SQLExecutionResponse, ColumnInfo, QueryPagination } from "@/types/api";
 
 interface QueryResultsProps {
   result: SQLExecutionResponse | null;
@@ -66,9 +66,9 @@ export function QueryResults({ result, isLoading, error, onPageChange }: QueryRe
           onClick={() => column.toggleSorting()}
         >
           {col.name}
-          {column.getIsSorted() === 'asc' ? (
+          {column.getIsSorted() === "asc" ? (
             <ArrowUp className="h-3 w-3" />
-          ) : column.getIsSorted() === 'desc' ? (
+          ) : column.getIsSorted() === "desc" ? (
             <ArrowDown className="h-3 w-3" />
           ) : (
             <ArrowUpDown className="h-3 w-3 opacity-50" />
@@ -165,13 +165,18 @@ export function QueryResults({ result, isLoading, error, onPageChange }: QueryRe
           {/* Left Side: Row Counts */}
           <div className="flex items-center gap-3">
             <Badge variant="secondary" className="text-sm py-1">
-              {pagination?.totalRows || result.rowCount} total row{(pagination?.totalRows || result.rowCount) !== 1 ? 's' : ''}
+              {pagination?.totalRows || result.rowCount} total row
+              {(pagination?.totalRows || result.rowCount) !== 1 ? "s" : ""}
             </Badge>
             <Badge variant="outline" className="text-sm py-1">
-              {rowModel.rows.length} row{rowModel.rows.length !== 1 ? 's' : ''} displayed
+              {rowModel.rows.length} row{rowModel.rows.length !== 1 ? "s" : ""} displayed
             </Badge>
             {pagination?.serverSide && (
-              <Badge variant="outline" className="text-xs py-1" title="Data fetched from server in pages">
+              <Badge
+                variant="outline"
+                className="text-xs py-1"
+                title="Data fetched from server in pages"
+              >
                 Server-Side Pagination
               </Badge>
             )}
@@ -181,7 +186,13 @@ export function QueryResults({ result, isLoading, error, onPageChange }: QueryRe
           <div className="flex items-center gap-4 text-sm">
             <div className="flex items-center gap-2">
               <span className="font-semibold">Execution Time:</span>
-              <span className={result.executionTime > 1000 ? 'text-yellow-600 dark:text-yellow-400' : 'text-green-600 dark:text-green-400'}>
+              <span
+                className={
+                  result.executionTime > 1000
+                    ? "text-yellow-600 dark:text-yellow-400"
+                    : "text-green-600 dark:text-green-400"
+                }
+              >
                 {result.executionTime}ms
               </span>
             </div>
@@ -222,17 +233,16 @@ export function QueryResults({ result, isLoading, error, onPageChange }: QueryRe
         {/* Warnings/Info */}
         {result.truncated && (
           <div className="mt-2">
-            <Badge variant="warning" className="text-xs">Results truncated at limit</Badge>
+            <Badge variant="warning" className="text-xs">
+              Results truncated at limit
+            </Badge>
           </div>
         )}
       </div>
 
       {/* Virtualized Table */}
-      <div
-        ref={tableContainerRef}
-        className="flex-1 overflow-auto rounded-md border"
-      >
-        <Table style={{ borderCollapse: 'separate', borderSpacing: '0' }}>
+      <div ref={tableContainerRef} className="flex-1 overflow-auto rounded-md border">
+        <Table style={{ borderCollapse: "separate", borderSpacing: "0" }}>
           <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -240,10 +250,7 @@ export function QueryResults({ result, isLoading, error, onPageChange }: QueryRe
                   <TableHead key={header.id} className="whitespace-nowrap bg-background">
                     {header.isPlaceholder
                       ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                      : flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
                 ))}
               </TableRow>
@@ -266,7 +273,7 @@ export function QueryResults({ result, isLoading, error, onPageChange }: QueryRe
                     ref={virtualizer.measureElement}
                     style={{
                       height: `${virtualRow.size}px`,
-                      display: 'table-row',
+                      display: "table-row",
                     }}
                   >
                     {row.getVisibleCells().map((cell) => (
@@ -274,13 +281,10 @@ export function QueryResults({ result, isLoading, error, onPageChange }: QueryRe
                         key={cell.id}
                         className="font-mono text-sm border-b py-2"
                         style={{
-                          boxSizing: 'border-box',
+                          boxSizing: "border-box",
                         }}
                       >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     ))}
                   </TableRow>
@@ -294,7 +298,8 @@ export function QueryResults({ result, isLoading, error, onPageChange }: QueryRe
       {/* Performance Info for Large Datasets */}
       {rowModel.rows.length > 100 && (
         <div className="text-xs text-muted-foreground flex-shrink-0">
-          💡 Virtual scrolling enabled for {rowModel.rows.length} rows. Only visible rows are rendered for optimal performance.
+          💡 Virtual scrolling enabled for {rowModel.rows.length} rows. Only visible rows are
+          rendered for optimal performance.
         </div>
       )}
     </div>
@@ -310,25 +315,17 @@ function CellValue({ value }: { value: unknown }) {
     return <span className="text-muted-foreground italic">undefined</span>;
   }
 
-  if (typeof value === 'boolean') {
-    return (
-      <Badge variant={value ? 'success' : 'secondary'}>
-        {value.toString()}
-      </Badge>
-    );
+  if (typeof value === "boolean") {
+    return <Badge variant={value ? "success" : "secondary"}>{value.toString()}</Badge>;
   }
 
-  if (typeof value === 'object') {
-    return (
-      <span className="text-xs">{JSON.stringify(value)}</span>
-    );
+  if (typeof value === "object") {
+    return <span className="text-xs">{JSON.stringify(value)}</span>;
   }
 
   const stringValue = String(value);
   if (stringValue.length > 100) {
-    return (
-      <span title={stringValue}>{stringValue.substring(0, 100)}...</span>
-    );
+    return <span title={stringValue}>{stringValue.substring(0, 100)}...</span>;
   }
 
   return <span>{stringValue}</span>;

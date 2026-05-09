@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth/config';
-import { getDb } from '@/lib/db/config';
-import { decrypt } from '@/lib/security/encryption';
-import { getConnection, testConnection } from '@/lib/db/connection-manager';
-import type { DataSource } from '@/types/database';
+import { type NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth/config";
+import { getDb } from "@/lib/db/config";
+import { decrypt } from "@/lib/security/encryption";
+import { getConnection, testConnection } from "@/lib/db/connection-manager";
+import type { DataSource } from "@/types/database";
 
 // GET /api/data-sources/active - Get the active data source
 export async function GET(request: NextRequest) {
@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const session = await auth();
     if (!session?.user) {
       return NextResponse.json(
-        { success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } },
+        { success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } },
         { status: 401 }
       );
     }
@@ -19,9 +19,9 @@ export async function GET(request: NextRequest) {
     // For now, return the first available data source
     // In the future, you could store user's preferred active connection
     const db = getDb();
-    const dataSource = await db<DataSource>('data_sources')
-      .where('is_active', true)
-      .orderBy('created_at', 'desc')
+    const dataSource = await db<DataSource>("data_sources")
+      .where("is_active", true)
+      .orderBy("created_at", "desc")
       .first();
 
     if (!dataSource) {
@@ -39,9 +39,12 @@ export async function GET(request: NextRequest) {
       data: { activeDataSource: sanitized },
     });
   } catch (error) {
-    console.error('Error fetching active data source:', error);
+    console.error("Error fetching active data source:", error);
     return NextResponse.json(
-      { success: false, error: { code: 'SERVER_ERROR', message: 'Failed to fetch active data source' } },
+      {
+        success: false,
+        error: { code: "SERVER_ERROR", message: "Failed to fetch active data source" },
+      },
       { status: 500 }
     );
   }
@@ -53,7 +56,7 @@ export async function POST(request: NextRequest) {
     const session = await auth();
     if (!session?.user) {
       return NextResponse.json(
-        { success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } },
+        { success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } },
         { status: 401 }
       );
     }
@@ -63,20 +66,20 @@ export async function POST(request: NextRequest) {
 
     if (!dataSourceId) {
       return NextResponse.json(
-        { success: false, error: { code: 'INVALID_INPUT', message: 'Data source ID is required' } },
+        { success: false, error: { code: "INVALID_INPUT", message: "Data source ID is required" } },
         { status: 400 }
       );
     }
 
     const db = getDb();
-    const dataSource = await db<DataSource>('data_sources')
-      .where('id', dataSourceId)
-      .where('is_active', true)
+    const dataSource = await db<DataSource>("data_sources")
+      .where("id", dataSourceId)
+      .where("is_active", true)
       .first();
 
     if (!dataSource) {
       return NextResponse.json(
-        { success: false, error: { code: 'NOT_FOUND', message: 'Data source not found' } },
+        { success: false, error: { code: "NOT_FOUND", message: "Data source not found" } },
         { status: 404 }
       );
     }
@@ -89,7 +92,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: { code: 'CONNECTION_ERROR', message: 'Cannot activate data source: ' + testResult.message },
+          error: {
+            code: "CONNECTION_ERROR",
+            message: "Cannot activate data source: " + testResult.message,
+          },
         },
         { status: 400 }
       );
@@ -106,9 +112,12 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error setting active data source:', error);
+    console.error("Error setting active data source:", error);
     return NextResponse.json(
-      { success: false, error: { code: 'SERVER_ERROR', message: 'Failed to set active data source' } },
+      {
+        success: false,
+        error: { code: "SERVER_ERROR", message: "Failed to set active data source" },
+      },
       { status: 500 }
     );
   }

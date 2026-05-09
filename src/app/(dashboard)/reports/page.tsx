@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -13,13 +13,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -28,48 +28,41 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import {
-  Plus,
-  MoreHorizontal,
-  Edit,
-  Trash,
-  Eye,
-  FileText,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { formatDateTime } from '@/lib/utils';
-import type { ReportDefinition, SavedQuery } from '@/types/database';
+} from "@/components/ui/select";
+import { Plus, MoreHorizontal, Edit, Trash, Eye, FileText } from "lucide-react";
+import { toast } from "sonner";
+import { formatDateTime } from "@/lib/utils";
+import type { ReportDefinition, SavedQuery } from "@/types/database";
 
 export default function ReportsPage() {
   const queryClient = useQueryClient();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [newReportName, setNewReportName] = useState('');
-  const [newReportDescription, setNewReportDescription] = useState('');
-  const [selectedQueryId, setSelectedQueryId] = useState('');
+  const [newReportName, setNewReportName] = useState("");
+  const [newReportDescription, setNewReportDescription] = useState("");
+  const [selectedQueryId, setSelectedQueryId] = useState("");
 
   const { data: reports, isLoading } = useQuery<ReportDefinition[]>({
-    queryKey: ['reports'],
+    queryKey: ["reports"],
     queryFn: async () => {
-      const res = await fetch('/api/reports');
+      const res = await fetch("/api/reports");
       const data = await res.json();
       return data.data?.items || [];
     },
   });
 
   const { data: queries } = useQuery<SavedQuery[]>({
-    queryKey: ['queries'],
+    queryKey: ["queries"],
     queryFn: async () => {
-      const res = await fetch('/api/queries');
+      const res = await fetch("/api/queries");
       const data = await res.json();
       return data.data?.items || [];
     },
@@ -77,9 +70,9 @@ export default function ReportsPage() {
 
   const createMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch('/api/reports', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: newReportName,
           description: newReportDescription,
@@ -91,29 +84,29 @@ export default function ReportsPage() {
     },
     onSuccess: (data) => {
       if (data.success) {
-        toast.success('Report created successfully');
-        queryClient.invalidateQueries({ queryKey: ['reports'] });
+        toast.success("Report created successfully");
+        queryClient.invalidateQueries({ queryKey: ["reports"] });
         setCreateDialogOpen(false);
-        setNewReportName('');
-        setNewReportDescription('');
-        setSelectedQueryId('');
+        setNewReportName("");
+        setNewReportDescription("");
+        setSelectedQueryId("");
       } else {
-        toast.error(data.error?.message || 'Failed to create report');
+        toast.error(data.error?.message || "Failed to create report");
       }
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/reports/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/reports/${id}`, { method: "DELETE" });
       return res.json();
     },
     onSuccess: (data) => {
       if (data.success) {
-        toast.success('Report deleted successfully');
-        queryClient.invalidateQueries({ queryKey: ['reports'] });
+        toast.success("Report deleted successfully");
+        queryClient.invalidateQueries({ queryKey: ["reports"] });
       } else {
-        toast.error(data.error?.message || 'Failed to delete report');
+        toast.error(data.error?.message || "Failed to delete report");
       }
     },
   });
@@ -123,9 +116,7 @@ export default function ReportsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Reports</h1>
-          <p className="text-muted-foreground">
-            Create and manage tabular reports
-          </p>
+          <p className="text-muted-foreground">Create and manage tabular reports</p>
         </div>
 
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
@@ -138,9 +129,7 @@ export default function ReportsPage() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Create Report</DialogTitle>
-              <DialogDescription>
-                Create a new report from a saved query.
-              </DialogDescription>
+              <DialogDescription>Create a new report from a saved query.</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
@@ -163,10 +152,7 @@ export default function ReportsPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="query">Saved Query</Label>
-                <Select
-                  value={selectedQueryId}
-                  onValueChange={setSelectedQueryId}
-                >
+                <Select value={selectedQueryId} onValueChange={setSelectedQueryId}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a query" />
                   </SelectTrigger>
@@ -181,17 +167,14 @@ export default function ReportsPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setCreateDialogOpen(false)}
-              >
+              <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
                 Cancel
               </Button>
               <Button
                 onClick={() => createMutation.mutate()}
                 disabled={!newReportName || createMutation.isPending}
               >
-                {createMutation.isPending ? 'Creating...' : 'Create Report'}
+                {createMutation.isPending ? "Creating..." : "Create Report"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -207,9 +190,7 @@ export default function ReportsPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Loading reports...
-            </div>
+            <div className="text-center py-8 text-muted-foreground">Loading reports...</div>
           ) : reports?.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               No reports created yet. Create your first report to get started.
@@ -232,15 +213,18 @@ export default function ReportsPage() {
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
                         {report.name}
-                        {(!report.name || report.name === 'Draft Report') && (
-                          <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700 border-yellow-300">
+                        {(!report.name || report.name === "Draft Report") && (
+                          <Badge
+                            variant="outline"
+                            className="text-xs bg-yellow-50 text-yellow-700 border-yellow-300"
+                          >
                             Draft
                           </Badge>
                         )}
                       </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {report.description || '-'}
+                      {report.description || "-"}
                     </TableCell>
                     <TableCell>
                       {report.saved_query_id ? (

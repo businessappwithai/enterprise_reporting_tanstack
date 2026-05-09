@@ -1,16 +1,16 @@
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { MultiSelect } from '@/components/ui/multi-select';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { MultiSelect } from "@/components/ui/multi-select";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { AlertTriangle } from 'lucide-react';
-import type { FilterFieldType, FilterOperator } from '@/types/database';
+} from "@/components/ui/select";
+import { AlertTriangle } from "lucide-react";
+import type { FilterFieldType, FilterOperator } from "@/types/database";
 
 interface SavedQuery {
   id: string;
@@ -55,7 +55,7 @@ export function FilterFormFields({
   availableFields,
   isLoadingFields,
   onQueryChange,
-  idPrefix = '',
+  idPrefix = "",
 }: FilterFormFieldsProps) {
   const set = (patch: Partial<FilterFormData>) => onFormDataChange({ ...formData, ...patch });
 
@@ -90,10 +90,13 @@ export function FilterFormFields({
             set({
               field_type: value,
               operator:
-                value === 'id' ? 'in'
-                : value === 'date' ? 'between'
-                : value === 'number' ? 'equals'
-                : 'contains',
+                value === "id"
+                  ? "in"
+                  : value === "date"
+                    ? "between"
+                    : value === "number"
+                      ? "equals"
+                      : "contains",
             })
           }
         >
@@ -108,10 +111,10 @@ export function FilterFormFields({
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground">
-          {formData.field_type === 'id' && 'Select a query to populate dropdown options in filter'}
-          {formData.field_type === 'number' && 'Select a query to filter by numeric column'}
-          {formData.field_type === 'date' && 'Select a query to filter by date column'}
-          {formData.field_type === 'text' && 'Select a query to filter by text column'}
+          {formData.field_type === "id" && "Select a query to populate dropdown options in filter"}
+          {formData.field_type === "number" && "Select a query to filter by numeric column"}
+          {formData.field_type === "date" && "Select a query to filter by date column"}
+          {formData.field_type === "text" && "Select a query to filter by text column"}
         </p>
       </div>
 
@@ -123,14 +126,18 @@ export function FilterFormFields({
           </SelectTrigger>
           <SelectContent>
             {savedQueries?.map((query) => (
-              <SelectItem key={query.id} value={query.id}>{query.name}</SelectItem>
+              <SelectItem key={query.id} value={query.id}>
+                {query.name}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <p className="text-xs text-muted-foreground">Select a saved query to populate available columns</p>
+        <p className="text-xs text-muted-foreground">
+          Select a saved query to populate available columns
+        </p>
       </div>
 
-      {formData.field_type === 'id' && (
+      {formData.field_type === "id" && (
         <div className="grid gap-4">
           <div className="grid gap-2">
             <Label>Display Fields (Multiple)</Label>
@@ -146,9 +153,14 @@ export function FilterFormFields({
               />
             ) : (
               <Input
-                value={formData.display_field.join(', ')}
+                value={formData.display_field.join(", ")}
                 onChange={(e) =>
-                  set({ display_field: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })
+                  set({
+                    display_field: e.target.value
+                      .split(",")
+                      .map((s) => s.trim())
+                      .filter(Boolean),
+                  })
                 }
                 placeholder="e.g., firstName, lastName"
               />
@@ -183,12 +195,14 @@ export function FilterFormFields({
                 placeholder="e.g., id"
               />
             )}
-            <p className="text-xs text-muted-foreground">Field used for filtering (should be unique)</p>
+            <p className="text-xs text-muted-foreground">
+              Field used for filtering (should be unique)
+            </p>
           </div>
         </div>
       )}
 
-      {formData.field_type === 'number' && (
+      {formData.field_type === "number" && (
         <>
           <div className="grid gap-2">
             <Label htmlFor={`${idPrefix}operator`}>Operator</Label>
@@ -211,21 +225,32 @@ export function FilterFormFields({
           <div className="grid gap-2">
             <Label htmlFor={`${idPrefix}value_field`}>Numeric Column *</Label>
             {isLoadingFields ? (
-              <p className="text-xs text-muted-foreground">Loading fields... Please select a saved query first.</p>
+              <p className="text-xs text-muted-foreground">
+                Loading fields... Please select a saved query first.
+              </p>
             ) : availableFields.length > 0 ? (
-              <Select value={formData.value_field} onValueChange={(value) => set({ value_field: value })}>
+              <Select
+                value={formData.value_field}
+                onValueChange={(value) => set({ value_field: value })}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select numeric column..." />
                 </SelectTrigger>
                 <SelectContent>
                   {availableFields
                     .filter((f) => {
-                      const type = (f.type || '').toLowerCase();
+                      const type = (f.type || "").toLowerCase();
                       return (
-                        type.includes('int') || type.includes('number') || type.includes('decimal') ||
-                        type.includes('numeric') || type.includes('real') || type.includes('double') ||
-                        type.includes('float') || type.includes('bigint') || type.includes('smallint') ||
-                        type.includes('tinyint')
+                        type.includes("int") ||
+                        type.includes("number") ||
+                        type.includes("decimal") ||
+                        type.includes("numeric") ||
+                        type.includes("real") ||
+                        type.includes("double") ||
+                        type.includes("float") ||
+                        type.includes("bigint") ||
+                        type.includes("smallint") ||
+                        type.includes("tinyint")
                       );
                     })
                     .map((field) => (
@@ -242,12 +267,14 @@ export function FilterFormFields({
                 </p>
               </div>
             )}
-            <p className="text-xs text-muted-foreground">The numeric database column to filter on</p>
+            <p className="text-xs text-muted-foreground">
+              The numeric database column to filter on
+            </p>
           </div>
         </>
       )}
 
-      {formData.field_type === 'date' && (
+      {formData.field_type === "date" && (
         <>
           <div className="grid gap-2">
             <Label htmlFor={`${idPrefix}date-operator`}>Operator</Label>
@@ -271,18 +298,25 @@ export function FilterFormFields({
             {isLoadingFields ? (
               <p className="text-xs text-muted-foreground">Loading fields...</p>
             ) : availableFields.length > 0 ? (
-              <Select value={formData.value_field} onValueChange={(value) => set({ value_field: value })}>
+              <Select
+                value={formData.value_field}
+                onValueChange={(value) => set({ value_field: value })}
+              >
                 <SelectTrigger id={`${idPrefix}date-column`}>
                   <SelectValue placeholder="Select date column..." />
                 </SelectTrigger>
                 <SelectContent>
                   {availableFields
                     .filter((f) => {
-                      const type = (f.type || '').toLowerCase();
-                      return type.includes('date') || type.includes('time') || type.includes('timestamp');
+                      const type = (f.type || "").toLowerCase();
+                      return (
+                        type.includes("date") || type.includes("time") || type.includes("timestamp")
+                      );
                     })
                     .map((field) => (
-                      <SelectItem key={field.name} value={field.name}>{field.name}</SelectItem>
+                      <SelectItem key={field.name} value={field.name}>
+                        {field.name}
+                      </SelectItem>
                     ))}
                 </SelectContent>
               </Select>
@@ -295,10 +329,12 @@ export function FilterFormFields({
             )}
             <p className="text-xs text-muted-foreground">The database date column to filter on</p>
           </div>
-          {formData.operator === 'between' && (
+          {formData.operator === "between" && (
             <div className="border rounded-md p-3 bg-muted/50">
               <Label className="text-sm font-medium">Date Validation (Optional)</Label>
-              <p className="text-xs text-muted-foreground mb-2">Limit the date range users can select</p>
+              <p className="text-xs text-muted-foreground mb-2">
+                Limit the date range users can select
+              </p>
               <div className="grid gap-2">
                 <div>
                   <Label htmlFor={`${idPrefix}max_from_date`} className="text-xs">
@@ -328,7 +364,7 @@ export function FilterFormFields({
         </>
       )}
 
-      {formData.field_type === 'text' && (
+      {formData.field_type === "text" && (
         <>
           <div className="grid gap-2">
             <Label htmlFor={`${idPrefix}text-operator`}>Operator</Label>
@@ -350,25 +386,40 @@ export function FilterFormFields({
             {isLoadingFields ? (
               <p className="text-xs text-muted-foreground">Loading fields...</p>
             ) : availableFields.length > 0 ? (
-              <Select value={formData.value_field} onValueChange={(value) => set({ value_field: value })}>
+              <Select
+                value={formData.value_field}
+                onValueChange={(value) => set({ value_field: value })}
+              >
                 <SelectTrigger id={`${idPrefix}text-column`}>
                   <SelectValue placeholder="Select text column..." />
                 </SelectTrigger>
                 <SelectContent>
                   {availableFields
                     .filter((f) => {
-                      const type = (f.type || '').toLowerCase();
+                      const type = (f.type || "").toLowerCase();
                       const isTextType =
-                        type.includes('text') || type.includes('char') || type.includes('varchar') || type.includes('string');
-                      const isUnknownType = type === '';
+                        type.includes("text") ||
+                        type.includes("char") ||
+                        type.includes("varchar") ||
+                        type.includes("string");
+                      const isUnknownType = type === "";
                       const isNonText =
-                        type.includes('int') || type.includes('number') || type.includes('decimal') ||
-                        type.includes('numeric') || type.includes('real') || type.includes('double') ||
-                        type.includes('float') || type.includes('date') || type.includes('time') || type.includes('bool');
+                        type.includes("int") ||
+                        type.includes("number") ||
+                        type.includes("decimal") ||
+                        type.includes("numeric") ||
+                        type.includes("real") ||
+                        type.includes("double") ||
+                        type.includes("float") ||
+                        type.includes("date") ||
+                        type.includes("time") ||
+                        type.includes("bool");
                       return (isTextType || isUnknownType) && !isNonText;
                     })
                     .map((field) => (
-                      <SelectItem key={field.name} value={field.name}>{field.name}</SelectItem>
+                      <SelectItem key={field.name} value={field.name}>
+                        {field.name}
+                      </SelectItem>
                     ))}
                 </SelectContent>
               </Select>
@@ -386,7 +437,8 @@ export function FilterFormFields({
             <div className="text-sm text-amber-800">
               <p className="font-medium">Performance Warning</p>
               <p className="text-xs">
-                Text filters (contains, starts with) prevent index usage and will result in slow queries on large datasets.
+                Text filters (contains, starts with) prevent index usage and will result in slow
+                queries on large datasets.
               </p>
             </div>
           </div>

@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
 /**
  * Hook for executing DuckDB-Wasm queries with loading and error states.
  */
 
-import { useCallback, useState } from 'react';
-import { useDuckDB } from '@/components/duckdb/DuckDBProvider';
-import type { QueryResult } from '@/types/wasm';
+import { useCallback, useState } from "react";
+import { useDuckDB } from "@/components/duckdb/DuckDBProvider";
+import type { QueryResult } from "@/types/wasm";
 
 interface UseWasmQueryReturn {
   result: QueryResult | null;
@@ -39,7 +39,7 @@ export function useWasmQuery(): UseWasmQueryReturn {
         setIsExecuting(false);
       }
     },
-    [executeQuery],
+    [executeQuery]
   );
 
   const reset = useCallback(() => {

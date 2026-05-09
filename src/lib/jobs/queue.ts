@@ -1,4 +1,4 @@
-import { Queue, Worker, Job, QueueEvents } from "bullmq";
+import { Queue, Worker, type Job, QueueEvents } from "bullmq";
 import Redis from "ioredis";
 
 let redisConnection: Redis | null = null;
@@ -7,13 +7,10 @@ let queueEventsInstance: QueueEvents | null = null;
 
 function getRedisConnection(): Redis {
   if (!redisConnection) {
-    redisConnection = new Redis(
-      process.env.REDIS_URL || "redis://localhost:6379",
-      {
-        maxRetriesPerRequest: null,
-        lazyConnect: true,
-      },
-    );
+    redisConnection = new Redis(process.env.REDIS_URL || "redis://localhost:6379", {
+      maxRetriesPerRequest: null,
+      lazyConnect: true,
+    });
   }
   return redisConnection;
 }
@@ -121,8 +118,7 @@ export const reportingQueue = {
   get instance() {
     return getQueue();
   },
-  add: async (name: string, data: JobData, options?: any) =>
-    getQueue().add(name, data, options),
+  add: async (name: string, data: JobData, options?: any) => getQueue().add(name, data, options),
   getJob: async (jobId: string) => getQueue().getJob(jobId),
   getWaitingCount: async () => getQueue().getWaitingCount(),
   getActiveCount: async () => getQueue().getActiveCount(),
@@ -134,8 +130,7 @@ export const reportingQueue = {
   clean: async (grace: number, limit: number, type: string) =>
     getQueue().clean(grace, limit, type as any),
   close: async () => getQueue().close(),
-  removeRepeatableByKey: async (key: string) =>
-    getQueue().removeRepeatableByKey(key),
+  removeRepeatableByKey: async (key: string) => getQueue().removeRepeatableByKey(key),
 };
 
 export const queueEvents = {
@@ -151,7 +146,7 @@ export async function addJob(
     priority?: number;
     delay?: number;
     jobId?: string;
-  },
+  }
 ): Promise<Job<JobData, JobResult>> {
   return getQueue().add(data.type, data, {
     priority: options?.priority,
@@ -166,7 +161,7 @@ export async function addScheduledJob(
   options?: {
     jobId?: string;
     timezone?: string;
-  },
+  }
 ): Promise<Job<JobData, JobResult>> {
   return getQueue().add(data.type, data, {
     repeat: {
@@ -181,9 +176,7 @@ export async function removeScheduledJob(jobId: string): Promise<boolean> {
   return getQueue().removeRepeatableByKey(jobId);
 }
 
-export async function getJob(
-  jobId: string,
-): Promise<Job<JobData, JobResult> | undefined> {
+export async function getJob(jobId: string): Promise<Job<JobData, JobResult> | undefined> {
   return getQueue().getJob(jobId);
 }
 
@@ -203,7 +196,7 @@ export async function getQueueStatus() {
 export async function getJobs(
   status: "waiting" | "active" | "completed" | "failed" | "delayed",
   start: number = 0,
-  end: number = 20,
+  end: number = 20
 ) {
   return getQueue().getJobs([status], start, end);
 }

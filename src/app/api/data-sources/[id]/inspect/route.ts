@@ -6,12 +6,12 @@
  * into the metadata_entity_header and metadata_entity_field tables.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { getSecurityContext, hasPermission } from '@/lib/auth/rbac';
-import { getDb } from '@/lib/db/config';
-import { EntityService } from '@/lib/metadata/entity-service';
-import { introspectSchema } from '@/lib/sql/schema-introspection';
-import { getConnection } from '@/lib/db/connection-manager';
+import { type NextRequest, NextResponse } from "next/server";
+import { getSecurityContext, hasPermission } from "@/lib/auth/rbac";
+import { getDb } from "@/lib/db/config";
+import { EntityService } from "@/lib/metadata/entity-service";
+import { introspectSchema } from "@/lib/sql/schema-introspection";
+import { getConnection } from "@/lib/db/connection-manager";
 
 interface DatabaseColumn {
   name: string;
@@ -29,14 +29,11 @@ interface DatabaseColumn {
 interface DatabaseTable {
   name: string;
   schema?: string;
-  type: 'table' | 'view';
+  type: "table" | "view";
   columns: DatabaseColumn[];
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const { id } = params;
 
@@ -44,45 +41,46 @@ export async function POST(
     const context = await getSecurityContext();
     if (!context) {
       return NextResponse.json(
-        { success: false, error: { code: 'UNAUTHORIZED' } },
+        { success: false, error: { code: "UNAUTHORIZED" } },
         { status: 401 }
       );
     }
 
     // Check permission
-    const canEdit = hasPermission(context, 'data_source:edit') || hasPermission(context, 'admin');
+    const canEdit = hasPermission(context, "data_source:edit") || hasPermission(context, "admin");
     if (!canEdit) {
-      return NextResponse.json(
-        { success: false, error: { code: 'FORBIDDEN' } },
-        { status: 403 }
-      );
+      return NextResponse.json({ success: false, error: { code: "FORBIDDEN" } }, { status: 403 });
     }
 
     // Get datasource
-    const dataSource = await getDb()('data_sources')
-      .where('id', id)
-      .where('is_deleted', false)
+    const dataSource = await getDb()("data_sources")
+      .where("id", id)
+      .where("is_deleted", false)
       .first();
 
     if (!dataSource) {
-      console.error('[Inspect] Datasource not found:', id);
+      console.error("[Inspect] Datasource not found:", id);
       return NextResponse.json(
-        { success: false, error: { code: 'NOT_FOUND', message: 'Datasource not found' } },
+        { success: false, error: { code: "NOT_FOUND", message: "Datasource not found" } },
         { status: 404 }
       );
     }
 
-    console.log('[Inspect] Datasource found:', { id, name: dataSource.name, is_active: dataSource.is_active });
+    console.log("[Inspect] Datasource found:", {
+      id,
+      name: dataSource.name,
+      is_active: dataSource.is_active,
+    });
 
     // Check if datasource is active
     if (!dataSource.is_active) {
-      console.error('[Inspect] Datasource not active:', id);
+      console.error("[Inspect] Datasource not active:", id);
       return NextResponse.json(
         {
           success: false,
           error: {
-            code: 'DATASOURCE_NOT_ACTIVE',
-            message: 'Datasource must be connected before inspecting schema',
+            code: "DATASOURCE_NOT_ACTIVE",
+            message: "Datasource must be connected before inspecting schema",
           },
         },
         { status: 400 }
@@ -93,15 +91,15 @@ export async function POST(
     let connection;
     try {
       connection = await getConnection(dataSource);
-      console.log('[Inspect] Connection obtained successfully');
+      console.log("[Inspect] Connection obtained successfully");
     } catch (error: any) {
-      console.error('[Inspect] Failed to get connection:', error);
+      console.error("[Inspect] Failed to get connection:", error);
       return NextResponse.json(
         {
           success: false,
           error: {
-            code: 'CONNECTION_FAILED',
-            message: error.message || 'Failed to connect to datasource',
+            code: "CONNECTION_FAILED",
+            message: error.message || "Failed to connect to datasource",
           },
         },
         { status: 500 }
@@ -112,18 +110,18 @@ export async function POST(
     let introspectionResult;
     try {
       introspectionResult = await introspectSchema(connection, dataSource.client_type);
-      console.log('[Inspect] Schema introspection successful:', {
+      console.log("[Inspect] Schema introspection successful:", {
         tablesCount: introspectionResult.schema.tables.length,
         viewsCount: introspectionResult.schema.views.length,
       });
     } catch (error: any) {
-      console.error('[Inspect] Schema introspection error:', error);
+      console.error("[Inspect] Schema introspection error:", error);
       return NextResponse.json(
         {
           success: false,
           error: {
-            code: 'INTROSPECTION_FAILED',
-            message: error.message || 'Failed to introspect schema',
+            code: "INTROSPECTION_FAILED",
+            message: error.message || "Failed to introspect schema",
           },
         },
         { status: 500 }
@@ -135,30 +133,27 @@ export async function POST(
       ...introspectionResult.schema.tables.map((table) => ({
         name: table.name,
         schema: table.schema,
-        type: 'table' as const,
+        type: "table" as const,
         columns: table.columns.map((col) => ({
           name: col.name,
           type: col.type,
           nullable: col.nullable,
           primary_key: table.primaryKey?.includes(col.name) || false,
-          foreign_key: table.foreignKeys?.find((fk) =>
-            fk.column === col.name
-          ) ? {
-            column: col.name,
-            ref_table: table.foreignKeys!.find((fk) =>
-              fk.column === col.name
-            )!.referencedTable,
-            ref_column: table.foreignKeys!.find((fk) =>
-              fk.column === col.name
-            )!.referencedColumn,
-          } : undefined,
+          foreign_key: table.foreignKeys?.find((fk) => fk.column === col.name)
+            ? {
+                column: col.name,
+                ref_table: table.foreignKeys!.find((fk) => fk.column === col.name)!.referencedTable,
+                ref_column: table.foreignKeys!.find((fk) => fk.column === col.name)!
+                  .referencedColumn,
+              }
+            : undefined,
           default_value: col.defaultValue as string | undefined,
         })),
       })),
       ...introspectionResult.schema.views.map((view) => ({
         name: view.name,
         schema: view.schema,
-        type: 'view' as const,
+        type: "view" as const,
         columns: view.columns.map((col) => ({
           name: col.name,
           type: col.type,
@@ -208,8 +203,8 @@ export async function POST(
 
         // Create field metadata
         for (const [index, column] of table.columns.entries()) {
-          await getDb()('metadata_entity_field').insert({
-            id: getDb().raw('(lower(hex(randomblob(16))))'),
+          await getDb()("metadata_entity_field").insert({
+            id: getDb().raw("(lower(hex(randomblob(16))))"),
             entity_header_id: entity.id,
             field_name: column.name,
             data_type: column.type,
@@ -234,10 +229,10 @@ export async function POST(
         entitiesCreated++;
       } else {
         // Update last_introspected_at for existing entity
-        await getDb()('metadata_entity_header')
-          .where('data_source_id', id)
-          .where('entity_name', table.name)
-          .where('entity_schema', table.schema || null)
+        await getDb()("metadata_entity_header")
+          .where("data_source_id", id)
+          .where("entity_name", table.name)
+          .where("entity_schema", table.schema || null)
           .update({
             last_introspected_at: new Date().toISOString(),
             updated_at: getDb().fn.now(),
@@ -246,30 +241,28 @@ export async function POST(
     }
 
     // Mark datasource as inspected
-    await getDb()('data_sources')
-      .where('id', id)
-      .update({
-        is_inspected: true,
-        updated_at: getDb().fn.now(),
-      });
+    await getDb()("data_sources").where("id", id).update({
+      is_inspected: true,
+      updated_at: getDb().fn.now(),
+    });
 
     return NextResponse.json({
       success: true,
       data: {
-        message: 'Schema inspected and imported successfully',
+        message: "Schema inspected and imported successfully",
         entities_count: entitiesCreated,
         fields_count: fieldsCreated,
         tables_found: schema.length,
       },
     });
   } catch (error) {
-    console.error('Error inspecting datasource schema:', error);
+    console.error("Error inspecting datasource schema:", error);
     return NextResponse.json(
       {
         success: false,
         error: {
-          code: 'INTERNAL_ERROR',
-          message: 'Failed to inspect datasource schema',
+          code: "INTERNAL_ERROR",
+          message: "Failed to inspect datasource schema",
         },
       },
       { status: 500 }

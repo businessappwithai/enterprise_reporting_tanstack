@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth/config';
-import { getDb } from '@/lib/db/config';
-import { introspectAndCacheSchema, getSchemaContext } from '@/lib/mastra/schema-store';
-import type { DataSource } from '@/types/database';
+import { type NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth/config";
+import { getDb } from "@/lib/db/config";
+import { introspectAndCacheSchema, getSchemaContext } from "@/lib/mastra/schema-store";
+import type { DataSource } from "@/types/database";
 
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user) {
       return NextResponse.json(
-        { success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } },
+        { success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } },
         { status: 401 }
       );
     }
@@ -19,20 +19,26 @@ export async function POST(request: NextRequest) {
 
     if (!data_source_id) {
       return NextResponse.json(
-        { success: false, error: { code: 'VALIDATION_ERROR', message: 'data_source_id is required' } },
+        {
+          success: false,
+          error: { code: "VALIDATION_ERROR", message: "data_source_id is required" },
+        },
         { status: 400 }
       );
     }
 
     const db = getDb();
-    const dataSource = await db<DataSource>('data_sources')
-      .where('id', data_source_id)
-      .where('is_active', true)
+    const dataSource = await db<DataSource>("data_sources")
+      .where("id", data_source_id)
+      .where("is_active", true)
       .first();
 
     if (!dataSource) {
       return NextResponse.json(
-        { success: false, error: { code: 'NOT_FOUND', message: 'Data source not found or inactive' } },
+        {
+          success: false,
+          error: { code: "NOT_FOUND", message: "Data source not found or inactive" },
+        },
         { status: 404 }
       );
     }
@@ -58,9 +64,15 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Schema introspection error:', error);
+    console.error("Schema introspection error:", error);
     return NextResponse.json(
-      { success: false, error: { code: 'INTERNAL_ERROR', message: error instanceof Error ? error.message : 'Unknown error' } },
+      {
+        success: false,
+        error: {
+          code: "INTERNAL_ERROR",
+          message: error instanceof Error ? error.message : "Unknown error",
+        },
+      },
       { status: 500 }
     );
   }

@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { AlertCircle, AlertTriangle, CheckCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import type { SQLValidationResult, SQLError, SQLWarning } from '@/lib/sql/validator';
+import { AlertCircle, AlertTriangle, CheckCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
+import type { SQLValidationResult, SQLError, SQLWarning } from "@/lib/sql/validator";
 
 interface ValidationPanelProps {
   validation: SQLValidationResult | null;
@@ -18,7 +18,7 @@ export function ValidationPanel({ validation, className }: ValidationPanelProps)
   const hasWarnings = validation.warnings.length > 0;
 
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn("space-y-2", className)}>
       {/* Status indicator */}
       <div className="flex items-center gap-2">
         {validation.isValid ? (
@@ -38,7 +38,7 @@ export function ValidationPanel({ validation, className }: ValidationPanelProps)
             <AlertTriangle className="h-4 w-4" />
             <span className="text-sm">
               {validation.warnings.length} warning
-              {validation.warnings.length !== 1 ? 's' : ''}
+              {validation.warnings.length !== 1 ? "s" : ""}
             </span>
           </div>
         )}
@@ -74,7 +74,7 @@ function ErrorItem({ error }: { error: SQLError }) {
         {(error.line || error.column) && (
           <p className="text-xs text-destructive/70 mt-0.5">
             {error.line && `Line ${error.line}`}
-            {error.line && error.column && ', '}
+            {error.line && error.column && ", "}
             {error.column && `Column ${error.column}`}
           </p>
         )}
@@ -86,14 +86,14 @@ function ErrorItem({ error }: { error: SQLError }) {
 function WarningItem({ warning }: { warning: SQLWarning }) {
   const getBadgeColor = (type: string) => {
     switch (type) {
-      case 'performance':
-        return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
-      case 'security':
-        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
-      case 'style':
-        return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+      case "performance":
+        return "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400";
+      case "security":
+        return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+      case "style":
+        return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
       default:
-        return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
+        return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
     }
   };
 
@@ -103,17 +103,12 @@ function WarningItem({ warning }: { warning: SQLWarning }) {
       <div className="flex-1">
         <div className="flex items-center gap-2">
           <span
-            className={cn(
-              'text-xs px-1.5 py-0.5 rounded font-medium',
-              getBadgeColor(warning.type)
-            )}
+            className={cn("text-xs px-1.5 py-0.5 rounded font-medium", getBadgeColor(warning.type))}
           >
             {warning.type}
           </span>
         </div>
-        <p className="text-sm text-yellow-700 dark:text-yellow-400 mt-1">
-          {warning.message}
-        </p>
+        <p className="text-sm text-yellow-700 dark:text-yellow-400 mt-1">{warning.message}</p>
       </div>
     </div>
   );

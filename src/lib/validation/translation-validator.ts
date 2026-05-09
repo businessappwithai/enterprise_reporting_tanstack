@@ -5,8 +5,8 @@
  * by translating it back to English and comparing semantic similarity.
  */
 
-import { generateText } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import { generateText } from "ai";
+import { openai } from "@ai-sdk/openai";
 
 export interface ReverseTranslationResult {
   englishMeaning: string;
@@ -52,7 +52,7 @@ ${schemaContext}
 SQL Query:
 ${sql}
 
-${originalNLQuestion ? `Original Natural Language Question: ${originalNLQuestion}` : ''}
+${originalNLQuestion ? `Original Natural Language Question: ${originalNLQuestion}` : ""}
 
 Provide:
 1. A clear, concise English description of what this query returns
@@ -67,7 +67,7 @@ Format your response as JSON:
 }`;
 
     const response = await generateText({
-      model: openai('gpt-4-turbo'),
+      model: openai("gpt-4-turbo"),
       prompt,
       temperature: 0.3, // Low temperature for consistent, deterministic responses
       maxTokens: 300,
@@ -75,9 +75,9 @@ Format your response as JSON:
 
     if (!response.text) {
       return {
-        englishMeaning: '(Could not reverse-translate SQL)',
+        englishMeaning: "(Could not reverse-translate SQL)",
         confidence: 0.0,
-        warnings: ['Failed to get response from Claude'],
+        warnings: ["Failed to get response from Claude"],
       };
     }
 
@@ -89,13 +89,13 @@ Format your response as JSON:
         return {
           englishMeaning: response.text,
           confidence: 0.5,
-          warnings: ['Response was not valid JSON'],
+          warnings: ["Response was not valid JSON"],
         };
       }
 
       const parsed = JSON.parse(jsonMatch[0]);
       result = {
-        englishMeaning: parsed.englishMeaning || '(No meaning extracted)',
+        englishMeaning: parsed.englishMeaning || "(No meaning extracted)",
         confidence: Math.min(1, Math.max(0, parsed.confidence || 0)),
         warnings: parsed.warnings || [],
       };
@@ -103,7 +103,7 @@ Format your response as JSON:
       return {
         englishMeaning: response.text,
         confidence: 0.5,
-        warnings: ['Failed to parse JSON response'],
+        warnings: ["Failed to parse JSON response"],
       };
     }
 
@@ -120,17 +120,15 @@ Format your response as JSON:
       };
 
       // Factor semantic similarity into final confidence
-      result.confidence = Math.round(
-        (result.confidence * 0.6 + semanticScore * 0.4) * 100
-      ) / 100;
+      result.confidence = Math.round((result.confidence * 0.6 + semanticScore * 0.4) * 100) / 100;
     }
 
     return result;
   } catch (error) {
     return {
-      englishMeaning: '(Error during reverse-translation)',
+      englishMeaning: "(Error during reverse-translation)",
       confidence: 0.0,
-      warnings: [error instanceof Error ? error.message : 'Unknown error'],
+      warnings: [error instanceof Error ? error.message : "Unknown error"],
     };
   }
 }
@@ -148,7 +146,7 @@ async function computeSemanticSimilarity(text1: string, text2: string): Promise<
   const set2 = new Set(tokens2);
 
   // Jaccard similarity: intersection / union
-  const intersection = [...set1].filter(t => set2.has(t)).length;
+  const intersection = [...set1].filter((t) => set2.has(t)).length;
   const union = new Set([...set1, ...set2]).size;
 
   const jaccardSimilarity = union > 0 ? intersection / union : 0;
@@ -168,18 +166,41 @@ async function computeSemanticSimilarity(text1: string, text2: string): Promise<
 function computeKeywordOverlap(text1: string, text2: string): number {
   const keywords = [
     // Aggregates
-    'count', 'sum', 'avg', 'average', 'min', 'max', 'total',
+    "count",
+    "sum",
+    "avg",
+    "average",
+    "min",
+    "max",
+    "total",
     // Operations
-    'filter', 'group', 'sort', 'order', 'join', 'distinct', 'unique',
+    "filter",
+    "group",
+    "sort",
+    "order",
+    "join",
+    "distinct",
+    "unique",
     // Data terms
-    'user', 'order', 'product', 'sale', 'customer', 'transaction',
+    "user",
+    "order",
+    "product",
+    "sale",
+    "customer",
+    "transaction",
     // Comparisons
-    'greater', 'greater than', 'less', 'less than', 'equal', 'between', 'like',
+    "greater",
+    "greater than",
+    "less",
+    "less than",
+    "equal",
+    "between",
+    "like",
   ];
 
   let matchCount = 0;
   for (const keyword of keywords) {
-    const pattern = new RegExp(`\\b${keyword}\\b`, 'i');
+    const pattern = new RegExp(`\\b${keyword}\\b`, "i");
     if (pattern.test(text1) && pattern.test(text2)) {
       matchCount++;
     }
@@ -194,8 +215,8 @@ function computeKeywordOverlap(text1: string, text2: string): number {
 function normalizeText(text: string): string {
   return text
     .toLowerCase()
-    .replace(/[^\w\s]/g, ' ')
-    .replace(/\s+/g, ' ')
+    .replace(/[^\w\s]/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
@@ -204,16 +225,17 @@ function normalizeText(text: string): string {
  */
 function buildSchemaContext(schema?: SchemaMetadata): string {
   if (!schema || schema.tables.length === 0) {
-    return '(No schema provided - please ensure query is valid SQL)';
+    return "(No schema provided - please ensure query is valid SQL)";
   }
 
   return schema.tables
-    .map(table =>
-      `Table: ${table.name}\n  Columns: ${table.columns
-        .map(col => `${col.name} (${col.type})`)
-        .join(', ')}`
+    .map(
+      (table) =>
+        `Table: ${table.name}\n  Columns: ${table.columns
+          .map((col) => `${col.name} (${col.type})`)
+          .join(", ")}`
     )
-    .join('\n');
+    .join("\n");
 }
 
 /**

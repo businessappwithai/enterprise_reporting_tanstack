@@ -1,4 +1,4 @@
-import knex, { Knex } from "knex";
+import knex, { type Knex } from "knex";
 import { join } from "path";
 import type { DataSource, DatabaseClientType } from "@/types/database";
 import { decrypt } from "@/lib/security/encryption";
@@ -22,7 +22,7 @@ interface ConnectionConfig {
 
 function buildKnexConfig(
   clientType: DatabaseClientType,
-  connectionConfig: ConnectionConfig,
+  connectionConfig: ConnectionConfig
 ): Knex.Config {
   const poolConfig = {
     min: 0,
@@ -32,7 +32,7 @@ function buildKnexConfig(
   };
 
   switch (clientType) {
-    case "sqlite3":
+    case "sqlite3": {
       const filename = connectionConfig.filename || ":memory:";
       let fullPath: string;
 
@@ -40,10 +40,7 @@ function buildKnexConfig(
         fullPath = filename;
       } else if (filename.startsWith("/")) {
         fullPath = filename;
-      } else if (
-        filename.startsWith("./data/") ||
-        filename.startsWith("data/")
-      ) {
+      } else if (filename.startsWith("./data/") || filename.startsWith("data/")) {
         fullPath = join(process.cwd(), filename.replace(/^\.\//, ""));
       } else {
         fullPath = join(process.cwd(), "data", "uploads", filename);
@@ -57,6 +54,7 @@ function buildKnexConfig(
         useNullAsDefault: true,
         pool: poolConfig,
       };
+    }
 
     case "pg":
       return {
@@ -128,15 +126,12 @@ export async function getConnection(dataSource: DataSource): Promise<Knex> {
     dataSource.name,
     "(ID:",
     dataSource.id,
-    ")",
+    ")"
   );
-  console.warn(
-    "[CONNECTION MANAGER] Data source client type:",
-    dataSource.client_type,
-  );
+  console.warn("[CONNECTION MANAGER] Data source client type:", dataSource.client_type);
   console.warn(
     "[CONNECTION MANAGER] Connection config ciphertext length:",
-    dataSource.connection_config?.length,
+    dataSource.connection_config?.length
   );
 
   if (connectionPool[poolKey]) {
@@ -145,19 +140,11 @@ export async function getConnection(dataSource: DataSource): Promise<Knex> {
       await connectionPool[poolKey].raw("SELECT 1");
 
       // Debug: Log cached connection
-      console.log(
-        "[CONNECTION MANAGER] Using cached connection for data source:",
-        dataSource.name,
-      );
+      console.log("[CONNECTION MANAGER] Using cached connection for data source:", dataSource.name);
       if (dataSource.client_type === "sqlite3") {
         try {
-          const dbInfo = await connectionPool[poolKey].raw(
-            "PRAGMA database_list",
-          );
-          console.log(
-            "[CONNECTION MANAGER] SQLite database list (cached):",
-            dbInfo,
-          );
+          const dbInfo = await connectionPool[poolKey].raw("PRAGMA database_list");
+          console.log("[CONNECTION MANAGER] SQLite database list (cached):", dbInfo);
         } catch (e) {
           console.error("[CONNECTION MANAGER] Failed to get database list:", e);
         }
@@ -166,9 +153,7 @@ export async function getConnection(dataSource: DataSource): Promise<Knex> {
       return connectionPool[poolKey];
     } catch {
       // Connection is dead, remove it and create a new one
-      console.warn(
-        "[CONNECTION MANAGER] Cached connection is dead, removing from pool",
-      );
+      console.warn("[CONNECTION MANAGER] Cached connection is dead, removing from pool");
       await connectionPool[poolKey].destroy();
       delete connectionPool[poolKey];
     }
@@ -178,11 +163,11 @@ export async function getConnection(dataSource: DataSource): Promise<Knex> {
   console.warn("[CONNECTION MANAGER] About to decrypt connection config...");
   console.warn(
     "[CONNECTION MANAGER] Connection config ciphertext length:",
-    dataSource.connection_config?.length,
+    dataSource.connection_config?.length
   );
   console.warn(
     "[CONNECTION MANAGER] Connection config (first 100 chars):",
-    dataSource.connection_config?.substring(0, 100),
+    dataSource.connection_config?.substring(0, 100)
   );
 
   let connectionConfig: ConnectionConfig;
@@ -195,58 +180,39 @@ export async function getConnection(dataSource: DataSource): Promise<Knex> {
       /^[0-9a-fA-F]+$/.test(dataSource.connection_config);
 
     if (isEncrypted) {
-      console.warn(
-        "[CONNECTION MANAGER] Config appears to be encrypted, attempting decryption...",
-      );
+      console.warn("[CONNECTION MANAGER] Config appears to be encrypted, attempting decryption...");
       const decryptedConfig = decrypt(dataSource.connection_config);
       console.warn("[CONNECTION MANAGER] Decryption successful!");
       console.warn(
         "[CONNECTION MANAGER] Decrypted config (first 200 chars):",
-        decryptedConfig.substring(0, 200),
+        decryptedConfig.substring(0, 200)
       );
       connectionConfig = JSON.parse(decryptedConfig);
       console.warn("[CONNECTION MANAGER] JSON parse successful!");
     } else {
       // Plain text JSON - backwards compatibility
+      console.warn("[CONNECTION MANAGER WARNING] Config appears to be plain JSON (not encrypted)!");
+      console.warn("[CONNECTION MANAGER WARNING] This is a backwards compatibility mode.");
+      console.warn("[CONNECTION MANAGER WARNING] Data source ID:", dataSource.id);
+      console.warn("[CONNECTION MANAGER WARNING] Data source name:", dataSource.name);
       console.warn(
-        "[CONNECTION MANAGER WARNING] Config appears to be plain JSON (not encrypted)!",
-      );
-      console.warn(
-        "[CONNECTION MANAGER WARNING] This is a backwards compatibility mode.",
-      );
-      console.warn(
-        "[CONNECTION MANAGER WARNING] Data source ID:",
-        dataSource.id,
-      );
-      console.warn(
-        "[CONNECTION MANAGER WARNING] Data source name:",
-        dataSource.name,
-      );
-      console.warn(
-        "[CONNECTION MANAGER WARNING] The config will be used as-is and re-encrypted on save.",
+        "[CONNECTION MANAGER WARNING] The config will be used as-is and re-encrypted on save."
       );
       connectionConfig = JSON.parse(dataSource.connection_config);
       needsEncryption = true;
-      console.warn(
-        "[CONNECTION MANAGER] Plain JSON config parsed successfully",
-      );
+      console.warn("[CONNECTION MANAGER] Plain JSON config parsed successfully");
     }
   } catch (error) {
-    console.error(
-      "[CONNECTION MANAGER ERROR] Failed to parse connection config!",
-    );
+    console.error("[CONNECTION MANAGER ERROR] Failed to parse connection config!");
     console.error("[CONNECTION MANAGER ERROR] Data source ID:", dataSource.id);
-    console.error(
-      "[CONNECTION MANAGER ERROR] Data source name:",
-      dataSource.name,
-    );
+    console.error("[CONNECTION MANAGER ERROR] Data source name:", dataSource.name);
     console.error(
       "[CONNECTION MANAGER ERROR] Connection config length:",
-      dataSource.connection_config?.length,
+      dataSource.connection_config?.length
     );
     console.error(
       "[CONNECTION MANAGER ERROR] Connection config (first 200 chars):",
-      dataSource.connection_config?.substring(0, 200),
+      dataSource.connection_config?.substring(0, 200)
     );
     console.error("[CONNECTION MANAGER ERROR] Error:", error);
     throw error;
@@ -256,7 +222,7 @@ export async function getConnection(dataSource: DataSource): Promise<Knex> {
   if (needsEncryption) {
     console.warn(
       "[CONNECTION MANAGER] Re-encrypting plain JSON config for data source:",
-      dataSource.id,
+      dataSource.id
     );
     try {
       const { encrypt } = await import("@/lib/security/encryption");
@@ -270,29 +236,20 @@ export async function getConnection(dataSource: DataSource): Promise<Knex> {
         .then(() => {
           console.warn(
             "[CONNECTION MANAGER] Config re-encrypted and saved successfully for data source:",
-            dataSource.id,
+            dataSource.id
           );
         })
         .catch((err) => {
-          console.error(
-            "[CONNECTION MANAGER ERROR] Failed to save re-encrypted config:",
-            err,
-          );
+          console.error("[CONNECTION MANAGER ERROR] Failed to save re-encrypted config:", err);
         });
     } catch (error) {
-      console.error(
-        "[CONNECTION MANAGER ERROR] Failed to re-encrypt config:",
-        error,
-      );
+      console.error("[CONNECTION MANAGER ERROR] Failed to re-encrypt config:", error);
       // Continue anyway - we have the plain config
     }
   }
 
   // Debug: Log the connection config
-  console.log(
-    "[CONNECTION MANAGER] Creating connection for data source:",
-    dataSource.name,
-  );
+  console.log("[CONNECTION MANAGER] Creating connection for data source:", dataSource.name);
   console.log("[CONNECTION MANAGER] Connection config:", {
     ...connectionConfig,
     password: connectionConfig.password ? "***" : undefined,
@@ -323,7 +280,7 @@ export async function getConnection(dataSource: DataSource): Promise<Knex> {
 
 export async function testConnection(
   clientType: DatabaseClientType,
-  connectionConfig: ConnectionConfig,
+  connectionConfig: ConnectionConfig
 ): Promise<{ success: boolean; message: string; latency?: number }> {
   const startTime = Date.now();
   let connection: Knex | null = null;

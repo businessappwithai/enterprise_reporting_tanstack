@@ -3,7 +3,7 @@
  * Manages the currently active database connection for the session
  */
 
-import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from "react";
 
 interface DataSource {
   id: string;
@@ -20,9 +20,7 @@ interface ActiveDataSourceContextType {
   refreshActiveDataSource: () => Promise<void>;
 }
 
-const ActiveDataSourceContext = createContext<ActiveDataSourceContextType | undefined>(
-  undefined
-);
+const ActiveDataSourceContext = createContext<ActiveDataSourceContextType | undefined>(undefined);
 
 export function ActiveDataSourceProvider({ children }: { children: ReactNode }) {
   const [activeDataSource, setActiveDataSourceState] = useState<DataSource | null>(null);
@@ -37,7 +35,7 @@ export function ActiveDataSourceProvider({ children }: { children: ReactNode }) 
     hasFetchedRef.current = true;
     try {
       setIsLoading(true);
-      const response = await fetch('/api/data-sources/active');
+      const response = await fetch("/api/data-sources/active");
       const data = await response.json();
 
       if (data.success && data.data.activeDataSource) {
@@ -46,7 +44,7 @@ export function ActiveDataSourceProvider({ children }: { children: ReactNode }) 
         setActiveDataSourceState(null);
       }
     } catch (error) {
-      console.error('Error fetching active data source:', error);
+      console.error("Error fetching active data source:", error);
       setActiveDataSourceState(null);
     } finally {
       setIsLoading(false);
@@ -60,9 +58,9 @@ export function ActiveDataSourceProvider({ children }: { children: ReactNode }) 
     }
 
     try {
-      const response = await fetch('/api/data-sources/active', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/data-sources/active", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ dataSourceId: dataSource.id }),
       });
 
@@ -71,10 +69,10 @@ export function ActiveDataSourceProvider({ children }: { children: ReactNode }) 
       if (data.success) {
         setActiveDataSourceState(dataSource);
       } else {
-        throw new Error(data.error?.message || 'Failed to set active data source');
+        throw new Error(data.error?.message || "Failed to set active data source");
       }
     } catch (error) {
-      console.error('Error setting active data source:', error);
+      console.error("Error setting active data source:", error);
       throw error;
     }
   };
@@ -107,7 +105,7 @@ export function useActiveDataSource() {
   const context = useContext(ActiveDataSourceContext);
 
   if (context === undefined) {
-    throw new Error('useActiveDataSource must be used within an ActiveDataSourceProvider');
+    throw new Error("useActiveDataSource must be used within an ActiveDataSourceProvider");
   }
 
   return context;

@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -13,7 +13,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -21,40 +21,41 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Plus,
-  Trash2,
-  Shield,
-  Users,
-  ArrowLeft,
-  Loader2,
-  Table as TableIcon,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import type { DsRole, DsEntityPermission, DsEntityPermissionLevel, DsEntityType, DsUserRoleJoinRow, SchemaApiResponse, UserListItem, DataSource } from '@/types/database';
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, Trash2, Shield, Users, ArrowLeft, Loader2, Table as TableIcon } from "lucide-react";
+import { toast } from "sonner";
+import type {
+  DsRole,
+  DsEntityPermission,
+  DsEntityPermissionLevel,
+  DsEntityType,
+  DsUserRoleJoinRow,
+  SchemaApiResponse,
+  UserListItem,
+  DataSource,
+} from "@/types/database";
 
 const PERMISSION_LEVELS: { value: DsEntityPermissionLevel; label: string }[] = [
-  { value: 'select', label: 'Select (Read)' },
-  { value: 'insert', label: 'Insert' },
-  { value: 'update', label: 'Update' },
-  { value: 'delete', label: 'Delete' },
-  { value: 'all', label: 'All' },
+  { value: "select", label: "Select (Read)" },
+  { value: "insert", label: "Insert" },
+  { value: "update", label: "Update" },
+  { value: "delete", label: "Delete" },
+  { value: "all", label: "All" },
 ];
 
 const ENTITY_TYPES: { value: DsEntityType; label: string }[] = [
-  { value: 'table', label: 'Table' },
-  { value: 'view', label: 'View' },
+  { value: "table", label: "Table" },
+  { value: "view", label: "View" },
 ];
 
 export default function DataSourcePermissionsPage() {
@@ -66,20 +67,20 @@ export default function DataSourcePermissionsPage() {
   const [showCreateRole, setShowCreateRole] = useState(false);
   const [showAssignUser, setShowAssignUser] = useState(false);
   const [showAddPermission, setShowAddPermission] = useState(false);
-  const [selectedRoleId, setSelectedRoleId] = useState<string>('');
+  const [selectedRoleId, setSelectedRoleId] = useState<string>("");
 
-  const [roleName, setRoleName] = useState('');
-  const [roleDescription, setRoleDescription] = useState('');
-  const [assignUserId, setAssignUserId] = useState('');
-  const [assignRoleId, setAssignRoleId] = useState('');
-  const [permEntityName, setPermEntityName] = useState('');
-  const [permEntityType, setPermEntityType] = useState<DsEntityType>('table');
-  const [permLevel, setPermLevel] = useState<DsEntityPermissionLevel>('select');
-  const [permRoleId, setPermRoleId] = useState('');
+  const [roleName, setRoleName] = useState("");
+  const [roleDescription, setRoleDescription] = useState("");
+  const [assignUserId, setAssignUserId] = useState("");
+  const [assignRoleId, setAssignRoleId] = useState("");
+  const [permEntityName, setPermEntityName] = useState("");
+  const [permEntityType, setPermEntityType] = useState<DsEntityType>("table");
+  const [permLevel, setPermLevel] = useState<DsEntityPermissionLevel>("select");
+  const [permRoleId, setPermRoleId] = useState("");
 
   // Fetch data source info
   const { data: dataSource } = useQuery<DataSource>({
-    queryKey: ['data-source', dataSourceId],
+    queryKey: ["data-source", dataSourceId],
     queryFn: async () => {
       const res = await fetch(`/api/data-sources/${dataSourceId}`);
       const json = await res.json();
@@ -89,7 +90,7 @@ export default function DataSourcePermissionsPage() {
 
   // Fetch DS roles
   const { data: roles = [], isLoading: rolesLoading } = useQuery<DsRole[]>({
-    queryKey: ['ds-roles', dataSourceId],
+    queryKey: ["ds-roles", dataSourceId],
     queryFn: async () => {
       const res = await fetch(`/api/data-sources/${dataSourceId}/roles`);
       const json = await res.json();
@@ -99,7 +100,7 @@ export default function DataSourcePermissionsPage() {
 
   // Fetch DS user-role assignments
   const { data: userRoles = [], isLoading: userRolesLoading } = useQuery<DsUserRoleJoinRow[]>({
-    queryKey: ['ds-user-roles', dataSourceId],
+    queryKey: ["ds-user-roles", dataSourceId],
     queryFn: async () => {
       const res = await fetch(`/api/data-sources/${dataSourceId}/user-roles`);
       const json = await res.json();
@@ -108,8 +109,10 @@ export default function DataSourcePermissionsPage() {
   });
 
   // Fetch entity permissions
-  const { data: entityPermissions = [], isLoading: permissionsLoading } = useQuery<DsEntityPermission[]>({
-    queryKey: ['ds-entity-permissions', dataSourceId, selectedRoleId],
+  const { data: entityPermissions = [], isLoading: permissionsLoading } = useQuery<
+    DsEntityPermission[]
+  >({
+    queryKey: ["ds-entity-permissions", dataSourceId, selectedRoleId],
     queryFn: async () => {
       const url = selectedRoleId
         ? `/api/data-sources/${dataSourceId}/entity-permissions?ds_role_id=${selectedRoleId}`
@@ -122,7 +125,7 @@ export default function DataSourcePermissionsPage() {
 
   // Fetch schema for entity name autocomplete
   const { data: schemaData } = useQuery<SchemaApiResponse>({
-    queryKey: ['ds-schema', dataSourceId],
+    queryKey: ["ds-schema", dataSourceId],
     queryFn: async () => {
       const res = await fetch(`/api/sql/schema/${dataSourceId}`);
       const json = await res.json();
@@ -132,9 +135,9 @@ export default function DataSourcePermissionsPage() {
 
   // Fetch users for assignment
   const { data: users = [] } = useQuery<UserListItem[]>({
-    queryKey: ['users-list'],
+    queryKey: ["users-list"],
     queryFn: async () => {
-      const res = await fetch('/api/admin/users');
+      const res = await fetch("/api/admin/users");
       const json = await res.json();
       return json.data || [];
     },
@@ -144,22 +147,22 @@ export default function DataSourcePermissionsPage() {
   const createRoleMutation = useMutation({
     mutationFn: async (data: { name: string; description: string }) => {
       const res = await fetch(`/api/data-sources/${dataSourceId}/roles`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(error.error?.message || 'Failed to create role');
+        throw new Error(error.error?.message || "Failed to create role");
       }
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ds-roles', dataSourceId] });
+      queryClient.invalidateQueries({ queryKey: ["ds-roles", dataSourceId] });
       setShowCreateRole(false);
-      setRoleName('');
-      setRoleDescription('');
-      toast.success('Role created successfully');
+      setRoleName("");
+      setRoleDescription("");
+      toast.success("Role created successfully");
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -170,22 +173,22 @@ export default function DataSourcePermissionsPage() {
   const assignUserRoleMutation = useMutation({
     mutationFn: async (data: { user_id: string; ds_role_id: string }) => {
       const res = await fetch(`/api/data-sources/${dataSourceId}/user-roles`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(error.error?.message || 'Failed to assign user');
+        throw new Error(error.error?.message || "Failed to assign user");
       }
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ds-user-roles', dataSourceId] });
+      queryClient.invalidateQueries({ queryKey: ["ds-user-roles", dataSourceId] });
       setShowAssignUser(false);
-      setAssignUserId('');
-      setAssignRoleId('');
-      toast.success('User assigned to role');
+      setAssignUserId("");
+      setAssignRoleId("");
+      toast.success("User assigned to role");
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -197,14 +200,14 @@ export default function DataSourcePermissionsPage() {
     mutationFn: async (data: { user_id: string; ds_role_id: string }) => {
       const res = await fetch(
         `/api/data-sources/${dataSourceId}/user-roles?user_id=${data.user_id}&ds_role_id=${data.ds_role_id}`,
-        { method: 'DELETE' }
+        { method: "DELETE" }
       );
-      if (!res.ok) throw new Error('Failed to remove assignment');
+      if (!res.ok) throw new Error("Failed to remove assignment");
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ds-user-roles', dataSourceId] });
-      toast.success('User removed from role');
+      queryClient.invalidateQueries({ queryKey: ["ds-user-roles", dataSourceId] });
+      toast.success("User removed from role");
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -220,24 +223,24 @@ export default function DataSourcePermissionsPage() {
       permission_level: DsEntityPermissionLevel;
     }) => {
       const res = await fetch(`/api/data-sources/${dataSourceId}/entity-permissions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(error.error?.message || 'Failed to add permission');
+        throw new Error(error.error?.message || "Failed to add permission");
       }
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ds-entity-permissions', dataSourceId] });
+      queryClient.invalidateQueries({ queryKey: ["ds-entity-permissions", dataSourceId] });
       setShowAddPermission(false);
-      setPermEntityName('');
-      setPermEntityType('table');
-      setPermLevel('select');
-      setPermRoleId('');
-      toast.success('Entity permission added');
+      setPermEntityName("");
+      setPermEntityType("table");
+      setPermLevel("select");
+      setPermRoleId("");
+      toast.success("Entity permission added");
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -249,14 +252,14 @@ export default function DataSourcePermissionsPage() {
     mutationFn: async (permissionId: string) => {
       const res = await fetch(
         `/api/data-sources/${dataSourceId}/entity-permissions?permission_id=${permissionId}`,
-        { method: 'DELETE' }
+        { method: "DELETE" }
       );
-      if (!res.ok) throw new Error('Failed to delete permission');
+      if (!res.ok) throw new Error("Failed to delete permission");
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ds-entity-permissions', dataSourceId] });
-      toast.success('Permission removed');
+      queryClient.invalidateQueries({ queryKey: ["ds-entity-permissions", dataSourceId] });
+      toast.success("Permission removed");
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -267,16 +270,16 @@ export default function DataSourcePermissionsPage() {
   const deleteRoleMutation = useMutation({
     mutationFn: async (roleId: string) => {
       const res = await fetch(`/api/data-sources/${dataSourceId}/roles/${roleId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
-      if (!res.ok) throw new Error('Failed to delete role');
+      if (!res.ok) throw new Error("Failed to delete role");
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ds-roles', dataSourceId] });
-      queryClient.invalidateQueries({ queryKey: ['ds-entity-permissions', dataSourceId] });
-      queryClient.invalidateQueries({ queryKey: ['ds-user-roles', dataSourceId] });
-      toast.success('Role deleted');
+      queryClient.invalidateQueries({ queryKey: ["ds-roles", dataSourceId] });
+      queryClient.invalidateQueries({ queryKey: ["ds-entity-permissions", dataSourceId] });
+      queryClient.invalidateQueries({ queryKey: ["ds-user-roles", dataSourceId] });
+      toast.success("Role deleted");
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -289,15 +292,14 @@ export default function DataSourcePermissionsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.push('/data-sources')}>
+        <Button variant="ghost" size="icon" onClick={() => router.push("/data-sources")}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Data Source Entity Permissions
-          </h1>
+          <h1 className="text-2xl font-bold tracking-tight">Data Source Entity Permissions</h1>
           <p className="text-muted-foreground">
-            {dataSource?.name || 'Loading...'} - Manage roles, users, and entity-level access control
+            {dataSource?.name || "Loading..."} - Manage roles, users, and entity-level access
+            control
           </p>
         </div>
       </div>
@@ -352,10 +354,10 @@ export default function DataSourcePermissionsPage() {
                     {roles.map((role) => (
                       <TableRow key={role.id}>
                         <TableCell className="font-medium">{role.name}</TableCell>
-                        <TableCell>{role.description || '-'}</TableCell>
+                        <TableCell>{role.description || "-"}</TableCell>
                         <TableCell>
-                          <Badge variant={role.is_active ? 'default' : 'secondary'}>
-                            {role.is_active ? 'Active' : 'Inactive'}
+                          <Badge variant={role.is_active ? "default" : "secondary"}>
+                            {role.is_active ? "Active" : "Inactive"}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -421,10 +423,12 @@ export default function DataSourcePermissionsPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => removeUserRoleMutation.mutate({
-                              user_id: ur.user_id,
-                              ds_role_id: ur.ds_role_id,
-                            })}
+                            onClick={() =>
+                              removeUserRoleMutation.mutate({
+                                user_id: ur.user_id,
+                                ds_role_id: ur.ds_role_id,
+                              })
+                            }
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -456,7 +460,9 @@ export default function DataSourcePermissionsPage() {
                   <SelectContent>
                     <SelectItem value="all">All Roles</SelectItem>
                     {roles.map((role) => (
-                      <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
+                      <SelectItem key={role.id} value={role.id}>
+                        {role.name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -472,7 +478,8 @@ export default function DataSourcePermissionsPage() {
                 </div>
               ) : entityPermissions.length === 0 ? (
                 <p className="text-center text-muted-foreground py-8">
-                  No entity permissions defined. Add permissions to control access to specific tables and views.
+                  No entity permissions defined. Add permissions to control access to specific
+                  tables and views.
                 </p>
               ) : (
                 <Table>
@@ -493,7 +500,8 @@ export default function DataSourcePermissionsPage() {
                       return (
                         <TableRow key={perm.id}>
                           <TableCell className="font-mono text-sm font-medium">
-                            {perm.entity_schema ? `${perm.entity_schema}.` : ''}{perm.entity_name}
+                            {perm.entity_schema ? `${perm.entity_schema}.` : ""}
+                            {perm.entity_name}
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline">{perm.entity_type}</Badge>
@@ -502,17 +510,19 @@ export default function DataSourcePermissionsPage() {
                             <Badge>{role?.name || perm.ds_role_id}</Badge>
                           </TableCell>
                           <TableCell>
-                            <Badge variant={perm.permission_level === 'all' ? 'default' : 'secondary'}>
+                            <Badge
+                              variant={perm.permission_level === "all" ? "default" : "secondary"}
+                            >
                               {perm.permission_level}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-xs text-muted-foreground">
                             {perm.column_restrictions
-                              ? JSON.parse(perm.column_restrictions).join(', ')
-                              : 'All columns'}
+                              ? JSON.parse(perm.column_restrictions).join(", ")
+                              : "All columns"}
                           </TableCell>
                           <TableCell className="text-xs font-mono text-muted-foreground">
-                            {perm.row_filter || '-'}
+                            {perm.row_filter || "-"}
                           </TableCell>
                           <TableCell>
                             <Button
@@ -564,12 +574,18 @@ export default function DataSourcePermissionsPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateRole(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setShowCreateRole(false)}>
+              Cancel
+            </Button>
             <Button
-              onClick={() => createRoleMutation.mutate({ name: roleName, description: roleDescription })}
+              onClick={() =>
+                createRoleMutation.mutate({ name: roleName, description: roleDescription })
+              }
               disabled={!roleName.trim() || createRoleMutation.isPending}
             >
-              {createRoleMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {createRoleMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
               Create
             </Button>
           </DialogFooter>
@@ -609,16 +625,22 @@ export default function DataSourcePermissionsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {roles.map((r) => (
-                    <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                    <SelectItem key={r.id} value={r.id}>
+                      {r.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAssignUser(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setShowAssignUser(false)}>
+              Cancel
+            </Button>
             <Button
-              onClick={() => assignUserRoleMutation.mutate({ user_id: assignUserId, ds_role_id: assignRoleId })}
+              onClick={() =>
+                assignUserRoleMutation.mutate({ user_id: assignUserId, ds_role_id: assignRoleId })
+              }
               disabled={!assignUserId || !assignRoleId || assignUserRoleMutation.isPending}
             >
               Assign
@@ -645,20 +667,27 @@ export default function DataSourcePermissionsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {roles.map((r) => (
-                    <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                    <SelectItem key={r.id} value={r.id}>
+                      {r.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="grid gap-2">
               <Label>Entity Type</Label>
-              <Select value={permEntityType} onValueChange={(v) => setPermEntityType(v as DsEntityType)}>
+              <Select
+                value={permEntityType}
+                onValueChange={(v) => setPermEntityType(v as DsEntityType)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {ENTITY_TYPES.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                    <SelectItem key={t.value} value={t.value}>
+                      {t.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -670,35 +699,46 @@ export default function DataSourcePermissionsPage() {
                   <SelectValue placeholder="Select entity" />
                 </SelectTrigger>
                 <SelectContent>
-                  {(permEntityType === 'table' ? entityNames : viewNames).map((name: string) => (
-                    <SelectItem key={name} value={name}>{name}</SelectItem>
+                  {(permEntityType === "table" ? entityNames : viewNames).map((name: string) => (
+                    <SelectItem key={name} value={name}>
+                      {name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="grid gap-2">
               <Label>Permission Level</Label>
-              <Select value={permLevel} onValueChange={(v) => setPermLevel(v as DsEntityPermissionLevel)}>
+              <Select
+                value={permLevel}
+                onValueChange={(v) => setPermLevel(v as DsEntityPermissionLevel)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {PERMISSION_LEVELS.map((l) => (
-                    <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
+                    <SelectItem key={l.value} value={l.value}>
+                      {l.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddPermission(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setShowAddPermission(false)}>
+              Cancel
+            </Button>
             <Button
-              onClick={() => addPermissionMutation.mutate({
-                ds_role_id: permRoleId,
-                entity_name: permEntityName,
-                entity_type: permEntityType,
-                permission_level: permLevel,
-              })}
+              onClick={() =>
+                addPermissionMutation.mutate({
+                  ds_role_id: permRoleId,
+                  entity_name: permEntityName,
+                  entity_type: permEntityType,
+                  permission_level: permLevel,
+                })
+              }
               disabled={!permRoleId || !permEntityName || addPermissionMutation.isPending}
             >
               Add Permission

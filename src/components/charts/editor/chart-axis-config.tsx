@@ -1,16 +1,16 @@
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Plus, Trash2 } from 'lucide-react';
-import type { ChartConfig, DataMapping, SeriesMapping } from '@/types/database';
+} from "@/components/ui/select";
+import { Plus, Trash2 } from "lucide-react";
+import type { ChartConfig, DataMapping, SeriesMapping } from "@/types/database";
 
 function hslToHex(h: number, s: number, l: number) {
   s /= 100;
@@ -19,7 +19,9 @@ function hslToHex(h: number, s: number, l: number) {
   const f = (n: number) => {
     const k = (n + h / 30) % 12;
     const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
-    return Math.round(255 * color).toString(16).padStart(2, '0');
+    return Math.round(255 * color)
+      .toString(16)
+      .padStart(2, "0");
   };
   return `#${f(0)}${f(8)}${f(4)}`;
 }
@@ -38,7 +40,12 @@ interface ChartAxisConfigProps {
   onDataMappingChange: (mapping: DataMapping) => void;
 }
 
-export function ChartAxisConfig({ dataMapping, availableFields, chartConfig, onDataMappingChange }: ChartAxisConfigProps) {
+export function ChartAxisConfig({
+  dataMapping,
+  availableFields,
+  chartConfig,
+  onDataMappingChange,
+}: ChartAxisConfigProps) {
   const addYSeries = () => {
     const existingColors = dataMapping.yAxis.map((s) => s.color).filter(Boolean) as string[];
     let newColor = generateRandomColor();
@@ -49,7 +56,7 @@ export function ChartAxisConfig({ dataMapping, availableFields, chartConfig, onD
     }
     onDataMappingChange({
       ...dataMapping,
-      yAxis: [...dataMapping.yAxis, { field: '', label: '', color: newColor }],
+      yAxis: [...dataMapping.yAxis, { field: "", label: "", color: newColor }],
     });
   };
 
@@ -76,12 +83,14 @@ export function ChartAxisConfig({ dataMapping, availableFields, chartConfig, onD
         <div>
           <div className="flex items-center justify-between">
             <Label htmlFor="x-axis">X-Axis (Categories) *</Label>
-            {dataMapping.xAxis.field && dataMapping.xAxis.field !== '' && (
+            {dataMapping.xAxis.field && dataMapping.xAxis.field !== "" && (
               <Button
                 size="sm"
                 variant="ghost"
                 className="h-6 text-xs"
-                onClick={() => onDataMappingChange({ ...dataMapping, xAxis: { field: '', label: '' } })}
+                onClick={() =>
+                  onDataMappingChange({ ...dataMapping, xAxis: { field: "", label: "" } })
+                }
               >
                 Clear
               </Button>
@@ -90,10 +99,13 @@ export function ChartAxisConfig({ dataMapping, availableFields, chartConfig, onD
           <Select
             value={dataMapping.xAxis.field}
             onValueChange={(value) => {
-              if (value === '__none__') {
-                onDataMappingChange({ ...dataMapping, xAxis: { field: '', label: '' } });
+              if (value === "__none__") {
+                onDataMappingChange({ ...dataMapping, xAxis: { field: "", label: "" } });
               } else {
-                onDataMappingChange({ ...dataMapping, xAxis: { ...dataMapping.xAxis, field: value, label: value } });
+                onDataMappingChange({
+                  ...dataMapping,
+                  xAxis: { ...dataMapping.xAxis, field: value, label: value },
+                });
               }
             }}
           >
@@ -103,18 +115,27 @@ export function ChartAxisConfig({ dataMapping, availableFields, chartConfig, onD
             <SelectContent>
               <SelectItem value="__none__">— None —</SelectItem>
               {availableFields.map((field) => (
-                <SelectItem key={field} value={field}>{field}</SelectItem>
+                <SelectItem key={field} value={field}>
+                  {field}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          {dataMapping.xAxis.field && dataMapping.xAxis.field !== '__none__' && dataMapping.xAxis.field !== '' && (
-            <Input
-              className="mt-2"
-              value={dataMapping.xAxis.label}
-              onChange={(e) => onDataMappingChange({ ...dataMapping, xAxis: { ...dataMapping.xAxis, label: e.target.value } })}
-              placeholder="Axis label"
-            />
-          )}
+          {dataMapping.xAxis.field &&
+            dataMapping.xAxis.field !== "__none__" &&
+            dataMapping.xAxis.field !== "" && (
+              <Input
+                className="mt-2"
+                value={dataMapping.xAxis.label}
+                onChange={(e) =>
+                  onDataMappingChange({
+                    ...dataMapping,
+                    xAxis: { ...dataMapping.xAxis, label: e.target.value },
+                  })
+                }
+                placeholder="Axis label"
+              />
+            )}
         </div>
 
         {/* Y-Axis Series */}
@@ -158,7 +179,7 @@ export function ChartAxisConfig({ dataMapping, availableFields, chartConfig, onD
                     size="sm"
                     variant="ghost"
                     className="h-6 text-xs"
-                    onClick={() => updateYSeries(index, { field: '', label: '' })}
+                    onClick={() => updateYSeries(index, { field: "", label: "" })}
                   >
                     Clear
                   </Button>
@@ -172,8 +193,8 @@ export function ChartAxisConfig({ dataMapping, availableFields, chartConfig, onD
               <Select
                 value={series.field}
                 onValueChange={(value) => {
-                  if (value === '__none__') {
-                    updateYSeries(index, { field: '', label: '' });
+                  if (value === "__none__") {
+                    updateYSeries(index, { field: "", label: "" });
                   } else {
                     updateYSeries(index, { field: value, label: value });
                   }
@@ -185,7 +206,9 @@ export function ChartAxisConfig({ dataMapping, availableFields, chartConfig, onD
                 <SelectContent>
                   <SelectItem value="__none__">— None —</SelectItem>
                   {availableFields.map((field) => (
-                    <SelectItem key={field} value={field}>{field}</SelectItem>
+                    <SelectItem key={field} value={field}>
+                      {field}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -207,7 +230,7 @@ export function ChartAxisConfig({ dataMapping, availableFields, chartConfig, onD
                 size="sm"
                 variant="ghost"
                 className="h-6 text-xs"
-                onClick={() => onDataMappingChange({ ...dataMapping, groupBy: '' })}
+                onClick={() => onDataMappingChange({ ...dataMapping, groupBy: "" })}
               >
                 Clear
               </Button>
@@ -215,7 +238,9 @@ export function ChartAxisConfig({ dataMapping, availableFields, chartConfig, onD
           </div>
           <Select
             value={dataMapping.groupBy}
-            onValueChange={(value) => onDataMappingChange({ ...dataMapping, groupBy: value === '__none__' ? '' : value })}
+            onValueChange={(value) =>
+              onDataMappingChange({ ...dataMapping, groupBy: value === "__none__" ? "" : value })
+            }
           >
             <SelectTrigger id="group-by">
               <SelectValue placeholder="Select field to group by..." />
@@ -223,7 +248,9 @@ export function ChartAxisConfig({ dataMapping, availableFields, chartConfig, onD
             <SelectContent>
               <SelectItem value="__none__">— None —</SelectItem>
               {availableFields.map((field) => (
-                <SelectItem key={field} value={field}>{field}</SelectItem>
+                <SelectItem key={field} value={field}>
+                  {field}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -238,7 +265,7 @@ export function ChartAxisConfig({ dataMapping, availableFields, chartConfig, onD
                 size="sm"
                 variant="ghost"
                 className="h-6 text-xs"
-                onClick={() => onDataMappingChange({ ...dataMapping, colorBy: '' })}
+                onClick={() => onDataMappingChange({ ...dataMapping, colorBy: "" })}
               >
                 Clear
               </Button>
@@ -246,7 +273,9 @@ export function ChartAxisConfig({ dataMapping, availableFields, chartConfig, onD
           </div>
           <Select
             value={dataMapping.colorBy}
-            onValueChange={(value) => onDataMappingChange({ ...dataMapping, colorBy: value === '__none__' ? '' : value })}
+            onValueChange={(value) =>
+              onDataMappingChange({ ...dataMapping, colorBy: value === "__none__" ? "" : value })
+            }
           >
             <SelectTrigger id="color-by">
               <SelectValue placeholder="Select field to color by..." />
@@ -254,7 +283,9 @@ export function ChartAxisConfig({ dataMapping, availableFields, chartConfig, onD
             <SelectContent>
               <SelectItem value="__none__">— None —</SelectItem>
               {availableFields.map((field) => (
-                <SelectItem key={field} value={field}>{field}</SelectItem>
+                <SelectItem key={field} value={field}>
+                  {field}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>

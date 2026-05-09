@@ -1,59 +1,61 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { json } from '@/lib/server/response'
+import { createFileRoute } from "@tanstack/react-router";
+import { json } from "@/lib/server/response";
 
-export const Route = createFileRoute('/api/auth/permissions')({
+export const Route = createFileRoute("/api/auth/permissions")({
   server: {
     handlers: {
       GET: async ({ request }: { request: Request }) => {
-        const cookie = request.headers.get('cookie') || ''
-        const match = cookie.match(/session_token=([^;]+)/)
-        const token = match?.[1]
+        const cookie = request.headers.get("cookie") || "";
+        const match = cookie.match(/session_token=([^;]+)/);
+        const token = match?.[1];
 
         if (!token) {
           return json({
-            userId: '',
+            userId: "",
             roles: [],
             rolePermissions: [],
             resourcePermissions: [],
             isAdmin: false,
-          })
+          });
         }
 
-        const { verifySession } = await import('@/lib/auth/session')
-        const session = await verifySession(token)
+        const { verifySession } = await import("@/lib/auth/session");
+        const session = await verifySession(token);
 
         if (!session) {
           return json({
-            userId: '',
+            userId: "",
             roles: [],
             rolePermissions: [],
             resourcePermissions: [],
             isAdmin: false,
-          })
+          });
         }
 
-        const { getDb } = await import('@/lib/db/config')
-        const db = getDb()
+        const { getDb } = await import("@/lib/db/config");
+        const db = getDb();
 
-        const roles = await db('roles')
-          .join('user_roles', 'roles.id', 'user_roles.role_id')
-          .where('user_roles.user_id', session.user.id)
-          .select('roles.*')
+        const roles = await db("roles")
+          .join("user_roles", "roles.id", "user_roles.role_id")
+          .where("user_roles.user_id", session.user.id)
+          .select("roles.*");
 
         const rolePermissions: string[] = roles.flatMap((role: { permissions: string }) => {
           try {
-            return JSON.parse(role.permissions)
+            return JSON.parse(role.permissions);
           } catch {
-            return []
+            return [];
           }
-        })
+        });
 
-        const isAdmin = roles.some((r: { name: string }) => r.name === 'admin' || r.name === 'Admin')
+        const isAdmin = roles.some(
+          (r: { name: string }) => r.name === "admin" || r.name === "Admin"
+        );
 
-        const resourcePermissions = await db('data_source_entity_permissions')
-          .where('user_id', session.user.id)
-          .select('*')
-          .catch(() => [])
+        const resourcePermissions = await db("data_source_entity_permissions")
+          .where("user_id", session.user.id)
+          .select("*")
+          .catch(() => []);
 
         return json({
           userId: session.user.id,
@@ -65,8 +67,8 @@ export const Route = createFileRoute('/api/auth/permissions')({
           rolePermissions: Array.from(new Set(rolePermissions)),
           resourcePermissions,
           isAdmin,
-        })
+        });
       },
     },
   },
-})
+});

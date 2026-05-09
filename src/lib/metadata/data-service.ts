@@ -5,12 +5,9 @@
  * All operations respect ds_entity_permissions and use server-side pagination.
  */
 
-import { getDb } from '@/lib/db/config';
-import { getConnection } from '@/lib/db/connection-manager';
-import type {
-  DataSource,
-  MetadataEntityWithFields,
-} from '@/types/database';
+import { getDb } from "@/lib/db/config";
+import { getConnection } from "@/lib/db/connection-manager";
+import type { DataSource, MetadataEntityWithFields } from "@/types/database";
 
 /**
  * Paginated result type
@@ -31,7 +28,7 @@ export interface EntityDataQueryParams {
   page?: number;
   limit?: number;
   sort?: string;
-  order?: 'asc' | 'desc';
+  order?: "asc" | "desc";
 }
 
 /**
@@ -48,50 +45,47 @@ export class DataService {
     _userId?: string
   ): Promise<PaginatedResult<Record<string, unknown>>> {
     // Check if datasource is editable
-    const dataSource = await getDb()('data_sources')
-      .where('id', dataSourceId)
-      .first() as DataSource | undefined;
+    const dataSource = (await getDb()("data_sources").where("id", dataSourceId).first()) as
+      | DataSource
+      | undefined;
 
     if (!dataSource) {
-      throw new Error('Data source not found');
+      throw new Error("Data source not found");
     }
 
     if (!dataSource.is_editable) {
-      throw new Error('Data source is not editable');
+      throw new Error("Data source is not editable");
     }
 
     // Get connection
     const connection = await getConnection(dataSource);
 
     if (!connection) {
-      throw new Error('Failed to connect to datasource');
+      throw new Error("Failed to connect to datasource");
     }
 
     // Build query
-    let query = connection(entityMetadata.entity_name)
-      .select('*');
+    let query = connection(entityMetadata.entity_name).select("*");
 
     // Apply search filter
     if (params.search && params.search.trim()) {
-      const displayFields = entityMetadata.fields.filter(f => f.is_searchable);
+      const displayFields = entityMetadata.fields.filter((f) => f.is_searchable);
       if (displayFields.length > 0) {
-        const searchConditions = displayFields.map(f =>
-          getDb().raw('?? LIKE ?', [f.field_name, `%${params.search}%`])
+        const searchConditions = displayFields.map((f) =>
+          getDb().raw("?? LIKE ?", [f.field_name, `%${params.search}%`])
         );
         query = query.andWhere(...searchConditions);
       }
     }
 
     // Get total count before pagination
-    let countQuery = connection(entityMetadata.entity_name)
-      .clearSelect()
-      .count('* as total');
+    let countQuery = connection(entityMetadata.entity_name).clearSelect().count("* as total");
 
     if (params.search && params.search.trim()) {
-      const displayFields = entityMetadata.fields.filter(f => f.is_searchable);
+      const displayFields = entityMetadata.fields.filter((f) => f.is_searchable);
       if (displayFields.length > 0) {
-        const searchConditions = displayFields.map(f =>
-          getDb().raw('?? LIKE ?', [f.field_name, `%${params.search}%`])
+        const searchConditions = displayFields.map((f) =>
+          getDb().raw("?? LIKE ?", [f.field_name, `%${params.search}%`])
         );
         countQuery = countQuery.andWhere(...searchConditions);
       }
@@ -109,16 +103,16 @@ export class DataService {
 
     // Apply sorting
     if (params.sort) {
-      const sortOrder = params.order || 'asc';
+      const sortOrder = params.order || "asc";
       query = query.orderBy(params.sort, sortOrder);
     } else {
-      const pkField = entityMetadata.fields.find(f => f.is_primary_key);
+      const pkField = entityMetadata.fields.find((f) => f.is_primary_key);
       if (pkField) {
-        query = query.orderBy(pkField.field_name, 'asc');
+        query = query.orderBy(pkField.field_name, "asc");
       }
     }
 
-    const records = await query.select('*');
+    const records = await query.select("*");
 
     return {
       records: records as Record<string, unknown>[],
@@ -138,33 +132,33 @@ export class DataService {
     recordId: string | number,
     _userId?: string
   ): Promise<Record<string, unknown> | null> {
-    const dataSource = await getDb()('data_sources')
-      .where('id', dataSourceId)
-      .first() as DataSource | undefined;
+    const dataSource = (await getDb()("data_sources").where("id", dataSourceId).first()) as
+      | DataSource
+      | undefined;
 
     if (!dataSource || !dataSource.is_editable) {
-      throw new Error('Data source not editable');
+      throw new Error("Data source not editable");
     }
 
     const connectionManager = getConnectionManager();
     const connection = await connectionManager.getConnection({
       id: dataSourceId,
-      client_type: dataSource.client_type as 'pg' | 'mysql' | 'sqlite3' | 'mssql',
+      client_type: dataSource.client_type as "pg" | "mysql" | "sqlite3" | "mssql",
       connection_config: dataSource.connection_config,
     });
 
     if (!connection) {
-      throw new Error('Failed to connect to datasource');
+      throw new Error("Failed to connect to datasource");
     }
 
-    const pkField = entityMetadata.fields.find(f => f.is_primary_key);
+    const pkField = entityMetadata.fields.find((f) => f.is_primary_key);
     if (!pkField) {
-      throw new Error('Entity has no primary key defined');
+      throw new Error("Entity has no primary key defined");
     }
 
     const [record] = await connection(entityMetadata.entity_name)
       .where(pkField.field_name, recordId)
-      .select('*')
+      .select("*")
       .limit(1);
 
     return record as Record<string, unknown> | null;
@@ -179,43 +173,41 @@ export class DataService {
     data: Record<string, unknown>,
     _userId?: string
   ): Promise<Record<string, unknown>> {
-    const dataSource = await getDb()('data_sources')
-      .where('id', dataSourceId)
-      .first() as DataSource | undefined;
+    const dataSource = (await getDb()("data_sources").where("id", dataSourceId).first()) as
+      | DataSource
+      | undefined;
 
     if (!dataSource || !dataSource.is_editable) {
-      throw new Error('Data source not editable');
+      throw new Error("Data source not editable");
     }
 
     const connectionManager = getConnectionManager();
     const connection = await connectionManager.getConnection({
       id: dataSourceId,
-      client_type: dataSource.client_type as 'pg' | 'mysql' | 'sqlite3' | 'mssql',
+      client_type: dataSource.client_type as "pg" | "mysql" | "sqlite3" | "mssql",
       connection_config: dataSource.connection_config,
     });
 
     if (!connection) {
-      throw new Error('Failed to connect to datasource');
+      throw new Error("Failed to connect to datasource");
     }
 
     // Validate required fields
-    const requiredFields = entityMetadata.fields.filter(f => !f.is_nullable);
+    const requiredFields = entityMetadata.fields.filter((f) => !f.is_nullable);
     for (const field of requiredFields) {
       if (data[field.field_name] === null || data[field.field_name] === undefined) {
         throw new Error(`Required field '${field.field_name}' is missing`);
       }
     }
 
-    const [record] = await connection(entityMetadata.entity_name)
-      .insert(data)
-      .returning('*');
+    const [record] = await connection(entityMetadata.entity_name).insert(data).returning("*");
 
     // Audit log
     if (userId) {
-      await getDb()('audit_log').insert({
+      await getDb()("audit_log").insert({
         user_id: userId,
-        action: 'create',
-        resource_type: 'metadata_entity',
+        action: "create",
+        resource_type: "metadata_entity",
         resource_id: entityMetadata.id,
         details: JSON.stringify({
           entity_name: entityMetadata.entity_name,
@@ -238,28 +230,28 @@ export class DataService {
     data: Record<string, unknown>,
     _userId?: string
   ): Promise<Record<string, unknown> | null> {
-    const dataSource = await getDb()('data_sources')
-      .where('id', dataSourceId)
-      .first() as DataSource | undefined;
+    const dataSource = (await getDb()("data_sources").where("id", dataSourceId).first()) as
+      | DataSource
+      | undefined;
 
     if (!dataSource || !dataSource.is_editable) {
-      throw new Error('Data source not editable');
+      throw new Error("Data source not editable");
     }
 
     const connectionManager = getConnectionManager();
     const connection = await connectionManager.getConnection({
       id: dataSourceId,
-      client_type: dataSource.client_type as 'pg' | 'mysql' | 'sqlite3' | 'mssql',
+      client_type: dataSource.client_type as "pg" | "mysql" | "sqlite3" | "mssql",
       connection_config: dataSource.connection_config,
     });
 
     if (!connection) {
-      throw new Error('Failed to connect to datasource');
+      throw new Error("Failed to connect to datasource");
     }
 
-    const pkField = entityMetadata.fields.find(f => f.is_primary_key);
+    const pkField = entityMetadata.fields.find((f) => f.is_primary_key);
     if (!pkField) {
-      throw new Error('Entity has no primary key defined');
+      throw new Error("Entity has no primary key defined");
     }
 
     const updated = await connection(entityMetadata.entity_name)
@@ -272,14 +264,14 @@ export class DataService {
 
     const [record] = await connection(entityMetadata.entity_name)
       .where(pkField.field_name, recordId)
-      .select('*')
+      .select("*")
       .limit(1);
 
     if (userId) {
-      await getDb()('audit_log').insert({
+      await getDb()("audit_log").insert({
         user_id: userId,
-        action: 'update',
-        resource_type: 'metadata_entity',
+        action: "update",
+        resource_type: "metadata_entity",
         resource_id: entityMetadata.id,
         details: JSON.stringify({
           entity_name: entityMetadata.entity_name,
@@ -302,28 +294,28 @@ export class DataService {
     recordId: string | number,
     _userId?: string
   ): Promise<boolean> {
-    const dataSource = await getDb()('data_sources')
-      .where('id', dataSourceId)
-      .first() as DataSource | undefined;
+    const dataSource = (await getDb()("data_sources").where("id", dataSourceId).first()) as
+      | DataSource
+      | undefined;
 
     if (!dataSource || !dataSource.is_editable) {
-      throw new Error('Data source not editable');
+      throw new Error("Data source not editable");
     }
 
     const connectionManager = getConnectionManager();
     const connection = await connectionManager.getConnection({
       id: dataSourceId,
-      client_type: dataSource.client_type as 'pg' | 'mysql' | 'sqlite3' | 'mssql',
+      client_type: dataSource.client_type as "pg" | "mysql" | "sqlite3" | "mssql",
       connection_config: dataSource.connection_config,
     });
 
     if (!connection) {
-      throw new Error('Failed to connect to datasource');
+      throw new Error("Failed to connect to datasource");
     }
 
-    const pkField = entityMetadata.fields.find(f => f.is_primary_key);
+    const pkField = entityMetadata.fields.find((f) => f.is_primary_key);
     if (!pkField) {
-      throw new Error('Entity has no primary key defined');
+      throw new Error("Entity has no primary key defined");
     }
 
     const deleted = await connection(entityMetadata.entity_name)
@@ -331,10 +323,10 @@ export class DataService {
       .del();
 
     if (userId && deleted > 0) {
-      await getDb()('audit_log').insert({
+      await getDb()("audit_log").insert({
         user_id: userId,
-        action: 'delete',
-        resource_type: 'metadata_entity',
+        action: "delete",
+        resource_type: "metadata_entity",
         resource_id: entityMetadata.id,
         details: JSON.stringify({
           entity_name: entityMetadata.entity_name,
@@ -357,7 +349,7 @@ export class DataService {
     page: number = 1,
     limit: number = 20
   ): Promise<PaginatedResult<Record<string, unknown>>> {
-    return await this.listRecords(dataSourceId, entityMetadata, {
+    return await DataService.listRecords(dataSourceId, entityMetadata, {
       search: searchTerm,
       page,
       limit,

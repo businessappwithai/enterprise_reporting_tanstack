@@ -1,6 +1,6 @@
-import { getDb } from '@/lib/db/config';
-import type { AuditAction, ResourceType, AuditLog } from '@/types/database';
-import { v4 as uuidv4 } from 'uuid';
+import { getDb } from "@/lib/db/config";
+import type { AuditAction, ResourceType, AuditLog } from "@/types/database";
+import { v4 as uuidv4 } from "uuid";
 
 export interface AuditLogEntry {
   userId?: string;
@@ -15,7 +15,7 @@ export interface AuditLogEntry {
 export async function logAudit(entry: AuditLogEntry): Promise<void> {
   const db = getDb();
 
-  await db<AuditLog>('audit_log').insert({
+  await db<AuditLog>("audit_log").insert({
     id: uuidv4(),
     user_id: entry.userId,
     action: entry.action,
@@ -39,32 +39,32 @@ export async function getAuditLogs(options: {
 }): Promise<{ logs: AuditLog[]; total: number }> {
   const db = getDb();
 
-  let query = db<AuditLog>('audit_log');
+  let query = db<AuditLog>("audit_log");
 
   if (options.userId) {
-    query = query.where('user_id', options.userId);
+    query = query.where("user_id", options.userId);
   }
   if (options.resourceType) {
-    query = query.where('resource_type', options.resourceType);
+    query = query.where("resource_type", options.resourceType);
   }
   if (options.resourceId) {
-    query = query.where('resource_id', options.resourceId);
+    query = query.where("resource_id", options.resourceId);
   }
   if (options.action) {
-    query = query.where('action', options.action);
+    query = query.where("action", options.action);
   }
   if (options.startDate) {
-    query = query.where('created_at', '>=', options.startDate.toISOString());
+    query = query.where("created_at", ">=", options.startDate.toISOString());
   }
   if (options.endDate) {
-    query = query.where('created_at', '<=', options.endDate.toISOString());
+    query = query.where("created_at", "<=", options.endDate.toISOString());
   }
 
-  const countResult = await query.clone().count('* as count').first();
+  const countResult = await query.clone().count("* as count").first();
   const total = Number((countResult as { count?: string })?.count || 0);
 
   const logs = await query
-    .orderBy('created_at', 'desc')
+    .orderBy("created_at", "desc")
     .limit(options.limit || 50)
     .offset(options.offset || 0);
 
@@ -77,21 +77,18 @@ export async function getResourceHistory(
 ): Promise<AuditLog[]> {
   const db = getDb();
 
-  return db<AuditLog>('audit_log')
-    .where('resource_type', resourceType)
-    .where('resource_id', resourceId)
-    .orderBy('created_at', 'desc');
+  return db<AuditLog>("audit_log")
+    .where("resource_type", resourceType)
+    .where("resource_id", resourceId)
+    .orderBy("created_at", "desc");
 }
 
-export async function getUserActivity(
-  userId: string,
-  limit: number = 50
-): Promise<AuditLog[]> {
+export async function getUserActivity(userId: string, limit: number = 50): Promise<AuditLog[]> {
   const db = getDb();
 
-  return db<AuditLog>('audit_log')
-    .where('user_id', userId)
-    .orderBy('created_at', 'desc')
+  return db<AuditLog>("audit_log")
+    .where("user_id", userId)
+    .orderBy("created_at", "desc")
     .limit(limit);
 }
 
@@ -100,7 +97,7 @@ export function createAuditMiddleware(resourceType: ResourceType) {
     onCreate: async (userId: string, resourceId: string, data: Record<string, unknown>) => {
       await logAudit({
         userId,
-        action: 'create',
+        action: "create",
         resourceType,
         resourceId,
         details: { data },
@@ -114,7 +111,7 @@ export function createAuditMiddleware(resourceType: ResourceType) {
     ) => {
       await logAudit({
         userId,
-        action: 'update',
+        action: "update",
         resourceType,
         resourceId,
         details: { before, after },
@@ -123,7 +120,7 @@ export function createAuditMiddleware(resourceType: ResourceType) {
     onDelete: async (userId: string, resourceId: string, data: Record<string, unknown>) => {
       await logAudit({
         userId,
-        action: 'delete',
+        action: "delete",
         resourceType,
         resourceId,
         details: { data },
@@ -132,7 +129,7 @@ export function createAuditMiddleware(resourceType: ResourceType) {
     onView: async (userId: string, resourceId: string) => {
       await logAudit({
         userId,
-        action: 'view',
+        action: "view",
         resourceType,
         resourceId,
       });
@@ -140,7 +137,7 @@ export function createAuditMiddleware(resourceType: ResourceType) {
     onExecute: async (userId: string, resourceId: string, parameters?: Record<string, unknown>) => {
       await logAudit({
         userId,
-        action: 'execute',
+        action: "execute",
         resourceType,
         resourceId,
         details: parameters ? { parameters } : undefined,
@@ -149,7 +146,7 @@ export function createAuditMiddleware(resourceType: ResourceType) {
     onExport: async (userId: string, resourceId: string, format: string) => {
       await logAudit({
         userId,
-        action: 'export',
+        action: "export",
         resourceType,
         resourceId,
         details: { format },

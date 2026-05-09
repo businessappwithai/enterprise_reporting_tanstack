@@ -1,6 +1,6 @@
-import { useState } from 'react'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Table,
   TableBody,
@@ -8,74 +8,79 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { Pencil, Trash2, RefreshCw, Search, Plus } from 'lucide-react'
-import type { SavedQuery, DataSource } from '@/types/database'
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Pencil, Trash2, RefreshCw, Search, Plus } from "lucide-react";
+import type { SavedQuery, DataSource } from "@/types/database";
 
-export const Route = createFileRoute('/_authed/queries/')({
+export const Route = createFileRoute("/_authed/queries/")({
   component: QueriesPage,
-})
+});
 
 function QueriesPage() {
-  const navigate = useNavigate()
-  const queryClient = useQueryClient()
-  const [searchTerm, setSearchTerm] = useState('')
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null)
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
 
-  const { data: queriesData, isLoading, refetch } = useQuery<{
-    items: SavedQuery[]
-    meta: { total: number }
+  const {
+    data: queriesData,
+    isLoading,
+    refetch,
+  } = useQuery<{
+    items: SavedQuery[];
+    meta: { total: number };
   }>({
-    queryKey: ['saved-queries', 'all'],
+    queryKey: ["saved-queries", "all"],
     queryFn: async () => {
-      const res = await fetch('/api/queries?pageSize=100')
-      const data = await res.json()
-      return data.data
+      const res = await fetch("/api/queries?pageSize=100");
+      const data = await res.json();
+      return data.data;
     },
-  })
+  });
 
   const { data: dataSources } = useQuery<DataSource[]>({
-    queryKey: ['data-sources'],
+    queryKey: ["data-sources"],
     queryFn: async () => {
-      const res = await fetch('/api/data-sources')
-      const data = await res.json()
-      return data.data?.items || []
+      const res = await fetch("/api/data-sources");
+      const data = await res.json();
+      return data.data?.items || [];
     },
-  })
+  });
 
   const deleteMutation = useMutation({
     mutationFn: async (queryId: string) => {
-      await fetch(`/api/queries/${queryId}`, { method: 'DELETE' })
+      await fetch(`/api/queries/${queryId}`, { method: "DELETE" });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['saved-queries'] })
-      setShowDeleteConfirm(null)
+      queryClient.invalidateQueries({ queryKey: ["saved-queries"] });
+      setShowDeleteConfirm(null);
     },
-  })
+  });
 
-  const queries = queriesData?.items || []
+  const queries = queriesData?.items || [];
   const filteredQueries = queries.filter((query) => {
-    const searchLower = searchTerm.toLowerCase()
+    const searchLower = searchTerm.toLowerCase();
     return (
       query.name.toLowerCase().includes(searchLower) ||
       (query.description?.toLowerCase().includes(searchLower) ?? false) ||
       (dataSources
         ?.find((ds) => ds.id === query.data_source_id)
         ?.name.toLowerCase()
-        .includes(searchLower) ?? false)
-    )
-  })
+        .includes(searchLower) ??
+        false)
+    );
+  });
 
   const handleEdit = (query: SavedQuery) => {
-    navigate({ to: '/sql-editor', search: { queryId: query.id } })
-  }
+    navigate({ to: "/sql-editor", search: { queryId: query.id } });
+  };
 
   const getDataSourceName = (dataSourceId: string) => {
-    return dataSources?.find((ds) => ds.id === dataSourceId)?.name || 'Unknown'
-  }
+    return dataSources?.find((ds) => ds.id === dataSourceId)?.name || "Unknown";
+  };
 
   return (
     <div className="p-6">
@@ -85,7 +90,7 @@ function QueriesPage() {
           <p className="text-muted-foreground">Manage your saved SQL queries</p>
         </div>
         <Button
-          onClick={() => navigate({ to: '/sql-editor' })}
+          onClick={() => navigate({ to: "/sql-editor" })}
           className="bg-blue-600 hover:bg-blue-700"
         >
           <Plus className="h-4 w-4 mr-2" />
@@ -143,14 +148,14 @@ function QueriesPage() {
                   {searchTerm ? (
                     <div>
                       <p className="text-muted-foreground">No queries match your search.</p>
-                      <Button variant="link" onClick={() => setSearchTerm('')} className="mt-2">
+                      <Button variant="link" onClick={() => setSearchTerm("")} className="mt-2">
                         Clear search
                       </Button>
                     </div>
                   ) : (
                     <div>
                       <p className="text-muted-foreground mb-2">No saved queries found.</p>
-                      <Button onClick={() => navigate({ to: '/sql-editor' })}>
+                      <Button onClick={() => navigate({ to: "/sql-editor" })}>
                         Create your first query
                       </Button>
                     </div>
@@ -226,12 +231,12 @@ function QueriesPage() {
                 className="flex-1"
                 disabled={deleteMutation.isPending}
               >
-                {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+                {deleteMutation.isPending ? "Deleting..." : "Delete"}
               </Button>
             </div>
           </div>
         </div>
       )}
     </div>
-  )
+  );
 }

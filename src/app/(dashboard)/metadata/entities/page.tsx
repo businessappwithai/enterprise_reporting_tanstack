@@ -1,53 +1,68 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { useSearchParams } from 'next/navigation'
-import Link from 'next/link'
-import { Search, Database, ArrowLeft, RefreshCw, Settings, Eye, EyeOff, Power, CheckCircle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import {
+  Search,
+  Database,
+  ArrowLeft,
+  RefreshCw,
+  Settings,
+  Eye,
+  EyeOff,
+  Power,
+  CheckCircle,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface MetadataEntity {
-  id: string
-  data_source_id: string
-  entity_name: string
-  entity_schema?: string
-  entity_type: 'table' | 'view'
-  description?: string
-  is_active: boolean
-  is_hidden: boolean
-  last_introspected_at: string
-  data_source_name?: string
-  field_count?: number
+  id: string;
+  data_source_id: string;
+  entity_name: string;
+  entity_schema?: string;
+  entity_type: "table" | "view";
+  description?: string;
+  is_active: boolean;
+  is_hidden: boolean;
+  last_introspected_at: string;
+  data_source_name?: string;
+  field_count?: number;
 }
 
 export default function MetadataEntitiesPage() {
-  const searchParams = useSearchParams()
-  const dataSourceId = searchParams.get('data_source_id')
-  const [search, setSearch] = useState('')
-  const [showHidden, setShowHidden] = useState(true)  // Default to true to show hidden entities
-  const [showInactive, setShowInactive] = useState(true)  // Default to true to show inactive entities
+  const searchParams = useSearchParams();
+  const dataSourceId = searchParams.get("data_source_id");
+  const [search, setSearch] = useState("");
+  const [showHidden, setShowHidden] = useState(true); // Default to true to show hidden entities
+  const [showInactive, setShowInactive] = useState(true); // Default to true to show inactive entities
 
   const { data: response, isLoading } = useQuery({
-    queryKey: ['metadata-entities', showHidden, showInactive, dataSourceId],
+    queryKey: ["metadata-entities", showHidden, showInactive, dataSourceId],
     queryFn: async () => {
-      const params = new URLSearchParams()
-      if (showHidden) params.set('include_hidden', 'true')
-      if (showInactive) params.set('is_active', 'false')
-      if (dataSourceId) params.set('data_source_id', dataSourceId)
+      const params = new URLSearchParams();
+      if (showHidden) params.set("include_hidden", "true");
+      if (showInactive) params.set("is_active", "false");
+      if (dataSourceId) params.set("data_source_id", dataSourceId);
 
-      console.log('[MetadataEntities] Fetching with params:', { showHidden, showInactive, dataSourceId, params: params.toString() })
-      const res = await fetch(`/api/metadata/entities?${params.toString()}`)
-      if (!res.ok) throw new Error('Failed to fetch entities')
-      const data = await res.json()
-      console.log('[MetadataEntities] Response:', data)
-      return data
+      console.log("[MetadataEntities] Fetching with params:", {
+        showHidden,
+        showInactive,
+        dataSourceId,
+        params: params.toString(),
+      });
+      const res = await fetch(`/api/metadata/entities?${params.toString()}`);
+      if (!res.ok) throw new Error("Failed to fetch entities");
+      const data = await res.json();
+      console.log("[MetadataEntities] Response:", data);
+      return data;
     },
     refetchOnWindowFocus: false,
     enabled: !!dataSourceId,
-  })
+  });
 
-  const entities = response?.data?.entities ?? []
+  const entities = response?.data?.entities ?? [];
 
   // Block direct access - must have datasource filter
   if (!dataSourceId) {
@@ -67,21 +82,21 @@ export default function MetadataEntitiesPage() {
           </Link>
         </div>
       </div>
-    )
+    );
   }
 
-  const filteredEntities = entities?.filter(entity => {
-    const searchLower = search.toLowerCase()
+  const filteredEntities = entities?.filter((entity) => {
+    const searchLower = search.toLowerCase();
     return (
       entity.entity_name.toLowerCase().includes(searchLower) ||
       entity.description?.toLowerCase().includes(searchLower) ||
       entity.data_source_name?.toLowerCase().includes(searchLower)
-    )
-  })
+    );
+  });
 
-  const activeCount = entities?.filter(e => e.is_active && !e.is_hidden).length ?? 0
-  const hiddenCount = entities?.filter(e => e.is_hidden).length ?? 0
-  const inactiveCount = entities?.filter(e => !e.is_active).length ?? 0
+  const activeCount = entities?.filter((e) => e.is_active && !e.is_hidden).length ?? 0;
+  const hiddenCount = entities?.filter((e) => e.is_hidden).length ?? 0;
+  const inactiveCount = entities?.filter((e) => !e.is_active).length ?? 0;
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -233,9 +248,9 @@ export default function MetadataEntitiesPage() {
                   <td className="p-4">
                     <span
                       className={`px-2 py-1 rounded text-xs font-medium ${
-                        entity.entity_type === 'table'
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'bg-purple-100 text-purple-700'
+                        entity.entity_type === "table"
+                          ? "bg-blue-100 text-blue-700"
+                          : "bg-purple-100 text-purple-700"
                       }`}
                     >
                       {entity.entity_type}
@@ -245,7 +260,9 @@ export default function MetadataEntitiesPage() {
                     {entity.data_source_name || entity.data_source_id}
                   </td>
                   <td className="p-4 text-sm max-w-md truncate">
-                    {entity.description || <span className="text-muted-foreground italic">No description</span>}
+                    {entity.description || (
+                      <span className="text-muted-foreground italic">No description</span>
+                    )}
                   </td>
                   <td className="p-4">
                     <div className="flex gap-2">
@@ -265,9 +282,7 @@ export default function MetadataEntitiesPage() {
                       )}
                     </div>
                   </td>
-                  <td className="p-4 text-sm">
-                    {entity.field_count ?? '-'}
-                  </td>
+                  <td className="p-4 text-sm">{entity.field_count ?? "-"}</td>
                   <td className="p-4 text-sm text-muted-foreground">
                     {new Date(entity.last_introspected_at).toLocaleDateString()}
                   </td>
@@ -290,9 +305,8 @@ export default function MetadataEntitiesPage() {
           <h3 className="text-lg font-medium mb-2">No entities found for this datasource</h3>
           <p className="text-muted-foreground mb-4">
             {search
-              ? 'Try adjusting your search or filters'
-              : 'Go back to Data Sources and click "Inspect Schema" to import entities from this datasource'
-            }
+              ? "Try adjusting your search or filters"
+              : 'Go back to Data Sources and click "Inspect Schema" to import entities from this datasource'}
           </p>
           {!search && (
             <Link href="/data-sources">
@@ -305,5 +319,5 @@ export default function MetadataEntitiesPage() {
         </div>
       )}
     </div>
-  )
+  );
 }

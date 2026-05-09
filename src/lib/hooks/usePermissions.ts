@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
-import { useMemo } from 'react';
-import type { ResourceType } from '@/types/database';
+import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
+import type { ResourceType } from "@/types/database";
 
 interface UserPermissions {
   userId: string;
@@ -26,13 +26,13 @@ interface UserPermissions {
  */
 export function usePermissions() {
   return useQuery<UserPermissions>({
-    queryKey: ['user-permissions'],
+    queryKey: ["user-permissions"],
     queryFn: async () => {
-      const res = await fetch('/api/auth/permissions');
+      const res = await fetch("/api/auth/permissions");
       if (!res.ok) {
         // Not authenticated or error — return empty permissions
         return {
-          userId: '',
+          userId: "",
           roles: [],
           rolePermissions: [],
           resourcePermissions: [],
@@ -56,7 +56,7 @@ export function useCanView(resourceType: ResourceType) {
     if (permissions.isAdmin) return true;
 
     return permissions.rolePermissions.some(
-      (perm) => perm === `${resourceType}:view` || perm === `${resourceType}:*` || perm === '*:*'
+      (perm) => perm === `${resourceType}:view` || perm === `${resourceType}:*` || perm === "*:*"
     );
   }, [permissions, resourceType]);
 }
@@ -72,7 +72,7 @@ export function useCanEdit(resourceType: ResourceType) {
     if (permissions.isAdmin) return true;
 
     return permissions.rolePermissions.some(
-      (perm) => perm === `${resourceType}:edit` || perm === `${resourceType}:*` || perm === '*:*'
+      (perm) => perm === `${resourceType}:edit` || perm === `${resourceType}:*` || perm === "*:*"
     );
   }, [permissions, resourceType]);
 }
@@ -92,7 +92,7 @@ export function useCanCreate(resourceType: ResourceType) {
         perm === `${resourceType}:create` ||
         perm === `${resourceType}:edit` ||
         perm === `${resourceType}:*` ||
-        perm === '*:*'
+        perm === "*:*"
     );
   }, [permissions, resourceType]);
 }
@@ -108,7 +108,11 @@ export function useCanDelete(resourceType: ResourceType) {
     if (permissions.isAdmin) return true;
 
     return permissions.rolePermissions.some(
-      (perm) => perm === `${resourceType}:delete` || perm === `${resourceType}:admin` || perm === `${resourceType}:*` || perm === '*:*'
+      (perm) =>
+        perm === `${resourceType}:delete` ||
+        perm === `${resourceType}:admin` ||
+        perm === `${resourceType}:*` ||
+        perm === "*:*"
     );
   }, [permissions, resourceType]);
 }
@@ -119,7 +123,7 @@ export function useCanDelete(resourceType: ResourceType) {
 export function useHasResourceAccess(
   resourceType: ResourceType,
   resourceId: string,
-  action: 'view' | 'edit' | 'execute' | 'delete' = 'view'
+  action: "view" | "edit" | "execute" | "delete" = "view"
 ) {
   const { data: permissions } = usePermissions();
 
@@ -129,7 +133,8 @@ export function useHasResourceAccess(
 
     // Check role permissions
     const hasRolePermission = permissions.rolePermissions.some(
-      (perm) => perm === `${resourceType}:${action}` || perm === `${resourceType}:*` || perm === '*:*'
+      (perm) =>
+        perm === `${resourceType}:${action}` || perm === `${resourceType}:*` || perm === "*:*"
     );
 
     if (hasRolePermission) return true;

@@ -1,29 +1,27 @@
-import { Job } from 'bullmq';
-import { getDb } from '@/lib/db/config';
-import { getConnection } from '@/lib/db/connection-manager';
-import { logAudit } from '@/lib/security/audit';
-import type { ReportJobData, JobResult } from '../queue';
-import type { ReportDefinition, SavedQuery, DataSource } from '@/types/database';
-import ExcelJS from 'exceljs';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import fs from 'fs/promises';
-import path from 'path';
+import type { Job } from "bullmq";
+import { getDb } from "@/lib/db/config";
+import { getConnection } from "@/lib/db/connection-manager";
+import { logAudit } from "@/lib/security/audit";
+import type { ReportJobData, JobResult } from "../queue";
+import type { ReportDefinition, SavedQuery, DataSource } from "@/types/database";
+import ExcelJS from "exceljs";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import fs from "fs/promises";
+import path from "path";
 
-const OUTPUT_DIR = process.env.JOB_OUTPUT_PATH || './job-outputs';
+const OUTPUT_DIR = process.env.JOB_OUTPUT_PATH || "./job-outputs";
 
 export async function processReportJob(job: Job<ReportJobData>): Promise<JobResult> {
   const startTime = Date.now();
-  const { reportId, userId, _parameters, format = 'csv' } = job.data;
+  const { reportId, userId, _parameters, format = "csv" } = job.data;
 
   try {
     await job.updateProgress(10);
 
     // Get report definition
     const db = getDb();
-    const report = await db<ReportDefinition>('report_definitions')
-      .where('id', reportId)
-      .first();
+    const report = await db<ReportDefinition>("report_definitions").where("id", reportId).first();
 
     if (!report) {
       throw new Error(`Report not found: ${reportId}`);
@@ -33,26 +31,24 @@ export async function processReportJob(job: Job<ReportJobData>): Promise<JobResu
 
     // Get the saved query
     if (!report.saved_query_id) {
-      throw new Error('Report has no associated query');
+      throw new Error("Report has no associated query");
     }
 
-    const query = await db<SavedQuery>('saved_queries')
-      .where('id', report.saved_query_id)
-      .first();
+    const query = await db<SavedQuery>("saved_queries").where("id", report.saved_query_id).first();
 
     if (!query) {
-      throw new Error('Query not found');
+      throw new Error("Query not found");
     }
 
     await job.updateProgress(30);
 
     // Get the data source
-    const dataSource = await db<DataSource>('data_sources')
-      .where('id', query.data_source_id)
+    const dataSource = await db<DataSource>("data_sources")
+      .where("id", query.data_source_id)
       .first();
 
     if (!dataSource) {
-      throw new Error('Data source not found');
+      throw new Error("Data source not found");
     }
 
     await job.updateProgress(40);
@@ -79,13 +75,13 @@ export async function processReportJob(job: Job<ReportJobData>): Promise<JobResu
 
     // Export based on format
     switch (format) {
-      case 'csv':
+      case "csv":
         await exportToCSV(rows, outputPath);
         break;
-      case 'xlsx':
+      case "xlsx":
         await exportToXLSX(rows, report.name, outputPath);
         break;
-      case 'pdf':
+      case "pdf":
         await exportToPDF(rows, report.name, outputPath);
         break;
       default:
@@ -97,8 +93,8 @@ export async function processReportJob(job: Job<ReportJobData>): Promise<JobResu
     // Log the export
     await logAudit({
       userId,
-      action: 'export',
-      resourceType: 'report',
+      action: "export",
+      resourceType: "report",
       resourceId: reportId,
       details: { format, rowCount: rows.length, outputPath },
     });
@@ -112,12 +108,12 @@ export async function processReportJob(job: Job<ReportJobData>): Promise<JobResu
       duration: Date.now() - startTime,
     };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
 
     await logAudit({
       userId,
-      action: 'execute',
-      resourceType: 'report',
+      action: "execute",
+      resourceType: "report",
       resourceId: reportId,
       details: { error: errorMessage },
     });
@@ -130,33 +126,32 @@ export async function processReportJob(job: Job<ReportJobData>): Promise<JobResu
   }
 }
 
-async function exportToCSV(
-  rows: Record<string, unknown>[],
-  outputPath: string
-): Promise<void> {
+async function exportToCSV(rows: Record<string, unknown>[], outputPath: string): Promise<void> {
   if (rows.length === 0) {
-    await fs.writeFile(outputPath, '');
+    await fs.writeFile(outputPath, "");
     return;
   }
 
   const headers = Object.keys(rows[0]);
   const csvLines = [
-    headers.join(','),
+    headers.join(","),
     ...rows.map((row) =>
-      headers.map((h) => {
-        const value = row[h];
-        if (value === null || value === undefined) return '';
-        const str = String(value);
-        // Escape quotes and wrap in quotes if contains comma, quote, or newline
-        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-          return `"${str.replace(/"/g, '""')}"`;
-        }
-        return str;
-      }).join(',')
+      headers
+        .map((h) => {
+          const value = row[h];
+          if (value === null || value === undefined) return "";
+          const str = String(value);
+          // Escape quotes and wrap in quotes if contains comma, quote, or newline
+          if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+            return `"${str.replace(/"/g, '""')}"`;
+          }
+          return str;
+        })
+        .join(",")
     ),
   ];
 
-  await fs.writeFile(outputPath, csvLines.join('\n'));
+  await fs.writeFile(outputPath, csvLines.join("\n"));
 }
 
 async function exportToXLSX(
@@ -181,9 +176,9 @@ async function exportToXLSX(
   const headerRow = worksheet.getRow(1);
   headerRow.font = { bold: true };
   headerRow.fill = {
-    type: 'pattern',
-    pattern: 'solid',
-    fgColor: { argb: 'FFE0E0E0' },
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FFE0E0E0" },
   };
 
   // Add data rows
@@ -222,7 +217,7 @@ async function exportToPDF(
   doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 28);
 
   if (rows.length === 0) {
-    doc.text('No data available', 14, 40);
+    doc.text("No data available", 14, 40);
     doc.save(outputPath);
     return;
   }
@@ -231,7 +226,7 @@ async function exportToPDF(
   const tableData = rows.map((row) =>
     headers.map((h) => {
       const value = row[h];
-      if (value === null || value === undefined) return '';
+      if (value === null || value === undefined) return "";
       return String(value);
     })
   );
@@ -244,6 +239,6 @@ async function exportToPDF(
     headStyles: { fillColor: [66, 66, 66] },
   });
 
-  const pdfBuffer = doc.output('arraybuffer');
+  const pdfBuffer = doc.output("arraybuffer");
   await fs.writeFile(outputPath, Buffer.from(pdfBuffer));
 }

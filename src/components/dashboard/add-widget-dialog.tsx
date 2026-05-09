@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -9,22 +9,22 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { toast } from 'sonner';
-import { BarChart3, FileText, Plus } from 'lucide-react';
-import type { ChartDefinition, ReportDefinition } from '@/types/database';
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
+import { BarChart3, FileText, Plus } from "lucide-react";
+import type { ChartDefinition, ReportDefinition } from "@/types/database";
 
 interface AddWidgetDialogProps {
   open: boolean;
@@ -39,59 +39,59 @@ interface AddWidgetDialogProps {
 }
 
 export function AddWidgetDialog({ open, onOpenChange, onAddWidget }: AddWidgetDialogProps) {
-  const [widgetType, setWidgetType] = useState<'chart' | 'report' | 'metric' | 'text'>('chart');
-  const [selectedChartId, setSelectedChartId] = useState('');
-  const [selectedReportId, setSelectedReportId] = useState('');
-  const [widgetTitle, setWidgetTitle] = useState('');
-  const [textContent, setTextContent] = useState('');
+  const [widgetType, setWidgetType] = useState<"chart" | "report" | "metric" | "text">("chart");
+  const [selectedChartId, setSelectedChartId] = useState("");
+  const [selectedReportId, setSelectedReportId] = useState("");
+  const [widgetTitle, setWidgetTitle] = useState("");
+  const [textContent, setTextContent] = useState("");
   const [width, setWidth] = useState(4);
   const [height, setHeight] = useState(4);
 
   // Fetch available charts
   const { data: charts = [], isLoading: isLoadingCharts } = useQuery<ChartDefinition[]>({
-    queryKey: ['charts'],
+    queryKey: ["charts"],
     queryFn: async () => {
-      const res = await fetch('/api/charts');
+      const res = await fetch("/api/charts");
       const data = await res.json();
       return data.data?.items || [];
     },
-    enabled: open && widgetType === 'chart',
+    enabled: open && widgetType === "chart",
   });
 
   // Fetch available reports
   const { data: reports = [], isLoading: isLoadingReports } = useQuery<ReportDefinition[]>({
-    queryKey: ['reports'],
+    queryKey: ["reports"],
     queryFn: async () => {
-      const res = await fetch('/api/reports');
+      const res = await fetch("/api/reports");
       const data = await res.json();
       return data.data?.items || [];
     },
-    enabled: open && widgetType === 'report',
+    enabled: open && widgetType === "report",
   });
 
   const handleAddWidget = () => {
     // Validate based on widget type
-    if (widgetType === 'chart' && !selectedChartId) {
-      toast.error('Please select a chart');
+    if (widgetType === "chart" && !selectedChartId) {
+      toast.error("Please select a chart");
       return;
     }
-    if (widgetType === 'report' && !selectedReportId) {
-      toast.error('Please select a report');
+    if (widgetType === "report" && !selectedReportId) {
+      toast.error("Please select a report");
       return;
     }
-    if (widgetType === 'text' && !textContent) {
-      toast.error('Please enter text content');
+    if (widgetType === "text" && !textContent) {
+      toast.error("Please enter text content");
       return;
     }
 
     const widgetConfig: { title?: string; content?: string } = {};
     if (widgetTitle) widgetConfig.title = widgetTitle;
-    if (widgetType === 'text' && textContent) widgetConfig.content = textContent;
+    if (widgetType === "text" && textContent) widgetConfig.content = textContent;
 
     onAddWidget({
       widgetType,
-      chartId: widgetType === 'chart' ? selectedChartId : undefined,
-      reportId: widgetType === 'report' ? selectedReportId : undefined,
+      chartId: widgetType === "chart" ? selectedChartId : undefined,
+      reportId: widgetType === "report" ? selectedReportId : undefined,
       positionConfig: {
         x: 0,
         y: 0, // Will be auto-calculated by the grid
@@ -104,15 +104,15 @@ export function AddWidgetDialog({ open, onOpenChange, onAddWidget }: AddWidgetDi
     });
 
     // Reset form
-    setWidgetType('chart');
-    setSelectedChartId('');
-    setSelectedReportId('');
-    setWidgetTitle('');
-    setTextContent('');
+    setWidgetType("chart");
+    setSelectedChartId("");
+    setSelectedReportId("");
+    setWidgetTitle("");
+    setTextContent("");
     setWidth(4);
     setHeight(4);
     onOpenChange(false);
-    toast.success('Widget added successfully');
+    toast.success("Widget added successfully");
   };
 
   return (
@@ -125,7 +125,11 @@ export function AddWidgetDialog({ open, onOpenChange, onAddWidget }: AddWidgetDi
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={widgetType} onValueChange={(v) => setWidgetType(v as typeof widgetType)} className="w-full">
+        <Tabs
+          value={widgetType}
+          onValueChange={(v) => setWidgetType(v as typeof widgetType)}
+          className="w-full"
+        >
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="chart">
               <BarChart3 className="h-4 w-4 mr-2" />
@@ -157,14 +161,18 @@ export function AddWidgetDialog({ open, onOpenChange, onAddWidget }: AddWidgetDi
                 <Label htmlFor="chart-select">Select Chart *</Label>
                 <Select value={selectedChartId} onValueChange={setSelectedChartId}>
                   <SelectTrigger id="chart-select">
-                    <SelectValue placeholder={isLoadingCharts ? 'Loading charts...' : 'Choose a chart'} />
+                    <SelectValue
+                      placeholder={isLoadingCharts ? "Loading charts..." : "Choose a chart"}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {charts.map((chart) => (
                       <SelectItem key={chart.id} value={chart.id}>
                         <div className="flex flex-col">
                           <span className="font-medium">{chart.name}</span>
-                          <span className="text-xs text-muted-foreground">{chart.description || 'No description'}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {chart.description || "No description"}
+                          </span>
                         </div>
                       </SelectItem>
                     ))}
@@ -179,14 +187,18 @@ export function AddWidgetDialog({ open, onOpenChange, onAddWidget }: AddWidgetDi
                 <Label htmlFor="report-select">Select Report *</Label>
                 <Select value={selectedReportId} onValueChange={setSelectedReportId}>
                   <SelectTrigger id="report-select">
-                    <SelectValue placeholder={isLoadingReports ? 'Loading reports...' : 'Choose a report'} />
+                    <SelectValue
+                      placeholder={isLoadingReports ? "Loading reports..." : "Choose a report"}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {reports.map((report) => (
                       <SelectItem key={report.id} value={report.id}>
                         <div className="flex flex-col">
                           <span className="font-medium">{report.name}</span>
-                          <span className="text-xs text-muted-foreground">{report.description || 'No description'}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {report.description || "No description"}
+                          </span>
                         </div>
                       </SelectItem>
                     ))}
@@ -198,7 +210,8 @@ export function AddWidgetDialog({ open, onOpenChange, onAddWidget }: AddWidgetDi
             {/* Metric Widget */}
             <TabsContent value="metric" className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Metric widgets display a single key value. Configuration for metrics will be available soon.
+                Metric widgets display a single key value. Configuration for metrics will be
+                available soon.
               </p>
             </TabsContent>
 

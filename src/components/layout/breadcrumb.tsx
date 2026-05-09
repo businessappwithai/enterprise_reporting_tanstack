@@ -1,6 +1,6 @@
-import { Link, useRouterState } from '@tanstack/react-router';
-import { ChevronRight, Home } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Link, useRouterState } from "@tanstack/react-router";
+import { ChevronRight, Home } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface BreadcrumbItem {
   label: string;
@@ -13,29 +13,26 @@ interface BreadcrumbProps {
 }
 
 export function Breadcrumb({ items, className }: BreadcrumbProps) {
-  const { location } = useRouterState()
+  const { location } = useRouterState();
   const pathname = location.pathname;
 
   const defaultItems: BreadcrumbItem[] = pathname
-    .split('/')
+    .split("/")
     .filter(Boolean)
     .map((segment, index, array) => {
-      const href = '/' + array.slice(0, index + 1).join('/');
+      const href = "/" + array.slice(0, index + 1).join("/");
       const label = segment
-        .split('-')
+        .split("-")
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
+        .join(" ");
       return { label, href };
     });
 
   const breadcrumbItems = items || defaultItems;
 
   return (
-    <nav className={cn('flex items-center space-x-1 text-sm', className)}>
-      <Link
-        to="/"
-        className="flex items-center text-muted-foreground hover:text-foreground"
-      >
+    <nav className={cn("flex items-center space-x-1 text-sm", className)}>
+      <Link to="/" className="flex items-center text-muted-foreground hover:text-foreground">
         <Home className="h-4 w-4" />
       </Link>
 
@@ -43,10 +40,7 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
         <div key={index} className="flex items-center">
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
           {item.href && index < breadcrumbItems.length - 1 ? (
-            <Link
-              to={item.href}
-              className="ml-1 text-muted-foreground hover:text-foreground"
-            >
+            <Link to={item.href} className="ml-1 text-muted-foreground hover:text-foreground">
               {item.label}
             </Link>
           ) : (

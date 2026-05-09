@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth/config';
-import { getDb } from '@/lib/db/config';
-import { decrypt } from '@/lib/security/encryption';
-import { testConnection } from '@/lib/db/connection-manager';
+import { type NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth/config";
+import { getDb } from "@/lib/db/config";
+import { decrypt } from "@/lib/security/encryption";
+import { testConnection } from "@/lib/db/connection-manager";
 
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user) {
       return NextResponse.json(
-        { success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } },
+        { success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } },
         { status: 401 }
       );
     }
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
 
     if (!clientType || !connectionConfig) {
       return NextResponse.json(
-        { success: false, error: { code: 'INVALID_INPUT', message: 'Missing connection details' } },
+        { success: false, error: { code: "INVALID_INPUT", message: "Missing connection details" } },
         { status: 400 }
       );
     }
@@ -31,16 +31,16 @@ export async function POST(request: NextRequest) {
       success: true,
       data: {
         connected: result.success,
-        message: result.success ? 'Connection successful' : result.message,
+        message: result.success ? "Connection successful" : result.message,
         latency: result.latency,
       },
     });
   } catch (error) {
-    console.error('Error testing connection:', error);
+    console.error("Error testing connection:", error);
     return NextResponse.json(
       {
         success: false,
-        error: { code: 'SERVER_ERROR', message: 'Failed to test connection' },
+        error: { code: "SERVER_ERROR", message: "Failed to test connection" },
       },
       { status: 500 }
     );

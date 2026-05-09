@@ -9,10 +9,10 @@
  * Requires is_editable=true on the datasource.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { DataService } from '@/lib/metadata/data-service';
-import { EntityService } from '@/lib/metadata/entity-service';
-import { hasPermission, getSecurityContext } from '@/lib/auth/rbac';
+import { type NextRequest, NextResponse } from "next/server";
+import { DataService } from "@/lib/metadata/data-service";
+import { EntityService } from "@/lib/metadata/entity-service";
+import { hasPermission, getSecurityContext } from "@/lib/auth/rbac";
 
 // GET - Fetch single record
 export async function GET(
@@ -23,47 +23,43 @@ export async function GET(
     const context = await getSecurityContext();
     if (!context) {
       return NextResponse.json(
-        { success: false, error: { code: 'UNAUTHORIZED' } },
+        { success: false, error: { code: "UNAUTHORIZED" } },
         { status: 401 }
       );
     }
 
-    const canView = hasPermission(context, 'metadata_entity:view') ??
-      context.permissions.includes('metadata_entity:view');
+    const canView =
+      hasPermission(context, "metadata_entity:view") ??
+      context.permissions.includes("metadata_entity:view");
 
     if (!canView) {
-      return NextResponse.json(
-        { success: false, error: { code: 'FORBIDDEN' } },
-        { status: 403 }
-      );
+      return NextResponse.json({ success: false, error: { code: "FORBIDDEN" } }, { status: 403 });
     }
 
     const entity = await EntityService.getById(params.entityId);
 
     if (!entity) {
       return NextResponse.json(
-        { success: false, error: { code: 'NOT_FOUND', message: 'Entity not found' } },
+        { success: false, error: { code: "NOT_FOUND", message: "Entity not found" } },
         { status: 404 }
       );
     }
 
     if (entity.data_source_id !== params.id) {
       return NextResponse.json(
-        { success: false, error: { code: 'VALIDATION_ERROR', message: 'Entity does not belong to this datasource' } },
+        {
+          success: false,
+          error: { code: "VALIDATION_ERROR", message: "Entity does not belong to this datasource" },
+        },
         { status: 400 }
       );
     }
 
-    const record = await DataService.getRecord(
-      params.id,
-      entity,
-      params.recordId,
-      context.userId
-    );
+    const record = await DataService.getRecord(params.id, entity, params.recordId, context.userId);
 
     if (!record) {
       return NextResponse.json(
-        { success: false, error: { code: 'NOT_FOUND', message: 'Record not found' } },
+        { success: false, error: { code: "NOT_FOUND", message: "Record not found" } },
         { status: 404 }
       );
     }
@@ -73,13 +69,13 @@ export async function GET(
       data: record,
     });
   } catch (error) {
-    console.error('Error getting entity record:', error);
+    console.error("Error getting entity record:", error);
     return NextResponse.json(
       {
         success: false,
         error: {
-          code: 'INTERNAL_ERROR',
-          message: error instanceof Error ? error.message : 'Failed to get entity record',
+          code: "INTERNAL_ERROR",
+          message: error instanceof Error ? error.message : "Failed to get entity record",
         },
       },
       { status: 500 }
@@ -96,58 +92,57 @@ export async function POST(
     const context = await getSecurityContext();
     if (!context) {
       return NextResponse.json(
-        { success: false, error: { code: 'UNAUTHORIZED' } },
+        { success: false, error: { code: "UNAUTHORIZED" } },
         { status: 401 }
       );
     }
 
-    const canEdit = hasPermission(context, 'metadata_entity:edit') ??
-      context.permissions.includes('metadata_entity:edit');
+    const canEdit =
+      hasPermission(context, "metadata_entity:edit") ??
+      context.permissions.includes("metadata_entity:edit");
 
     if (!canEdit) {
-      return NextResponse.json(
-        { success: false, error: { code: 'FORBIDDEN' } },
-        { status: 403 }
-      );
+      return NextResponse.json({ success: false, error: { code: "FORBIDDEN" } }, { status: 403 });
     }
 
     const entity = await EntityService.getById(params.entityId);
 
     if (!entity) {
       return NextResponse.json(
-        { success: false, error: { code: 'NOT_FOUND', message: 'Entity not found' } },
+        { success: false, error: { code: "NOT_FOUND", message: "Entity not found" } },
         { status: 404 }
       );
     }
 
     if (entity.data_source_id !== params.id) {
       return NextResponse.json(
-        { success: false, error: { code: 'VALIDATION_ERROR', message: 'Entity does not belong to this datasource' } },
+        {
+          success: false,
+          error: { code: "VALIDATION_ERROR", message: "Entity does not belong to this datasource" },
+        },
         { status: 400 }
       );
     }
 
     const body = await request.json();
 
-    const record = await DataService.createRecord(
-      params.id,
-      entity,
-      body,
-      context.userId
-    );
+    const record = await DataService.createRecord(params.id, entity, body, context.userId);
 
-    return NextResponse.json({
-      success: true,
-      data: record,
-    }, { status: 201 });
+    return NextResponse.json(
+      {
+        success: true,
+        data: record,
+      },
+      { status: 201 }
+    );
   } catch (error) {
-    console.error('Error creating entity record:', error);
+    console.error("Error creating entity record:", error);
     return NextResponse.json(
       {
         success: false,
         error: {
-          code: 'INTERNAL_ERROR',
-          message: error instanceof Error ? error.message : 'Failed to create entity record',
+          code: "INTERNAL_ERROR",
+          message: error instanceof Error ? error.message : "Failed to create entity record",
         },
       },
       { status: 500 }
@@ -164,33 +159,34 @@ export async function PUT(
     const context = await getSecurityContext();
     if (!context) {
       return NextResponse.json(
-        { success: false, error: { code: 'UNAUTHORIZED' } },
+        { success: false, error: { code: "UNAUTHORIZED" } },
         { status: 401 }
       );
     }
 
-    const canEdit = hasPermission(context, 'metadata_entity:edit') ??
-      context.permissions.includes('metadata_entity:edit');
+    const canEdit =
+      hasPermission(context, "metadata_entity:edit") ??
+      context.permissions.includes("metadata_entity:edit");
 
     if (!canEdit) {
-      return NextResponse.json(
-        { success: false, error: { code: 'FORBIDDEN' } },
-        { status: 403 }
-      );
+      return NextResponse.json({ success: false, error: { code: "FORBIDDEN" } }, { status: 403 });
     }
 
     const entity = await EntityService.getById(params.entityId);
 
     if (!entity) {
       return NextResponse.json(
-        { success: false, error: { code: 'NOT_FOUND', message: 'Entity not found' } },
+        { success: false, error: { code: "NOT_FOUND", message: "Entity not found" } },
         { status: 404 }
       );
     }
 
     if (entity.data_source_id !== params.id) {
       return NextResponse.json(
-        { success: false, error: { code: 'VALIDATION_ERROR', message: 'Entity does not belong to this datasource' } },
+        {
+          success: false,
+          error: { code: "VALIDATION_ERROR", message: "Entity does not belong to this datasource" },
+        },
         { status: 400 }
       );
     }
@@ -207,7 +203,10 @@ export async function PUT(
 
     if (!record) {
       return NextResponse.json(
-        { success: false, error: { code: 'NOT_FOUND', message: 'Record not found or no changes made' } },
+        {
+          success: false,
+          error: { code: "NOT_FOUND", message: "Record not found or no changes made" },
+        },
         { status: 404 }
       );
     }
@@ -217,13 +216,13 @@ export async function PUT(
       data: record,
     });
   } catch (error) {
-    console.error('Error updating entity record:', error);
+    console.error("Error updating entity record:", error);
     return NextResponse.json(
       {
         success: false,
         error: {
-          code: 'INTERNAL_ERROR',
-          message: error instanceof Error ? error.message : 'Failed to update entity record',
+          code: "INTERNAL_ERROR",
+          message: error instanceof Error ? error.message : "Failed to update entity record",
         },
       },
       { status: 500 }
@@ -240,33 +239,34 @@ export async function DELETE(
     const context = await getSecurityContext();
     if (!context) {
       return NextResponse.json(
-        { success: false, error: { code: 'UNAUTHORIZED' } },
+        { success: false, error: { code: "UNAUTHORIZED" } },
         { status: 401 }
       );
     }
 
-    const canEdit = hasPermission(context, 'metadata_entity:edit') ??
-      context.permissions.includes('metadata_entity:edit');
+    const canEdit =
+      hasPermission(context, "metadata_entity:edit") ??
+      context.permissions.includes("metadata_entity:edit");
 
     if (!canEdit) {
-      return NextResponse.json(
-        { success: false, error: { code: 'FORBIDDEN' } },
-        { status: 403 }
-      );
+      return NextResponse.json({ success: false, error: { code: "FORBIDDEN" } }, { status: 403 });
     }
 
     const entity = await EntityService.getById(params.entityId);
 
     if (!entity) {
       return NextResponse.json(
-        { success: false, error: { code: 'NOT_FOUND', message: 'Entity not found' } },
+        { success: false, error: { code: "NOT_FOUND", message: "Entity not found" } },
         { status: 404 }
       );
     }
 
     if (entity.data_source_id !== params.id) {
       return NextResponse.json(
-        { success: false, error: { code: 'VALIDATION_ERROR', message: 'Entity does not belong to this datasource' } },
+        {
+          success: false,
+          error: { code: "VALIDATION_ERROR", message: "Entity does not belong to this datasource" },
+        },
         { status: 400 }
       );
     }
@@ -280,23 +280,23 @@ export async function DELETE(
 
     if (!deleted) {
       return NextResponse.json(
-        { success: false, error: { code: 'NOT_FOUND', message: 'Record not found' } },
+        { success: false, error: { code: "NOT_FOUND", message: "Record not found" } },
         { status: 404 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      data: { message: 'Record deleted successfully' },
+      data: { message: "Record deleted successfully" },
     });
   } catch (error) {
-    console.error('Error deleting entity record:', error);
+    console.error("Error deleting entity record:", error);
     return NextResponse.json(
       {
         success: false,
         error: {
-          code: 'INTERNAL_ERROR',
-          message: error instanceof Error ? error.message : 'Failed to delete entity record',
+          code: "INTERNAL_ERROR",
+          message: error instanceof Error ? error.message : "Failed to delete entity record",
         },
       },
       { status: 500 }

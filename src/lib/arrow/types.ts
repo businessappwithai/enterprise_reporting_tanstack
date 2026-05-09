@@ -2,7 +2,7 @@
  * Arrow/Parquet type definitions and SQL-to-Arrow type mappings.
  */
 
-import * as Arrow from 'apache-arrow';
+import * as Arrow from "apache-arrow";
 
 /** Map of SQL type names to Arrow DataType instances. */
 export const SQL_TO_ARROW_TYPE: Record<string, Arrow.DataType> = {
@@ -48,4 +48,4 @@ export function resolveArrowType(sqlType: string): Arrow.DataType {
   return SQL_TO_ARROW_TYPE[normalised] ?? new Arrow.Utf8();
 }
 
-export type { Table as ArrowTable, Schema as ArrowSchema, Field as ArrowField } from 'apache-arrow';
+export type { Table as ArrowTable, Schema as ArrowSchema, Field as ArrowField } from "apache-arrow";

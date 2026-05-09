@@ -2,17 +2,14 @@
  * Data adapter: converts query result rows to ECharts data structures.
  */
 
-import type { DataMapping } from '@/types/wasm';
+import type { DataMapping } from "@/types/wasm";
 
 /**
  * Extract category (x-axis) values from rows using the data mapping.
  */
-export function extractCategories(
-  rows: Record<string, unknown>[],
-  mapping: DataMapping,
-): string[] {
+export function extractCategories(rows: Record<string, unknown>[], mapping: DataMapping): string[] {
   if (!mapping.x) return [];
-  return rows.map((r) => String(r[mapping.x!] ?? ''));
+  return rows.map((r) => String(r[mapping.x!] ?? ""));
 }
 
 /**
@@ -21,7 +18,7 @@ export function extractCategories(
  */
 export function extractSeries(
   rows: Record<string, unknown>[],
-  mapping: DataMapping,
+  mapping: DataMapping
 ): { name: string; data: number[] }[] {
   const yColumns = Array.isArray(mapping.y) ? mapping.y : mapping.y ? [mapping.y] : [];
 
@@ -36,7 +33,7 @@ export function extractSeries(
  */
 export function extractGroupedSeries(
   rows: Record<string, unknown>[],
-  mapping: DataMapping,
+  mapping: DataMapping
 ): { name: string; data: number[] }[] {
   if (!mapping.group || !mapping.y) return extractSeries(rows, mapping);
 
@@ -45,8 +42,8 @@ export function extractGroupedSeries(
   const categories = new Set<string>();
 
   for (const row of rows) {
-    const groupVal = String(row[mapping.group] ?? '');
-    const catVal = String(row[mapping.x!] ?? '');
+    const groupVal = String(row[mapping.group] ?? "");
+    const catVal = String(row[mapping.x!] ?? "");
     const value = Number(row[yColumn] ?? 0);
 
     categories.add(catVal);
@@ -67,9 +64,9 @@ export function extractGroupedSeries(
  */
 export function extractScatterData(
   rows: Record<string, unknown>[],
-  mapping: DataMapping,
+  mapping: DataMapping
 ): [number, number][] {
-  const yColumn = Array.isArray(mapping.y) ? mapping.y[0] : mapping.y ?? '';
+  const yColumn = Array.isArray(mapping.y) ? mapping.y[0] : (mapping.y ?? "");
   return rows.map((r) => [Number(r[mapping.x!] ?? 0), Number(r[yColumn] ?? 0)]);
 }
 
@@ -78,11 +75,11 @@ export function extractScatterData(
  */
 export function extractPieData(
   rows: Record<string, unknown>[],
-  mapping: DataMapping,
+  mapping: DataMapping
 ): { name: string; value: number }[] {
-  const yColumn = Array.isArray(mapping.y) ? mapping.y[0] : mapping.y ?? '';
+  const yColumn = Array.isArray(mapping.y) ? mapping.y[0] : (mapping.y ?? "");
   return rows.map((r) => ({
-    name: String(r[mapping.x!] ?? ''),
+    name: String(r[mapping.x!] ?? ""),
     value: Number(r[yColumn] ?? 0),
   }));
 }

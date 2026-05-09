@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -10,27 +10,31 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Pencil, Trash2, RefreshCw, Search, Plus } from 'lucide-react';
-import type { SavedQuery, DataSource } from '@/types/database';
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Pencil, Trash2, RefreshCw, Search, Plus } from "lucide-react";
+import type { SavedQuery, DataSource } from "@/types/database";
 
 export default function QueriesPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
 
   // Fetch saved queries
-  const { data: queriesData, isLoading, refetch } = useQuery<{
+  const {
+    data: queriesData,
+    isLoading,
+    refetch,
+  } = useQuery<{
     items: SavedQuery[];
     meta: { total: number };
   }>({
-    queryKey: ['saved-queries', 'all'],
+    queryKey: ["saved-queries", "all"],
     queryFn: async () => {
-      const res = await fetch('/api/queries?pageSize=100');
+      const res = await fetch("/api/queries?pageSize=100");
       const data = await res.json();
       return data.data;
     },
@@ -38,9 +42,9 @@ export default function QueriesPage() {
 
   // Fetch data sources for names
   const { data: dataSources } = useQuery<DataSource[]>({
-    queryKey: ['data-sources'],
+    queryKey: ["data-sources"],
     queryFn: async () => {
-      const res = await fetch('/api/data-sources');
+      const res = await fetch("/api/data-sources");
       const data = await res.json();
       return data.data?.items || [];
     },
@@ -49,10 +53,10 @@ export default function QueriesPage() {
   // Delete query mutation
   const deleteMutation = useMutation({
     mutationFn: async (queryId: string) => {
-      await fetch(`/api/queries/${queryId}`, { method: 'DELETE' });
+      await fetch(`/api/queries/${queryId}`, { method: "DELETE" });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['saved-queries'] });
+      queryClient.invalidateQueries({ queryKey: ["saved-queries"] });
       setShowDeleteConfirm(null);
     },
   });
@@ -65,7 +69,11 @@ export default function QueriesPage() {
     return (
       query.name.toLowerCase().includes(searchLower) ||
       (query.description?.toLowerCase().includes(searchLower) ?? false) ||
-      (dataSources?.find((ds) => ds.id === query.data_source_id)?.name.toLowerCase().includes(searchLower) ?? false)
+      (dataSources
+        ?.find((ds) => ds.id === query.data_source_id)
+        ?.name.toLowerCase()
+        .includes(searchLower) ??
+        false)
     );
   });
 
@@ -79,7 +87,7 @@ export default function QueriesPage() {
   };
 
   const getDataSourceName = (dataSourceId: string) => {
-    return dataSources?.find((ds) => ds.id === dataSourceId)?.name || 'Unknown';
+    return dataSources?.find((ds) => ds.id === dataSourceId)?.name || "Unknown";
   };
 
   return (
@@ -90,7 +98,7 @@ export default function QueriesPage() {
           <p className="text-muted-foreground">Manage your saved SQL queries</p>
         </div>
         <Button
-          onClick={() => router.push('/sql-editor')}
+          onClick={() => router.push("/sql-editor")}
           className="bg-blue-600 hover:bg-blue-700"
         >
           <Plus className="h-4 w-4 mr-2" />
@@ -110,12 +118,7 @@ export default function QueriesPage() {
             className="pl-10"
           />
         </div>
-        <Button
-          onClick={() => refetch()}
-          variant="outline"
-          size="sm"
-          className="gap-2"
-        >
+        <Button onClick={() => refetch()} variant="outline" size="sm" className="gap-2">
           <RefreshCw className="h-4 w-4" />
           Refresh
         </Button>
@@ -155,18 +158,14 @@ export default function QueriesPage() {
                   {searchTerm ? (
                     <div>
                       <p className="text-muted-foreground">No queries match your search.</p>
-                      <Button
-                        variant="link"
-                        onClick={() => setSearchTerm('')}
-                        className="mt-2"
-                      >
+                      <Button variant="link" onClick={() => setSearchTerm("")} className="mt-2">
                         Clear search
                       </Button>
                     </div>
                   ) : (
                     <div>
                       <p className="text-muted-foreground mb-2">No saved queries found.</p>
-                      <Button onClick={() => router.push('/sql-editor')}>
+                      <Button onClick={() => router.push("/sql-editor")}>
                         Create your first query
                       </Button>
                     </div>
@@ -220,7 +219,10 @@ export default function QueriesPage() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center" style={{ zIndex: 99999 }}>
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center"
+          style={{ zIndex: 99999 }}
+        >
           <div className="bg-background rounded-lg p-6 max-w-md w-full mx-4 shadow-lg">
             <h2 className="text-xl font-bold mb-4">Confirm Delete</h2>
             <p className="text-muted-foreground mb-6">
@@ -240,7 +242,7 @@ export default function QueriesPage() {
                 className="flex-1"
                 disabled={deleteMutation.isPending}
               >
-                {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+                {deleteMutation.isPending ? "Deleting..." : "Delete"}
               </Button>
             </div>
           </div>

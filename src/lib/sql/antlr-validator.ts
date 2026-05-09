@@ -22,48 +22,134 @@ export interface SQLValidationResult {
 
 export interface SQLValidationError {
   message: string;
-  severity: 'error' | 'critical';
+  severity: "error" | "critical";
   line?: number;
   column?: number;
 }
 
 export interface SQLValidationWarning {
   message: string;
-  type: 'security' | 'performance' | 'style';
+  type: "security" | "performance" | "style";
 }
 
 // ALLOWED keywords (safe for SELECT queries)
 const ALLOWED_KEYWORDS = new Set([
-  'SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'NOT', 'IN', 'LIKE', 'ILIKE',
-  'BETWEEN', 'IS', 'NULL', 'JOIN', 'INNER', 'LEFT', 'RIGHT', 'FULL', 'OUTER',
-  'ON', 'AS', 'DISTINCT', 'GROUP', 'BY', 'HAVING', 'ORDER', 'ASC', 'DESC',
-  'LIMIT', 'OFFSET', 'FETCH', 'ROWS', 'NEXT', 'ONLY', 'WITH', 'RECURSIVE',
-  'UNION', 'INTERSECT', 'EXCEPT', 'CASE', 'WHEN', 'THEN', 'ELSE', 'END',
-  'CAST', 'OVER', 'PARTITION', 'WINDOW', 'ROW', 'ALL', 'ANY', 'EXISTS',
-  'TRUE', 'FALSE', 'EXTRACT', 'DATE_TRUNC', 'NOW', 'CURRENT_DATE',
-  'CURRENT_TIME', 'CURRENT_TIMESTAMP',
+  "SELECT",
+  "FROM",
+  "WHERE",
+  "AND",
+  "OR",
+  "NOT",
+  "IN",
+  "LIKE",
+  "ILIKE",
+  "BETWEEN",
+  "IS",
+  "NULL",
+  "JOIN",
+  "INNER",
+  "LEFT",
+  "RIGHT",
+  "FULL",
+  "OUTER",
+  "ON",
+  "AS",
+  "DISTINCT",
+  "GROUP",
+  "BY",
+  "HAVING",
+  "ORDER",
+  "ASC",
+  "DESC",
+  "LIMIT",
+  "OFFSET",
+  "FETCH",
+  "ROWS",
+  "NEXT",
+  "ONLY",
+  "WITH",
+  "RECURSIVE",
+  "UNION",
+  "INTERSECT",
+  "EXCEPT",
+  "CASE",
+  "WHEN",
+  "THEN",
+  "ELSE",
+  "END",
+  "CAST",
+  "OVER",
+  "PARTITION",
+  "WINDOW",
+  "ROW",
+  "ALL",
+  "ANY",
+  "EXISTS",
+  "TRUE",
+  "FALSE",
+  "EXTRACT",
+  "DATE_TRUNC",
+  "NOW",
+  "CURRENT_DATE",
+  "CURRENT_TIME",
+  "CURRENT_TIMESTAMP",
   // Aggregate functions
-  'COUNT', 'SUM', 'AVG', 'MIN', 'MAX', 'STDDEV', 'VARIANCE',
+  "COUNT",
+  "SUM",
+  "AVG",
+  "MIN",
+  "MAX",
+  "STDDEV",
+  "VARIANCE",
   // String/utility functions
-  'SUBSTRING', 'LENGTH', 'UPPER', 'LOWER', 'TRIM', 'LTRIM', 'RTRIM',
-  'CONCAT', 'COALESCE', 'NULLIF', 'ROUND', 'FLOOR', 'CEIL', 'ABS',
+  "SUBSTRING",
+  "LENGTH",
+  "UPPER",
+  "LOWER",
+  "TRIM",
+  "LTRIM",
+  "RTRIM",
+  "CONCAT",
+  "COALESCE",
+  "NULLIF",
+  "ROUND",
+  "FLOOR",
+  "CEIL",
+  "ABS",
 ]);
 
 // FORBIDDEN keywords (hard block)
 const FORBIDDEN_KEYWORDS = new Set([
-  'DROP', 'DELETE', 'INSERT', 'UPDATE', 'CREATE', 'ALTER', 'TRUNCATE',
-  'PRAGMA', 'ATTACH', 'DETACH', 'GRANT', 'REVOKE', 'EXEC', 'EXECUTE',
-  'CALL', 'INTO', 'VALUES', 'SET', 'REPLACE', 'UPSERT',
+  "DROP",
+  "DELETE",
+  "INSERT",
+  "UPDATE",
+  "CREATE",
+  "ALTER",
+  "TRUNCATE",
+  "PRAGMA",
+  "ATTACH",
+  "DETACH",
+  "GRANT",
+  "REVOKE",
+  "EXEC",
+  "EXECUTE",
+  "CALL",
+  "INTO",
+  "VALUES",
+  "SET",
+  "REPLACE",
+  "UPSERT",
 ]);
 
 // SQL injection patterns to detect
 const INJECTION_PATTERNS = [
-  /('\s*;|;.*?--)/i,  // Comment escape
-  /('\s*OR\s+'?\d+'?\s*=\s*'?\d+)/i,  // OR 1=1
-  /(-{2}.*?$)/m,  // Comment injection
-  /(\/\*.*?\*\/)/i,  // Multiline comment
-  /('.*?UNION.*?SELECT)/i,  // UNION injection
-  /xp_cmdshell/i,  // MSSQL command exec
+  /('\s*;|;.*?--)/i, // Comment escape
+  /('\s*OR\s+'?\d+'?\s*=\s*'?\d+)/i, // OR 1=1
+  /(-{2}.*?$)/m, // Comment injection
+  /(\/\*.*?\*\/)/i, // Multiline comment
+  /('.*?UNION.*?SELECT)/i, // UNION injection
+  /xp_cmdshell/i, // MSSQL command exec
 ];
 
 /**
@@ -71,7 +157,7 @@ const INJECTION_PATTERNS = [
  */
 export function validateSQLWithAllowlist(
   sql: string,
-  dialect: 'postgres' | 'mysql' | 'sqlite' | 'mssql' = 'postgres'
+  dialect: "postgres" | "mysql" | "sqlite" | "mssql" = "postgres"
 ): SQLValidationResult {
   const errors: SQLValidationError[] = [];
   const warnings: SQLValidationWarning[] = [];
@@ -83,14 +169,14 @@ export function validateSQLWithAllowlist(
   };
 
   // 1. Check for forbidden keywords (hard block)
-  const forbiddenMatches = Array.from(FORBIDDEN_KEYWORDS).filter(keyword =>
-    new RegExp(`\\b${keyword}\\b`, 'i').test(sql)
+  const forbiddenMatches = Array.from(FORBIDDEN_KEYWORDS).filter((keyword) =>
+    new RegExp(`\\b${keyword}\\b`, "i").test(sql)
   );
 
   for (const keyword of forbiddenMatches) {
     errors.push({
       message: `Forbidden keyword: ${keyword}. Only SELECT queries are allowed.`,
-      severity: 'critical',
+      severity: "critical",
     });
   }
 
@@ -98,8 +184,8 @@ export function validateSQLWithAllowlist(
   for (const pattern of INJECTION_PATTERNS) {
     if (pattern.test(sql)) {
       errors.push({
-        message: 'Potential SQL injection pattern detected',
-        severity: 'critical',
+        message: "Potential SQL injection pattern detected",
+        severity: "critical",
       });
       break;
     }
@@ -127,7 +213,7 @@ export function validateSQLWithAllowlist(
 
       warnings.push({
         message: `Unknown keyword or function: ${keyword}. Verify this is a valid function or identifier.`,
-        type: 'style',
+        type: "style",
       });
     }
 
@@ -156,30 +242,30 @@ export function validateSQLWithAllowlist(
   const parenCloseCount = (sql.match(/\)/g) || []).length;
   if (parenCount !== parenCloseCount) {
     errors.push({
-      message: 'Mismatched parentheses',
-      severity: 'error',
+      message: "Mismatched parentheses",
+      severity: "error",
     });
   }
 
   // 8. Performance warnings
   if (/SELECT\s+\*/i.test(sql)) {
     warnings.push({
-      message: 'SELECT * detected - consider selecting only needed columns',
-      type: 'performance',
+      message: "SELECT * detected - consider selecting only needed columns",
+      type: "performance",
     });
   }
 
   if (/SELECT\s+/i.test(sql) && !/LIMIT\s+\d+|FETCH\s+/i.test(sql)) {
     warnings.push({
-      message: 'Query without LIMIT - consider adding a limit for large tables',
-      type: 'performance',
+      message: "Query without LIMIT - consider adding a limit for large tables",
+      type: "performance",
     });
   }
 
   if (/LIKE\s+['"]%/i.test(sql)) {
     warnings.push({
-      message: 'LIKE with leading wildcard may prevent index usage',
-      type: 'performance',
+      message: "LIKE with leading wildcard may prevent index usage",
+      type: "performance",
     });
   }
 
@@ -195,9 +281,7 @@ export function validateSQLWithAllowlist(
  * Check if a word is an operator or literal keyword
  */
 function isOperatorOrLiteral(word: string): boolean {
-  const operatorsAndLiterals = [
-    'TRUE', 'FALSE', 'NULL', 'AND', 'OR', 'NOT', 'IN', 'LIKE',
-  ];
+  const operatorsAndLiterals = ["TRUE", "FALSE", "NULL", "AND", "OR", "NOT", "IN", "LIKE"];
   return operatorsAndLiterals.includes(word);
 }
 
@@ -208,23 +292,23 @@ export function isReadOnlyQuery(sql: string): boolean {
   let trimmed = sql.trim();
 
   // Remove leading comments
-  while (trimmed.startsWith('--') || trimmed.startsWith('/*')) {
-    if (trimmed.startsWith('--')) {
-      const newlineIdx = trimmed.indexOf('\n');
-      trimmed = newlineIdx === -1 ? '' : trimmed.substring(newlineIdx + 1).trim();
-    } else if (trimmed.startsWith('/*')) {
-      const endIdx = trimmed.indexOf('*/');
-      trimmed = endIdx === -1 ? '' : trimmed.substring(endIdx + 2).trim();
+  while (trimmed.startsWith("--") || trimmed.startsWith("/*")) {
+    if (trimmed.startsWith("--")) {
+      const newlineIdx = trimmed.indexOf("\n");
+      trimmed = newlineIdx === -1 ? "" : trimmed.substring(newlineIdx + 1).trim();
+    } else if (trimmed.startsWith("/*")) {
+      const endIdx = trimmed.indexOf("*/");
+      trimmed = endIdx === -1 ? "" : trimmed.substring(endIdx + 2).trim();
     }
   }
 
   const upper = trimmed.toUpperCase();
   return (
-    upper.startsWith('SELECT') ||
-    upper.startsWith('WITH') ||
-    upper.startsWith('EXPLAIN') ||
-    upper.startsWith('SHOW') ||
-    upper.startsWith('DESCRIBE')
+    upper.startsWith("SELECT") ||
+    upper.startsWith("WITH") ||
+    upper.startsWith("EXPLAIN") ||
+    upper.startsWith("SHOW") ||
+    upper.startsWith("DESCRIBE")
   );
 }
 
@@ -233,11 +317,12 @@ export function isReadOnlyQuery(sql: string): boolean {
  */
 export function extractTables(sql: string): string[] {
   const tables: string[] = [];
-  const regex = /(?:FROM|JOIN)\s+([`"]?[a-zA-Z_][a-zA-Z0-9_.$]*[`"]?)(?:\s|$|,|JOIN|WHERE|GROUP|ORDER|LIMIT)/gi;
+  const regex =
+    /(?:FROM|JOIN)\s+([`"]?[a-zA-Z_][a-zA-Z0-9_.$]*[`"]?)(?:\s|$|,|JOIN|WHERE|GROUP|ORDER|LIMIT)/gi;
 
   let match;
   while ((match = regex.exec(sql)) !== null) {
-    const table = match[1].replace(/[`"]/g, '').trim();
+    const table = match[1].replace(/[`"]/g, "").trim();
     if (table && !tables.includes(table)) {
       tables.push(table);
     }
@@ -257,14 +342,19 @@ export function extractColumns(sql: string): string[] {
   if (selectMatch) {
     const selectPart = selectMatch[2];
     // Split by comma, then extract column names
-    const items = selectPart.split(',');
+    const items = selectPart.split(",");
 
     for (const item of items) {
       // Extract identifier before AS or whitespace
       const colMatch = item.match(/^\s*(\w+(?:\.\w+)?)/);
       if (colMatch) {
         const col = colMatch[1];
-        if (col !== '*' && col !== 'DISTINCT' && !isAggregateFunctionName(col) && !columns.includes(col)) {
+        if (
+          col !== "*" &&
+          col !== "DISTINCT" &&
+          !isAggregateFunctionName(col) &&
+          !columns.includes(col)
+        ) {
           columns.push(col);
         }
       }
@@ -279,8 +369,20 @@ export function extractColumns(sql: string): string[] {
  */
 function isAggregateFunctionName(word: string): boolean {
   const aggregates = [
-    'COUNT', 'SUM', 'AVG', 'MIN', 'MAX', 'STDDEV', 'VARIANCE',
-    'SUBSTRING', 'UPPER', 'LOWER', 'TRIM', 'LENGTH', 'COALESCE', 'NULLIF',
+    "COUNT",
+    "SUM",
+    "AVG",
+    "MIN",
+    "MAX",
+    "STDDEV",
+    "VARIANCE",
+    "SUBSTRING",
+    "UPPER",
+    "LOWER",
+    "TRIM",
+    "LENGTH",
+    "COALESCE",
+    "NULLIF",
   ];
   return aggregates.includes(word.toUpperCase());
 }

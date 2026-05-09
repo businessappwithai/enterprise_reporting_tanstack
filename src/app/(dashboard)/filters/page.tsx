@@ -32,22 +32,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Plus, Pencil, Trash2, AlertTriangle } from "lucide-react";
-import type {
-  FilterDefinition,
-  FilterFieldType,
-  FilterOperator,
-} from "@/types/database";
+import type { FilterDefinition, FilterFieldType, FilterOperator } from "@/types/database";
 
 export default function FiltersPage() {
   const queryClient = useQueryClient();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editingFilter, setEditingFilter] = useState<FilterDefinition | null>(
-    null,
-  );
-  const [availableFields, setAvailableFields] = useState<
-    Array<{ name: string; type: string }>
-  >([]);
+  const [editingFilter, setEditingFilter] = useState<FilterDefinition | null>(null);
+  const [availableFields, setAvailableFields] = useState<Array<{ name: string; type: string }>>([]);
   const [isLoadingFields, setIsLoadingFields] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -183,17 +175,14 @@ export default function FiltersPage() {
       display_field: displayFieldValue,
     };
     // Build date validation config
-    if (
-      formData.field_type === "date" &&
-      (formData.max_from_date || formData.min_to_date)
-    ) {
+    if (formData.field_type === "date" && (formData.max_from_date || formData.min_to_date)) {
       (dataToSubmit as any).date_validation_config = JSON.stringify({
         max_from_date: formData.max_from_date || undefined,
         min_to_date: formData.min_to_date || undefined,
       });
     }
 
-    console.log('[handleCreate] Submitting filter data:', JSON.stringify(dataToSubmit, null, 2));
+    console.log("[handleCreate] Submitting filter data:", JSON.stringify(dataToSubmit, null, 2));
     createFilter.mutate(dataToSubmit);
   };
 
@@ -227,10 +216,7 @@ export default function FiltersPage() {
       console.log("[loadQueryFields] Response status:", res.status);
       if (res.ok) {
         const data = await res.json();
-        console.log(
-          "[loadQueryFields] Response data:",
-          JSON.stringify(data, null, 2),
-        );
+        console.log("[loadQueryFields] Response data:", JSON.stringify(data, null, 2));
         if (data.success && data.data.columns) {
           const columnNames = data.data.columns;
           const columnTypes = data.data.types || {};
@@ -239,15 +225,10 @@ export default function FiltersPage() {
             name,
             type: columnTypes[name] || "text",
           }));
-          console.log(
-            "[loadQueryFields] Parsed fields:",
-            JSON.stringify(fields, null, 2),
-          );
+          console.log("[loadQueryFields] Parsed fields:", JSON.stringify(fields, null, 2));
           setAvailableFields(fields);
         } else {
-          console.log(
-            "[loadQueryFields] No columns in response or not successful",
-          );
+          console.log("[loadQueryFields] No columns in response or not successful");
           setAvailableFields([]);
         }
       } else {
@@ -278,9 +259,7 @@ export default function FiltersPage() {
     }
 
     // Try to find the saved query that matches this filter's query
-    const matchingQuery = savedQueries?.find(
-      (q) => q.sql_content === filter.filter_query,
-    );
+    const matchingQuery = savedQueries?.find((q) => q.sql_content === filter.filter_query);
 
     setFormData({
       name: filter.name,
@@ -327,10 +306,7 @@ export default function FiltersPage() {
         display_field: displayFieldValue,
       };
       // Build date validation config
-      if (
-        formData.field_type === "date" &&
-        (formData.max_from_date || formData.min_to_date)
-      ) {
+      if (formData.field_type === "date" && (formData.max_from_date || formData.min_to_date)) {
         (dataToSubmit as any).date_validation_config = JSON.stringify({
           max_from_date: formData.max_from_date || undefined,
           min_to_date: formData.min_to_date || undefined,
@@ -359,9 +335,7 @@ export default function FiltersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Filters</h1>
-          <p className="text-muted-foreground">
-            Manage reusable filters for reports and charts
-          </p>
+          <p className="text-muted-foreground">Manage reusable filters for reports and charts</p>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
@@ -383,9 +357,7 @@ export default function FiltersPage() {
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g., Customer Filter"
                 />
               </div>
@@ -394,9 +366,7 @@ export default function FiltersPage() {
                 <Textarea
                   id="description"
                   value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Optional description"
                   rows={2}
                 />
@@ -427,34 +397,24 @@ export default function FiltersPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="id">ID (Dropdown from query)</SelectItem>
-                    <SelectItem value="number">
-                      Number (Comparison operators)
-                    </SelectItem>
+                    <SelectItem value="number">Number (Comparison operators)</SelectItem>
                     <SelectItem value="date">Date (Date range)</SelectItem>
-                    <SelectItem value="text">
-                      Text (Pattern matching)
-                    </SelectItem>
+                    <SelectItem value="text">Text (Pattern matching)</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
                   {formData.field_type === "id" &&
                     "Select a query to populate dropdown options in filter"}
-                  {formData.field_type === "number" &&
-                    "Select a query to filter by numeric column"}
-                  {formData.field_type === "date" &&
-                    "Select a query to filter by date column"}
-                  {formData.field_type === "text" &&
-                    "Select a query to filter by text column"}
+                  {formData.field_type === "number" && "Select a query to filter by numeric column"}
+                  {formData.field_type === "date" && "Select a query to filter by date column"}
+                  {formData.field_type === "text" && "Select a query to filter by text column"}
                 </p>
               </div>
 
               {/* Saved Query Selector - shown for all field types */}
               <div className="grid gap-2">
                 <Label htmlFor="query_id">Saved Query *</Label>
-                <Select
-                  value={formData.query_id}
-                  onValueChange={handleQueryChange}
-                >
+                <Select value={formData.query_id} onValueChange={handleQueryChange}>
                   <SelectTrigger id="query_id">
                     <SelectValue placeholder="Select a saved query..." />
                   </SelectTrigger>
@@ -478,9 +438,7 @@ export default function FiltersPage() {
                   <div className="grid gap-2">
                     <Label>Display Fields (Multiple)</Label>
                     {isLoadingFields ? (
-                      <p className="text-xs text-muted-foreground">
-                        Loading fields...
-                      </p>
+                      <p className="text-xs text-muted-foreground">Loading fields...</p>
                     ) : availableFields.length > 0 ? (
                       <MultiSelect
                         options={availableFields.map((field) => ({
@@ -510,8 +468,7 @@ export default function FiltersPage() {
                       />
                     )}
                     <p className="text-xs text-muted-foreground">
-                      Select multiple fields to display (e.g., firstName +
-                      lastName)
+                      Select multiple fields to display (e.g., firstName + lastName)
                     </p>
                   </div>
 
@@ -519,15 +476,11 @@ export default function FiltersPage() {
                   <div className="grid gap-2">
                     <Label>Value Field</Label>
                     {isLoadingFields ? (
-                      <p className="text-xs text-muted-foreground">
-                        Loading fields...
-                      </p>
+                      <p className="text-xs text-muted-foreground">Loading fields...</p>
                     ) : availableFields.length > 0 ? (
                       <Select
                         value={formData.value_field}
-                        onValueChange={(value) =>
-                          setFormData({ ...formData, value_field: value })
-                        }
+                        onValueChange={(value) => setFormData({ ...formData, value_field: value })}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select field..." />
@@ -575,15 +528,9 @@ export default function FiltersPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="equals">Equals (=)</SelectItem>
-                        <SelectItem value="less_than">
-                          Less Than (&lt;)
-                        </SelectItem>
-                        <SelectItem value="less_than_equal">
-                          Less Than or Equal (&lt;=)
-                        </SelectItem>
-                        <SelectItem value="greater_than">
-                          Greater Than (&gt;)
-                        </SelectItem>
+                        <SelectItem value="less_than">Less Than (&lt;)</SelectItem>
+                        <SelectItem value="less_than_equal">Less Than or Equal (&lt;=)</SelectItem>
+                        <SelectItem value="greater_than">Greater Than (&gt;)</SelectItem>
                         <SelectItem value="greater_than_equal">
                           Greater Than or Equal (&gt;=)
                         </SelectItem>
@@ -599,9 +546,7 @@ export default function FiltersPage() {
                     ) : availableFields.length > 0 ? (
                       <Select
                         value={formData.value_field}
-                        onValueChange={(value) =>
-                          setFormData({ ...formData, value_field: value })
-                        }
+                        onValueChange={(value) => setFormData({ ...formData, value_field: value })}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select numeric column..." />
@@ -659,29 +604,21 @@ export default function FiltersPage() {
                         <SelectValue placeholder="Select operator..." />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="between">
-                          Between (Date Range)
-                        </SelectItem>
+                        <SelectItem value="between">Between (Date Range)</SelectItem>
                         <SelectItem value="equals">Equals (=)</SelectItem>
                         <SelectItem value="less_than">Before (&lt;)</SelectItem>
-                        <SelectItem value="greater_than">
-                          After (&gt;)
-                        </SelectItem>
+                        <SelectItem value="greater_than">After (&gt;)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="value_field">Date Column</Label>
                     {isLoadingFields ? (
-                      <p className="text-xs text-muted-foreground">
-                        Loading fields...
-                      </p>
+                      <p className="text-xs text-muted-foreground">Loading fields...</p>
                     ) : availableFields.length > 0 ? (
                       <Select
                         value={formData.value_field}
-                        onValueChange={(value) =>
-                          setFormData({ ...formData, value_field: value })
-                        }
+                        onValueChange={(value) => setFormData({ ...formData, value_field: value })}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select date column..." />
@@ -721,9 +658,7 @@ export default function FiltersPage() {
                   </div>
                   {formData.operator === "between" && (
                     <div className="border rounded-md p-3 bg-muted/50">
-                      <Label className="text-sm font-medium">
-                        Date Validation (Optional)
-                      </Label>
+                      <Label className="text-sm font-medium">Date Validation (Optional)</Label>
                       <p className="text-xs text-muted-foreground mb-2">
                         Limit the date range users can select
                       </p>
@@ -789,15 +724,11 @@ export default function FiltersPage() {
                   <div className="grid gap-2">
                     <Label htmlFor="value_field">Text Column</Label>
                     {isLoadingFields ? (
-                      <p className="text-xs text-muted-foreground">
-                        Loading fields...
-                      </p>
+                      <p className="text-xs text-muted-foreground">Loading fields...</p>
                     ) : availableFields.length > 0 ? (
                       <Select
                         value={formData.value_field}
-                        onValueChange={(value) =>
-                          setFormData({ ...formData, value_field: value })
-                        }
+                        onValueChange={(value) => setFormData({ ...formData, value_field: value })}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select text column..." />
@@ -826,9 +757,7 @@ export default function FiltersPage() {
                                 type.includes("date") ||
                                 type.includes("time") ||
                                 type.includes("bool");
-                              return (
-                                (isTextType || isUnknownType) && !isNonText
-                              );
+                              return (isTextType || isUnknownType) && !isNonText;
                             })
                             .map((field) => (
                               <SelectItem key={field.name} value={field.name}>
@@ -858,8 +787,8 @@ export default function FiltersPage() {
                     <div className="text-sm text-amber-800">
                       <p className="font-medium">Performance Warning</p>
                       <p className="text-xs">
-                        Text filters (contains, starts with) prevent index usage
-                        and will result in slow queries on large datasets.
+                        Text filters (contains, starts with) prevent index usage and will result in
+                        slow queries on large datasets.
                       </p>
                     </div>
                   </div>
@@ -867,10 +796,7 @@ export default function FiltersPage() {
               )}
             </div>
             <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setIsCreateDialogOpen(false)}
-              >
+              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                 Cancel
               </Button>
               <Button onClick={handleCreate} disabled={createFilter.isPending}>
@@ -898,10 +824,7 @@ export default function FiltersPage() {
           <TableBody>
             {filters?.length === 0 ? (
               <TableRow>
-                <TableCell
-                  colSpan={7}
-                  className="text-center text-muted-foreground"
-                >
+                <TableCell colSpan={7} className="text-center text-muted-foreground">
                   No filters found. Create your first filter to get started.
                 </TableCell>
               </TableRow>
@@ -913,8 +836,8 @@ export default function FiltersPage() {
                     {filter.description || "-"}
                   </TableCell>
                   <TableCell>
-                    {dataSources?.find((ds) => ds.id === filter.data_source_id)
-                      ?.name || filter.data_source_id}
+                    {dataSources?.find((ds) => ds.id === filter.data_source_id)?.name ||
+                      filter.data_source_id}
                   </TableCell>
                   <TableCell>
                     <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
@@ -933,18 +856,10 @@ export default function FiltersPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(filter)}
-                      >
+                      <Button variant="ghost" size="icon" onClick={() => handleEdit(filter)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(filter.id)}
-                      >
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(filter.id)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -961,9 +876,7 @@ export default function FiltersPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Edit Filter</DialogTitle>
-            <DialogDescription>
-              Update the filter configuration.
-            </DialogDescription>
+            <DialogDescription>Update the filter configuration.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
@@ -971,9 +884,7 @@ export default function FiltersPage() {
               <Input
                 id="edit-name"
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               />
             </div>
             <div className="grid gap-2">
@@ -981,18 +892,13 @@ export default function FiltersPage() {
               <Textarea
                 id="edit-description"
                 value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={2}
               />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="edit-query_id">Saved Query</Label>
-              <Select
-                value={formData.query_id}
-                onValueChange={(value) => handleQueryChange(value)}
-              >
+              <Select value={formData.query_id} onValueChange={(value) => handleQueryChange(value)}>
                 <SelectTrigger id="edit-query_id">
                   <SelectValue placeholder="Select a saved query..." />
                 </SelectTrigger>
@@ -1005,8 +911,7 @@ export default function FiltersPage() {
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                Select a saved query. The data source and SQL will be
-                auto-filled.
+                Select a saved query. The data source and SQL will be auto-filled.
               </p>
             </div>
 
@@ -1015,9 +920,7 @@ export default function FiltersPage() {
               <div className="grid gap-2">
                 <Label>Display Fields (Multiple)</Label>
                 {isLoadingFields ? (
-                  <p className="text-xs text-muted-foreground">
-                    Loading fields...
-                  </p>
+                  <p className="text-xs text-muted-foreground">Loading fields...</p>
                 ) : availableFields.length > 0 ? (
                   <MultiSelect
                     options={availableFields.map((field) => ({
@@ -1025,9 +928,7 @@ export default function FiltersPage() {
                       value: field,
                     }))}
                     value={formData.display_field}
-                    onValueChange={(values) =>
-                      setFormData({ ...formData, display_field: values })
-                    }
+                    onValueChange={(values) => setFormData({ ...formData, display_field: values })}
                     placeholder="Select display fields..."
                     className="w-full"
                   />
@@ -1061,9 +962,7 @@ export default function FiltersPage() {
                 {availableFields.length > 0 ? (
                   <Select
                     value={formData.value_field}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, value_field: value })
-                    }
+                    onValueChange={(value) => setFormData({ ...formData, value_field: value })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select field..." />
@@ -1079,9 +978,7 @@ export default function FiltersPage() {
                 ) : (
                   <Input
                     value={formData.value_field}
-                    onChange={(e) =>
-                      setFormData({ ...formData, value_field: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, value_field: e.target.value })}
                     placeholder="e.g., id"
                   />
                 )}
@@ -1092,10 +989,7 @@ export default function FiltersPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsEditDialogOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
               Cancel
             </Button>
             <Button onClick={handleUpdate} disabled={updateFilter.isPending}>

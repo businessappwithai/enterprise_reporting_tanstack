@@ -1,9 +1,9 @@
-import { useState } from 'react'
-import { createFileRoute, Link } from '@tanstack/react-router'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -11,13 +11,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -26,56 +26,47 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
-import {
-  Plus,
-  MoreHorizontal,
-  Edit,
-  Trash,
-  Eye,
-  LayoutDashboard,
-  Globe,
-  Lock,
-} from 'lucide-react'
-import { toast } from 'sonner'
-import { formatDateTime } from '@/lib/utils'
-import type { DashboardLayout } from '@/types/database'
-import { useCanCreate, useCanEdit, useCanDelete } from '@/lib/hooks/usePermissions'
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Plus, MoreHorizontal, Edit, Trash, Eye, LayoutDashboard, Globe, Lock } from "lucide-react";
+import { toast } from "sonner";
+import { formatDateTime } from "@/lib/utils";
+import type { DashboardLayout } from "@/types/database";
+import { useCanCreate, useCanEdit, useCanDelete } from "@/lib/hooks/usePermissions";
 
-export const Route = createFileRoute('/_authed/dashboards/')({
+export const Route = createFileRoute("/_authed/dashboards/")({
   component: DashboardsPage,
-})
+});
 
 function DashboardsPage() {
-  const queryClient = useQueryClient()
-  const [createDialogOpen, setCreateDialogOpen] = useState(false)
-  const [editDialogOpen, setEditDialogOpen] = useState(false)
-  const [newDashboardName, setNewDashboardName] = useState('')
-  const [newDashboardDescription, setNewDashboardDescription] = useState('')
-  const [isPublic, setIsPublic] = useState(false)
-  const [editingDashboard, setEditingDashboard] = useState<DashboardLayout | null>(null)
+  const queryClient = useQueryClient();
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [newDashboardName, setNewDashboardName] = useState("");
+  const [newDashboardDescription, setNewDashboardDescription] = useState("");
+  const [isPublic, setIsPublic] = useState(false);
+  const [editingDashboard, setEditingDashboard] = useState<DashboardLayout | null>(null);
 
-  const canCreateDashboard = useCanCreate('dashboard')
-  const canEditDashboards = useCanEdit('dashboard')
-  const canDeleteDashboards = useCanDelete('dashboard')
+  const canCreateDashboard = useCanCreate("dashboard");
+  const canEditDashboards = useCanEdit("dashboard");
+  const canDeleteDashboards = useCanDelete("dashboard");
 
   const { data: dashboards, isLoading } = useQuery<DashboardLayout[]>({
-    queryKey: ['dashboards'],
+    queryKey: ["dashboards"],
     queryFn: async () => {
-      const res = await fetch('/api/dashboards')
-      const data = await res.json()
-      return data.data?.items || []
+      const res = await fetch("/api/dashboards");
+      const data = await res.json();
+      return data.data?.items || [];
     },
-  })
+  });
 
   const createMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch('/api/dashboards', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/dashboards", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: newDashboardName,
           description: newDashboardDescription,
@@ -88,74 +79,74 @@ function DashboardsPage() {
             layouts: { lg: [], md: [], sm: [], xs: [] },
           },
         }),
-      })
-      return res.json()
+      });
+      return res.json();
     },
     onSuccess: (data) => {
       if (data.success) {
-        toast.success('Dashboard created successfully')
-        queryClient.invalidateQueries({ queryKey: ['dashboards'] })
-        setCreateDialogOpen(false)
-        setNewDashboardName('')
-        setNewDashboardDescription('')
-        setIsPublic(false)
+        toast.success("Dashboard created successfully");
+        queryClient.invalidateQueries({ queryKey: ["dashboards"] });
+        setCreateDialogOpen(false);
+        setNewDashboardName("");
+        setNewDashboardDescription("");
+        setIsPublic(false);
       } else {
-        toast.error(data.error?.message || 'Failed to create dashboard')
+        toast.error(data.error?.message || "Failed to create dashboard");
       }
     },
-  })
+  });
 
   const updateMutation = useMutation({
     mutationFn: async () => {
-      if (!editingDashboard) return
+      if (!editingDashboard) return;
       const res = await fetch(`/api/dashboards/${editingDashboard.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: newDashboardName,
           description: newDashboardDescription,
           isPublic,
         }),
-      })
-      return res.json()
+      });
+      return res.json();
     },
     onSuccess: (data) => {
       if (data?.success) {
-        toast.success('Dashboard updated successfully')
-        queryClient.invalidateQueries({ queryKey: ['dashboards'] })
-        setEditDialogOpen(false)
-        setEditingDashboard(null)
-        setNewDashboardName('')
-        setNewDashboardDescription('')
-        setIsPublic(false)
+        toast.success("Dashboard updated successfully");
+        queryClient.invalidateQueries({ queryKey: ["dashboards"] });
+        setEditDialogOpen(false);
+        setEditingDashboard(null);
+        setNewDashboardName("");
+        setNewDashboardDescription("");
+        setIsPublic(false);
       } else {
-        toast.error(data?.error?.message || 'Failed to update dashboard')
+        toast.error(data?.error?.message || "Failed to update dashboard");
       }
     },
-  })
+  });
 
   const openEditDialog = (dashboard: DashboardLayout) => {
-    setEditingDashboard(dashboard)
-    setNewDashboardName(dashboard.name)
-    setNewDashboardDescription(dashboard.description || '')
-    setIsPublic(dashboard.is_public)
-    setEditDialogOpen(true)
-  }
+    setEditingDashboard(dashboard);
+    setNewDashboardName(dashboard.name);
+    setNewDashboardDescription(dashboard.description || "");
+    setIsPublic(dashboard.is_public);
+    setEditDialogOpen(true);
+  };
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/dashboards/${id}`, { method: 'DELETE' })
-      return res.json()
+      const res = await fetch(`/api/dashboards/${id}`, { method: "DELETE" });
+      return res.json();
     },
     onSuccess: (data) => {
       if (data.success) {
-        toast.success('Dashboard deleted successfully')
-        queryClient.invalidateQueries({ queryKey: ['dashboards'] })
+        toast.success("Dashboard deleted successfully");
+        queryClient.invalidateQueries({ queryKey: ["dashboards"] });
       } else {
-        toast.error(data.error?.message || 'Failed to delete dashboard')
+        toast.error(data.error?.message || "Failed to delete dashboard");
       }
     },
-  })
+  });
 
   return (
     <div className="space-y-6">
@@ -212,7 +203,7 @@ function DashboardsPage() {
                   onClick={() => createMutation.mutate()}
                   disabled={!newDashboardName || createMutation.isPending}
                 >
-                  {createMutation.isPending ? 'Creating...' : 'Create Dashboard'}
+                  {createMutation.isPending ? "Creating..." : "Create Dashboard"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -245,11 +236,7 @@ function DashboardsPage() {
                 />
               </div>
               <div className="flex items-center space-x-2">
-                <Switch
-                  id="edit-public"
-                  checked={isPublic}
-                  onCheckedChange={setIsPublic}
-                />
+                <Switch id="edit-public" checked={isPublic} onCheckedChange={setIsPublic} />
                 <Label htmlFor="edit-public">Make dashboard public</Label>
               </div>
             </div>
@@ -261,7 +248,7 @@ function DashboardsPage() {
                 onClick={() => updateMutation.mutate()}
                 disabled={!newDashboardName || updateMutation.isPending}
               >
-                {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+                {updateMutation.isPending ? "Saving..." : "Save Changes"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -299,14 +286,11 @@ function DashboardsPage() {
                   <TableRow key={dashboard.id}>
                     <TableCell className="font-medium">{dashboard.name}</TableCell>
                     <TableCell className="text-muted-foreground">
-                      {dashboard.description || '-'}
+                      {dashboard.description || "-"}
                     </TableCell>
                     <TableCell>
                       {dashboard.is_public ? (
-                        <Badge
-                          variant="secondary"
-                          className="flex items-center gap-1 w-fit"
-                        >
+                        <Badge variant="secondary" className="flex items-center gap-1 w-fit">
                           <Globe className="h-3 w-3" />
                           Public
                         </Badge>
@@ -363,5 +347,5 @@ function DashboardsPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

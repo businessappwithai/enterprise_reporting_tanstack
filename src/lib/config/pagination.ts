@@ -30,16 +30,16 @@ function getEnvNumber(key: string, defaultValue: number): number {
 function getEnvBoolean(key: string, defaultValue: boolean): boolean {
   const value = process.env[key];
   if (!value) return defaultValue;
-  return value.toLowerCase() === 'true';
+  return value.toLowerCase() === "true";
 }
 
 export const paginationConfig: PaginationConfig = {
-  defaultPageSize: getEnvNumber('DEFAULT_PAGE_SIZE', 50),
-  maxPageSize: getEnvNumber('MAX_PAGE_SIZE', 1000),
-  dataTablePageSize: getEnvNumber('DATA_TABLE_PAGE_SIZE', 500), // Server-side: 500 rows per page
-  exportPageSize: getEnvNumber('EXPORT_PAGE_SIZE', 1000),
-  virtualScrollThreshold: getEnvNumber('VIRTUAL_SCROLL_THRESHOLD', 500),
-  enableVirtualScrolling: getEnvBoolean('ENABLE_VIRTUAL_SCROLLING', true),
+  defaultPageSize: getEnvNumber("DEFAULT_PAGE_SIZE", 50),
+  maxPageSize: getEnvNumber("MAX_PAGE_SIZE", 1000),
+  dataTablePageSize: getEnvNumber("DATA_TABLE_PAGE_SIZE", 500), // Server-side: 500 rows per page
+  exportPageSize: getEnvNumber("EXPORT_PAGE_SIZE", 1000),
+  virtualScrollThreshold: getEnvNumber("VIRTUAL_SCROLL_THRESHOLD", 500),
+  enableVirtualScrolling: getEnvBoolean("ENABLE_VIRTUAL_SCROLLING", true),
 };
 
 // Client-side pagination for SQL Editor results
@@ -73,8 +73,7 @@ export function calculateOffset(page: number, pageSize: number): number {
  */
 export function shouldUseVirtualScrolling(totalRows: number): boolean {
   return (
-    paginationConfig.enableVirtualScrolling &&
-    totalRows >= paginationConfig.virtualScrollThreshold
+    paginationConfig.enableVirtualScrolling && totalRows >= paginationConfig.virtualScrollThreshold
   );
 }
 

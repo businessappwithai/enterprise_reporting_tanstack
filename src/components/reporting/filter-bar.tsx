@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { useNavigate, useSearch } from '@tanstack/react-router';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Loader2, Play, AlertTriangle } from 'lucide-react';
-import { MultiSelect } from '@/components/ui/multi-select';
-import type { FilterFieldType, FilterOperator } from '@/types/database';
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useNavigate, useSearch } from "@tanstack/react-router";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Loader2, Play, AlertTriangle } from "lucide-react";
+import { MultiSelect } from "@/components/ui/multi-select";
+import type { FilterFieldType, FilterOperator } from "@/types/database";
 
 export interface ReportFilter {
   id: string;
@@ -34,54 +34,59 @@ interface FilterBarProps {
   reportId?: string;
   chartId?: string;
   filters: ReportFilter[];
-  type: 'report' | 'chart';
+  type: "report" | "chart";
 }
 
 export function FilterBar({ reportId, chartId, filters, type }: FilterBarProps) {
   const navigate = useNavigate();
-  const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+  const searchParams = new URLSearchParams(
+    typeof window !== "undefined" ? window.location.search : ""
+  );
   const [selectedValues, setSelectedValues] = useState<Record<string, string | string[]>>({});
   const [appliedValues, setAppliedValues] = useState<Record<string, string | string[]>>({});
 
   // Get today's date in YYYY-MM-DD format
-  const getTodayDate = () => new Date().toISOString().split('T')[0];
+  const getTodayDate = () => new Date().toISOString().split("T")[0];
 
   // Initialize selected values from URL based on field type
   useEffect(() => {
     const initialValues: Record<string, string | string[]> = {};
     filters.forEach((filter) => {
       const value = searchParams.get(`filter_${filter.filter_id}`);
-      const fieldType = filter.field_type || 'id';
+      const fieldType = filter.field_type || "id";
 
       if (value) {
-        if (fieldType === 'id') {
+        if (fieldType === "id") {
           // ID fields: comma-separated values
-          initialValues[filter.filter_id] = value.split(',').map(v => v.trim()).filter(Boolean);
-        } else if (fieldType === 'number') {
+          initialValues[filter.filter_id] = value
+            .split(",")
+            .map((v) => v.trim())
+            .filter(Boolean);
+        } else if (fieldType === "number") {
           // Number fields: single value
           initialValues[filter.filter_id] = value;
-        } else if (fieldType === 'date') {
+        } else if (fieldType === "date") {
           // Date fields: two values separated by pipe (from|to)
-          const [from, to] = value.split('|');
+          const [from, to] = value.split("|");
           initialValues[filter.filter_id] = {
             from: from || getTodayDate(),
             to: to || getTodayDate(),
           };
-        } else if (fieldType === 'text') {
+        } else if (fieldType === "text") {
           // Text fields: single value
           initialValues[filter.filter_id] = value;
         }
       } else {
         // Set defaults
-        if (fieldType === 'id') {
+        if (fieldType === "id") {
           initialValues[filter.filter_id] = [];
-        } else if (fieldType === 'date') {
+        } else if (fieldType === "date") {
           initialValues[filter.filter_id] = {
             from: getTodayDate(),
             to: getTodayDate(),
           };
         } else {
-          initialValues[filter.filter_id] = '';
+          initialValues[filter.filter_id] = "";
         }
       }
     });
@@ -91,20 +96,23 @@ export function FilterBar({ reportId, chartId, filters, type }: FilterBarProps) 
 
   // Fetch filter options for ID field types only
   const filterOptionsQueries = filters
-    .filter(f => !f.field_type || f.field_type === 'id')
+    .filter((f) => !f.field_type || f.field_type === "id")
     .map((filter) => ({
       ...useQuery({
-        queryKey: ['filter-options', filter.filter_id],
+        queryKey: ["filter-options", filter.filter_id],
         queryFn: async (): Promise<FilterOption[]> => {
           const res = await fetch(`/api/filters/${filter.filter_id}/options`);
-          if (!res.ok) throw new Error('Failed to fetch filter options');
+          if (!res.ok) throw new Error("Failed to fetch filter options");
           return res.json();
         },
       }),
       filter,
     }));
 
-  const handleFilterChange = (filterId: string, value: string | string[] | { from: string; to: string }) => {
+  const handleFilterChange = (
+    filterId: string,
+    value: string | string[] | { from: string; to: string }
+  ) => {
     const newValues = { ...selectedValues, [filterId]: value };
     setSelectedValues(newValues);
     // Don't update URL immediately - wait for Run button
@@ -114,22 +122,22 @@ export function FilterBar({ reportId, chartId, filters, type }: FilterBarProps) 
     // Update URL with selected filter values based on field type
     const params = new URLSearchParams(searchParams);
     Object.entries(selectedValues).forEach(([fid, val]) => {
-      const filter = filters.find(f => f.filter_id === fid);
-      const fieldType = filter?.field_type || 'id';
+      const filter = filters.find((f) => f.filter_id === fid);
+      const fieldType = filter?.field_type || "id";
 
-      if (fieldType === 'id') {
+      if (fieldType === "id") {
         // ID fields: comma-separated
         const vals = val as string[];
         if (vals.length > 0) {
-          params.set(`filter_${fid}`, vals.join(','));
+          params.set(`filter_${fid}`, vals.join(","));
         } else {
           params.delete(`filter_${fid}`);
         }
-      } else if (fieldType === 'date') {
+      } else if (fieldType === "date") {
         // Date fields: pipe-separated (from|to)
         const dateVal = val as { from: string; to: string };
         params.set(`filter_${fid}`, `${dateVal.from}|${dateVal.to}`);
-      } else if (fieldType === 'number' || fieldType === 'text') {
+      } else if (fieldType === "number" || fieldType === "text") {
         // Number and text fields: single value
         const strVal = val as string;
         if (strVal) {
@@ -165,7 +173,7 @@ export function FilterBar({ reportId, chartId, filters, type }: FilterBarProps) 
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filters.map((filter) => {
-              const fieldType = filter.field_type || 'id';
+              const fieldType = filter.field_type || "id";
               const value = selectedValues[filter.filter_id];
               const appliedValue = appliedValues[filter.filter_id];
 
@@ -173,7 +181,7 @@ export function FilterBar({ reportId, chartId, filters, type }: FilterBarProps) 
               const hasPendingChanges = JSON.stringify(value) !== JSON.stringify(appliedValue);
 
               // Find filter options query for ID fields
-              const optionsQuery = filterOptionsQueries.find(q => q.filter.id === filter.id);
+              const optionsQuery = filterOptionsQueries.find((q) => q.filter.id === filter.id);
               const isLoading = optionsQuery?.isLoading;
               const options = optionsQuery?.data;
 
@@ -194,38 +202,39 @@ export function FilterBar({ reportId, chartId, filters, type }: FilterBarProps) 
                   </Label>
 
                   {/* ID Field Type: MultiSelect Dropdown */}
-                  {fieldType === 'id' && (
-                    isLoading ? (
+                  {fieldType === "id" &&
+                    (isLoading ? (
                       <div className="flex items-center gap-2 h-10 px-3 py-2 border rounded-md">
                         <Loader2 className="h-4 w-4 animate-spin" />
                         <span className="text-sm text-muted-foreground">Loading...</span>
                       </div>
                     ) : (
                       <MultiSelect
-                        options={options?.map((opt) => ({
-                          label: opt.label,
-                          value: String(opt.value),
-                        })) || []}
+                        options={
+                          options?.map((opt) => ({
+                            label: opt.label,
+                            value: String(opt.value),
+                          })) || []
+                        }
                         value={(value as string[]) || []}
                         onValueChange={(vals) => handleFilterChange(filter.filter_id, vals)}
                         placeholder={`Select ${filter.filter_name}...`}
                         className="w-full"
                       />
-                    )
-                  )}
+                    ))}
 
                   {/* Number Field Type: Number Input */}
-                  {fieldType === 'number' && (
+                  {fieldType === "number" && (
                     <Input
                       type="number"
-                      value={(value as string) || ''}
+                      value={(value as string) || ""}
                       onChange={(e) => handleFilterChange(filter.filter_id, e.target.value)}
                       placeholder={`Enter ${filter.filter_name.toLowerCase()}...`}
                     />
                   )}
 
                   {/* Date Field Type: Date Range Picker */}
-                  {fieldType === 'date' && (
+                  {fieldType === "date" && (
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <Label className="text-xs text-muted-foreground">From</Label>
@@ -257,11 +266,11 @@ export function FilterBar({ reportId, chartId, filters, type }: FilterBarProps) 
                   )}
 
                   {/* Text Field Type: Text Input with Warning */}
-                  {fieldType === 'text' && (
+                  {fieldType === "text" && (
                     <div>
                       <Input
                         type="text"
-                        value={(value as string) || ''}
+                        value={(value as string) || ""}
                         onChange={(e) => handleFilterChange(filter.filter_id, e.target.value)}
                         placeholder={`Enter ${filter.filter_name.toLowerCase()}...`}
                       />

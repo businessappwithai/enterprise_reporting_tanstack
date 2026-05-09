@@ -1,17 +1,23 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 interface TemplateEditorProps {
   templateId?: string;
@@ -41,18 +47,18 @@ interface PreviewData {
 
 export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorProps) {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState('content');
+  const [activeTab, setActiveTab] = useState("content");
 
   // Form state
-  const [name, setName] = useState('');
-  const [subject, setSubject] = useState('');
-  const [htmlBody, setHtmlBody] = useState('');
-  const [selectedQueryId, setSelectedQueryId] = useState<string>('');
+  const [name, setName] = useState("");
+  const [subject, setSubject] = useState("");
+  const [htmlBody, setHtmlBody] = useState("");
+  const [selectedQueryId, setSelectedQueryId] = useState<string>("");
   const [columnMappings, setColumnMappings] = useState<Record<string, string>>({});
 
   // Fetch existing template if editing
   const { data: existingTemplate, isLoading: isLoadingTemplate } = useQuery({
-    queryKey: ['email-template', templateId],
+    queryKey: ["email-template", templateId],
     queryFn: async () => {
       if (!templateId) return null;
       const res = await fetch(`/api/email-templates/${templateId}`);
@@ -68,19 +74,19 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
   // Populate form when template loads
   useEffect(() => {
     if (existingTemplate) {
-      setName(existingTemplate.name || '');
-      setSubject(existingTemplate.subject || '');
-      setHtmlBody(existingTemplate.htmlBody || '');
-      setSelectedQueryId(existingTemplate.queryId || '');
+      setName(existingTemplate.name || "");
+      setSubject(existingTemplate.subject || "");
+      setHtmlBody(existingTemplate.htmlBody || "");
+      setSelectedQueryId(existingTemplate.queryId || "");
       setColumnMappings(existingTemplate.columnMappings || {});
     }
   }, [existingTemplate]);
 
   // Fetch queries
   const { data: queries = [], isLoading: isLoadingQueries } = useQuery<Query[]>({
-    queryKey: ['queries'],
+    queryKey: ["queries"],
     queryFn: async () => {
-      const res = await fetch('/api/queries');
+      const res = await fetch("/api/queries");
       const data = await res.json();
       return data.data?.items || [];
     },
@@ -88,32 +94,32 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
 
   // Fetch query results for selected query
   const { data: queryResults = [] } = useQuery({
-    queryKey: ['query-results', selectedQueryId],
+    queryKey: ["query-results", selectedQueryId],
     queryFn: async () => {
       if (!selectedQueryId) return [];
       const res = await fetch(`/api/queries/${selectedQueryId}/execute`);
       const data = await res.json();
       return data.data?.rows?.slice(0, 5) || [];
     },
-    enabled: !!selectedQueryId && activeTab === 'mappings',
+    enabled: !!selectedQueryId && activeTab === "mappings",
   });
 
   // Preview mutation
   const previewMutation = useMutation({
     mutationFn: async () => {
       if (!templateId) {
-        throw new Error('Template must be saved first');
+        throw new Error("Template must be saved first");
       }
       const res = await fetch(`/api/email-templates/${templateId}/preview`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'preview' }),
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "preview" }),
       });
       return res.json();
     },
     onSuccess: (data) => {
       if (data.success) {
-        setActiveTab('preview');
+        setActiveTab("preview");
       }
     },
   });
@@ -121,12 +127,12 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
   // Save mutation
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const url = templateId ? `/api/email-templates/${templateId}` : '/api/email-templates';
-      const method = templateId ? 'PUT' : 'POST';
+      const url = templateId ? `/api/email-templates/${templateId}` : "/api/email-templates";
+      const method = templateId ? "PUT" : "POST";
 
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
           subject,
@@ -139,12 +145,12 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
     },
     onSuccess: (data) => {
       if (data.success) {
-        toast.success(templateId ? 'Template updated' : 'Template created');
-        queryClient.invalidateQueries({ queryKey: ['email-templates'] });
-        queryClient.invalidateQueries({ queryKey: ['email-template', templateId] });
+        toast.success(templateId ? "Template updated" : "Template created");
+        queryClient.invalidateQueries({ queryKey: ["email-templates"] });
+        queryClient.invalidateQueries({ queryKey: ["email-template", templateId] });
         onSave(data.data);
       } else {
-        toast.error(data.error?.message || 'Failed to save template');
+        toast.error(data.error?.message || "Failed to save template");
       }
     },
   });
@@ -153,19 +159,19 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
   const availableColumns = queryResults.length > 0 ? Object.keys(queryResults[0]) : [];
 
   // Extract placeholders from template
-  const placeholders = htmlBody.match(/{{(\w+)}}/g)?.map(p => p.replace(/{{|}}/g)) || [];
+  const placeholders = htmlBody.match(/{{(\w+)}}/g)?.map((p) => p.replace(/{{|}}/g)) || [];
   const uniquePlaceholders = Array.from(new Set(placeholders));
 
   const handleSave = () => {
     if (!name || !subject || !htmlBody) {
-      toast.error('Name, subject, and HTML body are required');
+      toast.error("Name, subject, and HTML body are required");
       return;
     }
     saveMutation.mutate();
   };
 
   const insertPlaceholder = (placeholder: string) => {
-    setHtmlBody(prev => prev + `{{${placeholder}}}`);
+    setHtmlBody((prev) => prev + `{{${placeholder}}}`);
   };
 
   if (isLoadingTemplate) {
@@ -221,7 +227,8 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
               className="font-mono text-sm"
             />
             <p className="text-xs text-muted-foreground">
-              Use {'{{placeholder}}'} syntax for variables. Available: {'{{#if var}}...{{/if}}'} for conditionals
+              Use {"{{placeholder}}"} syntax for variables. Available: {"{{#if var}}...{{/if}}"} for
+              conditionals
             </p>
           </div>
         </TabsContent>
@@ -235,17 +242,17 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
             </p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
               {[
-                'customer_name',
-                'email',
-                'invoice_number',
-                'amount',
-                'due_date',
-                'month',
-                'year',
-                'company_name',
-                'queryResults',
-                '_rowNumber',
-                '_totalRows',
+                "customer_name",
+                "email",
+                "invoice_number",
+                "amount",
+                "due_date",
+                "month",
+                "year",
+                "company_name",
+                "queryResults",
+                "_rowNumber",
+                "_totalRows",
               ].map((placeholder) => (
                 <Button
                   key={placeholder}
@@ -266,11 +273,11 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
               Use conditional blocks to show/hide content:
             </p>
             <code className="text-xs bg-background p-2 rounded block">
-              {'{{#if amount}}'}
+              {"{{#if amount}}"}
               <br />
-              {'  Total: {{amount}}'}
+              {"  Total: {{amount}}"}
               <br />
-              {'{{/if}}'}
+              {"{{/if}}"}
             </code>
           </div>
         </TabsContent>
@@ -292,7 +299,8 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              Connect a query to fetch data for placeholders (e.g., customer data for billing emails)
+              Connect a query to fetch data for placeholders (e.g., customer data for billing
+              emails)
             </p>
           </div>
 
@@ -311,9 +319,9 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
                     </span>
                     <span className="text-muted-foreground">→</span>
                     <Select
-                      value={columnMappings[placeholder] || ''}
+                      value={columnMappings[placeholder] || ""}
                       onValueChange={(value) => {
-                        setColumnMappings(prev => ({
+                        setColumnMappings((prev) => ({
                           ...prev,
                           [placeholder]: value,
                         }));
@@ -358,7 +366,7 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
                         <tr key={i} className="border-b">
                           {availableColumns.map((col) => (
                             <td key={col} className="p-2">
-                              {String(row[col] ?? '')}
+                              {String(row[col] ?? "")}
                             </td>
                           ))}
                         </tr>
@@ -385,9 +393,7 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
               onClick={() => previewMutation.mutate()}
               disabled={previewMutation.isPending}
             >
-              {previewMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : null}
+              {previewMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Refresh Preview
             </Button>
           </div>
@@ -395,7 +401,7 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
           {previewMutation.data?.success ? (
             <div className="space-y-4">
               <div className="text-sm text-muted-foreground">
-                Showing {previewMutation.data.data.previewingFirst} of{' '}
+                Showing {previewMutation.data.data.previewingFirst} of{" "}
                 {previewMutation.data.data.totalRows} rows
               </div>
 
@@ -430,10 +436,8 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
           Cancel
         </Button>
         <Button onClick={handleSave} disabled={saveMutation.isPending}>
-          {saveMutation.isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-          ) : null}
-          {templateId ? 'Update Template' : 'Create Template'}
+          {saveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+          {templateId ? "Update Template" : "Create Template"}
         </Button>
       </div>
     </div>

@@ -5,37 +5,32 @@
  * Lists all entities for a datasource with metadata (for CRUD interface).
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { EntityService } from '@/lib/metadata/entity-service';
-import { hasPermission, getSecurityContext } from '@/lib/auth/rbac';
+import { type NextRequest, NextResponse } from "next/server";
+import { EntityService } from "@/lib/metadata/entity-service";
+import { hasPermission, getSecurityContext } from "@/lib/auth/rbac";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const context = await getSecurityContext();
     if (!context) {
       return NextResponse.json(
-        { success: false, error: { code: 'UNAUTHORIZED' } },
+        { success: false, error: { code: "UNAUTHORIZED" } },
         { status: 401 }
       );
     }
 
-    const canView = hasPermission(context, 'metadata_entity:view') ??
-      context.user.permissions.includes('metadata_entity:view');
+    const canView =
+      hasPermission(context, "metadata_entity:view") ??
+      context.user.permissions.includes("metadata_entity:view");
 
     if (!canView) {
-      return NextResponse.json(
-        { success: false, error: { code: 'FORBIDDEN' } },
-        { status: 403 }
-      );
+      return NextResponse.json({ success: false, error: { code: "FORBIDDEN" } }, { status: 403 });
     }
 
     // Parse query parameters
     const searchParams = request.nextUrl.searchParams;
-    const includeFields = searchParams.get('include_fields') === 'true';
-    const activeOnly = searchParams.get('active_only') !== 'false'; // default true
+    const includeFields = searchParams.get("include_fields") === "true";
+    const activeOnly = searchParams.get("active_only") !== "false"; // default true
 
     // List entities for this datasource
     const result = await EntityService.list({
@@ -60,13 +55,13 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Error listing datasource entities:', error);
+    console.error("Error listing datasource entities:", error);
     return NextResponse.json(
       {
         success: false,
         error: {
-          code: 'INTERNAL_ERROR',
-          message: 'Failed to list datasource entities',
+          code: "INTERNAL_ERROR",
+          message: "Failed to list datasource entities",
         },
       },
       { status: 500 }

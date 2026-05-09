@@ -1,110 +1,109 @@
-'use server'
+"use server";
 
-import { createServerFn } from '@tanstack/react-start'
-import { getDb } from '@/lib/db/config'
-import { getConnection } from '@/lib/db/connection-manager'
-import { isReadOnlyQuery } from '@/lib/sql/validator'
-import { validateSQLWithAllowlist, extractTables, extractColumns } from '@/lib/sql/antlr-validator'
-import { logAudit } from '@/lib/security/audit'
-import { validatePageSize, sqlEditorConfig } from '@/lib/config/pagination'
-import { requireAuth } from '@/lib/auth/middleware'
-import type { DataSource } from '@/types/database'
+import { createServerFn } from "@tanstack/react-start";
+import { getDb } from "@/lib/db/config";
+import { getConnection } from "@/lib/db/connection-manager";
+import { isReadOnlyQuery } from "@/lib/sql/validator";
+import { validateSQLWithAllowlist, extractTables, extractColumns } from "@/lib/sql/antlr-validator";
+import { logAudit } from "@/lib/security/audit";
+import { validatePageSize, sqlEditorConfig } from "@/lib/config/pagination";
+import { requireAuth } from "@/lib/auth/middleware";
+import type { DataSource } from "@/types/database";
 
 interface ExecuteQueryInput {
-  sql: string
-  dataSourceId: string
-  limit?: number
-  offset?: number
-  timeout?: number
+  sql: string;
+  dataSourceId: string;
+  limit?: number;
+  offset?: number;
+  timeout?: number;
 }
 
 interface ValidateQueryInput {
-  sql: string
-  dataSourceId?: string
+  sql: string;
+  dataSourceId?: string;
 }
 
 interface SchemaIntrospectionInput {
-  dataSourceId: string
+  dataSourceId: string;
 }
 
-const DEFAULT_TIMEOUT = 30000
+const DEFAULT_TIMEOUT = 30000;
 
 export const executeSql = createServerFn({
-  method: 'POST',
+  method: "POST",
 }).handler(async (input: ExecuteQueryInput) => {
-  const session = await requireAuth()
-  const { sql, dataSourceId, limit, offset = 0, timeout = DEFAULT_TIMEOUT } = input
+  const session = await requireAuth();
+  const { sql, dataSourceId, limit, offset = 0, timeout = DEFAULT_TIMEOUT } = input;
 
   if (!sql) {
-    throw new Error('SQL content is required')
+    throw new Error("SQL content is required");
   }
 
   if (!dataSourceId) {
-    throw new Error('Data source ID is required')
+    throw new Error("Data source ID is required");
   }
 
   if (!isReadOnlyQuery(sql)) {
-    throw new Error('Only SELECT queries are allowed in the SQL editor')
+    throw new Error("Only SELECT queries are allowed in the SQL editor");
   }
 
   // ANTLR validation: keyword allowlist enforcement (D11)
-  const antlrValidation = validateSQLWithAllowlist(sql)
+  const antlrValidation = validateSQLWithAllowlist(sql);
   if (!antlrValidation.valid) {
-    const errorMessages = antlrValidation.errors
-      .map(e => e.message)
-      .join('; ')
-    throw new Error(`SQL validation failed: ${errorMessages}`)
+    const errorMessages = antlrValidation.errors.map((e) => e.message).join("; ");
+    throw new Error(`SQL validation failed: ${errorMessages}`);
   }
 
   // Log validation warnings for security audit
   if (antlrValidation.warnings.length > 0) {
-    const securityWarnings = antlrValidation.warnings.filter(w => w.type === 'security')
+    const securityWarnings = antlrValidation.warnings.filter((w) => w.type === "security");
     if (securityWarnings.length > 0) {
       await logAudit({
         userId: session.user.id,
-        action: 'sql_validation_warning',
-        resourceType: 'query',
+        action: "sql_validation_warning",
+        resourceType: "query",
         resourceId: dataSourceId,
         details: {
-          warnings: securityWarnings.map(w => w.message),
+          warnings: securityWarnings.map((w) => w.message),
           sql: sql.substring(0, 200),
         },
-      })
+      });
     }
   }
 
-  const db = getDb()
+  const db = getDb();
   const dataSource = await db
-    .selectFrom('data_sources')
+    .selectFrom("data_sources")
     .selectAll()
-    .where('id', '=', dataSourceId)
-    .where('is_active', '=', true)
-    .executeTakeFirst()
+    .where("id", "=", dataSourceId)
+    .where("is_active", "=", true)
+    .executeTakeFirst();
 
   if (!dataSource) {
-    throw new Error('Data source not found')
+    throw new Error("Data source not found");
   }
 
-  const connection = await getConnection(dataSource)
-  const PAGE_SIZE = sqlEditorConfig.serverPageSize
-  const MAX_CLIENT_ROWS = sqlEditorConfig.maxClientRows
+  const connection = await getConnection(dataSource);
+  const PAGE_SIZE = sqlEditorConfig.serverPageSize;
+  const MAX_CLIENT_ROWS = sqlEditorConfig.maxClientRows;
 
-  let totalRowCount = 0
-  const countSQL = `SELECT COUNT(*) as total FROM (${sql.replace(/;$/, '')}) as count_query`
+  let totalRowCount = 0;
+  const countSQL = `SELECT COUNT(*) as total FROM (${sql.replace(/;$/, "")}) as count_query`;
 
   try {
-    const countResult = dataSource.client_type === 'sqlite3'
-      ? await connection.raw(countSQL)
-      : await connection.raw(countSQL).timeout(5000)
+    const countResult =
+      dataSource.client_type === "sqlite3"
+        ? await connection.raw(countSQL)
+        : await connection.raw(countSQL).timeout(5000);
 
     if (Array.isArray(countResult) && countResult[0]) {
-      totalRowCount = Number(countResult[0].total) || 0
+      totalRowCount = Number(countResult[0].total) || 0;
     }
   } catch (e) {
-    console.error('Could not count total rows:', e)
+    console.error("Could not count total rows:", e);
   }
 
-  const tooLargeForInteractive = totalRowCount > MAX_CLIENT_ROWS
+  const tooLargeForInteractive = totalRowCount > MAX_CLIENT_ROWS;
   if (tooLargeForInteractive) {
     return {
       columns: [],
@@ -114,67 +113,72 @@ export const executeSql = createServerFn({
       truncated: false,
       pagination: { limit: PAGE_SIZE, offset, hasMore: false, serverSide: true },
       warning: {
-        code: 'DATASET_TOO_LARGE',
+        code: "DATASET_TOO_LARGE",
         message: `Query returns ${totalRowCount.toLocaleString()} rows, which exceeds the interactive limit of ${MAX_CLIENT_ROWS.toLocaleString()} rows.`,
-        suggestion: 'Run this query as a background job instead.',
+        suggestion: "Run this query as a background job instead.",
         totalRows: totalRowCount,
         interactiveLimit: MAX_CLIENT_ROWS,
       },
-    }
+    };
   }
 
-  let limitedSQL = sql.trim()
-  const effectiveLimit = validatePageSize(limit || sqlEditorConfig.serverPageSize)
+  let limitedSQL = sql.trim();
+  const effectiveLimit = validatePageSize(limit || sqlEditorConfig.serverPageSize);
 
   if (!/\bLIMIT\s+\d+/i.test(limitedSQL) && !/\bTOP\s+\d+/i.test(limitedSQL)) {
-    if (limitedSQL.endsWith(';')) limitedSQL = limitedSQL.slice(0, -1)
-    limitedSQL = `${limitedSQL} LIMIT ${effectiveLimit} OFFSET ${offset}`
-  } else if (/\bLIMIT\s+\d+/i.test(limitedSQL) && !/\bOFFSET\s+\d+/i.test(limitedSQL) && offset > 0) {
-    if (limitedSQL.endsWith(';')) limitedSQL = limitedSQL.slice(0, -1)
-    limitedSQL = `${limitedSQL} OFFSET ${offset}`
+    if (limitedSQL.endsWith(";")) limitedSQL = limitedSQL.slice(0, -1);
+    limitedSQL = `${limitedSQL} LIMIT ${effectiveLimit} OFFSET ${offset}`;
+  } else if (
+    /\bLIMIT\s+\d+/i.test(limitedSQL) &&
+    !/\bOFFSET\s+\d+/i.test(limitedSQL) &&
+    offset > 0
+  ) {
+    if (limitedSQL.endsWith(";")) limitedSQL = limitedSQL.slice(0, -1);
+    limitedSQL = `${limitedSQL} OFFSET ${offset}`;
   }
 
-  const limitMatch = limitedSQL.match(/\bLIMIT\s+(\d+)/i)
+  const limitMatch = limitedSQL.match(/\bLIMIT\s+(\d+)/i);
   if (limitMatch) {
-    const userLimit = parseInt(limitMatch[1], 10)
-    const validatedLimit = validatePageSize(userLimit)
+    const userLimit = parseInt(limitMatch[1], 10);
+    const validatedLimit = validatePageSize(userLimit);
     if (userLimit !== validatedLimit) {
-      limitedSQL = limitedSQL.replace(/\bLIMIT\s+\d+/i, `LIMIT ${validatedLimit}`)
+      limitedSQL = limitedSQL.replace(/\bLIMIT\s+\d+/i, `LIMIT ${validatedLimit}`);
     }
   }
 
-  const startTime = Date.now()
-  const result = dataSource.client_type === 'sqlite3'
-    ? await connection.raw(limitedSQL)
-    : await connection.raw(limitedSQL).timeout(timeout)
+  const startTime = Date.now();
+  const result =
+    dataSource.client_type === "sqlite3"
+      ? await connection.raw(limitedSQL)
+      : await connection.raw(limitedSQL).timeout(timeout);
 
-  const executionTime = Date.now() - startTime
+  const executionTime = Date.now() - startTime;
 
-  let rows: Record<string, unknown>[] = []
-  let columns: { name: string; type: string }[] = []
+  let rows: Record<string, unknown>[] = [];
+  let columns: { name: string; type: string }[] = [];
 
   if (Array.isArray(result)) {
-    rows = result
+    rows = result;
   } else if (result.rows) {
-    rows = result.rows
+    rows = result.rows;
   } else if (result[0]) {
-    rows = Array.isArray(result[0]) ? result[0] : [result[0]]
+    rows = Array.isArray(result[0]) ? result[0] : [result[0]];
   }
 
   if (rows.length > 0) {
     columns = Object.keys(rows[0]).map((name) => ({
       name,
       type: typeof rows[0][name],
-    }))
+    }));
   }
 
   await logAudit({
     userId: session.user.id,
-    action: 'execute',
-    resourceType: 'query',
+    action: "execute",
+    resourceType: "query",
     resourceId: dataSourceId,
     details: { sql: sql.substring(0, 500), rowCount: rows.length, executionTime },
-  })
+  });
 
   return {
     columns,
@@ -187,87 +191,90 @@ export const executeSql = createServerFn({
       limit: PAGE_SIZE,
       offset,
       totalRows: totalRowCount,
-      hasMore: totalRowCount > 0 ? (offset + rows.length) < totalRowCount : false,
+      hasMore: totalRowCount > 0 ? offset + rows.length < totalRowCount : false,
       serverSide: true,
       maxClientRows: MAX_CLIENT_ROWS,
     },
-  }
-})
+  };
+});
 
 export const validateSql = createServerFn({
-  method: 'POST',
+  method: "POST",
 }).handler(async (input: ValidateQueryInput) => {
-  const session = await requireAuth()
-  const { sql, dataSourceId } = input
+  const session = await requireAuth();
+  const { sql, dataSourceId } = input;
 
   if (!sql) {
-    throw new Error('SQL content is required')
+    throw new Error("SQL content is required");
   }
 
-  const { validateSQL } = await import('@/lib/sql/validator')
-  let dialect = 'sqlite3'
+  const { validateSQL } = await import("@/lib/sql/validator");
+  let dialect = "sqlite3";
 
   if (dataSourceId) {
-    const db = getDb()
+    const db = getDb();
     const dataSource = await db
-      .selectFrom('data_sources')
+      .selectFrom("data_sources")
       .selectAll()
-      .where('id', '=', dataSourceId)
-      .executeTakeFirst()
+      .where("id", "=", dataSourceId)
+      .executeTakeFirst();
     if (dataSource) {
-      dialect = dataSource.client_type
+      dialect = dataSource.client_type;
     }
   }
 
-  return validateSQL(sql, dialect)
-})
+  return validateSQL(sql, dialect);
+});
 
 export const introspectSchema = createServerFn({
-  method: 'GET',
+  method: "GET",
 }).handler(async (input: SchemaIntrospectionInput) => {
-  const session = await requireAuth()
-  const { dataSourceId } = input
+  const session = await requireAuth();
+  const { dataSourceId } = input;
 
-  const db = getDb()
+  const db = getDb();
   const dataSource = await db
-    .selectFrom('data_sources')
+    .selectFrom("data_sources")
     .selectAll()
-    .where('id', '=', dataSourceId)
-    .where('is_active', '=', true)
-    .executeTakeFirst()
+    .where("id", "=", dataSourceId)
+    .where("is_active", "=", true)
+    .executeTakeFirst();
 
   if (!dataSource) {
-    throw new Error('Data source not found or not active')
+    throw new Error("Data source not found or not active");
   }
 
-  const connection = await getConnection(dataSource)
-  const { introspectSchema: introspect } = await import('@/lib/sql/schema-introspection')
-  const { schema, logs } = await introspect(connection, dataSource.client_type)
+  const connection = await getConnection(dataSource);
+  const { introspectSchema: introspect } = await import("@/lib/sql/schema-introspection");
+  const { schema, logs } = await introspect(connection, dataSource.client_type);
 
-  let syncResult
+  let syncResult;
   try {
-    const { SyncService } = await import('@/lib/metadata/sync-service')
-    syncResult = await SyncService.syncDataSource(dataSourceId, session.user.id)
+    const { SyncService } = await import("@/lib/metadata/sync-service");
+    syncResult = await SyncService.syncDataSource(dataSourceId, session.user.id);
   } catch (e) {
-    console.error('[Schema Sync] Failed to sync metadata:', e)
+    console.error("[Schema Sync] Failed to sync metadata:", e);
   }
 
   if (schema.tables.length === 0 && schema.views.length === 0) {
     return {
       ...schema,
       logs,
-      warning: 'No tables or views found in this database. The database may be empty or you may not have permission to access the tables.',
-    }
+      warning:
+        "No tables or views found in this database. The database may be empty or you may not have permission to access the tables.",
+    };
   }
 
   return {
     ...schema,
     logs,
-    metadataSync: syncResult ? {
-      entitiesCreated: syncResult.entitiesCreated,
-      entitiesUpdated: syncResult.entitiesUpdated,
-      fieldsCreated: syncResult.fieldsCreated,
-      fieldsUpdated: syncResult.fieldsUpdated,
-    } : undefined,
-  }
-})
+    metadataSync: syncResult
+      ? {
+          entitiesCreated: syncResult.entitiesCreated,
+          entitiesUpdated: syncResult.entitiesUpdated,
+          fieldsCreated: syncResult.fieldsCreated,
+          fieldsUpdated: syncResult.fieldsUpdated,
+        }
+      : undefined,
+  };
+});

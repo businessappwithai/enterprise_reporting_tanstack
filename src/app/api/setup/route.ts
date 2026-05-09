@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from "next/server";
 
 // This endpoint initializes the database
 // It should only be used for first-time setup
 export async function POST(_request: NextRequest) {
   try {
     // Import modules
-    const knex = require('knex');
-    const path = require('path');
-    const fs = require('fs');
+    const knex = require("knex");
+    const path = require("path");
+    const fs = require("fs");
 
-    const dbPath = process.env.DATABASE_PATH || path.join(process.cwd(), 'data', 'config.sqlite');
+    const dbPath = process.env.DATABASE_PATH || path.join(process.cwd(), "data", "config.sqlite");
 
     // Ensure data directory exists
     const dataDir = path.dirname(dbPath);
@@ -19,7 +19,7 @@ export async function POST(_request: NextRequest) {
 
     // Create knex instance for SQLite using better-sqlite3 client
     const knexInstance = knex({
-      client: 'better-sqlite3',
+      client: "better-sqlite3",
       connection: {
         filename: dbPath,
       },
@@ -27,18 +27,19 @@ export async function POST(_request: NextRequest) {
     });
 
     // Run migrations directly using createRequire
-    const { createRequire } = require('module');
-    const migrationsDir = '/app/migrations';
+    const { createRequire } = require("module");
+    const migrationsDir = "/app/migrations";
 
     if (!fs.existsSync(migrationsDir)) {
       throw new Error(`Migrations directory not found: ${migrationsDir}`);
     }
 
     // Create require from a file that exists in the container
-    const nodeRequire = createRequire('/app/server.js');
+    const nodeRequire = createRequire("/app/server.js");
 
-    const migrationFiles = fs.readdirSync(migrationsDir)
-      .filter(f => f.endsWith('.js'))
+    const migrationFiles = fs
+      .readdirSync(migrationsDir)
+      .filter((f) => f.endsWith(".js"))
       .sort();
 
     for (const file of migrationFiles) {
@@ -50,7 +51,7 @@ export async function POST(_request: NextRequest) {
 
         console.log(`Migration loaded: ${file}, up: ${typeof migration?.up}`);
 
-        if (typeof migration?.up === 'function') {
+        if (typeof migration?.up === "function") {
           console.log(`Running migration: ${file}...`);
           await migration.up(knexInstance);
           console.log(`✅ Ran migration: ${file}`);
@@ -67,12 +68,12 @@ export async function POST(_request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Database initialized successfully'
+      message: "Database initialized successfully",
     });
   } catch (error) {
-    console.error('Setup error:', error);
+    console.error("Setup error:", error);
     return NextResponse.json(
-      { error: 'Failed to initialize database', details: String(error) },
+      { error: "Failed to initialize database", details: String(error) },
       { status: 500 }
     );
   }
@@ -80,7 +81,7 @@ export async function POST(_request: NextRequest) {
 
 export async function GET() {
   return NextResponse.json({
-    status: 'ok',
-    message: 'Setup endpoint - POST to initialize database'
+    status: "ok",
+    message: "Setup endpoint - POST to initialize database",
   });
 }

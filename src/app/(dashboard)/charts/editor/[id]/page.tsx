@@ -1,24 +1,24 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { ChartRenderer } from '@/components/charts/chart-renderer';
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { ChartRenderer } from "@/components/charts/chart-renderer";
 import {
   ArrowLeft,
   Save,
@@ -32,8 +32,8 @@ import {
   Trash2,
   Info,
   X,
-} from 'lucide-react';
-import { toast } from 'sonner';
+} from "lucide-react";
+import { toast } from "sonner";
 import type {
   ChartDefinition,
   SavedQuery,
@@ -43,57 +43,70 @@ import type {
   SeriesMapping,
   AxisMapping,
   FilterDefinition,
-} from '@/types/database';
+} from "@/types/database";
 
-const chartTypes: { type: ChartType; icon: React.ReactNode; label: string; description: string; usage: string }[] = [
+const chartTypes: {
+  type: ChartType;
+  icon: React.ReactNode;
+  label: string;
+  description: string;
+  usage: string;
+}[] = [
   {
-    type: 'bar',
+    type: "bar",
     icon: <BarChart3 className="h-5 w-5" />,
-    label: 'Bar Chart',
-    description: 'Compare values across different categories using vertical bars',
-    usage: 'Best for: Comparing sales by region, population by country, revenue by product. Requires: 1 category field (X-axis) and 1+ value fields (Y-axis).'
+    label: "Bar Chart",
+    description: "Compare values across different categories using vertical bars",
+    usage:
+      "Best for: Comparing sales by region, population by country, revenue by product. Requires: 1 category field (X-axis) and 1+ value fields (Y-axis).",
   },
   {
-    type: 'line',
+    type: "line",
     icon: <LineChart className="h-5 w-5" />,
-    label: 'Line Chart',
-    description: 'Show trends and changes over time with connected data points',
-    usage: 'Best for: Stock prices, temperature over time, website traffic. Requires: 1 time/sequence field (X-axis) and 1+ value fields (Y-axis).'
+    label: "Line Chart",
+    description: "Show trends and changes over time with connected data points",
+    usage:
+      "Best for: Stock prices, temperature over time, website traffic. Requires: 1 time/sequence field (X-axis) and 1+ value fields (Y-axis).",
   },
   {
-    type: 'area',
+    type: "area",
     icon: <AreaChart className="h-5 w-5" />,
-    label: 'Area Chart',
-    description: 'Show volume over time with filled areas under the line',
-    usage: 'Best for: Cumulative revenue, website traffic over time, inventory levels. Requires: 1 time/sequence field (X-axis) and 1+ value fields (Y-axis).'
+    label: "Area Chart",
+    description: "Show volume over time with filled areas under the line",
+    usage:
+      "Best for: Cumulative revenue, website traffic over time, inventory levels. Requires: 1 time/sequence field (X-axis) and 1+ value fields (Y-axis).",
   },
   {
-    type: 'pie',
+    type: "pie",
     icon: <PieChart className="h-5 w-5" />,
-    label: 'Pie Chart',
-    description: 'Show proportions and percentages of a whole',
-    usage: 'Best for: Market share, budget allocation, survey results. Requires: 1 category field (X-axis) and 1 numeric value field (Y-axis). Shows data for the first series only.'
+    label: "Pie Chart",
+    description: "Show proportions and percentages of a whole",
+    usage:
+      "Best for: Market share, budget allocation, survey results. Requires: 1 category field (X-axis) and 1 numeric value field (Y-axis). Shows data for the first series only.",
   },
   {
-    type: 'scatter',
+    type: "scatter",
     icon: <ScatterChart className="h-5 w-5" />,
-    label: 'Scatter Plot',
-    description: 'Show correlation and distribution between two numeric variables',
-    usage: 'Best for: Height vs weight, price vs demand, advertising vs sales. Requires: 2 numeric value fields (X and Y axes).'
+    label: "Scatter Plot",
+    description: "Show correlation and distribution between two numeric variables",
+    usage:
+      "Best for: Height vs weight, price vs demand, advertising vs sales. Requires: 2 numeric value fields (X and Y axes).",
   },
   {
-    type: 'column',
+    type: "column",
     icon: <BarChart3 className="h-5 w-5" />,
-    label: 'Column Chart',
-    description: 'Compare values across categories using horizontal bars',
-    usage: 'Best for: Long category names, ranking data, comparing performance. Requires: 1 category field (X-axis) and 1+ value fields (Y-axis).'
+    label: "Column Chart",
+    description: "Compare values across categories using horizontal bars",
+    usage:
+      "Best for: Long category names, ranking data, comparing performance. Requires: 1 category field (X-axis) and 1+ value fields (Y-axis).",
   },
   {
-    type: 'doughnut',
+    type: "doughnut",
     icon: <PieChart className="h-5 w-5" />,
-    label: 'Doughnut Chart',
-    description: 'Show proportions with a hollow center, similar to pie chart',
-    usage: 'Best for: Showing progress toward goals, metric breakdown with center text. Requires: 1 category field and 1 numeric value. Shows first series only.'
+    label: "Doughnut Chart",
+    description: "Show proportions with a hollow center, similar to pie chart",
+    usage:
+      "Best for: Showing progress toward goals, metric breakdown with center text. Requires: 1 category field and 1 numeric value. Shows first series only.",
   },
 ];
 
@@ -104,23 +117,23 @@ export default function ChartEditorPage() {
   const chartId = params.id as string;
 
   // Form state
-  const [chartName, setChartName] = useState('');
-  const [chartDescription, setChartDescription] = useState('');
-  const [chartType, setChartType] = useState<ChartType>('bar');
-  const [selectedQueryId, setSelectedQueryId] = useState('');
+  const [chartName, setChartName] = useState("");
+  const [chartDescription, setChartDescription] = useState("");
+  const [chartType, setChartType] = useState<ChartType>("bar");
+  const [selectedQueryId, setSelectedQueryId] = useState("");
   const [chartConfig, setChartConfig] = useState<ChartConfig>({
-    title: { show: true, text: '' },
-    legend: { show: true, position: 'bottom' },
+    title: { show: true, text: "" },
+    legend: { show: true, position: "bottom" },
     tooltip: { enabled: true },
     animation: true,
     stacked: false,
-    colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+    colors: ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"],
   });
   const [dataMapping, setDataMapping] = useState<DataMapping>({
-    xAxis: { field: '', label: '' },
+    xAxis: { field: "", label: "" },
     yAxis: [],
-    groupBy: '',
-    colorBy: '',
+    groupBy: "",
+    colorBy: "",
   });
 
   // Preview state
@@ -128,25 +141,25 @@ export default function ChartEditorPage() {
   const [previewData, setPreviewData] = useState<Record<string, unknown>[]>([]);
 
   // Reusable filter selector state
-  const [selectedFilterId, setSelectedFilterId] = useState<string>('');
-  const [targetColumn, setTargetColumn] = useState<string>('');
+  const [selectedFilterId, setSelectedFilterId] = useState<string>("");
+  const [targetColumn, setTargetColumn] = useState<string>("");
 
   // Fetch chart definition
   const { data: chart, isLoading: _chartLoading } = useQuery<ChartDefinition>({
-    queryKey: ['chart', chartId],
+    queryKey: ["chart", chartId],
     queryFn: async () => {
       const res = await fetch(`/api/charts/${chartId}`);
       const data = await res.json();
       return data.data;
     },
-    enabled: !!chartId && chartId !== 'new',
+    enabled: !!chartId && chartId !== "new",
   });
 
   // Fetch available queries
   const { data: queries, isLoading: _queriesLoading } = useQuery<SavedQuery[]>({
-    queryKey: ['queries'],
+    queryKey: ["queries"],
     queryFn: async () => {
-      const res = await fetch('/api/queries');
+      const res = await fetch("/api/queries");
       const data = await res.json();
       return data.data?.items || [];
     },
@@ -154,9 +167,9 @@ export default function ChartEditorPage() {
 
   // Fetch available filters
   const { data: availableFilters } = useQuery<FilterDefinition[]>({
-    queryKey: ['filters'],
+    queryKey: ["filters"],
     queryFn: async () => {
-      const res = await fetch('/api/filters');
+      const res = await fetch("/api/filters");
       if (!res.ok) return [];
       return res.json();
     },
@@ -164,36 +177,36 @@ export default function ChartEditorPage() {
 
   // Fetch chart filters (link table)
   const { data: chartFilters, refetch: refetchChartFilters } = useQuery({
-    queryKey: ['chart-filters', chartId],
+    queryKey: ["chart-filters", chartId],
     queryFn: async () => {
-      if (chartId === 'new') return [];
+      if (chartId === "new") return [];
       const res = await fetch(`/api/charts/${chartId}/filters`);
       if (!res.ok) return [];
       return res.json();
     },
-    enabled: !!chartId && chartId !== 'new',
+    enabled: !!chartId && chartId !== "new",
   });
 
   // Fetch query results for preview - always use the selected query's results
   const { data: queryResults, isLoading: queryResultsLoading } = useQuery({
-    queryKey: ['chart-data-preview', selectedQueryId, chartId],
+    queryKey: ["chart-data-preview", selectedQueryId, chartId],
     queryFn: async () => {
       if (!selectedQueryId) return { rows: [] };
 
-      console.log('[ChartEditor] Fetching query results for query:', selectedQueryId);
+      console.log("[ChartEditor] Fetching query results for query:", selectedQueryId);
       // Always execute the selected query to get fresh data
       // This ensures when changing data source/query, we get new fields
       const res = await fetch(`/api/queries/${selectedQueryId}/execute`, {
-        method: 'POST',
+        method: "POST",
       });
 
       if (!res.ok) {
-        console.error('[ChartEditor] Error executing query:', res.status, res.statusText);
+        console.error("[ChartEditor] Error executing query:", res.status, res.statusText);
         return { rows: [] };
       }
 
       const data = await res.json();
-      console.log('[ChartEditor] Query results:', data);
+      console.log("[ChartEditor] Query results:", data);
       return data.data;
     },
     enabled: !!selectedQueryId,
@@ -202,37 +215,46 @@ export default function ChartEditorPage() {
   // Load chart data into form
   useEffect(() => {
     if (chart) {
-      console.log('[ChartEditor] Loading chart:', chart);
-      setChartName(chart.name || '');
-      setChartDescription(chart.description || '');
-      setChartType(chart.chart_type || 'bar');
-      setSelectedQueryId(chart.saved_query_id || '');
+      console.log("[ChartEditor] Loading chart:", chart);
+      setChartName(chart.name || "");
+      setChartDescription(chart.description || "");
+      setChartType(chart.chart_type || "bar");
+      setSelectedQueryId(chart.saved_query_id || "");
 
       // Safely parse chart config with defaults
       if (chart.chart_config) {
         try {
           let configStr = chart.chart_config;
-          console.log('[ChartEditor] chart_config raw:', configStr, 'Type:', typeof configStr);
+          console.log("[ChartEditor] chart_config raw:", configStr, "Type:", typeof configStr);
 
           // Handle double-escaped JSON
-          if (typeof configStr === 'string' && configStr.startsWith('"') && configStr.includes('\\"')) {
-            console.log('[ChartEditor] Detected double-escaped chart_config, parsing twice');
+          if (
+            typeof configStr === "string" &&
+            configStr.startsWith('"') &&
+            configStr.includes('\\"')
+          ) {
+            console.log("[ChartEditor] Detected double-escaped chart_config, parsing twice");
             configStr = JSON.parse(configStr);
           }
 
-          const parsed = typeof configStr === 'string' ? JSON.parse(configStr) : configStr;
-          console.log('[ChartEditor] Parsed chart config:', parsed);
+          const parsed = typeof configStr === "string" ? JSON.parse(configStr) : configStr;
+          console.log("[ChartEditor] Parsed chart config:", parsed);
 
           setChartConfig({
-            title: parsed.title || { show: true, text: '' },
-            legend: parsed.legend || { show: true, position: 'bottom' },
+            title: parsed.title || { show: true, text: "" },
+            legend: parsed.legend || { show: true, position: "bottom" },
             tooltip: parsed.tooltip || { enabled: true },
             animation: parsed.animation !== undefined ? parsed.animation : true,
             stacked: parsed.stacked || false,
-            colors: parsed.colors || ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+            colors: parsed.colors || ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"],
           });
         } catch (e) {
-          console.error('[ChartEditor] Failed to parse chart_config:', e, 'Raw value:', chart.chart_config);
+          console.error(
+            "[ChartEditor] Failed to parse chart_config:",
+            e,
+            "Raw value:",
+            chart.chart_config
+          );
           // Keep defaults if parsing fails
         }
       }
@@ -241,25 +263,34 @@ export default function ChartEditorPage() {
       if (chart.data_mapping) {
         try {
           let mappingStr = chart.data_mapping;
-          console.log('[ChartEditor] data_mapping raw:', mappingStr, 'Type:', typeof mappingStr);
+          console.log("[ChartEditor] data_mapping raw:", mappingStr, "Type:", typeof mappingStr);
 
           // Handle double-escaped JSON
-          if (typeof mappingStr === 'string' && mappingStr.startsWith('"') && mappingStr.includes('\\"')) {
-            console.log('[ChartEditor] Detected double-escaped data_mapping, parsing twice');
+          if (
+            typeof mappingStr === "string" &&
+            mappingStr.startsWith('"') &&
+            mappingStr.includes('\\"')
+          ) {
+            console.log("[ChartEditor] Detected double-escaped data_mapping, parsing twice");
             mappingStr = JSON.parse(mappingStr);
           }
 
-          const parsed = typeof mappingStr === 'string' ? JSON.parse(mappingStr) : mappingStr;
-          console.log('[ChartEditor] Parsed data mapping:', parsed);
+          const parsed = typeof mappingStr === "string" ? JSON.parse(mappingStr) : mappingStr;
+          console.log("[ChartEditor] Parsed data mapping:", parsed);
 
           setDataMapping({
-            xAxis: parsed.xAxis || { field: '', label: '' },
+            xAxis: parsed.xAxis || { field: "", label: "" },
             yAxis: parsed.yAxis || [],
-            groupBy: parsed.groupBy || '',
-            colorBy: parsed.colorBy || '',
+            groupBy: parsed.groupBy || "",
+            colorBy: parsed.colorBy || "",
           });
         } catch (e) {
-          console.error('[ChartEditor] Failed to parse data_mapping:', e, 'Raw value:', chart.data_mapping);
+          console.error(
+            "[ChartEditor] Failed to parse data_mapping:",
+            e,
+            "Raw value:",
+            chart.data_mapping
+          );
           // Keep defaults if parsing fails
         }
       }
@@ -269,7 +300,7 @@ export default function ChartEditorPage() {
   // Update preview data when query results change
   useEffect(() => {
     if (queryResults?.rows) {
-      console.log('[ChartEditor] Updating preview data:', queryResults.rows.length, 'rows');
+      console.log("[ChartEditor] Updating preview data:", queryResults.rows.length, "rows");
       setPreviewData(queryResults.rows);
     }
   }, [queryResults]);
@@ -277,13 +308,13 @@ export default function ChartEditorPage() {
   // Reset data mapping when query changes (to avoid invalid field references)
   useEffect(() => {
     if (selectedQueryId && chart) {
-      console.log('[ChartEditor] Query changed, resetting data mapping');
+      console.log("[ChartEditor] Query changed, resetting data mapping");
       // Keep the structure but clear field references
       setDataMapping({
-        xAxis: { field: '', label: '' },
+        xAxis: { field: "", label: "" },
         yAxis: [],
-        groupBy: '',
-        colorBy: '',
+        groupBy: "",
+        colorBy: "",
       });
     }
   }, [selectedQueryId, chartId]);
@@ -299,27 +330,27 @@ export default function ChartEditorPage() {
         dataMapping: JSON.stringify(dataMapping),
       };
 
-      const url = chartId === 'new' ? '/api/charts' : `/api/charts/${chartId}`;
-      const method = chartId === 'new' ? 'POST' : 'PUT';
+      const url = chartId === "new" ? "/api/charts" : `/api/charts/${chartId}`;
+      const method = chartId === "new" ? "POST" : "PUT";
 
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(error.error?.message || 'Failed to save chart');
+        throw new Error(error.error?.message || "Failed to save chart");
       }
 
       return res.json();
     },
     onSuccess: (data) => {
-      toast.success('Chart saved successfully');
-      queryClient.invalidateQueries({ queryKey: ['charts'] });
-      queryClient.invalidateQueries({ queryKey: ['chart'] });
-      if (chartId === 'new') {
+      toast.success("Chart saved successfully");
+      queryClient.invalidateQueries({ queryKey: ["charts"] });
+      queryClient.invalidateQueries({ queryKey: ["chart"] });
+      if (chartId === "new") {
         router.push(`/charts/editor/${data.data.id}`);
       }
     },
@@ -332,16 +363,16 @@ export default function ChartEditorPage() {
   const addFilterMutation = useMutation({
     mutationFn: async ({ filterId, targetColumn }: { filterId: string; targetColumn: string }) => {
       const res = await fetch(`/api/charts/${chartId}/filters`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ filter_id: filterId, target_column: targetColumn }),
       });
-      if (!res.ok) throw new Error('Failed to add filter');
+      if (!res.ok) throw new Error("Failed to add filter");
       return res.json();
     },
     onSuccess: () => {
-      toast.success('Filter added');
-      queryClient.invalidateQueries({ queryKey: ['chart-filters', chartId] });
+      toast.success("Filter added");
+      queryClient.invalidateQueries({ queryKey: ["chart-filters", chartId] });
     },
   });
 
@@ -349,14 +380,14 @@ export default function ChartEditorPage() {
   const removeFilterMutation = useMutation({
     mutationFn: async (filterLinkId: string) => {
       const res = await fetch(`/api/charts/${chartId}/filters/${filterLinkId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
-      if (!res.ok) throw new Error('Failed to remove filter');
+      if (!res.ok) throw new Error("Failed to remove filter");
       return res.json();
     },
     onSuccess: () => {
-      toast.success('Filter removed');
-      queryClient.invalidateQueries({ queryKey: ['chart-filters', chartId] });
+      toast.success("Filter removed");
+      queryClient.invalidateQueries({ queryKey: ["chart-filters", chartId] });
     },
   });
 
@@ -382,14 +413,14 @@ export default function ChartEditorPage() {
       const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
       return Math.round(255 * color)
         .toString(16)
-        .padStart(2, '0');
+        .padStart(2, "0");
     };
     return `#${f(0)}${f(8)}${f(4)}`;
   };
 
   // Add a new Y-axis series with a random distinct color
   const addYSeries = () => {
-    const existingColors = dataMapping.yAxis.map(s => s.color).filter(Boolean) as string[];
+    const existingColors = dataMapping.yAxis.map((s) => s.color).filter(Boolean) as string[];
     let newColor = generateRandomColor();
 
     // Ensure the new color is distinct from existing colors (simple check)
@@ -401,10 +432,7 @@ export default function ChartEditorPage() {
 
     setDataMapping({
       ...dataMapping,
-      yAxis: [
-        ...dataMapping.yAxis,
-        { field: '', label: '', color: newColor },
-      ],
+      yAxis: [...dataMapping.yAxis, { field: "", label: "", color: newColor }],
     });
   };
 
@@ -437,21 +465,18 @@ export default function ChartEditorPage() {
             <div>
               <h1 className="text-2xl font-bold">Chart Editor</h1>
               <p className="text-sm text-gray-500">
-                {chartId === 'new' ? 'Create a new chart' : 'Edit chart configuration'}
+                {chartId === "new" ? "Create a new chart" : "Edit chart configuration"}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setShowPreview(!showPreview)}
-            >
+            <Button variant="outline" onClick={() => setShowPreview(!showPreview)}>
               <Eye className="mr-2 h-4 w-4" />
-              {showPreview ? 'Hide' : 'Show'} Preview
+              {showPreview ? "Hide" : "Show"} Preview
             </Button>
             <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
               <Save className="mr-2 h-4 w-4" />
-              {saveMutation.isPending ? 'Saving...' : 'Save Chart'}
+              {saveMutation.isPending ? "Saving..." : "Save Chart"}
             </Button>
           </div>
         </div>
@@ -504,7 +529,9 @@ export default function ChartEditorPage() {
                         <SelectItem key={query.id} value={query.id}>
                           <div className="flex flex-col">
                             <span className="font-medium">{query.name}</span>
-                            <span className="text-xs text-gray-500">{query.description || 'No description'}</span>
+                            <span className="text-xs text-gray-500">
+                              {query.description || "No description"}
+                            </span>
                           </div>
                         </SelectItem>
                       ))}
@@ -538,12 +565,13 @@ export default function ChartEditorPage() {
             </Card>
 
             {/* Reusable Filters */}
-            {chartId !== 'new' && (
+            {chartId !== "new" && (
               <Card>
                 <CardHeader>
                   <CardTitle>Reusable Filters</CardTitle>
                   <p className="text-sm text-gray-500">
-                    Add pre-configured filters that users can select from dropdowns when viewing the chart.
+                    Add pre-configured filters that users can select from dropdowns when viewing the
+                    chart.
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -556,16 +584,16 @@ export default function ChartEditorPage() {
                           <SelectValue placeholder="Choose a filter..." />
                         </SelectTrigger>
                         <SelectContent>
-                          {availableFilters?.filter(f =>
-                            !chartFilters?.some((cf: any) => cf.filter_id === f.id)
-                          ).map((filter) => (
-                            <SelectItem key={filter.id} value={filter.id}>
-                              {filter.name}
-                              <span className="text-gray-500 text-xs ml-2">
-                                ({filter.display_field} → {filter.value_field})
-                              </span>
-                            </SelectItem>
-                          ))}
+                          {availableFilters
+                            ?.filter((f) => !chartFilters?.some((cf: any) => cf.filter_id === f.id))
+                            .map((filter) => (
+                              <SelectItem key={filter.id} value={filter.id}>
+                                {filter.name}
+                                <span className="text-gray-500 text-xs ml-2">
+                                  ({filter.display_field} → {filter.value_field})
+                                </span>
+                              </SelectItem>
+                            ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -591,8 +619,8 @@ export default function ChartEditorPage() {
                             filterId: selectedFilterId,
                             targetColumn: targetColumn,
                           });
-                          setSelectedFilterId('');
-                          setTargetColumn('');
+                          setSelectedFilterId("");
+                          setTargetColumn("");
                         }
                       }}
                       disabled={!selectedFilterId || !targetColumn || addFilterMutation.isPending}
@@ -615,8 +643,9 @@ export default function ChartEditorPage() {
                               <div className="flex-1">
                                 <div className="font-medium">{filterDef.name}</div>
                                 <div className="text-sm text-gray-500">
-                                  Filter: <code>{filterDef.display_field}</code> → <code>{filterDef.value_field}</code>
-                                  {' '}| Target: <code>{cf.target_column}</code>
+                                  Filter: <code>{filterDef.display_field}</code> →{" "}
+                                  <code>{filterDef.value_field}</code> | Target:{" "}
+                                  <code>{cf.target_column}</code>
                                 </div>
                               </div>
                               <Button
@@ -649,7 +678,10 @@ export default function ChartEditorPage() {
                 <CardTitle>Chart Type</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Select value={chartType} onValueChange={(value) => setChartType(value as ChartType)}>
+                <Select
+                  value={chartType}
+                  onValueChange={(value) => setChartType(value as ChartType)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select chart type..." />
                   </SelectTrigger>
@@ -674,7 +706,7 @@ export default function ChartEditorPage() {
                     <Textarea
                       id="chart-usage"
                       readOnly
-                      value={chartTypes.find(ct => ct.type === chartType)?.usage || ''}
+                      value={chartTypes.find((ct) => ct.type === chartType)?.usage || ""}
                       className="bg-gray-50 min-h-[120px] text-sm"
                     />
                   </div>
@@ -692,7 +724,7 @@ export default function ChartEditorPage() {
                 <div>
                   <div className="flex items-center justify-between">
                     <Label htmlFor="x-axis">X-Axis (Categories) *</Label>
-                    {dataMapping.xAxis.field && dataMapping.xAxis.field !== '' && (
+                    {dataMapping.xAxis.field && dataMapping.xAxis.field !== "" && (
                       <Button
                         size="sm"
                         variant="ghost"
@@ -700,7 +732,7 @@ export default function ChartEditorPage() {
                         onClick={() =>
                           setDataMapping({
                             ...dataMapping,
-                            xAxis: { field: '', label: '' },
+                            xAxis: { field: "", label: "" },
                           })
                         }
                       >
@@ -711,10 +743,10 @@ export default function ChartEditorPage() {
                   <Select
                     value={dataMapping.xAxis.field}
                     onValueChange={(value) => {
-                      if (value === '__none__') {
+                      if (value === "__none__") {
                         setDataMapping({
                           ...dataMapping,
-                          xAxis: { field: '', label: '' },
+                          xAxis: { field: "", label: "" },
                         });
                       } else {
                         setDataMapping({
@@ -736,19 +768,21 @@ export default function ChartEditorPage() {
                       ))}
                     </SelectContent>
                   </Select>
-                  {dataMapping.xAxis.field && dataMapping.xAxis.field !== '__none__' && dataMapping.xAxis.field !== '' && (
-                    <Input
-                      className="mt-2"
-                      value={dataMapping.xAxis.label}
-                      onChange={(e) =>
-                        setDataMapping({
-                          ...dataMapping,
-                          xAxis: { ...dataMapping.xAxis, label: e.target.value },
-                        })
-                      }
-                      placeholder="Axis label"
-                    />
-                  )}
+                  {dataMapping.xAxis.field &&
+                    dataMapping.xAxis.field !== "__none__" &&
+                    dataMapping.xAxis.field !== "" && (
+                      <Input
+                        className="mt-2"
+                        value={dataMapping.xAxis.label}
+                        onChange={(e) =>
+                          setDataMapping({
+                            ...dataMapping,
+                            xAxis: { ...dataMapping.xAxis, label: e.target.value },
+                          })
+                        }
+                        placeholder="Axis label"
+                      />
+                    )}
                 </div>
 
                 {/* Y-Axis Series */}
@@ -772,7 +806,10 @@ export default function ChartEditorPage() {
                           <div className="flex items-center gap-1">
                             <input
                               type="color"
-                              value={series.color || chartConfig.colors[index % chartConfig.colors.length]}
+                              value={
+                                series.color ||
+                                chartConfig.colors[index % chartConfig.colors.length]
+                              }
                               onChange={(e) => updateYSeries(index, { color: e.target.value })}
                               className="h-6 w-8 rounded cursor-pointer border-2"
                               title="Choose color for this series"
@@ -793,16 +830,12 @@ export default function ChartEditorPage() {
                             size="sm"
                             variant="ghost"
                             className="h-6 text-xs"
-                            onClick={() => updateYSeries(index, { field: '', label: '' })}
+                            onClick={() => updateYSeries(index, { field: "", label: "" })}
                           >
                             Clear
                           </Button>
                           {dataMapping.yAxis.length > 1 && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => removeYSeries(index)}
-                            >
+                            <Button size="sm" variant="ghost" onClick={() => removeYSeries(index)}>
                               <Trash2 className="h-3 w-3" />
                             </Button>
                           )}
@@ -811,8 +844,8 @@ export default function ChartEditorPage() {
                       <Select
                         value={series.field}
                         onValueChange={(value) => {
-                          if (value === '__none__') {
-                            updateYSeries(index, { field: '', label: '' });
+                          if (value === "__none__") {
+                            updateYSeries(index, { field: "", label: "" });
                           } else {
                             updateYSeries(index, { field: value, label: value });
                           }
@@ -848,7 +881,7 @@ export default function ChartEditorPage() {
                         size="sm"
                         variant="ghost"
                         className="h-6 text-xs"
-                        onClick={() => setDataMapping({ ...dataMapping, groupBy: '' })}
+                        onClick={() => setDataMapping({ ...dataMapping, groupBy: "" })}
                       >
                         Clear
                       </Button>
@@ -857,7 +890,7 @@ export default function ChartEditorPage() {
                   <Select
                     value={dataMapping.groupBy}
                     onValueChange={(value) =>
-                      setDataMapping({ ...dataMapping, groupBy: value === '__none__' ? '' : value })
+                      setDataMapping({ ...dataMapping, groupBy: value === "__none__" ? "" : value })
                     }
                   >
                     <SelectTrigger id="group-by">
@@ -883,7 +916,7 @@ export default function ChartEditorPage() {
                         size="sm"
                         variant="ghost"
                         className="h-6 text-xs"
-                        onClick={() => setDataMapping({ ...dataMapping, colorBy: '' })}
+                        onClick={() => setDataMapping({ ...dataMapping, colorBy: "" })}
                       >
                         Clear
                       </Button>
@@ -892,7 +925,7 @@ export default function ChartEditorPage() {
                   <Select
                     value={dataMapping.colorBy}
                     onValueChange={(value) =>
-                      setDataMapping({ ...dataMapping, colorBy: value === '__none__' ? '' : value })
+                      setDataMapping({ ...dataMapping, colorBy: value === "__none__" ? "" : value })
                     }
                   >
                     <SelectTrigger id="color-by">
@@ -923,7 +956,10 @@ export default function ChartEditorPage() {
                     id="show-title"
                     checked={chartConfig.title.show}
                     onCheckedChange={(checked) =>
-                      setChartConfig({ ...chartConfig, title: { ...chartConfig.title, show: checked } })
+                      setChartConfig({
+                        ...chartConfig,
+                        title: { ...chartConfig.title, show: checked },
+                      })
                     }
                   />
                 </div>
@@ -931,7 +967,10 @@ export default function ChartEditorPage() {
                   <Input
                     value={chartConfig.title.text}
                     onChange={(e) =>
-                      setChartConfig({ ...chartConfig, title: { ...chartConfig.title, text: e.target.value } })
+                      setChartConfig({
+                        ...chartConfig,
+                        title: { ...chartConfig.title, text: e.target.value },
+                      })
                     }
                     placeholder="Chart title"
                   />
@@ -943,7 +982,10 @@ export default function ChartEditorPage() {
                     id="show-legend"
                     checked={chartConfig.legend.show}
                     onCheckedChange={(checked) =>
-                      setChartConfig({ ...chartConfig, legend: { ...chartConfig.legend, show: checked } })
+                      setChartConfig({
+                        ...chartConfig,
+                        legend: { ...chartConfig.legend, show: checked },
+                      })
                     }
                   />
                 </div>
@@ -970,7 +1012,7 @@ export default function ChartEditorPage() {
                   />
                 </div>
 
-                {(chartType === 'bar' || chartType === 'column') && (
+                {(chartType === "bar" || chartType === "column") && (
                   <div className="flex items-center justify-between">
                     <div>
                       <Label htmlFor="enable-stacked">Stacked Chart</Label>
@@ -1013,7 +1055,10 @@ export default function ChartEditorPage() {
                           className="h-6 w-6 p-0"
                           onClick={() => {
                             const newColors = chartConfig.colors.filter((_, i) => i !== index);
-                            setChartConfig({ ...chartConfig, colors: newColors.length > 0 ? newColors : chartConfig.colors });
+                            setChartConfig({
+                              ...chartConfig,
+                              colors: newColors.length > 0 ? newColors : chartConfig.colors,
+                            });
                           }}
                           disabled={chartConfig.colors.length <= 1}
                           title="Remove color"
@@ -1028,7 +1073,7 @@ export default function ChartEditorPage() {
                       onClick={() =>
                         setChartConfig({
                           ...chartConfig,
-                          colors: [...chartConfig.colors, '#64748b'],
+                          colors: [...chartConfig.colors, "#64748b"],
                         })
                       }
                       disabled={chartConfig.colors.length >= 12}
@@ -1044,7 +1089,16 @@ export default function ChartEditorPage() {
                     onClick={() =>
                       setChartConfig({
                         ...chartConfig,
-                        colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'],
+                        colors: [
+                          "#3b82f6",
+                          "#10b981",
+                          "#f59e0b",
+                          "#ef4444",
+                          "#8b5cf6",
+                          "#ec4899",
+                          "#06b6d4",
+                          "#84cc16",
+                        ],
                       })
                     }
                   >
@@ -1109,7 +1163,7 @@ export default function ChartEditorPage() {
                             <tr key={i} className="border-b">
                               {availableFields.slice(0, 5).map((field) => (
                                 <td key={field} className="p-2">
-                                  {String(row[field] ?? '')}
+                                  {String(row[field] ?? "")}
                                 </td>
                               ))}
                             </tr>

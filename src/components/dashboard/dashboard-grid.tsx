@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useState, useCallback } from 'react';
-import GridLayout, { WidthProvider, Layout } from 'react-grid-layout';
-import 'react-grid-layout/css/styles.css';
-import 'react-resizable/css/styles.css';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { WidgetCard } from '@/components/dashboard/widget-card';
-import { X, Move, Settings, MoreVertical } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import type { DashboardWidget } from '@/types/database';
+import { useState, useCallback } from "react";
+import GridLayout, { WidthProvider, type Layout } from "react-grid-layout";
+import "react-grid-layout/css/styles.css";
+import "react-resizable/css/styles.css";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { WidgetCard } from "@/components/dashboard/widget-card";
+import { X, Move, Settings, MoreVertical } from "lucide-react";
+import { cn } from "@/lib/utils";
+import type { DashboardWidget } from "@/types/database";
 
 const ResponsiveGridLayout = WidthProvider(GridLayout);
 
@@ -17,7 +17,7 @@ interface ActiveFilter {
   sourceWidgetId: string;
   column: string;
   values: unknown[];
-  operator: 'eq' | 'in' | 'range';
+  operator: "eq" | "in" | "range";
 }
 
 interface DashboardGridProps {
@@ -29,7 +29,7 @@ interface DashboardGridProps {
   onLayoutChange?: (layout: Layout[]) => void;
   onRemoveWidget?: (widgetId: string) => void;
   onConfigureWidget?: (widgetId: string) => void;
-  onFilterApply?: (filter: Omit<ActiveFilter, 'id' | 'affectedWidgets'>) => void;
+  onFilterApply?: (filter: Omit<ActiveFilter, "id" | "affectedWidgets">) => void;
 }
 
 export function DashboardGrid({
@@ -67,7 +67,7 @@ export function DashboardGrid({
       onResizeStart={() => setIsDragging(true)}
       onResizeStop={() => setIsDragging(false)}
       draggableHandle=".drag-handle"
-      resizeHandles={isEditing ? ['s', 'e', 'se', 'sw', 'n', 'ne', 'nw', 'w'] : []}
+      resizeHandles={isEditing ? ["s", "e", "se", "sw", "n", "ne", "nw", "w"] : []}
       useCSSTransforms
     >
       {widgets.map((widget) => (
@@ -79,10 +79,10 @@ export function DashboardGrid({
         >
           <Card
             className={cn(
-              'h-full overflow-hidden transition-shadow',
-              isDragging && 'cursor-grabbing shadow-lg',
-              isEditing && 'ring-2 ring-primary ring-offset-2',
-              hoveredWidget === widget.id && !isEditing && 'shadow-md'
+              "h-full overflow-hidden transition-shadow",
+              isDragging && "cursor-grabbing shadow-lg",
+              isEditing && "ring-2 ring-primary ring-offset-2",
+              hoveredWidget === widget.id && !isEditing && "shadow-md"
             )}
           >
             {/* Widget Header with Actions */}
@@ -94,9 +94,9 @@ export function DashboardGrid({
               {/* Action Buttons - Always visible on hover, visible in edit mode */}
               <div
                 className={cn(
-                  'flex items-center gap-1 transition-opacity',
-                  (isEditing || hoveredWidget === widget.id) ? 'opacity-100' : 'opacity-0',
-                  'group/widget'
+                  "flex items-center gap-1 transition-opacity",
+                  isEditing || hoveredWidget === widget.id ? "opacity-100" : "opacity-0",
+                  "group/widget"
                 )}
               >
                 {isEditing && (

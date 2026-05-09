@@ -1,17 +1,17 @@
-import { Job } from 'bullmq';
-import { getDb } from '@/lib/db/config';
-import { getConnection } from '@/lib/db/connection-manager';
-import { logAudit } from '@/lib/security/audit';
-import { sendEmail } from '@/lib/email/email-service';
-import type { EmailBatchJobData, JobResult } from '../queue';
-import type { SavedQuery, DataSource, EmailTemplate } from '@/types/database';
-import ExcelJS from 'exceljs';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import fs from 'fs/promises';
-import path from 'path';
+import type { Job } from "bullmq";
+import { getDb } from "@/lib/db/config";
+import { getConnection } from "@/lib/db/connection-manager";
+import { logAudit } from "@/lib/security/audit";
+import { sendEmail } from "@/lib/email/email-service";
+import type { EmailBatchJobData, JobResult } from "../queue";
+import type { SavedQuery, DataSource, EmailTemplate } from "@/types/database";
+import ExcelJS from "exceljs";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import fs from "fs/promises";
+import path from "path";
 
-const OUTPUT_DIR = process.env.JOB_OUTPUT_PATH || './job-outputs';
+const OUTPUT_DIR = process.env.JOB_OUTPUT_PATH || "./job-outputs";
 
 export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise<JobResult> {
   const startTime = Date.now();
@@ -21,8 +21,8 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
     recipientQueryId,
     recipientEmailColumn,
     userId,
-    format = 'csv',
-    reportName = 'Report',
+    format = "csv",
+    reportName = "Report",
     _parameters,
   } = job.data;
 
@@ -33,14 +33,12 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
     await job.updateProgress(10);
 
     // === STAGE 1: Generate Report Attachment ===
-    await job.log('Generating report attachment...');
+    await job.log("Generating report attachment...");
 
     const db = getDb();
 
     // Get the report query
-    const reportQuery = await db<SavedQuery>('saved_queries')
-      .where('id', queryId)
-      .first();
+    const reportQuery = await db<SavedQuery>("saved_queries").where("id", queryId).first();
 
     if (!reportQuery) {
       throw new Error(`Report query not found: ${queryId}`);
@@ -49,12 +47,12 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
     await job.updateProgress(15);
 
     // Get data source for report query
-    const reportDataSource = await db<DataSource>('data_sources')
-      .where('id', reportQuery.data_source_id)
+    const reportDataSource = await db<DataSource>("data_sources")
+      .where("id", reportQuery.data_source_id)
       .first();
 
     if (!reportDataSource) {
-      throw new Error('Report data source not found');
+      throw new Error("Report data source not found");
     }
 
     await job.updateProgress(20);
@@ -78,17 +76,17 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
 
     // Generate export file
     const timestamp = Date.now();
-    const filename = `${reportName.replace(/\s+/g, '_')}_${timestamp}.${format}`;
+    const filename = `${reportName.replace(/\s+/g, "_")}_${timestamp}.${format}`;
     attachmentPath = path.join(OUTPUT_DIR, filename);
 
     switch (format) {
-      case 'csv':
+      case "csv":
         await exportToCSV(reportRows, attachmentPath);
         break;
-      case 'xlsx':
+      case "xlsx":
         await exportToXLSX(reportRows, reportName, attachmentPath);
         break;
-      case 'pdf':
+      case "pdf":
         await exportToPDF(reportRows, reportName, attachmentPath);
         break;
       default:
@@ -99,10 +97,10 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
     await job.log(`Report attachment created: ${filename}`);
 
     // === STAGE 2: Fetch Email Template ===
-    await job.log('Fetching email template...');
+    await job.log("Fetching email template...");
 
-    const template = await db<EmailTemplate>('email_templates')
-      .where('id', emailTemplateId)
+    const template = await db<EmailTemplate>("email_templates")
+      .where("id", emailTemplateId)
       .first();
 
     if (!template) {
@@ -110,17 +108,15 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
     }
 
     // Parse column mappings
-    const columnMappings = template.columnMappings
-      ? JSON.parse(template.columnMappings)
-      : {};
+    const columnMappings = template.columnMappings ? JSON.parse(template.columnMappings) : {};
 
     await job.updateProgress(55);
 
     // === STAGE 3: Fetch Recipients ===
-    await job.log('Fetching recipient list...');
+    await job.log("Fetching recipient list...");
 
-    const recipientQuery = await db<SavedQuery>('saved_queries')
-      .where('id', recipientQueryId)
+    const recipientQuery = await db<SavedQuery>("saved_queries")
+      .where("id", recipientQueryId)
       .first();
 
     if (!recipientQuery) {
@@ -128,12 +124,12 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
     }
 
     // Get data source for recipient query
-    const recipientDataSource = await db<DataSource>('data_sources')
-      .where('id', recipientQuery.data_source_id)
+    const recipientDataSource = await db<DataSource>("data_sources")
+      .where("id", recipientQuery.data_source_id)
       .first();
 
     if (!recipientDataSource) {
-      throw new Error('Recipient data source not found');
+      throw new Error("Recipient data source not found");
     }
 
     await job.updateProgress(60);
@@ -150,8 +146,8 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
     }
 
     if (recipientRows.length === 0) {
-      await job.log('WARNING: No recipients found');
-      throw new Error('No recipients found from recipient query');
+      await job.log("WARNING: No recipients found");
+      throw new Error("No recipients found from recipient query");
     }
 
     await job.updateProgress(65);
@@ -159,11 +155,13 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
 
     // Validate email column exists
     if (!recipientRows[0][recipientEmailColumn]) {
-      throw new Error(`Email column '${recipientEmailColumn}' not found in recipient query results`);
+      throw new Error(
+        `Email column '${recipientEmailColumn}' not found in recipient query results`
+      );
     }
 
     // === STAGE 4: Send Batch Emails ===
-    await job.log('Starting batch email send...');
+    await job.log("Starting batch email send...");
 
     const failedRecipients: Array<{ email: string; error: string }> = [];
 
@@ -208,11 +206,11 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
           emailsSent++;
           await job.log(`✓ Email sent to ${recipientEmail} (Message ID: ${result.messageId})`);
         } else {
-          failedRecipients.push({ email: recipientEmail, error: result.error || 'Unknown error' });
+          failedRecipients.push({ email: recipientEmail, error: result.error || "Unknown error" });
           await job.log(`✗ Failed to send to ${recipientEmail}: ${result.error}`);
         }
       } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        const errorMsg = error instanceof Error ? error.message : "Unknown error";
         failedRecipients.push({ email: recipientEmail, error: errorMsg });
         await job.log(`✗ Error sending to ${recipientEmail}: ${errorMsg}`);
       }
@@ -223,8 +221,8 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
     // Log audit
     await logAudit({
       userId,
-      action: 'email_batch',
-      resourceType: 'job',
+      action: "email_batch",
+      resourceType: "job",
       resourceId: job.id!,
       details: {
         emailsSent,
@@ -250,12 +248,12 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
       attachmentPath,
     };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
 
     await logAudit({
       userId,
-      action: 'email_batch',
-      resourceType: 'job',
+      action: "email_batch",
+      resourceType: "job",
       resourceId: job.id!,
       details: { error: errorMessage, emailsSent },
     });
@@ -271,27 +269,29 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
 
 async function exportToCSV(rows: Record<string, unknown>[], outputPath: string): Promise<void> {
   if (rows.length === 0) {
-    await fs.writeFile(outputPath, '');
+    await fs.writeFile(outputPath, "");
     return;
   }
 
   const headers = Object.keys(rows[0]);
   const csvLines = [
-    headers.join(','),
+    headers.join(","),
     ...rows.map((row) =>
-      headers.map((h) => {
-        const value = row[h];
-        if (value === null || value === undefined) return '';
-        const str = String(value);
-        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-          return `"${str.replace(/"/g, '""')}"`;
-        }
-        return str;
-      }).join(',')
+      headers
+        .map((h) => {
+          const value = row[h];
+          if (value === null || value === undefined) return "";
+          const str = String(value);
+          if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+            return `"${str.replace(/"/g, '""')}"`;
+          }
+          return str;
+        })
+        .join(",")
     ),
   ];
 
-  await fs.writeFile(outputPath, csvLines.join('\n'));
+  await fs.writeFile(outputPath, csvLines.join("\n"));
 }
 
 async function exportToXLSX(
@@ -314,9 +314,9 @@ async function exportToXLSX(
   const headerRow = worksheet.getRow(1);
   headerRow.font = { bold: true };
   headerRow.fill = {
-    type: 'pattern',
-    pattern: 'solid',
-    fgColor: { argb: 'FFE0E0E0' },
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FFE0E0E0" },
   };
 
   rows.forEach((row) => {
@@ -351,7 +351,7 @@ async function exportToPDF(
   doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 28);
 
   if (rows.length === 0) {
-    doc.text('No data available', 14, 40);
+    doc.text("No data available", 14, 40);
     doc.save(outputPath);
     return;
   }
@@ -360,7 +360,7 @@ async function exportToPDF(
   const tableData = rows.map((row) =>
     headers.map((h) => {
       const value = row[h];
-      if (value === null || value === undefined) return '';
+      if (value === null || value === undefined) return "";
       return String(value);
     })
   );
@@ -373,6 +373,6 @@ async function exportToPDF(
     headStyles: { fillColor: [66, 66, 66] },
   });
 
-  const pdfBuffer = doc.output('arraybuffer');
+  const pdfBuffer = doc.output("arraybuffer");
   await fs.writeFile(outputPath, Buffer.from(pdfBuffer));
 }

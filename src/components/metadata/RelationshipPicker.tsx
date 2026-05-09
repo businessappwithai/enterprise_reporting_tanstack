@@ -6,23 +6,37 @@
  * - popup: Searchable dialog with server-side paginated table
  */
 
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Search, ExternalLink } from 'lucide-react';
-import { useEntityRecords } from '@/hooks/metadata/use-metadata-queries';
-import type { MetadataEntityWithFields, MetadataEntityField } from '@/types/database';
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Loader2, Search, ExternalLink } from "lucide-react";
+import { useEntityRecords } from "@/hooks/metadata/use-metadata-queries";
+import type { MetadataEntityWithFields, MetadataEntityField } from "@/types/database";
 
 interface RelationshipPickerProps {
   dataSourceId: string;
@@ -39,57 +53,59 @@ export function RelationshipPicker({
   value,
   onChange,
 }: RelationshipPickerProps) {
-  const uiType = field.relationship_ui_type || 'dropdown';
+  const uiType = field.relationship_ui_type || "dropdown";
   const referencedEntityName = field.referenced_table_name;
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [popupOpen, setPopupOpen] = useState(false);
   const [searchPage, setSearchPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Fetch referenced entity records for dropdown (limited)
   const { data: dropdownData, isLoading: isLoadingDropdown } = useEntityRecords(
     dataSourceId,
     referencedEntityName,
-    uiType === 'dropdown' ? { page: 1, limit: 100 } : { page: 1, limit: 0 }
+    uiType === "dropdown" ? { page: 1, limit: 100 } : { page: 1, limit: 0 }
   );
 
   // Fetch referenced entity records for popup (paginated search)
   const { data: popupData, isLoading: isLoadingPopup } = useEntityRecords(
     dataSourceId,
     referencedEntityName,
-    uiType === 'popup' && popupOpen ? {
-      page: searchPage,
-      limit: 20,
-      search: searchTerm || undefined,
-    } : { page: 1, limit: 0 }
+    uiType === "popup" && popupOpen
+      ? {
+          page: searchPage,
+          limit: 20,
+          search: searchTerm || undefined,
+        }
+      : { page: 1, limit: 0 }
   );
 
-  const records = (uiType === 'dropdown' ? dropdownData : popupData)?.data?.records || [];
-  const total = (uiType === 'dropdown' ? dropdownData : popupData)?.data?.total || 0;
-  const pageCount = (uiType === 'dropdown' ? dropdownData : popupData)?.data?.pageCount || 0;
+  const records = (uiType === "dropdown" ? dropdownData : popupData)?.data?.records || [];
+  const total = (uiType === "dropdown" ? dropdownData : popupData)?.data?.total || 0;
+  const pageCount = (uiType === "dropdown" ? dropdownData : popupData)?.data?.pageCount || 0;
 
   // Get display fields for the referenced entity
   // For now, we'll use the first field or the field that matches the referenced column name
   const getDisplayValue = (record: Record<string, unknown>) => {
     // Try to find a display field
-    const displayFields = Object.keys(record).filter(k => k !== 'id');
+    const displayFields = Object.keys(record).filter((k) => k !== "id");
     if (displayFields.length > 0) {
       const val = record[displayFields[0]];
-      return val !== null && val !== undefined ? String(val) : '(null)';
+      return val !== null && val !== undefined ? String(val) : "(null)";
     }
-    return String(record['id'] || '');
+    return String(record["id"] || "");
   };
 
   const getPrimaryKeyValue = (record: Record<string, unknown>) => {
-    return record['id'] as string | number;
+    return record["id"] as string | number;
   };
 
-  if (uiType === 'dropdown') {
+  if (uiType === "dropdown") {
     return (
       <Select
-        value={value?.toString() || ''}
-        onValueChange={(val) => onChange(val === '' ? null : val)}
+        value={value?.toString() || ""}
+        onValueChange={(val) => onChange(val === "" ? null : val)}
         open={dropdownOpen}
         onOpenChange={setDropdownOpen}
       >
@@ -102,9 +118,7 @@ export function RelationshipPicker({
               <Loader2 className="h-4 w-4 animate-spin" />
             </div>
           ) : records.length === 0 ? (
-            <div className="py-4 text-center text-sm text-muted-foreground">
-              No records found
-            </div>
+            <div className="py-4 text-center text-sm text-muted-foreground">No records found</div>
           ) : (
             records.map((record, idx) => {
               const pkValue = getPrimaryKeyValue(record as Record<string, unknown>);
@@ -125,11 +139,7 @@ export function RelationshipPicker({
   return (
     <Dialog open={popupOpen} onOpenChange={setPopupOpen}>
       <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          className="w-full justify-start"
-          type="button"
-        >
+        <Button variant="outline" className="w-full justify-start" type="button">
           {value ? `Selected ID: ${value}` : `Select ${field.referenced_table_name}...`}
           <ExternalLink className="ml-auto h-4 w-4 opacity-50" />
         </Button>
@@ -171,13 +181,14 @@ export function RelationshipPicker({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    {records.length > 0 && Object.keys(records[0] as Record<string, unknown>)
-                      .slice(0, 4) // Show first 4 columns only
-                      .map((key) => (
-                        <TableHead key={key} className="capitalize">
-                          {key}
-                        </TableHead>
-                      ))}
+                    {records.length > 0 &&
+                      Object.keys(records[0] as Record<string, unknown>)
+                        .slice(0, 4) // Show first 4 columns only
+                        .map((key) => (
+                          <TableHead key={key} className="capitalize">
+                            {key}
+                          </TableHead>
+                        ))}
                     <TableHead>Action</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -192,19 +203,21 @@ export function RelationshipPicker({
                           .slice(0, 4)
                           .map(([key, val]) => (
                             <TableCell key={key}>
-                              {val !== null && val !== undefined ? String(val).substring(0, 50) : '<null>'}
+                              {val !== null && val !== undefined
+                                ? String(val).substring(0, 50)
+                                : "<null>"}
                             </TableCell>
                           ))}
                         <TableCell>
                           <Button
                             size="sm"
-                            variant={isSelected ? 'default' : 'outline'}
+                            variant={isSelected ? "default" : "outline"}
                             onClick={() => {
                               onChange(pkValue);
                               setPopupOpen(false);
                             }}
                           >
-                            {isSelected ? 'Selected' : 'Select'}
+                            {isSelected ? "Selected" : "Select"}
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -219,13 +232,13 @@ export function RelationshipPicker({
           {pageCount > 1 && (
             <div className="flex items-center justify-between mt-4 pt-4 border-t">
               <div className="text-sm text-muted-foreground">
-                {total} {total === 1 ? 'record' : 'records'} found
+                {total} {total === 1 ? "record" : "records"} found
               </div>
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setSearchPage(p => Math.max(1, p - 1))}
+                  onClick={() => setSearchPage((p) => Math.max(1, p - 1))}
                   disabled={searchPage === 1}
                 >
                   Previous
@@ -236,7 +249,7 @@ export function RelationshipPicker({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setSearchPage(p => Math.min(pageCount, p + 1))}
+                  onClick={() => setSearchPage((p) => Math.min(pageCount, p + 1))}
                   disabled={searchPage >= pageCount}
                 >
                   Next

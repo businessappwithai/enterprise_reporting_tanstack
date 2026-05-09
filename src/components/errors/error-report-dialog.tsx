@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { AlertTriangle, Mail, Copy, Check, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState } from "react";
+import { AlertTriangle, Mail, Copy, Check, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -10,10 +10,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
-import { errorLogger } from '@/lib/errors/error-logger';
-import type { ErrorLog } from '@/lib/errors/error-logger';
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { errorLogger } from "@/lib/errors/error-logger";
+import type { ErrorLog } from "@/lib/errors/error-logger";
 
 interface ErrorReportDialogProps {
   open: boolean;
@@ -23,9 +23,10 @@ interface ErrorReportDialogProps {
 
 export function ErrorReportDialog({ open, onOpenChange, errorLog }: ErrorReportDialogProps) {
   const [copied, setCopied] = useState(false);
-  const [additionalInfo, setAdditionalInfo] = useState('');
+  const [additionalInfo, setAdditionalInfo] = useState("");
 
-  const errorReportingEmail = process.env.NEXT_PUBLIC_ERROR_REPORTING_EMAIL || 'admin@yourcompany.com';
+  const errorReportingEmail =
+    process.env.NEXT_PUBLIC_ERROR_REPORTING_EMAIL || "admin@yourcompany.com";
 
   if (!errorLog) return null;
 
@@ -36,7 +37,7 @@ export function ErrorReportDialog({ open, onOpenChange, errorLog }: ErrorReportD
 
   const handleSendEmail = () => {
     const mailtoLink = `mailto:${errorReportingEmail}?subject=${encodeURIComponent(emailData.subject)}&body=${encodeURIComponent(fullEmailBody)}`;
-    window.open(mailtoLink, '_blank');
+    window.open(mailtoLink, "_blank");
   };
 
   const handleCopyToClipboard = async () => {
@@ -45,12 +46,12 @@ export function ErrorReportDialog({ open, onOpenChange, errorLog }: ErrorReportD
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy to clipboard:', err);
+      console.error("Failed to copy to clipboard:", err);
     }
   };
 
   const handleDismiss = () => {
-    setAdditionalInfo('');
+    setAdditionalInfo("");
     onOpenChange(false);
   };
 
@@ -122,8 +123,9 @@ export function ErrorReportDialog({ open, onOpenChange, errorLog }: ErrorReportD
           {/* Instructions */}
           <div className="p-3 rounded-lg bg-muted border">
             <p className="text-sm text-muted-foreground">
-              <strong>What happens next:</strong> Clicking &quot;Send Error Report&quot; will open your email client
-              with the error details pre-filled. You can review the contents before sending.
+              <strong>What happens next:</strong> Clicking &quot;Send Error Report&quot; will open
+              your email client with the error details pre-filled. You can review the contents
+              before sending.
             </p>
           </div>
         </div>

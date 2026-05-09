@@ -5,16 +5,16 @@
  * Uses local state for change tracking with Zod validation on submit.
  */
 
-import { useState } from 'react';
-import { z } from 'zod';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, ChevronRight } from 'lucide-react';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import type { MetadataEntityField } from '@/types/database';
+import { useState } from "react";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, ChevronRight } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import type { MetadataEntityField } from "@/types/database";
 
 const singleFieldSchema = z.object({
   id: z.string(),
@@ -22,7 +22,7 @@ const singleFieldSchema = z.object({
   is_display_field: z.boolean().optional(),
   is_searchable: z.boolean().optional(),
   display_order: z.number().int().min(0).max(10000).optional(),
-  relationship_ui_type: z.enum(['dropdown', 'popup']).nullable().optional(),
+  relationship_ui_type: z.enum(["dropdown", "popup"]).nullable().optional(),
 });
 
 export type BatchFieldEditFormValues = z.infer<typeof singleFieldSchema>[];
@@ -43,7 +43,9 @@ export function BatchFieldEditForm({
   const [openFieldIds, setOpenFieldIds] = useState<Set<string>>(new Set());
 
   // Track changes per field
-  const [fieldChanges, setFieldChanges] = useState<Map<string, z.infer<typeof singleFieldSchema>>>(new Map());
+  const [fieldChanges, setFieldChanges] = useState<Map<string, z.infer<typeof singleFieldSchema>>>(
+    new Map()
+  );
 
   const toggleField = (fieldId: string) => {
     const newOpen = new Set(openFieldIds);
@@ -55,7 +57,10 @@ export function BatchFieldEditForm({
     setOpenFieldIds(newOpen);
   };
 
-  const updateFieldChange = (fieldId: string, updates: Partial<z.infer<typeof singleFieldSchema>>) => {
+  const updateFieldChange = (
+    fieldId: string,
+    updates: Partial<z.infer<typeof singleFieldSchema>>
+  ) => {
     const newChanges = new Map(fieldChanges);
     const existing = newChanges.get(fieldId) || {
       id: fieldId,
@@ -84,10 +89,11 @@ export function BatchFieldEditForm({
       <CardHeader>
         <CardTitle>Batch Edit Fields</CardTitle>
         <CardDescription>
-          Configure display and search settings for multiple fields. Only modified fields will be updated.
+          Configure display and search settings for multiple fields. Only modified fields will be
+          updated.
           {hasChanges && (
             <span className="ml-2 text-primary font-medium">
-              ({fieldChanges.size} field{fieldChanges.size > 1 ? 's' : ''} modified)
+              ({fieldChanges.size} field{fieldChanges.size > 1 ? "s" : ""} modified)
             </span>
           )}
         </CardDescription>
@@ -110,30 +116,37 @@ export function BatchFieldEditForm({
                 <CollapsibleTrigger className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
                   <div className="flex items-center gap-3">
                     <ChevronRight
-                      className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-90' : ''}`}
+                      className={`h-4 w-4 transition-transform ${isOpen ? "rotate-90" : ""}`}
                     />
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{field.field_name}</span>
-                      <Badge variant="outline" className="text-xs">{field.data_type}</Badge>
+                      <Badge variant="outline" className="text-xs">
+                        {field.data_type}
+                      </Badge>
                       {isForeignKey && (
                         <Badge variant="secondary" className="text-xs">
                           FK → {field.referenced_table_name}
                         </Badge>
                       )}
                       {hasFieldChange && (
-                        <Badge variant="default" className="text-xs">Modified</Badge>
+                        <Badge variant="default" className="text-xs">
+                          Modified
+                        </Badge>
                       )}
                     </div>
                   </div>
                   <div className="text-sm text-muted-foreground">
                     {changes?.is_display_field !== undefined && (
-                      <Badge variant={changes.is_display_field ? 'default' : 'secondary'} className="mr-1">
-                        {changes.is_display_field ? 'Display' : 'Not Display'}
+                      <Badge
+                        variant={changes.is_display_field ? "default" : "secondary"}
+                        className="mr-1"
+                      >
+                        {changes.is_display_field ? "Display" : "Not Display"}
                       </Badge>
                     )}
                     {changes?.is_searchable !== undefined && (
-                      <Badge variant={changes.is_searchable ? 'default' : 'secondary'}>
-                        {changes.is_searchable ? 'Searchable' : 'Not Searchable'}
+                      <Badge variant={changes.is_searchable ? "default" : "secondary"}>
+                        {changes.is_searchable ? "Searchable" : "Not Searchable"}
                       </Badge>
                     )}
                   </div>
@@ -145,12 +158,14 @@ export function BatchFieldEditForm({
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Description</label>
                       <Input
-                        placeholder={field.description || 'No description'}
-                        defaultValue={field.description || ''}
-                        onChange={(e) => updateFieldChange(field.id, {
-                          description: e.target.value || undefined,
-                          id: field.id,
-                        })}
+                        placeholder={field.description || "No description"}
+                        defaultValue={field.description || ""}
+                        onChange={(e) =>
+                          updateFieldChange(field.id, {
+                            description: e.target.value || undefined,
+                            id: field.id,
+                          })
+                        }
                       />
                     </div>
 
@@ -160,10 +175,12 @@ export function BatchFieldEditForm({
                         <Checkbox
                           id={`display-${field.id}`}
                           checked={changes?.is_display_field ?? field.is_display_field}
-                          onCheckedChange={(checked) => updateFieldChange(field.id, {
-                            is_display_field: checked === true,
-                            id: field.id,
-                          })}
+                          onCheckedChange={(checked) =>
+                            updateFieldChange(field.id, {
+                              is_display_field: checked === true,
+                              id: field.id,
+                            })
+                          }
                         />
                         <label
                           htmlFor={`display-${field.id}`}
@@ -177,10 +194,12 @@ export function BatchFieldEditForm({
                         <Checkbox
                           id={`searchable-${field.id}`}
                           checked={changes?.is_searchable ?? field.is_searchable}
-                          onCheckedChange={(checked) => updateFieldChange(field.id, {
-                            is_searchable: checked === true,
-                            id: field.id,
-                          })}
+                          onCheckedChange={(checked) =>
+                            updateFieldChange(field.id, {
+                              is_searchable: checked === true,
+                              id: field.id,
+                            })
+                          }
                         />
                         <label
                           htmlFor={`searchable-${field.id}`}
@@ -199,10 +218,12 @@ export function BatchFieldEditForm({
                         min={0}
                         max={10000}
                         defaultValue={field.display_order}
-                        onChange={(e) => updateFieldChange(field.id, {
-                          display_order: parseInt(e.target.value) || 0,
-                          id: field.id,
-                        })}
+                        onChange={(e) =>
+                          updateFieldChange(field.id, {
+                            display_order: parseInt(e.target.value) || 0,
+                            id: field.id,
+                          })
+                        }
                       />
                     </div>
 
@@ -212,11 +233,16 @@ export function BatchFieldEditForm({
                         <label className="text-sm font-medium">Relationship UI Type</label>
                         <select
                           className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                          defaultValue={field.relationship_ui_type || ''}
-                          onChange={(e) => updateFieldChange(field.id, {
-                            relationship_ui_type: e.target.value === '' ? null : (e.target.value as 'dropdown' | 'popup'),
-                            id: field.id,
-                          })}
+                          defaultValue={field.relationship_ui_type || ""}
+                          onChange={(e) =>
+                            updateFieldChange(field.id, {
+                              relationship_ui_type:
+                                e.target.value === ""
+                                  ? null
+                                  : (e.target.value as "dropdown" | "popup"),
+                              id: field.id,
+                            })
+                          }
                         >
                           <option value="">None (Standard Input)</option>
                           <option value="dropdown">Dropdown (Select from list)</option>
@@ -234,18 +260,13 @@ export function BatchFieldEditForm({
         {/* Form Actions */}
         <div className="flex items-center justify-end gap-3 pt-6 mt-6 border-t">
           {onCancel && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onCancel}
-              disabled={isLoading}
-            >
+            <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
               Cancel
             </Button>
           )}
           <Button type="button" onClick={handleSubmit} disabled={isLoading || !hasChanges}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Save {fieldChanges.size} Change{fieldChanges.size !== 1 ? 's' : ''}
+            Save {fieldChanges.size} Change{fieldChanges.size !== 1 ? "s" : ""}
           </Button>
         </div>
       </CardContent>

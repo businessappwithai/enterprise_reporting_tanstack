@@ -1,53 +1,53 @@
-import React, { useEffect, useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
-import { DatasetManager } from '@/components/datasets/DatasetManager'
-import { Button } from '@/components/ui/button'
-import { useDuckDB } from '@/components/duckdb/DuckDBProvider'
-import { useDataset } from '@/hooks/useDataset'
-import type { DatasetInfo } from '@/types/wasm'
-import { isFeatureEnabled } from '@/lib/feature-flags'
+import React, { useEffect, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { DatasetManager } from "@/components/datasets/DatasetManager";
+import { Button } from "@/components/ui/button";
+import { useDuckDB } from "@/components/duckdb/DuckDBProvider";
+import { useDataset } from "@/hooks/useDataset";
+import type { DatasetInfo } from "@/types/wasm";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
-export const Route = createFileRoute('/_authed/datasets/')({
+export const Route = createFileRoute("/_authed/datasets/")({
   component: DatasetsPage,
-})
+});
 
 interface ServerDataset {
-  id: string
-  name: string
-  dataSourceId: string
-  rowCount: number
-  fileSize: number
-  columns: { name: string; type: string; nullable: boolean }[]
-  status: string
+  id: string;
+  name: string;
+  dataSourceId: string;
+  rowCount: number;
+  fileSize: number;
+  columns: { name: string; type: string; nullable: boolean }[];
+  status: string;
 }
 
 function DatasetsPage() {
-  const wasmEnabled = isFeatureEnabled('wasmEnabled')
-  const { status: duckdbStatus } = useDuckDB()
-  const { datasets, loadDataset, unloadDataset } = useDataset()
-  const [serverDatasets, setServerDatasets] = useState<ServerDataset[]>([])
-  const [isLoadingList, setIsLoadingList] = useState(true)
+  const wasmEnabled = isFeatureEnabled("wasmEnabled");
+  const { status: duckdbStatus } = useDuckDB();
+  const { datasets, loadDataset, unloadDataset } = useDataset();
+  const [serverDatasets, setServerDatasets] = useState<ServerDataset[]>([]);
+  const [isLoadingList, setIsLoadingList] = useState(true);
 
   useEffect(() => {
     async function fetchDatasets() {
       try {
-        const res = await fetch('/api/datasets?pageSize=100')
-        const json = await res.json()
+        const res = await fetch("/api/datasets?pageSize=100");
+        const json = await res.json();
         if (json.success) {
-          setServerDatasets(json.data.datasets)
+          setServerDatasets(json.data.datasets);
         }
       } catch (err) {
-        console.error('Failed to fetch datasets:', err)
+        console.error("Failed to fetch datasets:", err);
       } finally {
-        setIsLoadingList(false)
+        setIsLoadingList(false);
       }
     }
-    fetchDatasets()
-  }, [])
+    fetchDatasets();
+  }, []);
 
   const merged: DatasetInfo[] = serverDatasets.map((sd) => {
-    const local = datasets.find((d) => d.id === sd.id)
-    if (local) return local
+    const local = datasets.find((d) => d.id === sd.id);
+    if (local) return local;
     return {
       id: sd.id,
       name: sd.name,
@@ -57,25 +57,25 @@ function DatasetsPage() {
       fileSize: sd.fileSize,
       memorySize: 0,
       schema: sd.columns,
-      cacheStatus: 'not-cached' as const,
+      cacheStatus: "not-cached" as const,
       isLoading: false,
-    }
-  })
+    };
+  });
 
   const handleLoad = async (id: string) => {
-    const sd = serverDatasets.find((d) => d.id === id)
-    if (!sd) return
+    const sd = serverDatasets.find((d) => d.id === id);
+    if (!sd) return;
     await loadDataset({
       id: sd.id,
       name: sd.name,
       dataSourceId: sd.dataSourceId,
       url: `/api/datasets/${sd.id}/parquet`,
-    })
-  }
+    });
+  };
 
   const handleUnload = async (id: string) => {
-    await unloadDataset(id)
-  }
+    await unloadDataset(id);
+  };
 
   if (!wasmEnabled) {
     return (
@@ -85,7 +85,7 @@ function DatasetsPage() {
           WASM mode is not enabled. Enable VITE_WASM_ENABLED to use client-side datasets.
         </p>
       </div>
-    )
+    );
   }
 
   return (
@@ -111,5 +111,5 @@ function DatasetsPage() {
         <DatasetManager datasets={merged} onLoad={handleLoad} onUnload={handleUnload} />
       )}
     </div>
-  )
+  );
 }

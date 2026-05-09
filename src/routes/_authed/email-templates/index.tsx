@@ -1,9 +1,9 @@
-import { useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -11,86 +11,86 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { toast } from 'sonner'
-import { Plus, Edit, Trash, Mail, Eye, FileText, Database, MoreHorizontal } from 'lucide-react'
-import { TemplateEditor } from '@/components/email/template-editor'
-import type { EmailTemplate } from '@/lib/email/email-service'
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
+import { Plus, Edit, Trash, Mail, Eye, FileText, Database, MoreHorizontal } from "lucide-react";
+import { TemplateEditor } from "@/components/email/template-editor";
+import type { EmailTemplate } from "@/lib/email/email-service";
 
-export const Route = createFileRoute('/_authed/email-templates/')({
+export const Route = createFileRoute("/_authed/email-templates/")({
   component: EmailTemplatesPage,
-})
+});
 
 function EmailTemplatesPage() {
-  const queryClient = useQueryClient()
-  const [editorOpen, setEditorOpen] = useState(false)
-  const [editingTemplate, setEditingTemplate] = useState<EmailTemplate | null>(null)
+  const queryClient = useQueryClient();
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<EmailTemplate | null>(null);
 
   const { data: templates, isLoading } = useQuery<EmailTemplate[]>({
-    queryKey: ['email-templates'],
+    queryKey: ["email-templates"],
     queryFn: async () => {
-      const res = await fetch('/api/email-templates')
-      const data = await res.json()
-      return data.data?.items || []
+      const res = await fetch("/api/email-templates");
+      const data = await res.json();
+      return data.data?.items || [];
     },
-  })
+  });
 
   const deleteMutation = useMutation({
     mutationFn: async (templateId: string) => {
       const res = await fetch(`/api/email-templates/${templateId}`, {
-        method: 'DELETE',
-      })
-      return res.json()
+        method: "DELETE",
+      });
+      return res.json();
     },
     onSuccess: (data) => {
       if (data.success) {
-        toast.success('Template deleted')
-        queryClient.invalidateQueries({ queryKey: ['email-templates'] })
+        toast.success("Template deleted");
+        queryClient.invalidateQueries({ queryKey: ["email-templates"] });
       } else {
-        toast.error(data.error?.message || 'Failed to delete template')
+        toast.error(data.error?.message || "Failed to delete template");
       }
     },
-  })
+  });
 
   const handleCreate = () => {
-    setEditingTemplate(null)
-    setEditorOpen(true)
-  }
+    setEditingTemplate(null);
+    setEditorOpen(true);
+  };
 
   const handleEdit = (template: EmailTemplate) => {
-    setEditingTemplate(template)
-    setEditorOpen(true)
-  }
+    setEditingTemplate(template);
+    setEditorOpen(true);
+  };
 
   const handleDelete = (templateId: string) => {
-    if (confirm('Are you sure you want to delete this template?')) {
-      deleteMutation.mutate(templateId)
+    if (confirm("Are you sure you want to delete this template?")) {
+      deleteMutation.mutate(templateId);
     }
-  }
+  };
 
   const handleSave = (_template: {
-    name: string
-    subject: string
-    htmlBody: string
-    queryId?: string
-    columnMappings: Record<string, string>
+    name: string;
+    subject: string;
+    htmlBody: string;
+    queryId?: string;
+    columnMappings: Record<string, string>;
   }) => {
-    setEditorOpen(false)
-    setEditingTemplate(null)
-  }
+    setEditorOpen(false);
+    setEditingTemplate(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -167,8 +167,8 @@ function EmailTemplatesPage() {
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => {
-                              setEditingTemplate(template)
-                              setEditorOpen(true)
+                              setEditingTemplate(template);
+                              setEditorOpen(true);
                             }}
                           >
                             <Eye className="h-4 w-4 mr-2" />
@@ -195,19 +195,17 @@ function EmailTemplatesPage() {
       <Dialog
         open={editorOpen}
         onOpenChange={(open) => {
-          if (!open) setEditingTemplate(null)
-          setEditorOpen(open)
+          if (!open) setEditingTemplate(null);
+          setEditorOpen(open);
         }}
       >
         <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              {editingTemplate ? 'Edit Template' : 'Create Email Template'}
-            </DialogTitle>
+            <DialogTitle>{editingTemplate ? "Edit Template" : "Create Email Template"}</DialogTitle>
             <DialogDescription>
               {editingTemplate
-                ? 'Modify your email template and placeholder mappings'
-                : 'Create a new email template with query-based placeholders'}
+                ? "Modify your email template and placeholder mappings"
+                : "Create a new email template with query-based placeholders"}
             </DialogDescription>
           </DialogHeader>
           <TemplateEditor
@@ -227,29 +225,29 @@ function EmailTemplatesPage() {
             {[
               {
                 step: 1,
-                title: 'Create Template',
+                title: "Create Template",
                 desc: (
                   <>
-                    Add placeholders like{' '}
-                    <code className="bg-muted px-1 rounded">{'{{customer_name}}'}</code> to your
+                    Add placeholders like{" "}
+                    <code className="bg-muted px-1 rounded">{"{{customer_name}}"}</code> to your
                     email
                   </>
                 ),
               },
               {
                 step: 2,
-                title: 'Connect Query',
-                desc: 'Select a saved query to fetch data (e.g., customer billing data)',
+                title: "Connect Query",
+                desc: "Select a saved query to fetch data (e.g., customer billing data)",
               },
               {
                 step: 3,
-                title: 'Map Columns',
+                title: "Map Columns",
                 desc: "Map query columns to template placeholders (e.g., customer_name column → {{customer_name}})",
               },
               {
                 step: 4,
-                title: 'Use in Jobs',
-                desc: 'When creating a scheduled job, select this template to send personalized emails',
+                title: "Use in Jobs",
+                desc: "When creating a scheduled job, select this template to send personalized emails",
               },
             ].map(({ step, title, desc }) => (
               <div key={step} className="space-y-2">
@@ -266,5 +264,5 @@ function EmailTemplatesPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

@@ -1,29 +1,24 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getAuthSession } from '@/lib/auth/config';
-import { getConfigDB } from '@/lib/db/config';
-import type { FilterDefinition } from '@/types/database';
-import { randomUUID } from 'crypto';
+import { type NextRequest, NextResponse } from "next/server";
+import { getAuthSession } from "@/lib/auth/config";
+import { getConfigDB } from "@/lib/db/config";
+import type { FilterDefinition } from "@/types/database";
+import { randomUUID } from "crypto";
 
 // GET all filters
 export async function GET() {
   try {
     const session = await getAuthSession();
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const db = getConfigDB();
-    const filters = await db('filter_definitions')
-      .select('*')
-      .orderBy('name');
+    const filters = await db("filter_definitions").select("*").orderBy("name");
 
     return NextResponse.json(filters);
   } catch (error) {
-    console.error('Error fetching filters:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch filters' },
-      { status: 500 }
-    );
+    console.error("Error fetching filters:", error);
+    return NextResponse.json({ error: "Failed to fetch filters" }, { status: 500 });
   }
 }
 
@@ -32,11 +27,11 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getAuthSession();
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await req.json();
-    console.log('[POST /api/filters] Received body:', JSON.stringify(body, null, 2));
+    console.log("[POST /api/filters] Received body:", JSON.stringify(body, null, 2));
 
     const {
       name,
@@ -52,16 +47,16 @@ export async function POST(req: NextRequest) {
 
     // Validation
     const missingFields = [];
-    if (!name) missingFields.push('name');
-    if (!data_source_id) missingFields.push('data_source_id');
-    if (!filter_query) missingFields.push('filter_query');
-    if (!display_field) missingFields.push('display_field');
-    if (!value_field) missingFields.push('value_field');
+    if (!name) missingFields.push("name");
+    if (!data_source_id) missingFields.push("data_source_id");
+    if (!filter_query) missingFields.push("filter_query");
+    if (!display_field) missingFields.push("display_field");
+    if (!value_field) missingFields.push("value_field");
 
     if (missingFields.length > 0) {
-      console.error('[POST /api/filters] Missing required fields:', missingFields);
+      console.error("[POST /api/filters] Missing required fields:", missingFields);
       return NextResponse.json(
-        { error: 'Missing required fields', missingFields },
+        { error: "Missing required fields", missingFields },
         { status: 400 }
       );
     }
@@ -82,16 +77,19 @@ export async function POST(req: NextRequest) {
       updated_at: new Date().toISOString(),
     };
 
-    console.log('[POST /api/filters] Creating filter:', JSON.stringify(newFilter, null, 2));
+    console.log("[POST /api/filters] Creating filter:", JSON.stringify(newFilter, null, 2));
 
     const db = getConfigDB();
-    await db('filter_definitions').insert(newFilter);
+    await db("filter_definitions").insert(newFilter);
 
     return NextResponse.json(newFilter, { status: 201 });
   } catch (error) {
-    console.error('[POST /api/filters] Error creating filter:', error);
+    console.error("[POST /api/filters] Error creating filter:", error);
     return NextResponse.json(
-      { error: 'Failed to create filter', details: error instanceof Error ? error.message : String(error) },
+      {
+        error: "Failed to create filter",
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }

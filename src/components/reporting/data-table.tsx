@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -13,7 +13,7 @@ import {
   type ColumnFiltersState,
   type VisibilityState,
   type PaginationState,
-} from '@tanstack/react-table';
+} from "@tanstack/react-table";
 import {
   Table,
   TableBody,
@@ -21,22 +21,22 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   ChevronLeft,
   ChevronRight,
@@ -49,9 +49,9 @@ import {
   ArrowDown,
   Search,
   X,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import type { ReportColorTheme } from '@/types/database';
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import type { ReportColorTheme } from "@/types/database";
 
 interface DataTableProps<TData> {
   data: TData[];
@@ -60,7 +60,7 @@ interface DataTableProps<TData> {
   totalRows?: number;
   pageSize?: number;
   pageSizeOptions?: number[];
-  onExport?: (format: 'csv' | 'xlsx' | 'pdf') => void;
+  onExport?: (format: "csv" | "xlsx" | "pdf") => void;
   serverSide?: boolean;
   onPaginationChange?: (pagination: PaginationState) => void;
   onSortingChange?: (sorting: SortingState) => void;
@@ -93,7 +93,7 @@ export function DataTable<TData>({
     pageIndex: externalPageIndex,
     pageSize,
   });
-  const [globalFilter, setGlobalFilter] = useState('');
+  const [globalFilter, setGlobalFilter] = useState("");
 
   // Sync internal pagination state when external pageIndex changes (server-side)
   useEffect(() => {
@@ -112,19 +112,23 @@ export function DataTable<TData>({
     : internalPagination;
 
   const handleSortingChange = (updater: SortingState | ((old: SortingState) => SortingState)) => {
-    const newSorting = typeof updater === 'function' ? updater(sorting) : updater;
+    const newSorting = typeof updater === "function" ? updater(sorting) : updater;
     setSorting(newSorting);
     onSortingChange?.(newSorting);
   };
 
-  const handleFilterChange = (updater: ColumnFiltersState | ((old: ColumnFiltersState) => ColumnFiltersState)) => {
-    const newFilters = typeof updater === 'function' ? updater(columnFilters) : updater;
+  const handleFilterChange = (
+    updater: ColumnFiltersState | ((old: ColumnFiltersState) => ColumnFiltersState)
+  ) => {
+    const newFilters = typeof updater === "function" ? updater(columnFilters) : updater;
     setColumnFilters(newFilters);
     onFilterChange?.(newFilters);
   };
 
-  const handlePaginationChange = (updater: PaginationState | ((old: PaginationState) => PaginationState)) => {
-    const newPagination = typeof updater === 'function' ? updater(pagination) : updater;
+  const handlePaginationChange = (
+    updater: PaginationState | ((old: PaginationState) => PaginationState)
+  ) => {
+    const newPagination = typeof updater === "function" ? updater(pagination) : updater;
 
     // Always update internal state to keep table in sync
     setInternalPagination(newPagination);
@@ -137,14 +141,14 @@ export function DataTable<TData>({
 
   // Prepare styles based on color theme
   const tableStyle = {
-    '--header-bg': colorTheme?.headerBackgroundColor || undefined,
-    '--header-text': colorTheme?.headerTextColor || undefined,
-    '--header-font-weight': colorTheme?.headerFontWeight || undefined,
-    '--row-bg': colorTheme?.rowBackgroundColor || undefined,
-    '--row-text': colorTheme?.rowTextColor || undefined,
-    '--alt-row-bg': colorTheme?.alternatingRowBackgroundColor || undefined,
-    '--alt-row-text': colorTheme?.alternatingRowTextColor || undefined,
-    '--border-color': colorTheme?.borderColor || undefined,
+    "--header-bg": colorTheme?.headerBackgroundColor || undefined,
+    "--header-text": colorTheme?.headerTextColor || undefined,
+    "--header-font-weight": colorTheme?.headerFontWeight || undefined,
+    "--row-bg": colorTheme?.rowBackgroundColor || undefined,
+    "--row-text": colorTheme?.rowTextColor || undefined,
+    "--alt-row-bg": colorTheme?.alternatingRowBackgroundColor || undefined,
+    "--alt-row-text": colorTheme?.alternatingRowTextColor || undefined,
+    "--border-color": colorTheme?.borderColor || undefined,
   } as React.CSSProperties;
 
   const table = useReactTable({
@@ -181,7 +185,7 @@ export function DataTable<TData>({
             <Search
               className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground"
               onClick={() => {
-                console.log('[DataTable] Search icon clicked, searching for:', globalFilter);
+                console.log("[DataTable] Search icon clicked, searching for:", globalFilter);
                 onSearchChange?.(globalFilter);
               }}
             />
@@ -189,12 +193,12 @@ export function DataTable<TData>({
               placeholder="Search all columns..."
               value={globalFilter}
               onChange={(e) => {
-                console.log('[DataTable] Input changed:', e.target.value);
+                console.log("[DataTable] Input changed:", e.target.value);
                 setGlobalFilter(e.target.value);
               }}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  console.log('[DataTable] Enter pressed, searching for:', globalFilter);
+                if (e.key === "Enter") {
+                  console.log("[DataTable] Enter pressed, searching for:", globalFilter);
                   onSearchChange?.(globalFilter);
                 }
               }}
@@ -204,9 +208,9 @@ export function DataTable<TData>({
               <X
                 className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground"
                 onClick={() => {
-                  console.log('[DataTable] Clear search');
-                  setGlobalFilter('');
-                  onSearchChange?.('');
+                  console.log("[DataTable] Clear search");
+                  setGlobalFilter("");
+                  onSearchChange?.("");
                 }}
               />
             )}
@@ -216,7 +220,7 @@ export function DataTable<TData>({
             size="sm"
             className="h-8"
             onClick={() => {
-              console.log('[DataTable] Search button clicked, searching for:', globalFilter);
+              console.log("[DataTable] Search button clicked, searching for:", globalFilter);
               onSearchChange?.(globalFilter);
             }}
           >
@@ -229,9 +233,9 @@ export function DataTable<TData>({
               size="sm"
               className="h-8"
               onClick={() => {
-                console.log('[DataTable] Clear button clicked');
-                setGlobalFilter('');
-                onSearchChange?.('');
+                console.log("[DataTable] Clear button clicked");
+                setGlobalFilter("");
+                onSearchChange?.("");
               }}
             >
               <X className="h-4 w-4 mr-2" />
@@ -250,13 +254,13 @@ export function DataTable<TData>({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuCheckboxItem onClick={() => onExport('csv')}>
+                <DropdownMenuCheckboxItem onClick={() => onExport("csv")}>
                   Export as CSV
                 </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem onClick={() => onExport('xlsx')}>
+                <DropdownMenuCheckboxItem onClick={() => onExport("xlsx")}>
                   Export as Excel
                 </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem onClick={() => onExport('pdf')}>
+                <DropdownMenuCheckboxItem onClick={() => onExport("pdf")}>
                   Export as PDF
                 </DropdownMenuCheckboxItem>
               </DropdownMenuContent>
@@ -294,7 +298,7 @@ export function DataTable<TData>({
       <div
         className="rounded-md border"
         style={{
-          borderColor: tableStyle['--border-color'],
+          borderColor: tableStyle["--border-color"],
         }}
       >
         <Table style={tableStyle}>
@@ -306,28 +310,25 @@ export function DataTable<TData>({
                     key={header.id}
                     className="whitespace-nowrap"
                     style={{
-                      backgroundColor: tableStyle['--header-bg'],
-                      color: tableStyle['--header-text'],
-                      fontWeight: tableStyle['--header-font-weight'],
+                      backgroundColor: tableStyle["--header-bg"],
+                      color: tableStyle["--header-text"],
+                      fontWeight: tableStyle["--header-font-weight"],
                     }}
                   >
                     {header.isPlaceholder ? null : (
                       <div
                         className={cn(
                           header.column.getCanSort() &&
-                            'flex items-center gap-1 cursor-pointer select-none hover:text-foreground'
+                            "flex items-center gap-1 cursor-pointer select-none hover:text-foreground"
                         )}
                         onClick={header.column.getToggleSortingHandler()}
                       >
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                        {flexRender(header.column.columnDef.header, header.getContext())}
                         {header.column.getCanSort() && (
                           <>
-                            {header.column.getIsSorted() === 'asc' ? (
+                            {header.column.getIsSorted() === "asc" ? (
                               <ArrowUp className="h-3 w-3" />
-                            ) : header.column.getIsSorted() === 'desc' ? (
+                            ) : header.column.getIsSorted() === "desc" ? (
                               <ArrowDown className="h-3 w-3" />
                             ) : (
                               <ArrowUpDown className="h-3 w-3 opacity-50" />
@@ -344,10 +345,7 @@ export function DataTable<TData>({
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
+                <TableCell colSpan={columns.length} className="h-24 text-center">
                   Loading...
                 </TableCell>
               </TableRow>
@@ -368,26 +366,19 @@ export function DataTable<TData>({
                     key={row.id}
                     style={{
                       backgroundColor: isAltRow
-                        ? tableStyle['--alt-row-bg']
-                        : tableStyle['--row-bg'],
-                      color: isAltRow
-                        ? tableStyle['--alt-row-text']
-                        : tableStyle['--row-text'],
+                        ? tableStyle["--alt-row-bg"]
+                        : tableStyle["--row-bg"],
+                      color: isAltRow ? tableStyle["--alt-row-text"] : tableStyle["--row-text"],
                     }}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell
                         key={cell.id}
                         style={{
-                          color: isAltRow
-                            ? tableStyle['--alt-row-text']
-                            : tableStyle['--row-text'],
+                          color: isAltRow ? tableStyle["--alt-row-text"] : tableStyle["--row-text"],
                         }}
                       >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     ))}
                   </TableRow>
@@ -402,16 +393,12 @@ export function DataTable<TData>({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span>
-            Showing{' '}
-            {table.getState().pagination.pageIndex *
-              table.getState().pagination.pageSize +
-              1}{' '}
-            to{' '}
+            Showing{" "}
+            {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{" "}
             {Math.min(
-              (table.getState().pagination.pageIndex + 1) *
-                table.getState().pagination.pageSize,
+              (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
               totalRows || data.length
-            )}{' '}
+            )}{" "}
             of {totalRows || data.length} results
           </span>
         </div>
@@ -458,8 +445,7 @@ export function DataTable<TData>({
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <span className="text-sm px-2">
-              Page {table.getState().pagination.pageIndex + 1} of{' '}
-              {table.getPageCount()}
+              Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
             </span>
             <Button
               variant="outline"

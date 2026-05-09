@@ -1,100 +1,109 @@
-'use server'
+"use server";
 
-import { createServerFn } from '@tanstack/react-start'
-import { getDb } from '@/lib/db/config'
-import { logAudit } from '@/lib/security/audit'
-import { randomUUID } from 'crypto'
-import type { ReportDefinition } from '@/types/database'
-import { requireAuth } from '@/lib/auth/middleware'
+import { createServerFn } from "@tanstack/react-start";
+import { getDb } from "@/lib/db/config";
+import { logAudit } from "@/lib/security/audit";
+import { randomUUID } from "crypto";
+import type { ReportDefinition } from "@/types/database";
+import { requireAuth } from "@/lib/auth/middleware";
 
 interface ListReportsInput {
-  page?: number
-  pageSize?: number
+  page?: number;
+  pageSize?: number;
 }
 
 interface CreateReportInput {
-  name: string
-  description?: string
-  savedQueryId?: string
-  columnConfig?: unknown[]
-  filterConfig?: unknown
-  sortConfig?: unknown
-  paginationConfig?: unknown
-  exportFormats?: string[]
+  name: string;
+  description?: string;
+  savedQueryId?: string;
+  columnConfig?: unknown[];
+  filterConfig?: unknown;
+  sortConfig?: unknown;
+  paginationConfig?: unknown;
+  exportFormats?: string[];
 }
 
 interface UpdateReportInput {
-  id: string
-  name?: string
-  description?: string
-  columnConfig?: unknown[]
-  filterConfig?: unknown
-  sortConfig?: unknown
+  id: string;
+  name?: string;
+  description?: string;
+  columnConfig?: unknown[];
+  filterConfig?: unknown;
+  sortConfig?: unknown;
 }
 
 export const listReports = createServerFn({
-  method: 'GET',
+  method: "GET",
 }).handler(async (input: ListReportsInput) => {
-  const session = await requireAuth()
-  const { page = 0, pageSize = 20 } = input
+  const session = await requireAuth();
+  const { page = 0, pageSize = 20 } = input;
 
-  const db = getDb()
+  const db = getDb();
   const reports = await db
-    .selectFrom('report_definitions')
+    .selectFrom("report_definitions")
     .selectAll()
-    .orderBy('created_at', 'desc')
+    .orderBy("created_at", "desc")
     .limit(pageSize)
     .offset(page * pageSize)
-    .execute()
+    .execute();
 
   const countResult = await db
-    .selectFrom('report_definitions')
-    .select((eb) => eb.fn.count('id').as('count'))
-    .executeTakeFirst()
-  const total = Number(countResult?.count || 0)
+    .selectFrom("report_definitions")
+    .select((eb) => eb.fn.count("id").as("count"))
+    .executeTakeFirst();
+  const total = Number(countResult?.count || 0);
 
   return {
     items: reports,
     meta: { total, page, pageSize, totalPages: Math.ceil(total / pageSize) },
-  }
-})
+  };
+});
 
 export const getReport = createServerFn({
-  method: 'GET',
+  method: "GET",
 }).handler(async (input: { id: string }) => {
-  const session = await requireAuth()
-  const { id } = input
+  const session = await requireAuth();
+  const { id } = input;
 
-  const db = getDb()
+  const db = getDb();
   const report = await db
-    .selectFrom('report_definitions')
+    .selectFrom("report_definitions")
     .selectAll()
-    .where('id', '=', id)
-    .executeTakeFirst()
+    .where("id", "=", id)
+    .executeTakeFirst();
 
   if (!report) {
-    throw new Error('Report not found')
+    throw new Error("Report not found");
   }
 
-  return report
-})
+  return report;
+});
 
 export const createReport = createServerFn({
-  method: 'POST',
+  method: "POST",
 }).handler(async (input: CreateReportInput) => {
-  const session = await requireAuth()
+  const session = await requireAuth();
 
-  const { name, description, savedQueryId, columnConfig, filterConfig, sortConfig, paginationConfig, exportFormats } = input
+  const {
+    name,
+    description,
+    savedQueryId,
+    columnConfig,
+    filterConfig,
+    sortConfig,
+    paginationConfig,
+    exportFormats,
+  } = input;
 
   if (!name) {
-    throw new Error('Name is required')
+    throw new Error("Name is required");
   }
 
-  const db = getDb()
-  const id = randomUUID()
+  const db = getDb();
+  const id = randomUUID();
 
   await db
-    .insertInto('report_definitions')
+    .insertInto("report_definitions")
     .values({
       id,
       name,
@@ -104,69 +113,66 @@ export const createReport = createServerFn({
       filter_config: filterConfig ? JSON.stringify(filterConfig) : null,
       sort_config: sortConfig ? JSON.stringify(sortConfig) : null,
       pagination_config: paginationConfig ? JSON.stringify(paginationConfig) : null,
-      export_formats: JSON.stringify(exportFormats || ['csv', 'xlsx', 'pdf']),
+      export_formats: JSON.stringify(exportFormats || ["csv", "xlsx", "pdf"]),
       created_by: session.user.id,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
-    .execute()
+    .execute();
 
   await logAudit({
     userId: session.user.id,
-    action: 'create',
-    resourceType: 'report',
+    action: "create",
+    resourceType: "report",
     resourceId: id,
     details: { name },
-  })
+  });
 
-  return { id }
-})
+  return { id };
+});
 
 export const updateReport = createServerFn({
-  method: 'PUT',
+  method: "PUT",
 }).handler(async (input: UpdateReportInput) => {
-  const session = await requireAuth()
-  const { id, ...updates } = input
+  const session = await requireAuth();
+  const { id, ...updates } = input;
 
-  const db = getDb()
+  const db = getDb();
   await db
-    .updateTable('report_definitions')
+    .updateTable("report_definitions")
     .set({
       ...updates,
       updated_at: new Date().toISOString(),
     })
-    .where('id', '=', id)
-    .execute()
+    .where("id", "=", id)
+    .execute();
 
   await logAudit({
     userId: session.user.id,
-    action: 'update',
-    resourceType: 'report',
+    action: "update",
+    resourceType: "report",
     resourceId: id,
     details: updates,
-  })
+  });
 
-  return { success: true }
-})
+  return { success: true };
+});
 
 export const deleteReport = createServerFn({
-  method: 'DELETE',
+  method: "DELETE",
 }).handler(async (input: { id: string }) => {
-  const session = await requireAuth()
-  const { id } = input
+  const session = await requireAuth();
+  const { id } = input;
 
-  const db = getDb()
-  await db
-    .deleteFrom('report_definitions')
-    .where('id', '=', id)
-    .execute()
+  const db = getDb();
+  await db.deleteFrom("report_definitions").where("id", "=", id).execute();
 
   await logAudit({
     userId: session.user.id,
-    action: 'delete',
-    resourceType: 'report',
+    action: "delete",
+    resourceType: "report",
     resourceId: id,
-  })
+  });
 
-  return { success: true }
-})
+  return { success: true };
+});

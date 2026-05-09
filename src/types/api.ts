@@ -9,7 +9,7 @@ import type {
   ReportDefinition,
   SavedQuery,
   User,
-} from './database';
+} from "./database";
 
 // Generic API Response Types
 export interface ApiResponse<T = unknown> {
@@ -37,7 +37,7 @@ export interface PaginationParams {
   page?: number;
   pageSize?: number;
   sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
 }
 
 export interface PaginatedResponse<T> {
@@ -71,7 +71,7 @@ export interface SQLWarning {
   message: string;
   line?: number;
   column?: number;
-  type: 'performance' | 'security' | 'style';
+  type: "performance" | "security" | "style";
 }
 
 export interface QueryCost {
@@ -155,9 +155,7 @@ export interface IndexInfo {
 }
 
 // Data Source Types
-export type DataSourceListResponse = ApiResponse<
-  PaginatedResponse<DataSource>
->;
+export type DataSourceListResponse = ApiResponse<PaginatedResponse<DataSource>>;
 export type DataSourceResponse = ApiResponse<DataSource>;
 
 export interface CreateDataSourceRequest {
@@ -178,7 +176,7 @@ export interface CreateDataSourceRequest {
 export interface UpdateDataSourceRequest {
   name?: string;
   description?: string;
-  connectionConfig?: CreateDataSourceRequest['connectionConfig'];
+  connectionConfig?: CreateDataSourceRequest["connectionConfig"];
   isActive?: boolean;
 }
 
@@ -208,9 +206,7 @@ export interface UpdateQueryRequest {
 }
 
 // Report Types
-export type ReportListResponse = ApiResponse<
-  PaginatedResponse<ReportDefinition>
->;
+export type ReportListResponse = ApiResponse<PaginatedResponse<ReportDefinition>>;
 export type ReportResponse = ApiResponse<ReportDefinition>;
 
 export interface CreateReportRequest {
@@ -242,14 +238,14 @@ export interface FilterConfiguration {
 
 export interface FilterDefinition {
   field: string;
-  type: 'text' | 'number' | 'date' | 'select' | 'multiselect' | 'boolean';
+  type: "text" | "number" | "date" | "select" | "multiselect" | "boolean";
   label?: string;
   operators?: string[];
   options?: Array<{ label: string; value: unknown }>;
 }
 
 export interface SortConfiguration {
-  defaultSort?: Array<{ field: string; direction: 'asc' | 'desc' }>;
+  defaultSort?: Array<{ field: string; direction: "asc" | "desc" }>;
   sortableColumns?: string[];
 }
 
@@ -263,7 +259,7 @@ export interface ReportDataRequest {
   page?: number;
   pageSize?: number;
   sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
   filters?: Record<string, unknown>;
   parameters?: Record<string, unknown>;
 }
@@ -275,7 +271,7 @@ export interface ReportDataResponse {
 }
 
 export interface ReportExportRequest {
-  format: 'csv' | 'xlsx' | 'pdf';
+  format: "csv" | "xlsx" | "pdf";
   filters?: Record<string, unknown>;
   parameters?: Record<string, unknown>;
   includeHeaders?: boolean;
@@ -314,18 +310,14 @@ export interface ChartDataResponse {
 }
 
 export interface ChartExportRequest {
-  format: 'png' | 'svg';
+  format: "png" | "svg";
   width?: number;
   height?: number;
 }
 
 // Dashboard Types
-export type DashboardListResponse = ApiResponse<
-  PaginatedResponse<DashboardLayout>
->;
-export type DashboardResponse = ApiResponse<
-  DashboardLayout & { widgets: DashboardWidget[] }
->;
+export type DashboardListResponse = ApiResponse<PaginatedResponse<DashboardLayout>>;
+export type DashboardResponse = ApiResponse<DashboardLayout & { widgets: DashboardWidget[] }>;
 
 export interface CreateDashboardRequest {
   name: string;
@@ -346,7 +338,7 @@ export interface UpdateDashboardRequest {
 }
 
 export interface AddWidgetRequest {
-  widgetType: 'report' | 'chart' | 'metric' | 'text';
+  widgetType: "report" | "chart" | "metric" | "text";
   reportId?: string;
   chartId?: string;
   positionConfig: { x: number; y: number; w: number; h: number };
@@ -361,13 +353,11 @@ export interface UpdateWidgetRequest {
 // Job Types
 export type JobListResponse = ApiResponse<PaginatedResponse<JobDefinition>>;
 export type JobResponse = ApiResponse<JobDefinition>;
-export type JobExecutionListResponse = ApiResponse<
-  PaginatedResponse<JobExecution>
->;
+export type JobExecutionListResponse = ApiResponse<PaginatedResponse<JobExecution>>;
 
 export interface CreateJobRequest {
   name: string;
-  jobType: 'report' | 'chart' | 'export';
+  jobType: "report" | "chart" | "export";
   targetId: string;
   scheduleCron?: string;
   parameters?: Record<string, unknown>;
@@ -390,7 +380,7 @@ export interface UpdateJobRequest {
 
 export interface QueueJobRequest {
   jobDefinitionId?: string;
-  jobType: 'report' | 'chart' | 'export';
+  jobType: "report" | "chart" | "export";
   targetId: string;
   parameters?: Record<string, unknown>;
   priority?: number;
@@ -403,10 +393,8 @@ export interface QueueJobResponse {
 }
 
 // User Types (for admin)
-export type UserListResponse = ApiResponse<
-  PaginatedResponse<Omit<User, 'password_hash'>>
->;
-export type UserResponse = ApiResponse<Omit<User, 'password_hash'>>;
+export type UserListResponse = ApiResponse<PaginatedResponse<Omit<User, "password_hash">>>;
+export type UserResponse = ApiResponse<Omit<User, "password_hash">>;
 
 export interface CreateUserRequest {
   email: string;

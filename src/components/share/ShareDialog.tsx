@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,20 +8,20 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Copy, Check, Globe, Lock, Share2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Copy, Check, Globe, Lock, Share2 } from "lucide-react";
+import { toast } from "sonner";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface ShareDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   resourceId: string;
-  resourceType: 'dashboard' | 'report' | 'chart';
+  resourceType: "dashboard" | "report" | "chart";
   isPublic: boolean;
   onTogglePublic: (isPublic: boolean) => void;
 }
@@ -37,31 +37,32 @@ export function ShareDialog({
   const [copied, setCopied] = useState(false);
   const queryClient = useQueryClient();
 
-  const shareUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/share/${resourceType}/${resourceId}`
-    : '';
+  const shareUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/share/${resourceType}/${resourceId}`
+      : "";
 
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-      toast.success('Share link copied to clipboard');
+      toast.success("Share link copied to clipboard");
     } catch (err) {
-      toast.error('Failed to copy link');
+      toast.error("Failed to copy link");
     }
   };
 
   const togglePublicMutation = useMutation({
     mutationFn: async (newPublicState: boolean) => {
       const response = await fetch(`/api/${resourceType}s/${resourceId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isPublic: newState }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update visibility');
+        throw new Error("Failed to update visibility");
       }
 
       return response.json();
@@ -70,13 +71,13 @@ export function ShareDialog({
       queryClient.invalidateQueries({ queryKey: [resourceType, resourceId] });
       toast.success(
         isPublic
-          ? 'Dashboard is now private. Only logged in users can view it.'
-          : 'Dashboard is now public. Anyone with the link can view it.'
+          ? "Dashboard is now private. Only logged in users can view it."
+          : "Dashboard is now public. Anyone with the link can view it."
       );
       onTogglePublic(!isPublic);
     },
     onError: () => {
-      toast.error('Failed to update visibility');
+      toast.error("Failed to update visibility");
     },
   });
 
@@ -90,8 +91,8 @@ export function ShareDialog({
           </DialogTitle>
           <DialogDescription>
             {isPublic
-              ? 'This is publicly visible. Anyone with the link can view it.'
-              : 'This is private. Only you can view it.'}
+              ? "This is publicly visible. Anyone with the link can view it."
+              : "This is private. Only you can view it."}
           </DialogDescription>
         </DialogHeader>
 
@@ -102,8 +103,8 @@ export function ShareDialog({
               <Label className="text-base">Make Public</Label>
               <p className="text-sm text-muted-foreground">
                 {isPublic
-                  ? 'Anyone with the link can view this without logging in.'
-                  : 'Only you can view this. Users must be logged in.'}
+                  ? "Anyone with the link can view this without logging in."
+                  : "Only you can view this. Users must be logged in."}
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -125,23 +126,14 @@ export function ShareDialog({
             <div className="space-y-2">
               <Label htmlFor="share-url">Public Share Link</Label>
               <div className="flex space-x-2">
-                <Input
-                  id="share-url"
-                  value={shareUrl}
-                  readOnly
-                  className="flex-1"
-                />
+                <Input id="share-url" value={shareUrl} readOnly className="flex-1" />
                 <Button
                   size="icon"
-                  variant={copied ? 'default' : 'outline'}
+                  variant={copied ? "default" : "outline"}
                   onClick={copyToClipboard}
                   disabled={togglePublicMutation.isPending}
                 >
-                  {copied ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
+                  {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
@@ -157,7 +149,8 @@ export function ShareDialog({
                 <div className="space-y-1">
                   <p className="text-sm font-medium">Private Sharing</p>
                   <p className="text-xs text-muted-foreground">
-                    Make this {resourceType} public to generate a share link that doesn't require login.
+                    Make this {resourceType} public to generate a share link that doesn't require
+                    login.
                   </p>
                 </div>
               </div>
@@ -166,9 +159,7 @@ export function ShareDialog({
         </div>
 
         <DialogFooter>
-          <Button onClick={() => onOpenChange(false)}>
-            Done
-          </Button>
+          <Button onClick={() => onOpenChange(false)}>Done</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

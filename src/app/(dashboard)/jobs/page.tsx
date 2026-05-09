@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -12,13 +12,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 import {
   RefreshCw,
   Clock,
@@ -28,17 +28,17 @@ import {
   Download,
   Trash,
   Pause,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { formatDateTime } from '@/lib/utils';
-import type { JobDefinition, JobExecution } from '@/types/database';
+} from "lucide-react";
+import { toast } from "sonner";
+import { formatDateTime } from "@/lib/utils";
+import type { JobDefinition, JobExecution } from "@/types/database";
 
 const statusColors: Record<string, string> = {
-  pending: 'bg-yellow-500',
-  running: 'bg-blue-500',
-  completed: 'bg-green-500',
-  failed: 'bg-red-500',
-  cancelled: 'bg-gray-500',
+  pending: "bg-yellow-500",
+  running: "bg-blue-500",
+  completed: "bg-green-500",
+  failed: "bg-red-500",
+  cancelled: "bg-gray-500",
 };
 
 const statusIcons: Record<string, React.ReactNode> = {
@@ -53,9 +53,9 @@ export default function JobsPage() {
   const queryClient = useQueryClient();
 
   const { data: queueStatus, refetch: refetchStatus } = useQuery({
-    queryKey: ['queue-status'],
+    queryKey: ["queue-status"],
     queryFn: async () => {
-      const res = await fetch('/api/jobs/status');
+      const res = await fetch("/api/jobs/status");
       const data = await res.json();
       return data.data;
     },
@@ -63,18 +63,18 @@ export default function JobsPage() {
   });
 
   const { data: jobDefinitions, isLoading: isLoadingDefinitions } = useQuery<JobDefinition[]>({
-    queryKey: ['job-definitions'],
+    queryKey: ["job-definitions"],
     queryFn: async () => {
-      const res = await fetch('/api/jobs');
+      const res = await fetch("/api/jobs");
       const data = await res.json();
       return data.data?.items || [];
     },
   });
 
   const { data: recentExecutions, isLoading: isLoadingExecutions } = useQuery<JobExecution[]>({
-    queryKey: ['job-executions'],
+    queryKey: ["job-executions"],
     queryFn: async () => {
-      const res = await fetch('/api/jobs/executions?limit=20');
+      const res = await fetch("/api/jobs/executions?limit=20");
       const data = await res.json();
       return data.data?.items || [];
     },
@@ -83,15 +83,15 @@ export default function JobsPage() {
 
   const cancelMutation = useMutation({
     mutationFn: async (jobId: string) => {
-      const res = await fetch(`/api/jobs/${jobId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/jobs/${jobId}`, { method: "DELETE" });
       return res.json();
     },
     onSuccess: (data) => {
       if (data.success) {
-        toast.success('Job cancelled');
-        queryClient.invalidateQueries({ queryKey: ['job-executions'] });
+        toast.success("Job cancelled");
+        queryClient.invalidateQueries({ queryKey: ["job-executions"] });
       } else {
-        toast.error(data.error?.message || 'Failed to cancel job');
+        toast.error(data.error?.message || "Failed to cancel job");
       }
     },
   });
@@ -101,9 +101,7 @@ export default function JobsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Background Jobs</h1>
-          <p className="text-muted-foreground">
-            Monitor and manage background job processing
-          </p>
+          <p className="text-muted-foreground">Monitor and manage background job processing</p>
         </div>
 
         <Button variant="outline" onClick={() => refetchStatus()}>
@@ -178,13 +176,9 @@ export default function JobsPage() {
             </CardHeader>
             <CardContent>
               {isLoadingExecutions ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  Loading...
-                </div>
+                <div className="text-center py-8 text-muted-foreground">Loading...</div>
               ) : recentExecutions?.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No job executions yet
-                </div>
+                <div className="text-center py-8 text-muted-foreground">No job executions yet</div>
               ) : (
                 <Table>
                   <TableHeader>
@@ -204,28 +198,21 @@ export default function JobsPage() {
                           {execution.id.substring(0, 8)}...
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            variant="secondary"
-                            className="flex items-center gap-1 w-fit"
-                          >
+                          <Badge variant="secondary" className="flex items-center gap-1 w-fit">
                             {statusIcons[execution.status]}
                             {execution.status}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-muted-foreground">
-                          {execution.started_at
-                            ? formatDateTime(execution.started_at)
-                            : '-'}
+                          {execution.started_at ? formatDateTime(execution.started_at) : "-"}
                         </TableCell>
                         <TableCell className="text-muted-foreground">
-                          {execution.completed_at
-                            ? formatDateTime(execution.completed_at)
-                            : '-'}
+                          {execution.completed_at ? formatDateTime(execution.completed_at) : "-"}
                         </TableCell>
                         <TableCell>
                           {execution.execution_metadata
-                            ? JSON.parse(execution.execution_metadata).duration + 'ms'
-                            : '-'}
+                            ? JSON.parse(execution.execution_metadata).duration + "ms"
+                            : "-"}
                         </TableCell>
                         <TableCell>
                           <DropdownMenu>
@@ -237,21 +224,16 @@ export default function JobsPage() {
                             <DropdownMenuContent align="end">
                               {execution.result_location && (
                                 <DropdownMenuItem asChild>
-                                  <a
-                                    href={`/api/jobs/${execution.id}/result`}
-                                    download
-                                  >
+                                  <a href={`/api/jobs/${execution.id}/result`} download>
                                     <Download className="h-4 w-4 mr-2" />
                                     Download Result
                                   </a>
                                 </DropdownMenuItem>
                               )}
-                              {execution.status === 'pending' ||
-                                (execution.status === 'running' && (
+                              {execution.status === "pending" ||
+                                (execution.status === "running" && (
                                   <DropdownMenuItem
-                                    onClick={() =>
-                                      cancelMutation.mutate(execution.id)
-                                    }
+                                    onClick={() => cancelMutation.mutate(execution.id)}
                                     className="text-destructive"
                                   >
                                     <Trash className="h-4 w-4 mr-2" />
@@ -277,9 +259,7 @@ export default function JobsPage() {
             </CardHeader>
             <CardContent>
               {isLoadingDefinitions ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  Loading...
-                </div>
+                <div className="text-center py-8 text-muted-foreground">Loading...</div>
               ) : jobDefinitions?.filter((j) => j.schedule_cron).length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   No scheduled jobs configured
@@ -304,14 +284,10 @@ export default function JobsPage() {
                           <TableCell>
                             <Badge variant="outline">{job.job_type}</Badge>
                           </TableCell>
-                          <TableCell className="font-mono text-sm">
-                            {job.schedule_cron}
-                          </TableCell>
+                          <TableCell className="font-mono text-sm">{job.schedule_cron}</TableCell>
                           <TableCell>
-                            <Badge
-                              variant={job.is_active ? 'default' : 'secondary'}
-                            >
-                              {job.is_active ? 'Active' : 'Paused'}
+                            <Badge variant={job.is_active ? "default" : "secondary"}>
+                              {job.is_active ? "Active" : "Paused"}
                             </Badge>
                           </TableCell>
                           <TableCell>

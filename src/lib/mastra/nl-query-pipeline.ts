@@ -10,10 +10,10 @@
  * 6. Return results with metadata
  */
 
-import { getDb } from '@/lib/db/config';
-import { getConnection } from '@/lib/db/connection-manager';
-import { validateSqlAccess, validateSqlTokens } from './sql-parser';
-import type { DataSource, NlQueryPipelineResult } from '@/types/database';
+import { getDb } from "@/lib/db/config";
+import { getConnection } from "@/lib/db/connection-manager";
+import { validateSqlAccess, validateSqlTokens } from "./sql-parser";
+import type { DataSource, NlQueryPipelineResult } from "@/types/database";
 
 const MAX_RESULT_ROWS = 1000;
 
@@ -68,9 +68,9 @@ export function buildChartPrompt(
   return `Based on the following query results, generate a chart configuration as a JSON object.
 
 USER REQUEST: ${naturalLanguageQuery}
-${requestedChartType ? `REQUESTED CHART TYPE: ${requestedChartType}` : 'Choose the most appropriate chart type.'}
+${requestedChartType ? `REQUESTED CHART TYPE: ${requestedChartType}` : "Choose the most appropriate chart type."}
 
-AVAILABLE COLUMNS: ${columns.join(', ')}
+AVAILABLE COLUMNS: ${columns.join(", ")}
 
 SAMPLE DATA (first 5 rows):
 ${JSON.stringify(sampleRows.slice(0, 5), null, 2)}
@@ -109,7 +109,7 @@ export async function executeNlQueryPipeline(
       parsedEntities: [],
       accessCheckResults: [],
       accessGranted: false,
-      error: `Generated SQL has syntax errors: ${tokenValidation.errors.join('; ')}`,
+      error: `Generated SQL has syntax errors: ${tokenValidation.errors.join("; ")}`,
     };
   }
 
@@ -124,25 +124,27 @@ export async function executeNlQueryPipeline(
   // Log the query attempt
   const db = getDb();
   const historyId = crypto.randomUUID();
-  await db('nl_query_history').insert({
+  await db("nl_query_history").insert({
     id: historyId,
     data_source_id: dataSource.id,
     user_id: userId,
     natural_language_query: naturalLanguageQuery,
     generated_sql: generatedSql,
     parsed_entities: JSON.stringify(entities),
-    access_check_result: allGranted ? 'granted' : 'denied',
+    access_check_result: allGranted ? "granted" : "denied",
     access_check_details: JSON.stringify(accessResults),
     created_at: new Date().toISOString(),
   });
 
   if (!allGranted) {
-    const deniedList = deniedEntities.join(', ');
+    const deniedList = deniedEntities.join(", ");
 
     // Update history with denial
-    await db('nl_query_history').where('id', historyId).update({
-      error_message: `Access denied to entities: ${deniedList}`,
-    });
+    await db("nl_query_history")
+      .where("id", historyId)
+      .update({
+        error_message: `Access denied to entities: ${deniedList}`,
+      });
 
     return {
       naturalLanguageQuery,
@@ -160,7 +162,7 @@ export async function executeNlQueryPipeline(
 
     // Add LIMIT if not present
     let executableSql = generatedSql.trim();
-    if (!executableSql.toLowerCase().includes('limit')) {
+    if (!executableSql.toLowerCase().includes("limit")) {
       executableSql = executableSql.replace(/;?\s*$/, ` LIMIT ${maxRows};`);
     }
 
@@ -183,10 +185,12 @@ export async function executeNlQueryPipeline(
     const columns = resultRows.length > 0 ? Object.keys(resultRows[0]) : [];
 
     // Update history with success
-    await db('nl_query_history').where('id', historyId).update({
-      execution_result: JSON.stringify({ rowCount: resultRows.length, columns }),
-      execution_time_ms: executionTimeMs,
-    });
+    await db("nl_query_history")
+      .where("id", historyId)
+      .update({
+        execution_result: JSON.stringify({ rowCount: resultRows.length, columns }),
+        execution_time_ms: executionTimeMs,
+      });
 
     return {
       naturalLanguageQuery,
@@ -205,11 +209,13 @@ export async function executeNlQueryPipeline(
     const errorMessage = error instanceof Error ? error.message : String(error);
 
     // Update history with error
-    await db('nl_query_history').where('id', historyId).update({
-      access_check_result: 'error',
-      error_message: errorMessage,
-      execution_time_ms: Date.now() - startTime,
-    });
+    await db("nl_query_history")
+      .where("id", historyId)
+      .update({
+        access_check_result: "error",
+        error_message: errorMessage,
+        execution_time_ms: Date.now() - startTime,
+      });
 
     return {
       naturalLanguageQuery,
@@ -224,12 +230,18 @@ export async function executeNlQueryPipeline(
 
 function getDialectName(dialect: string): string {
   switch (dialect) {
-    case 'pg': return 'PostgreSQL';
-    case 'mysql': return 'MySQL';
-    case 'mssql': return 'Microsoft SQL Server';
-    case 'sqlite3':
-    case 'sqlite': return 'SQLite';
-    case 'oracledb': return 'Oracle';
-    default: return 'SQL';
+    case "pg":
+      return "PostgreSQL";
+    case "mysql":
+      return "MySQL";
+    case "mssql":
+      return "Microsoft SQL Server";
+    case "sqlite3":
+    case "sqlite":
+      return "SQLite";
+    case "oracledb":
+      return "Oracle";
+    default:
+      return "SQL";
   }
 }

@@ -3,13 +3,14 @@
  * Custom queue monitoring and management interface
  */
 
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
+import type React from "react";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import {
   RefreshCw,
   Play,
@@ -20,8 +21,8 @@ import {
   XCircle,
   AlertCircle,
   Activity,
-} from 'lucide-react';
-import { toast } from 'sonner';
+} from "lucide-react";
+import { toast } from "sonner";
 
 interface QueueStats {
   waiting: number;
@@ -57,17 +58,19 @@ export default function BullBoardPage() {
     delayed: 0,
   });
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [activeTab, setActiveTab] = useState<'waiting' | 'active' | 'completed' | 'failed'>('waiting');
+  const [activeTab, setActiveTab] = useState<"waiting" | "active" | "completed" | "failed">(
+    "waiting"
+  );
   const [loading, setLoading] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('/api/jobs/status');
+      const response = await fetch("/api/jobs/status");
       const data = await response.json();
       setStats(data.data || { waiting: 0, active: 0, completed: 0, failed: 0, delayed: 0 });
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      console.error("Error fetching stats:", error);
     }
   };
 
@@ -78,8 +81,8 @@ export default function BullBoardPage() {
       const data = await response.json();
       setJobs(data.data?.items || []);
     } catch (error) {
-      console.error('Error fetching jobs:', error);
-      toast.error('Failed to fetch jobs');
+      console.error("Error fetching jobs:", error);
+      toast.error("Failed to fetch jobs");
     } finally {
       setLoading(false);
     }
@@ -87,64 +90,64 @@ export default function BullBoardPage() {
 
   const pauseQueue = async () => {
     try {
-      const response = await fetch('/api/jobs/pause', { method: 'POST' });
+      const response = await fetch("/api/jobs/pause", { method: "POST" });
       if (response.ok) {
         setIsPaused(true);
-        toast.success('Queue paused successfully');
+        toast.success("Queue paused successfully");
       }
     } catch (error) {
-      toast.error('Failed to pause queue');
+      toast.error("Failed to pause queue");
     }
   };
 
   const resumeQueue = async () => {
     try {
-      const response = await fetch('/api/jobs/resume', { method: 'POST' });
+      const response = await fetch("/api/jobs/resume", { method: "POST" });
       if (response.ok) {
         setIsPaused(false);
-        toast.success('Queue resumed successfully');
+        toast.success("Queue resumed successfully");
       }
     } catch (error) {
-      toast.error('Failed to resume queue');
+      toast.error("Failed to resume queue");
     }
   };
 
   const cleanOldJobs = async () => {
     try {
-      const response = await fetch('/api/jobs/clean', { method: 'POST' });
+      const response = await fetch("/api/jobs/clean", { method: "POST" });
       if (response.ok) {
-        toast.success('Old jobs cleaned successfully');
+        toast.success("Old jobs cleaned successfully");
         fetchJobs();
         fetchStats();
       }
     } catch (error) {
-      toast.error('Failed to clean old jobs');
+      toast.error("Failed to clean old jobs");
     }
   };
 
   const retryJob = async (jobId: string) => {
     try {
-      const response = await fetch(`/api/jobs/${jobId}/retry`, { method: 'POST' });
+      const response = await fetch(`/api/jobs/${jobId}/retry`, { method: "POST" });
       if (response.ok) {
-        toast.success('Job retrying successfully');
+        toast.success("Job retrying successfully");
         fetchJobs();
         fetchStats();
       }
     } catch (error) {
-      toast.error('Failed to retry job');
+      toast.error("Failed to retry job");
     }
   };
 
   const deleteJob = async (jobId: string) => {
     try {
-      const response = await fetch(`/api/jobs/${jobId}`, { method: 'DELETE' });
+      const response = await fetch(`/api/jobs/${jobId}`, { method: "DELETE" });
       if (response.ok) {
-        toast.success('Job deleted successfully');
+        toast.success("Job deleted successfully");
         fetchJobs();
         fetchStats();
       }
     } catch (error) {
-      toast.error('Failed to delete job');
+      toast.error("Failed to delete job");
     }
   };
 
@@ -157,7 +160,12 @@ export default function BullBoardPage() {
     return () => clearInterval(interval);
   }, [activeTab]);
 
-  const StatCard = ({ title, count, icon: Icon, color }: {
+  const StatCard = ({
+    title,
+    count,
+    icon: Icon,
+    color,
+  }: {
     title: string;
     count: number;
     icon: React.ElementType;
@@ -215,30 +223,15 @@ export default function BullBoardPage() {
 
       {/* Statistics Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        <StatCard
-          title="Waiting"
-          count={stats.waiting}
-          icon={Clock}
-          color="text-yellow-500"
-        />
-        <StatCard
-          title="Active"
-          count={stats.active}
-          icon={Activity}
-          color="text-blue-500"
-        />
+        <StatCard title="Waiting" count={stats.waiting} icon={Clock} color="text-yellow-500" />
+        <StatCard title="Active" count={stats.active} icon={Activity} color="text-blue-500" />
         <StatCard
           title="Completed"
           count={stats.completed}
           icon={CheckCircle2}
           color="text-green-500"
         />
-        <StatCard
-          title="Failed"
-          count={stats.failed}
-          icon={XCircle}
-          color="text-red-500"
-        />
+        <StatCard title="Failed" count={stats.failed} icon={XCircle} color="text-red-500" />
         <StatCard
           title="Delayed"
           count={stats.delayed}
@@ -251,36 +244,22 @@ export default function BullBoardPage() {
       <Card>
         <CardHeader>
           <CardTitle>Jobs</CardTitle>
-          <CardDescription>
-            View and manage jobs by status
-          </CardDescription>
+          <CardDescription>View and manage jobs by status</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
             <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="waiting">
-                Waiting ({stats.waiting})
-              </TabsTrigger>
-              <TabsTrigger value="active">
-                Active ({stats.active})
-              </TabsTrigger>
-              <TabsTrigger value="completed">
-                Completed ({stats.completed})
-              </TabsTrigger>
-              <TabsTrigger value="failed">
-                Failed ({stats.failed})
-              </TabsTrigger>
+              <TabsTrigger value="waiting">Waiting ({stats.waiting})</TabsTrigger>
+              <TabsTrigger value="active">Active ({stats.active})</TabsTrigger>
+              <TabsTrigger value="completed">Completed ({stats.completed})</TabsTrigger>
+              <TabsTrigger value="failed">Failed ({stats.failed})</TabsTrigger>
             </TabsList>
 
             <TabsContent value={activeTab} className="mt-4">
               {loading ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  Loading jobs...
-                </div>
+                <div className="text-center py-8 text-muted-foreground">Loading jobs...</div>
               ) : jobs.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No {activeTab} jobs
-                </div>
+                <div className="text-center py-8 text-muted-foreground">No {activeTab} jobs</div>
               ) : (
                 <div className="space-y-2">
                   {jobs.map((job) => (
@@ -290,12 +269,10 @@ export default function BullBoardPage() {
                     >
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <Badge variant="outline">{job.id?.slice(0, 8) || 'N/A'}</Badge>
-                          <span className="font-medium">{job.name || 'Unknown'}</span>
+                          <Badge variant="outline">{job.id?.slice(0, 8) || "N/A"}</Badge>
+                          <span className="font-medium">{job.name || "Unknown"}</span>
                           {(job.attemptsMade || 0) > 0 && (
-                            <Badge variant="secondary">
-                              Attempts: {job.attemptsMade}
-                            </Badge>
+                            <Badge variant="secondary">Attempts: {job.attemptsMade}</Badge>
                           )}
                         </div>
                         {job.failedReason && (
@@ -313,20 +290,12 @@ export default function BullBoardPage() {
                         )}
                       </div>
                       <div className="flex items-center gap-2">
-                        {activeTab === 'failed' && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => retryJob(job.id)}
-                          >
+                        {activeTab === "failed" && (
+                          <Button size="sm" variant="outline" onClick={() => retryJob(job.id)}>
                             <RefreshCw className="h-4 w-4" />
                           </Button>
                         )}
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => deleteJob(job.id)}
-                        >
+                        <Button size="sm" variant="ghost" onClick={() => deleteJob(job.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>

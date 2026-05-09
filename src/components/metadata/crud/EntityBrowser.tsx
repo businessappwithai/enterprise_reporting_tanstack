@@ -5,30 +5,37 @@
  * Uses server-side pagination.
  */
 
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 import {
-  ColumnDef,
+  type ColumnDef,
   getCoreRowModel,
   useReactTable,
-  PaginationState,
-  SortingState,
-} from '@tanstack/react-table';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+  type PaginationState,
+  type SortingState,
+} from "@tanstack/react-table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Search, Edit, RefreshCw } from 'lucide-react';
-import type { MetadataEntityHeader } from '@/types/database';
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Loader2, Search, Edit, RefreshCw } from "lucide-react";
+import type { MetadataEntityHeader } from "@/types/database";
 
 interface EntityBrowserProps {
   dataSourceId?: string;
@@ -45,7 +52,7 @@ export function EntityBrowser({
 }: EntityBrowserProps) {
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 50 });
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [isActiveFilter, setIsActiveFilter] = useState<boolean | undefined>(undefined);
   const [isHiddenFilter, setIsHiddenFilter] = useState<boolean | undefined>(undefined);
 
@@ -76,47 +83,45 @@ export function EntityBrowser({
   // Table columns
   const columns: ColumnDef<MetadataEntityHeader>[] = [
     {
-      accessorKey: 'entity_name',
-      header: 'Entity Name',
-      cell: ({ row }) => (
-        <div className="font-medium">{row.getValue('entity_name')}</div>
-      ),
+      accessorKey: "entity_name",
+      header: "Entity Name",
+      cell: ({ row }) => <div className="font-medium">{row.getValue("entity_name")}</div>,
     },
     {
-      accessorKey: 'description',
-      header: 'Description',
+      accessorKey: "description",
+      header: "Description",
       cell: ({ row }) => (
         <div className="max-w-md truncate text-sm text-muted-foreground">
-          {row.getValue('description') || <span className="italic">No description</span>}
+          {row.getValue("description") || <span className="italic">No description</span>}
         </div>
       ),
     },
     {
-      accessorKey: 'is_active',
-      header: 'Active',
+      accessorKey: "is_active",
+      header: "Active",
       cell: ({ row }) => (
-        <Badge variant={row.getValue('is_active') ? 'default' : 'secondary'}>
-          {row.getValue('is_active') ? 'Active' : 'Inactive'}
+        <Badge variant={row.getValue("is_active") ? "default" : "secondary"}>
+          {row.getValue("is_active") ? "Active" : "Inactive"}
         </Badge>
       ),
     },
     {
-      accessorKey: 'is_hidden',
-      header: 'Hidden',
+      accessorKey: "is_hidden",
+      header: "Hidden",
       cell: ({ row }) => (
-        <Badge variant={row.getValue('is_hidden') ? 'outline' : 'default'}>
-          {row.getValue('is_hidden') ? 'Hidden' : 'Visible'}
+        <Badge variant={row.getValue("is_hidden") ? "outline" : "default"}>
+          {row.getValue("is_hidden") ? "Hidden" : "Visible"}
         </Badge>
       ),
     },
     {
-      accessorKey: 'field_count',
-      header: 'Fields',
+      accessorKey: "field_count",
+      header: "Fields",
       cell: ({ row }) => <span className="text-sm">{row.original.field_count || 0}</span>,
     },
     {
-      id: 'actions',
-      header: 'Actions',
+      id: "actions",
+      header: "Actions",
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           {onEditEntity && (
@@ -170,7 +175,7 @@ export function EntityBrowser({
           <div>
             <CardTitle>Entity Metadata</CardTitle>
             <CardDescription>
-              {total} {total === 1 ? 'entity' : 'entities'} found
+              {total} {total === 1 ? "entity" : "entities"} found
             </CardDescription>
           </div>
           {dataSourceId && (
@@ -206,8 +211,8 @@ export function EntityBrowser({
 
           {/* Active Filter */}
           <Select
-            value={isActiveFilter === undefined ? 'all' : String(isActiveFilter)}
-            onValueChange={(val) => setIsActiveFilter(val === 'all' ? undefined : val === 'true')}
+            value={isActiveFilter === undefined ? "all" : String(isActiveFilter)}
+            onValueChange={(val) => setIsActiveFilter(val === "all" ? undefined : val === "true")}
           >
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Active status" />
@@ -221,8 +226,8 @@ export function EntityBrowser({
 
           {/* Hidden Filter */}
           <Select
-            value={isHiddenFilter === undefined ? 'all' : String(isHiddenFilter)}
-            onValueChange={(val) => setIsHiddenFilter(val === 'all' ? undefined : val === 'true')}
+            value={isHiddenFilter === undefined ? "all" : String(isHiddenFilter)}
+            onValueChange={(val) => setIsHiddenFilter(val === "all" ? undefined : val === "true")}
           >
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Visibility" />
@@ -263,9 +268,7 @@ export function EntityBrowser({
                   <TableRow key={headerGroup.id}>
                     {headerGroup.headers.map((header) => (
                       <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : header.column.columnDef.header?.toString()}
+                        {header.isPlaceholder ? null : header.column.columnDef.header?.toString()}
                       </TableHead>
                     ))}
                   </TableRow>
@@ -274,7 +277,7 @@ export function EntityBrowser({
               <TableBody>
                 {table.getRowModel().rows?.length ? (
                   table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+                    <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
                       {row.getVisibleCells().map((cell) => (
                         <TableCell key={cell.id}>
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -298,8 +301,9 @@ export function EntityBrowser({
         {pageCount > 1 && (
           <div className="flex items-center justify-between space-x-2 py-4">
             <div className="text-sm text-muted-foreground">
-              Showing {pagination.pageIndex * pagination.pageSize + 1} to{' '}
-              {Math.min((pagination.pageIndex + 1) * pagination.pageSize, total)} of {total} entities
+              Showing {pagination.pageIndex * pagination.pageSize + 1} to{" "}
+              {Math.min((pagination.pageIndex + 1) * pagination.pageSize, total)} of {total}{" "}
+              entities
             </div>
             <div className="flex items-center space-x-2">
               <Button
@@ -343,7 +347,7 @@ export function EntityBrowser({
 }
 
 function flexRender<T>(Comp: ((props: T) => React.ReactNode) | string, props: T): React.ReactNode {
-  if (typeof Comp === 'string') {
+  if (typeof Comp === "string") {
     return Comp;
   }
   return <Comp {...props} />;

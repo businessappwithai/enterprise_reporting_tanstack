@@ -1,14 +1,30 @@
-'use client';
+"use client";
 
 /**
  * Universal ECharts chart renderer.
  * Replaces Recharts for canvas-based, high-performance charting.
  */
 
-import React, { useMemo } from 'react';
-import ReactEChartsCore from 'echarts-for-react/lib/core';
-import * as echarts from 'echarts/core';
-import { BarChart, LineChart, PieChart, ScatterChart, HeatmapChart, TreemapChart, SunburstChart, SankeyChart, FunnelChart, GaugeChart, BoxplotChart, CandlestickChart, ParallelChart, MapChart, GraphChart } from 'echarts/charts';
+import React, { useMemo } from "react";
+import ReactEChartsCore from "echarts-for-react/lib/core";
+import * as echarts from "echarts/core";
+import {
+  BarChart,
+  LineChart,
+  PieChart,
+  ScatterChart,
+  HeatmapChart,
+  TreemapChart,
+  SunburstChart,
+  SankeyChart,
+  FunnelChart,
+  GaugeChart,
+  BoxplotChart,
+  CandlestickChart,
+  ParallelChart,
+  MapChart,
+  GraphChart,
+} from "echarts/charts";
 import {
   GridComponent,
   TooltipComponent,
@@ -19,13 +35,13 @@ import {
   TitleComponent,
   GeoComponent,
   ParallelComponent as ParallelComp,
-} from 'echarts/components';
-import { CanvasRenderer } from 'echarts/renderers';
+} from "echarts/components";
+import { CanvasRenderer } from "echarts/renderers";
 
-import { ChartTypeFactory } from './ChartTypeFactory';
-import { getBaseEChartsOption, getEChartsThemeColors } from './ThemeAdapter';
-import type { EChartsConfig } from '@/types/wasm';
-import { useTheme } from 'next-themes';
+import { ChartTypeFactory } from "./ChartTypeFactory";
+import { getBaseEChartsOption, getEChartsThemeColors } from "./ThemeAdapter";
+import type { EChartsConfig } from "@/types/wasm";
+import { useTheme } from "next-themes";
 
 // Register ECharts components (tree-shakeable)
 echarts.use([
@@ -83,7 +99,7 @@ export function EChartsRenderer({
   onChartClick,
 }: EChartsRendererProps) {
   const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
+  const isDark = resolvedTheme === "dark";
 
   const option = useMemo(() => {
     if (data.length === 0) return {};
@@ -94,15 +110,24 @@ export function EChartsRenderer({
     // Merge base theme, chart config, and user customOptions
     const merged = deepMerge(base, chart);
 
-    console.log('[EChartsRenderer] Merged option series:', merged.series?.map((s: any) => ({
-      name: s.name,
-      type: s.type,
-      hasStack: 'stack' in s,
-      stackValue: s.stack,
-      allKeys: Object.keys(s)
-    })));
-    console.log('[EChartsRenderer] First merged series:', JSON.stringify(merged.series?.[0], null, 2));
-    console.log('[EChartsRenderer] Second merged series:', JSON.stringify(merged.series?.[1], null, 2));
+    console.log(
+      "[EChartsRenderer] Merged option series:",
+      merged.series?.map((s: any) => ({
+        name: s.name,
+        type: s.type,
+        hasStack: "stack" in s,
+        stackValue: s.stack,
+        allKeys: Object.keys(s),
+      }))
+    );
+    console.log(
+      "[EChartsRenderer] First merged series:",
+      JSON.stringify(merged.series?.[0], null, 2)
+    );
+    console.log(
+      "[EChartsRenderer] Second merged series:",
+      JSON.stringify(merged.series?.[1], null, 2)
+    );
 
     // Apply title
     if (config.title) {
@@ -120,8 +145,8 @@ export function EChartsRenderer({
     // Apply dataZoom
     if (enableZoom) {
       merged.dataZoom = [
-        { type: 'inside', start: 0, end: 100 },
-        { type: 'slider', start: 0, end: 100 },
+        { type: "inside", start: 0, end: 100 },
+        { type: "slider", start: 0, end: 100 },
       ];
     }
 
@@ -135,7 +160,10 @@ export function EChartsRenderer({
 
   if (error) {
     return (
-      <div className="flex items-center justify-center rounded-md border border-destructive p-4 text-sm text-destructive" style={{ height }}>
+      <div
+        className="flex items-center justify-center rounded-md border border-destructive p-4 text-sm text-destructive"
+        style={{ height }}
+      >
         {error.message}
       </div>
     );
@@ -143,7 +171,10 @@ export function EChartsRenderer({
 
   if (data.length === 0 && !loading) {
     return (
-      <div className="flex items-center justify-center rounded-md border text-sm text-muted-foreground" style={{ height }}>
+      <div
+        className="flex items-center justify-center rounded-md border text-sm text-muted-foreground"
+        style={{ height }}
+      >
         No data to display
       </div>
     );
@@ -161,7 +192,7 @@ export function EChartsRenderer({
     <ReactEChartsCore
       echarts={echarts}
       option={option}
-      style={{ height, width: '100%' }}
+      style={{ height, width: "100%" }}
       showLoading={loading}
       onEvents={events}
       notMerge
@@ -176,10 +207,10 @@ function deepMerge(target: any, source: any): any {
   for (const key of Object.keys(source)) {
     if (
       source[key] &&
-      typeof source[key] === 'object' &&
+      typeof source[key] === "object" &&
       !Array.isArray(source[key]) &&
       target[key] &&
-      typeof target[key] === 'object' &&
+      typeof target[key] === "object" &&
       !Array.isArray(target[key])
     ) {
       output[key] = deepMerge(target[key], source[key]);

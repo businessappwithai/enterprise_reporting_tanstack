@@ -1,23 +1,23 @@
-'use client';
+"use client";
 
 /**
  * Enhanced dashboard widget card with cross-filtering support.
  * Renders charts, reports, and metrics with WASM optimizations.
  */
 
-import { useQuery } from '@tanstack/react-query';
-import { Skeleton } from '@/components/ui/skeleton';
-import { ChartRenderer } from '@/components/charts/chart-renderer';
-import { DataTable } from '@/components/reporting/data-table';
-import { useDashboardState } from './DashboardState';
-import { useDuckDB } from '@/components/duckdb/DuckDBProvider';
-import { isFeatureEnabled } from '@/lib/feature-flags';
-import type { DashboardWidget, ChartType, ChartConfig, DataMapping } from '@/types/database';
-import type { ActiveFilter } from '@/types/wasm';
+import { useQuery } from "@tanstack/react-query";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ChartRenderer } from "@/components/charts/chart-renderer";
+import { DataTable } from "@/components/reporting/data-table";
+import { useDashboardState } from "./DashboardState";
+import { useDuckDB } from "@/components/duckdb/DuckDBProvider";
+import { isFeatureEnabled } from "@/lib/feature-flags";
+import type { DashboardWidget, ChartType, ChartConfig, DataMapping } from "@/types/database";
+import type { ActiveFilter } from "@/types/wasm";
 
 interface WidgetCardProps {
   widget: DashboardWidget;
-  onFilterApply?: (filter: Omit<ActiveFilter, 'id' | 'affectedWidgets'>) => void;
+  onFilterApply?: (filter: Omit<ActiveFilter, "id" | "affectedWidgets">) => void;
 }
 
 export function WidgetCard({ widget, onFilterApply }: WidgetCardProps) {
@@ -25,46 +25,44 @@ export function WidgetCard({ widget, onFilterApply }: WidgetCardProps) {
   const { executeQuery, status: duckdbStatus } = useDuckDB();
 
   const isWasmEnabled =
-    isFeatureEnabled('wasmEnabled') &&
-    isFeatureEnabled('crossFilterEnabled') &&
-    duckdbStatus === 'ready';
+    isFeatureEnabled("wasmEnabled") &&
+    isFeatureEnabled("crossFilterEnabled") &&
+    duckdbStatus === "ready";
 
   // Fetch chart definition if this is a chart widget
   const { data: chartDef, isLoading: isLoadingChart } = useQuery({
-    queryKey: ['chart', widget.chart_id],
+    queryKey: ["chart", widget.chart_id],
     queryFn: async () => {
       if (!widget.chart_id) return null;
       const res = await fetch(`/api/charts/${widget.chart_id}`);
       const data = await res.json();
       return data.data;
     },
-    enabled: widget.widget_type === 'chart' && !!widget.chart_id,
+    enabled: widget.widget_type === "chart" && !!widget.chart_id,
     staleTime: 300000, // Cache for 5 minutes
   });
 
   // Base query for reports (saved query SQL)
   const { data: reportDef } = useQuery({
-    queryKey: ['report-def', widget.report_id],
+    queryKey: ["report-def", widget.report_id],
     queryFn: async () => {
       if (!widget.report_id) return null;
       const res = await fetch(`/api/reports/${widget.report_id}`);
       const data = await res.json();
       return data.data;
     },
-    enabled: widget.widget_type === 'report' && !!widget.report_id,
+    enabled: widget.widget_type === "report" && !!widget.report_id,
     staleTime: 300000,
   });
 
   // Determine the query to use (apply cross-filters if enabled)
-  const baseQuery = reportDef?.query?.sql ?? 'SELECT * FROM data';
+  const baseQuery = reportDef?.query?.sql ?? "SELECT * FROM data";
   const widgetId = widget.id.toString();
-  const filteredQuery = isWasmEnabled
-    ? getFilteredQuery(widgetId, baseQuery)
-    : baseQuery;
+  const filteredQuery = isWasmEnabled ? getFilteredQuery(widgetId, baseQuery) : baseQuery;
 
   // Fetch report data (server-side or WASM)
   const { data: reportData, isLoading: isLoadingReport } = useQuery({
-    queryKey: ['report-data-for-widget', widget.report_id, filteredQuery],
+    queryKey: ["report-data-for-widget", widget.report_id, filteredQuery],
     queryFn: async () => {
       if (!widget.report_id) return null;
 
@@ -89,13 +87,13 @@ export function WidgetCard({ widget, onFilterApply }: WidgetCardProps) {
       const data = await res.json();
       return data;
     },
-    enabled: widget.widget_type === 'report' && !!widget.report_id,
+    enabled: widget.widget_type === "report" && !!widget.report_id,
     staleTime: 30000, // Cache for 30 seconds
   });
 
   // Fetch chart data (server-side or WASM)
   const { data: chartData, isLoading: isLoadingChartData } = useQuery({
-    queryKey: ['chart-data-for-widget', widget.chart_id, filteredQuery],
+    queryKey: ["chart-data-for-widget", widget.chart_id, filteredQuery],
     queryFn: async () => {
       if (!widget.chart_id) return null;
 
@@ -110,11 +108,11 @@ export function WidgetCard({ widget, onFilterApply }: WidgetCardProps) {
       const data = await res.json();
       return data;
     },
-    enabled: widget.widget_type === 'chart' && !!widget.chart_id,
+    enabled: widget.widget_type === "chart" && !!widget.chart_id,
     staleTime: 30000,
   });
 
-  const isLoading = widget.widget_type === 'chart' ? isLoadingChart : isLoadingReport;
+  const isLoading = widget.widget_type === "chart" ? isLoadingChart : isLoadingReport;
 
   // Render loading state
   if (isLoading) {
@@ -131,7 +129,7 @@ export function WidgetCard({ widget, onFilterApply }: WidgetCardProps) {
 
   // Render widget content based on type
   switch (widget.widget_type) {
-    case 'chart':
+    case "chart":
       if (!chartData || !chartDef) {
         return (
           <div className="flex items-center justify-center h-full text-muted-foreground">
@@ -159,16 +157,16 @@ export function WidgetCard({ widget, onFilterApply }: WidgetCardProps) {
               if (onFilterApply && data) {
                 onFilterApply({
                   sourceWidgetId: widgetId,
-                  column: data.column ?? data.field ?? 'value',
+                  column: data.column ?? data.field ?? "value",
                   values: Array.isArray(data.value) ? data.value : [data.value],
-                  operator: 'in',
+                  operator: "in",
                 });
               }
             }}
           />
         );
       } catch (error) {
-        console.error('Error rendering chart:', error);
+        console.error("Error rendering chart:", error);
         return (
           <div className="flex items-center justify-center h-full text-destructive text-sm">
             Error rendering chart
@@ -176,7 +174,7 @@ export function WidgetCard({ widget, onFilterApply }: WidgetCardProps) {
         );
       }
 
-    case 'report':
+    case "report":
       if (!reportData) {
         return (
           <div className="flex items-center justify-center h-full text-muted-foreground">
@@ -208,7 +206,7 @@ export function WidgetCard({ widget, onFilterApply }: WidgetCardProps) {
           </div>
         );
       } catch (error) {
-        console.error('Error rendering report:', error);
+        console.error("Error rendering report:", error);
         return (
           <div className="flex items-center justify-center h-full text-destructive text-sm">
             Error rendering report
@@ -216,24 +214,26 @@ export function WidgetCard({ widget, onFilterApply }: WidgetCardProps) {
         );
       }
 
-    case 'metric':
+    case "metric": {
       const config = widget.widget_config ? JSON.parse(widget.widget_config) : {};
       return (
         <div className="flex items-center justify-center h-full">
           <div className="text-center">
-            <div className="text-4xl font-bold">{config.value || '--'}</div>
-            <div className="text-muted-foreground">{config.label || 'Metric'}</div>
+            <div className="text-4xl font-bold">{config.value || "--"}</div>
+            <div className="text-muted-foreground">{config.label || "Metric"}</div>
           </div>
         </div>
       );
+    }
 
-    case 'text':
+    case "text": {
       const textConfig = widget.widget_config ? JSON.parse(widget.widget_config) : {};
       return (
         <div className="p-2 h-full overflow-auto">
-          <p className="text-sm text-muted-foreground">{textConfig.content || 'Text widget'}</p>
+          <p className="text-sm text-muted-foreground">{textConfig.content || "Text widget"}</p>
         </div>
       );
+    }
 
     default:
       return (

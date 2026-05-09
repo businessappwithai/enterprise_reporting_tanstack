@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -9,12 +9,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
-import type { DashboardWidget } from '@/types/database';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import type { DashboardWidget } from "@/types/database";
 
 interface ConfigureWidgetDialogProps {
   open: boolean;
@@ -24,47 +24,51 @@ interface ConfigureWidgetDialogProps {
 
 export function ConfigureWidgetDialog({ open, onOpenChange, widget }: ConfigureWidgetDialogProps) {
   const queryClient = useQueryClient();
-  const [title, setTitle] = useState('');
+  const [title, setTitle] = useState("");
 
   // Initialize form when widget changes
   useEffect(() => {
     if (widget && open) {
       try {
         const config = widget.widget_config ? JSON.parse(widget.widget_config) : {};
-        setTitle(config.title || '');
+        setTitle(config.title || "");
       } catch {
-        setTitle('');
+        setTitle("");
       }
     } else if (!open) {
-      setTitle('');
+      setTitle("");
     }
   }, [widget, open]);
 
   const updateMutation = useMutation({
-    mutationFn: async ({ dashboardId, widgetId, updates }: {
+    mutationFn: async ({
+      dashboardId,
+      widgetId,
+      updates,
+    }: {
       dashboardId: string;
       widgetId: string;
       updates: { widgetConfig?: { title?: string } };
     }) => {
       const res = await fetch(`/api/dashboards/${dashboardId}/widgets/${widgetId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updates),
       });
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(error.error?.message || 'Failed to update widget');
+        throw new Error(error.error?.message || "Failed to update widget");
       }
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['dashboard-widgets'] });
-      toast.success('Widget updated successfully');
+      queryClient.invalidateQueries({ queryKey: ["dashboard-widgets"] });
+      toast.success("Widget updated successfully");
       onOpenChange(false);
-      setTitle('');
+      setTitle("");
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update widget');
+      toast.error(error.message || "Failed to update widget");
     },
   });
 
@@ -86,9 +90,7 @@ export function ConfigureWidgetDialog({ open, onOpenChange, widget }: ConfigureW
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Configure Widget</DialogTitle>
-          <DialogDescription>
-            Customize the widget settings
-          </DialogDescription>
+          <DialogDescription>Customize the widget settings</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
@@ -111,7 +113,7 @@ export function ConfigureWidgetDialog({ open, onOpenChange, widget }: ConfigureW
             Cancel
           </Button>
           <Button onClick={handleSave} disabled={updateMutation.isPending}>
-            {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+            {updateMutation.isPending ? "Saving..." : "Save Changes"}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,38 +1,30 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { cva, type VariantProps } from 'class-variance-authority';
-import { Check, ChevronsUpDown, X } from 'lucide-react';
+import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+import { Check, ChevronsUpDown, X } from "lucide-react";
 
-import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
-const multiSelectVariants = cva(
-  'm-1 transition ease-in-out delay-150 duration-300',
-  {
-    variants: {
-      variant: {
-        default: 'border-foreground/10 text-foreground bg-background',
-        secondary: 'border-foreground/10 text-foreground bg-secondary',
-        destructive: 'border-transparent text-destructive bg-destructive/10',
-        inverted: 'inverted',
-      },
+const multiSelectVariants = cva("m-1 transition ease-in-out delay-150 duration-300", {
+  variants: {
+    variant: {
+      default: "border-foreground/10 text-foreground bg-background",
+      secondary: "border-foreground/10 text-foreground bg-secondary",
+      destructive: "border-transparent text-destructive bg-destructive/10",
+      inverted: "inverted",
     },
-    defaultVariants: {
-      variant: 'default',
-    },
-  }
-);
+  },
+  defaultVariants: {
+    variant: "default",
+  },
+});
 
-export interface MultiSelectProps
-  extends VariantProps<typeof multiSelectVariants> {
+export interface MultiSelectProps extends VariantProps<typeof multiSelectVariants> {
   options: { label: string; value: string }[];
   value: string[];
   onValueChange: (value: string[]) => void;
@@ -48,7 +40,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
       options,
       value,
       onValueChange,
-      placeholder = 'Select options',
+      placeholder = "Select options",
       maxCount,
       variant,
       modalPopover = false,
@@ -83,19 +75,15 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
     };
 
     return (
-      <Popover
-        open={isPopoverOpen}
-        onOpenChange={setIsPopoverOpen}
-        modal={modalPopover}
-      >
+      <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen} modal={modalPopover}>
         <PopoverTrigger asChild>
           <Button
             ref={ref}
             {...props}
             variant="outline"
             className={cn(
-              'w-full justify-start text-left font-normal h-auto py-2',
-              value.length > 0 && 'h-auto min-h-[38px]',
+              "w-full justify-start text-left font-normal h-auto py-2",
+              value.length > 0 && "h-auto min-h-[38px]",
               className
             )}
             onClick={() => setIsPopoverOpen(!isPopoverOpen)}
@@ -103,9 +91,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
             <div className="flex w-full items-center justify-between gap-2">
               <div className="flex flex-wrap gap-1">
                 {value.length === 0 ? (
-                  <span className="text-sm text-muted-foreground">
-                    {placeholder}
-                  </span>
+                  <span className="text-sm text-muted-foreground">{placeholder}</span>
                 ) : (
                   value.map((v) => {
                     const option = options.find((o) => o.value === v);
@@ -154,10 +140,8 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
                   >
                     <div
                       className={cn(
-                        'flex h-4 w-4 items-center justify-center rounded-sm border border-primary',
-                        isSelected
-                          ? 'bg-primary text-primary-foreground'
-                          : 'opacity-50'
+                        "flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                        isSelected ? "bg-primary text-primary-foreground" : "opacity-50"
                       )}
                     >
                       {isSelected && <Check className="h-3 w-3" />}
@@ -174,4 +158,4 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
   }
 );
 
-MultiSelect.displayName = 'MultiSelect';
+MultiSelect.displayName = "MultiSelect";

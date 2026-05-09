@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState, useRef } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useState, useRef } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -13,7 +13,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -22,16 +22,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Plus,
   Database,
@@ -45,17 +45,17 @@ import {
   AlertTriangle,
   RefreshCw,
   Settings,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { formatDateTime } from '@/lib/utils';
-import type { DataSource, DatabaseClientType } from '@/types/database';
+} from "lucide-react";
+import { toast } from "sonner";
+import { formatDateTime } from "@/lib/utils";
+import type { DataSource, DatabaseClientType } from "@/types/database";
 
 const databaseTypes: { value: DatabaseClientType; label: string }[] = [
-  { value: 'pg', label: 'PostgreSQL' },
-  { value: 'mysql', label: 'MySQL' },
-  { value: 'mssql', label: 'SQL Server' },
-  { value: 'sqlite3', label: 'SQLite' },
-  { value: 'oracledb', label: 'Oracle' },
+  { value: "pg", label: "PostgreSQL" },
+  { value: "mysql", label: "MySQL" },
+  { value: "mssql", label: "SQL Server" },
+  { value: "sqlite3", label: "SQLite" },
+  { value: "oracledb", label: "Oracle" },
 ];
 
 export default function DataSourcesPage() {
@@ -63,15 +63,15 @@ export default function DataSourcesPage() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingDataSource, setEditingDataSource] = useState<DataSource | null>(null);
-  const [newDSName, setNewDSName] = useState('');
-  const [newDSDescription, setNewDSDescription] = useState('');
-  const [newDSType, setNewDSType] = useState<DatabaseClientType>('pg');
-  const [newDSHost, setNewDSHost] = useState('');
-  const [newDSPort, setNewDSPort] = useState('');
-  const [newDSDatabase, setNewDSDatabase] = useState('');
-  const [newDSUser, setNewDSUser] = useState('');
-  const [newDSPassword, setNewDSPassword] = useState('');
-  const [newDSFileName, setNewDSFileName] = useState('');
+  const [newDSName, setNewDSName] = useState("");
+  const [newDSDescription, setNewDSDescription] = useState("");
+  const [newDSType, setNewDSType] = useState<DatabaseClientType>("pg");
+  const [newDSHost, setNewDSHost] = useState("");
+  const [newDSPort, setNewDSPort] = useState("");
+  const [newDSDatabase, setNewDSDatabase] = useState("");
+  const [newDSUser, setNewDSUser] = useState("");
+  const [newDSPassword, setNewDSPassword] = useState("");
+  const [newDSFileName, setNewDSFileName] = useState("");
   const [uploadingFile, setUploadingFile] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [testingConnection, setTestingConnection] = useState(false);
@@ -82,13 +82,17 @@ export default function DataSourcesPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [dataSourceToDelete, setDataSourceToDelete] = useState<DataSource | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [usageInfo, setUsageInfo] = useState<{ queries: number; reports: number; charts: number } | null>(null);
+  const [usageInfo, setUsageInfo] = useState<{
+    queries: number;
+    reports: number;
+    charts: number;
+  } | null>(null);
   const [inspectingDs, setInspectingDs] = useState<string | null>(null);
 
   const { data: dataSources, isLoading } = useQuery<DataSource[]>({
-    queryKey: ['data-sources'],
+    queryKey: ["data-sources"],
     queryFn: async () => {
-      const res = await fetch('/api/data-sources');
+      const res = await fetch("/api/data-sources");
       const data = await res.json();
       return data.data?.items || [];
     },
@@ -97,14 +101,14 @@ export default function DataSourcesPage() {
   const createMutation = useMutation({
     mutationFn: async () => {
       // For SQLite, use the uploaded filename
-      if (newDSType === 'sqlite3') {
+      if (newDSType === "sqlite3") {
         if (!newDSFileName) {
-          throw new Error('Please upload a SQLite database file');
+          throw new Error("Please upload a SQLite database file");
         }
 
-        const res = await fetch('/api/data-sources', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const res = await fetch("/api/data-sources", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             name: newDSName,
             description: newDSDescription,
@@ -118,9 +122,9 @@ export default function DataSourcesPage() {
       }
 
       // For other databases, use JSON
-      const res = await fetch('/api/data-sources', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/data-sources", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: newDSName,
           description: newDSDescription,
@@ -138,12 +142,12 @@ export default function DataSourcesPage() {
     },
     onSuccess: (data) => {
       if (data.success) {
-        toast.success('Data source created successfully');
-        queryClient.invalidateQueries({ queryKey: ['data-sources'] });
+        toast.success("Data source created successfully");
+        queryClient.invalidateQueries({ queryKey: ["data-sources"] });
         resetForm();
         setCreateDialogOpen(false);
       } else {
-        toast.error(data.error?.message || 'Failed to create data source');
+        toast.error(data.error?.message || "Failed to create data source");
       }
     },
   });
@@ -154,16 +158,19 @@ export default function DataSourcesPage() {
 
     try {
       // For SQLite, use the uploaded filename
-      if (newDSType === 'sqlite3') {
+      if (newDSType === "sqlite3") {
         if (!newDSFileName) {
-          setConnectionTestResult({ success: false, message: 'Please upload a SQLite database file' });
+          setConnectionTestResult({
+            success: false,
+            message: "Please upload a SQLite database file",
+          });
           setTestingConnection(false);
           return;
         }
 
-        const res = await fetch('/api/data-sources/test', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const res = await fetch("/api/data-sources/test", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             clientType: newDSType,
             connectionConfig: {
@@ -172,26 +179,26 @@ export default function DataSourcesPage() {
           }),
         });
         const data = await res.json();
-        console.log('SQLite test connection response:', data);
+        console.log("SQLite test connection response:", data);
         setConnectionTestResult({
           success: data.data?.connected || false,
-          message: data.data?.message || data.error?.message || 'Test failed'
+          message: data.data?.message || data.error?.message || "Test failed",
         });
       } else {
         // Validate required fields for non-SQLite databases
         if (!newDSHost || !newDSDatabase || !newDSUser) {
           setConnectionTestResult({
             success: false,
-            message: 'Please fill in Host, Database, and Username fields'
+            message: "Please fill in Host, Database, and Username fields",
           });
           setTestingConnection(false);
           return;
         }
 
         // For other databases, use JSON
-        const res = await fetch('/api/data-sources/test', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const res = await fetch("/api/data-sources/test", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             clientType: newDSType,
             connectionConfig: {
@@ -204,17 +211,17 @@ export default function DataSourcesPage() {
           }),
         });
         const data = await res.json();
-        console.log('Database test connection response:', data);
+        console.log("Database test connection response:", data);
         setConnectionTestResult({
           success: data.data?.connected || false,
-          message: data.data?.message || data.error?.message || 'Test failed'
+          message: data.data?.message || data.error?.message || "Test failed",
         });
       }
     } catch (error) {
-      console.error('Connection test error:', error);
+      console.error("Connection test error:", error);
       setConnectionTestResult({
         success: false,
-        message: error instanceof Error ? error.message : 'Connection test failed'
+        message: error instanceof Error ? error.message : "Connection test failed",
       });
     } finally {
       setTestingConnection(false);
@@ -222,25 +229,29 @@ export default function DataSourcesPage() {
   };
 
   const resetForm = () => {
-    setNewDSName('');
-    setNewDSDescription('');
-    setNewDSType('pg');
-    setNewDSHost('');
-    setNewDSPort('');
-    setNewDSDatabase('');
-    setNewDSUser('');
-    setNewDSPassword('');
-    setNewDSFileName('');
+    setNewDSName("");
+    setNewDSDescription("");
+    setNewDSType("pg");
+    setNewDSHost("");
+    setNewDSPort("");
+    setNewDSDatabase("");
+    setNewDSUser("");
+    setNewDSPassword("");
+    setNewDSFileName("");
     setConnectionTestResult(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
   const handleFileUpload = async (file: File) => {
     // Validate file type
-    if (!file.name.endsWith('.db') && !file.name.endsWith('.sqlite') && !file.name.endsWith('.sqlite3')) {
-      toast.error('Please select a valid SQLite database file (.db, .sqlite, .sqlite3)');
+    if (
+      !file.name.endsWith(".db") &&
+      !file.name.endsWith(".sqlite") &&
+      !file.name.endsWith(".sqlite3")
+    ) {
+      toast.error("Please select a valid SQLite database file (.db, .sqlite, .sqlite3)");
       return;
     }
 
@@ -249,10 +260,10 @@ export default function DataSourcesPage() {
 
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append("file", file);
 
-      const res = await fetch('/api/data-sources/upload', {
-        method: 'POST',
+      const res = await fetch("/api/data-sources/upload", {
+        method: "POST",
         body: formData,
       });
 
@@ -262,11 +273,11 @@ export default function DataSourcesPage() {
         setNewDSFileName(data.data.filename);
         toast.success(data.data.message);
       } else {
-        toast.error(data.error?.message || 'Failed to upload file');
+        toast.error(data.error?.message || "Failed to upload file");
       }
     } catch (error) {
-      console.error('Upload error:', error);
-      toast.error('Failed to upload file');
+      console.error("Upload error:", error);
+      toast.error("Failed to upload file");
     } finally {
       setUploadingFile(false);
     }
@@ -289,17 +300,20 @@ export default function DataSourcesPage() {
     e.stopPropagation();
 
     const file = e.dataTransfer.files?.[0];
-    if (file && (file.name.endsWith('.db') || file.name.endsWith('.sqlite') || file.name.endsWith('.sqlite3'))) {
+    if (
+      file &&
+      (file.name.endsWith(".db") || file.name.endsWith(".sqlite") || file.name.endsWith(".sqlite3"))
+    ) {
       handleFileUpload(file);
     } else if (file) {
-      toast.error('Please select a valid SQLite database file (.db, .sqlite, .sqlite3)');
+      toast.error("Please select a valid SQLite database file (.db, .sqlite, .sqlite3)");
     }
   };
 
   const handleEdit = (ds: DataSource) => {
     setEditingDataSource(ds);
     setNewDSName(ds.name);
-    setNewDSDescription(ds.description || '');
+    setNewDSDescription(ds.description || "");
     setNewDSType(ds.client_type);
 
     // Parse connection config to extract values
@@ -311,32 +325,32 @@ export default function DataSourcesPage() {
     }
 
     // Extract just the filename from the path
-    const fullPath = (config as any).filename || '';
-    const fileName = fullPath.split('/').pop() || fullPath;
+    const fullPath = (config as any).filename || "";
+    const fileName = fullPath.split("/").pop() || fullPath;
     setNewDSFileName(fileName);
 
-    setNewDSHost((config as any).host || '');
-    setNewDSPort((config as any).port?.toString() || '');
-    setNewDSDatabase((config as any).database || '');
-    setNewDSUser((config as any).user || '');
-    setNewDSPassword(''); // Don't pre-fill password for security
+    setNewDSHost((config as any).host || "");
+    setNewDSPort((config as any).port?.toString() || "");
+    setNewDSDatabase((config as any).database || "");
+    setNewDSUser((config as any).user || "");
+    setNewDSPassword(""); // Don't pre-fill password for security
     setConnectionTestResult(null);
     setEditDialogOpen(true);
   };
 
   const updateMutation = useMutation({
     mutationFn: async () => {
-      if (!editingDataSource) throw new Error('No data source selected');
+      if (!editingDataSource) throw new Error("No data source selected");
 
       // For SQLite, use the uploaded filename
-      if (newDSType === 'sqlite3') {
+      if (newDSType === "sqlite3") {
         if (!newDSFileName) {
-          throw new Error('Please upload a SQLite database file');
+          throw new Error("Please upload a SQLite database file");
         }
 
         const res = await fetch(`/api/data-sources/${editingDataSource.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             name: newDSName,
             description: newDSDescription,
@@ -351,8 +365,8 @@ export default function DataSourcesPage() {
 
       // For other databases
       const res = await fetch(`/api/data-sources/${editingDataSource.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: newDSName,
           description: newDSDescription,
@@ -370,13 +384,13 @@ export default function DataSourcesPage() {
     },
     onSuccess: (data) => {
       if (data.success) {
-        toast.success('Data source updated successfully');
-        queryClient.invalidateQueries({ queryKey: ['data-sources'] });
+        toast.success("Data source updated successfully");
+        queryClient.invalidateQueries({ queryKey: ["data-sources"] });
         resetForm();
         setEditDialogOpen(false);
         setEditingDataSource(null);
       } else {
-        toast.error(data.error?.message || 'Failed to update data source');
+        toast.error(data.error?.message || "Failed to update data source");
       }
     },
   });
@@ -394,31 +408,31 @@ export default function DataSourcesPage() {
         setUsageInfo(data.data);
       }
     } catch (error) {
-      console.error('Failed to check usage:', error);
+      console.error("Failed to check usage:", error);
     }
   };
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/data-sources/${id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
       return res.json();
     },
     onSuccess: (data) => {
       if (data.success) {
-        toast.success('Data source deleted successfully');
-        queryClient.invalidateQueries({ queryKey: ['data-sources'] });
+        toast.success("Data source deleted successfully");
+        queryClient.invalidateQueries({ queryKey: ["data-sources"] });
         setDeleteDialogOpen(false);
         setDataSourceToDelete(null);
         setUsageInfo(null);
       } else {
-        toast.error(data.error?.message || 'Failed to delete data source');
+        toast.error(data.error?.message || "Failed to delete data source");
       }
       setIsDeleting(false);
     },
     onError: () => {
-      toast.error('Failed to delete data source');
+      toast.error("Failed to delete data source");
       setIsDeleting(false);
     },
   });
@@ -432,21 +446,23 @@ export default function DataSourcesPage() {
   const inspectMutation = useMutation({
     mutationFn: async (dsId: string) => {
       const res = await fetch(`/api/data-sources/${dsId}/inspect`, {
-        method: 'POST',
+        method: "POST",
       });
       return res.json();
     },
     onSuccess: (data, variables) => {
       if (data.success) {
-        toast.success(`Schema imported successfully! Found ${data.data?.entities_count || 0} entities`);
-        queryClient.invalidateQueries({ queryKey: ['data-sources'] });
+        toast.success(
+          `Schema imported successfully! Found ${data.data?.entities_count || 0} entities`
+        );
+        queryClient.invalidateQueries({ queryKey: ["data-sources"] });
       } else {
-        toast.error(data.error?.message || 'Failed to inspect schema');
+        toast.error(data.error?.message || "Failed to inspect schema");
       }
       setInspectingDs(null);
     },
     onError: () => {
-      toast.error('Failed to inspect schema');
+      toast.error("Failed to inspect schema");
       setInspectingDs(null);
     },
   });
@@ -493,7 +509,10 @@ export default function DataSourcesPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="ds-type">Database Type</Label>
-                  <Select value={newDSType} onValueChange={(v) => setNewDSType(v as DatabaseClientType)}>
+                  <Select
+                    value={newDSType}
+                    onValueChange={(v) => setNewDSType(v as DatabaseClientType)}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -518,7 +537,7 @@ export default function DataSourcesPage() {
                 />
               </div>
 
-              {newDSType === 'sqlite3' ? (
+              {newDSType === "sqlite3" ? (
                 // SQLite file upload to server
                 <div className="space-y-3">
                   <Label>Database File</Label>
@@ -529,8 +548,8 @@ export default function DataSourcesPage() {
                     onDrop={handleDrop}
                     className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
                       uploadingFile
-                        ? 'bg-muted cursor-not-allowed'
-                        : 'cursor-pointer hover:bg-accent/50'
+                        ? "bg-muted cursor-not-allowed"
+                        : "cursor-pointer hover:bg-accent/50"
                     }`}
                     onClick={() => !uploadingFile && fileInputRef.current?.click()}
                   >
@@ -543,10 +562,11 @@ export default function DataSourcesPage() {
                       <>
                         <FolderOpen className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
                         <p className="text-sm font-medium">
-                          {newDSFileName || 'Click to browse or drag & drop SQLite file'}
+                          {newDSFileName || "Click to browse or drag & drop SQLite file"}
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          File will be uploaded to: <code className="bg-muted px-1 py-0.5 rounded">data/uploads/</code>
+                          File will be uploaded to:{" "}
+                          <code className="bg-muted px-1 py-0.5 rounded">data/uploads/</code>
                         </p>
                       </>
                     )}
@@ -591,7 +611,9 @@ export default function DataSourcesPage() {
                         id="ds-port"
                         value={newDSPort}
                         onChange={(e) => setNewDSPort(e.target.value)}
-                        placeholder={newDSType === 'pg' ? '5432' : newDSType === 'mysql' ? '3306' : ''}
+                        placeholder={
+                          newDSType === "pg" ? "5432" : newDSType === "mysql" ? "3306" : ""
+                        }
                       />
                     </div>
                   </div>
@@ -634,8 +656,8 @@ export default function DataSourcesPage() {
                 <div
                   className={`p-3 rounded-md flex items-center gap-2 ${
                     connectionTestResult.success
-                      ? 'bg-green-500 text-white dark:bg-green-600'
-                      : 'bg-red-500 text-white dark:bg-red-600'
+                      ? "bg-green-500 text-white dark:bg-green-600"
+                      : "bg-red-500 text-white dark:bg-red-600"
                   }`}
                 >
                   {connectionTestResult.success ? (
@@ -644,7 +666,7 @@ export default function DataSourcesPage() {
                     <X className="h-4 w-4" />
                   )}
                   <span className="font-medium">
-                    {connectionTestResult.success ? 'Connection Successful' : 'Connection Failed'}
+                    {connectionTestResult.success ? "Connection Successful" : "Connection Failed"}
                   </span>
                   {connectionTestResult.message && !connectionTestResult.success && (
                     <span className="text-sm opacity-90">: {connectionTestResult.message}</span>
@@ -656,7 +678,9 @@ export default function DataSourcesPage() {
               {connectionTestResult?.success && !newDSName && (
                 <div className="w-full flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/10 px-3 py-2 rounded-md">
                   <AlertCircle className="h-4 w-4" />
-                  <span>Connection verified! Please enter a Name above to enable the Create button.</span>
+                  <span>
+                    Connection verified! Please enter a Name above to enable the Create button.
+                  </span>
                 </div>
               )}
               {connectionTestResult?.success && newDSName && (
@@ -669,7 +693,12 @@ export default function DataSourcesPage() {
                 <Button
                   variant="outline"
                   onClick={testConnection}
-                  disabled={testingConnection || (newDSType === 'sqlite3' ? !newDSFileName : !newDSHost || !newDSDatabase || !newDSUser)}
+                  disabled={
+                    testingConnection ||
+                    (newDSType === "sqlite3"
+                      ? !newDSFileName
+                      : !newDSHost || !newDSDatabase || !newDSUser)
+                  }
                   className="flex-1 sm:flex-none"
                 >
                   {testingConnection && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
@@ -677,10 +706,12 @@ export default function DataSourcesPage() {
                 </Button>
                 <Button
                   onClick={() => createMutation.mutate()}
-                  disabled={!newDSName || !connectionTestResult?.success || createMutation.isPending}
+                  disabled={
+                    !newDSName || !connectionTestResult?.success || createMutation.isPending
+                  }
                   className="flex-1 sm:flex-none"
                 >
-                  {createMutation.isPending ? 'Creating...' : 'Create'}
+                  {createMutation.isPending ? "Creating..." : "Create"}
                 </Button>
               </div>
             </DialogFooter>
@@ -709,7 +740,11 @@ export default function DataSourcesPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-ds-type">Database Type</Label>
-                  <Select value={newDSType} onValueChange={(v) => setNewDSType(v as DatabaseClientType)} disabled>
+                  <Select
+                    value={newDSType}
+                    onValueChange={(v) => setNewDSType(v as DatabaseClientType)}
+                    disabled
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -734,7 +769,7 @@ export default function DataSourcesPage() {
                 />
               </div>
 
-              {newDSType === 'sqlite3' ? (
+              {newDSType === "sqlite3" ? (
                 // SQLite file upload for edit dialog
                 <div className="space-y-3">
                   <Label>Database File</Label>
@@ -745,8 +780,8 @@ export default function DataSourcesPage() {
                     onDrop={handleDrop}
                     className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
                       uploadingFile
-                        ? 'bg-muted cursor-not-allowed'
-                        : 'cursor-pointer hover:bg-accent/50'
+                        ? "bg-muted cursor-not-allowed"
+                        : "cursor-pointer hover:bg-accent/50"
                     }`}
                     onClick={() => !uploadingFile && fileInputRef.current?.click()}
                   >
@@ -759,10 +794,11 @@ export default function DataSourcesPage() {
                       <>
                         <FolderOpen className="h-6 w-6 mx-auto mb-1 text-muted-foreground" />
                         <p className="text-sm font-medium">
-                          {newDSFileName || 'Click to browse or drag & drop to change file'}
+                          {newDSFileName || "Click to browse or drag & drop to change file"}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Upload to: <code className="bg-muted px-1 py-0.5 rounded">data/uploads/</code>
+                          Upload to:{" "}
+                          <code className="bg-muted px-1 py-0.5 rounded">data/uploads/</code>
                         </p>
                       </>
                     )}
@@ -803,7 +839,9 @@ export default function DataSourcesPage() {
                         id="edit-ds-port"
                         value={newDSPort}
                         onChange={(e) => setNewDSPort(e.target.value)}
-                        placeholder={newDSType === 'pg' ? '5432' : newDSType === 'mysql' ? '3306' : ''}
+                        placeholder={
+                          newDSType === "pg" ? "5432" : newDSType === "mysql" ? "3306" : ""
+                        }
                       />
                     </div>
                   </div>
@@ -846,8 +884,8 @@ export default function DataSourcesPage() {
                 <div
                   className={`p-3 rounded-md flex items-center gap-2 ${
                     connectionTestResult.success
-                      ? 'bg-green-500 text-white dark:bg-green-600'
-                      : 'bg-red-500 text-white dark:bg-red-600'
+                      ? "bg-green-500 text-white dark:bg-green-600"
+                      : "bg-red-500 text-white dark:bg-red-600"
                   }`}
                 >
                   {connectionTestResult.success ? (
@@ -856,7 +894,7 @@ export default function DataSourcesPage() {
                     <X className="h-4 w-4" />
                   )}
                   <span className="font-medium">
-                    {connectionTestResult.success ? 'Connection Successful' : 'Connection Failed'}
+                    {connectionTestResult.success ? "Connection Successful" : "Connection Failed"}
                   </span>
                   {connectionTestResult.message && !connectionTestResult.success && (
                     <span className="text-sm opacity-90">: {connectionTestResult.message}</span>
@@ -868,7 +906,12 @@ export default function DataSourcesPage() {
               <Button
                 variant="outline"
                 onClick={testConnection}
-                disabled={testingConnection || (newDSType === 'sqlite3' ? !newDSFileName : !newDSHost || !newDSDatabase || !newDSUser)}
+                disabled={
+                  testingConnection ||
+                  (newDSType === "sqlite3"
+                    ? !newDSFileName
+                    : !newDSHost || !newDSDatabase || !newDSUser)
+                }
               >
                 {testingConnection && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Test Connection
@@ -887,7 +930,7 @@ export default function DataSourcesPage() {
                 onClick={() => updateMutation.mutate()}
                 disabled={!newDSName || updateMutation.isPending}
               >
-                {updateMutation.isPending ? 'Updating...' : 'Update'}
+                {updateMutation.isPending ? "Updating..." : "Update"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -899,23 +942,43 @@ export default function DataSourcesPage() {
             <DialogHeader>
               <DialogTitle>Delete Data Source</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete &ldquo;{dataSourceToDelete?.name}&rdquo;? This action cannot be undone.
+                Are you sure you want to delete &ldquo;{dataSourceToDelete?.name}&rdquo;? This
+                action cannot be undone.
               </DialogDescription>
             </DialogHeader>
             <div className="py-4">
-              {usageInfo && (usageInfo.queries > 0 || usageInfo.reports > 0 || usageInfo.charts > 0) ? (
+              {usageInfo &&
+              (usageInfo.queries > 0 || usageInfo.reports > 0 || usageInfo.charts > 0) ? (
                 <div className="p-4 rounded-md bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30">
                   <div className="flex items-start gap-2">
                     <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
                     <div>
-                      <h4 className="text-sm font-semibold text-red-800 dark:text-red-400">Cannot Delete Data Source</h4>
-                      <p className="text-sm text-red-700 dark:text-red-400 mt-2">This data source is currently in use:</p>
+                      <h4 className="text-sm font-semibold text-red-800 dark:text-red-400">
+                        Cannot Delete Data Source
+                      </h4>
+                      <p className="text-sm text-red-700 dark:text-red-400 mt-2">
+                        This data source is currently in use:
+                      </p>
                       <ul className="text-sm text-red-700 dark:text-red-400 mt-1 list-disc list-inside">
-                        {usageInfo.queries > 0 && <li>{usageInfo.queries} saved quer{usageInfo.queries === 1 ? 'y' : 'ies'}</li>}
-                        {usageInfo.reports > 0 && <li>{usageInfo.reports} report{usageInfo.reports === 1 ? '' : 's'}</li>}
-                        {usageInfo.charts > 0 && <li>{usageInfo.charts} chart{usageInfo.charts === 1 ? '' : 's'}</li>}
+                        {usageInfo.queries > 0 && (
+                          <li>
+                            {usageInfo.queries} saved quer{usageInfo.queries === 1 ? "y" : "ies"}
+                          </li>
+                        )}
+                        {usageInfo.reports > 0 && (
+                          <li>
+                            {usageInfo.reports} report{usageInfo.reports === 1 ? "" : "s"}
+                          </li>
+                        )}
+                        {usageInfo.charts > 0 && (
+                          <li>
+                            {usageInfo.charts} chart{usageInfo.charts === 1 ? "" : "s"}
+                          </li>
+                        )}
                       </ul>
-                      <p className="text-sm text-red-700 dark:text-red-400 mt-2">Please delete or update these items first.</p>
+                      <p className="text-sm text-red-700 dark:text-red-400 mt-2">
+                        Please delete or update these items first.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -924,9 +987,12 @@ export default function DataSourcesPage() {
                   <div className="flex items-start gap-2">
                     <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
                     <div>
-                      <h4 className="text-sm font-semibold text-yellow-800 dark:text-yellow-400">Warning</h4>
+                      <h4 className="text-sm font-semibold text-yellow-800 dark:text-yellow-400">
+                        Warning
+                      </h4>
                       <p className="text-sm text-yellow-700 dark:text-yellow-400 mt-1">
-                        This will soft delete the data source. It will be marked as deleted but will remain in the database for audit purposes.
+                        This will soft delete the data source. It will be marked as deleted but will
+                        remain in the database for audit purposes.
                       </p>
                     </div>
                   </div>
@@ -947,9 +1013,13 @@ export default function DataSourcesPage() {
               <Button
                 variant="destructive"
                 onClick={handleDeleteConfirm}
-                disabled={!!usageInfo && (usageInfo.queries > 0 || usageInfo.reports > 0 || usageInfo.charts > 0) || isDeleting}
+                disabled={
+                  (!!usageInfo &&
+                    (usageInfo.queries > 0 || usageInfo.reports > 0 || usageInfo.charts > 0)) ||
+                  isDeleting
+                }
               >
-                {isDeleting ? 'Deleting...' : 'Delete'}
+                {isDeleting ? "Deleting..." : "Delete"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -965,9 +1035,7 @@ export default function DataSourcesPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Loading data sources...
-            </div>
+            <div className="text-center py-8 text-muted-foreground">Loading data sources...</div>
           ) : dataSources?.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               No data sources configured. Add your first data source to get started.
@@ -991,13 +1059,11 @@ export default function DataSourcesPage() {
                     <TableCell>
                       <Badge variant="outline">{ds.client_type}</Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {ds.description || '-'}
-                    </TableCell>
+                    <TableCell className="text-muted-foreground">{ds.description || "-"}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Badge variant={ds.is_active ? 'default' : 'secondary'}>
-                          {ds.is_active ? 'Connected' : 'No Connection'}
+                        <Badge variant={ds.is_active ? "default" : "secondary"}>
+                          {ds.is_active ? "Connected" : "No Connection"}
                         </Badge>
                         {ds.is_inspected && (
                           <Badge variant="outline" className="text-green-600 border-green-600">

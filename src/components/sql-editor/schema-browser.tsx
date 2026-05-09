@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState, memo } from 'react';
-import { ChevronRight, ChevronDown, Table, Eye, Key, Hash, Type } from 'lucide-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
-import type { SchemaInfo, TableInfo, ViewInfo, ColumnSchema } from '@/types/api';
+import { useState, memo } from "react";
+import { ChevronRight, ChevronDown, Table, Eye, Key, Hash, Type } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import type { SchemaInfo, TableInfo, ViewInfo, ColumnSchema } from "@/types/api";
 
 interface SchemaBrowserProps {
   schema: SchemaInfo | null;
@@ -20,7 +20,7 @@ function SchemaBrowserComponent({
   onTableClick,
   onColumnClick,
 }: SchemaBrowserProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [expandedTables, setExpandedTables] = useState<Set<string>>(new Set());
   const [expandedViews, setExpandedViews] = useState<Set<string>>(new Set());
 
@@ -254,7 +254,12 @@ interface ColumnItemProps {
   onClick?: (tableName: string, columnName: string) => void;
 }
 
-const ColumnItem = memo(function ColumnItem({ column, tableName, primaryKey, onClick }: ColumnItemProps) {
+const ColumnItem = memo(function ColumnItem({
+  column,
+  tableName,
+  primaryKey,
+  onClick,
+}: ColumnItemProps) {
   const isPrimary = primaryKey?.includes(column.name) || column.isPrimaryKey;
 
   return (
@@ -267,15 +272,9 @@ const ColumnItem = memo(function ColumnItem({ column, tableName, primaryKey, onC
       ) : (
         <Type className="h-3 w-3 text-muted-foreground" />
       )}
-      <span className={cn('truncate', isPrimary && 'font-medium')}>
-        {column.name}
-      </span>
-      <span className="text-xs text-muted-foreground ml-auto">
-        {column.type}
-      </span>
-      {!column.nullable && (
-        <span className="text-xs text-red-500 ml-1">*</span>
-      )}
+      <span className={cn("truncate", isPrimary && "font-medium")}>{column.name}</span>
+      <span className="text-xs text-muted-foreground ml-auto">{column.type}</span>
+      {!column.nullable && <span className="text-xs text-red-500 ml-1">*</span>}
     </div>
   );
 });

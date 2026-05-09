@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { EChartsRenderer } from '@/components/echarts/EChartsRenderer';
-import { convertRechartsToECharts } from '@/components/echarts/RechartsCompatAdapter';
-import type { ChartType, ChartConfig, DataMapping } from '@/types/database';
+import { EChartsRenderer } from "@/components/echarts/EChartsRenderer";
+import { convertRechartsToECharts } from "@/components/echarts/RechartsCompatAdapter";
+import type { ChartType, ChartConfig, DataMapping } from "@/types/database";
 
 interface ChartRendererProps {
   data: Record<string, unknown>[];
@@ -26,8 +26,19 @@ export function ChartRenderer({
   height = 400,
   onDataClick,
 }: ChartRendererProps) {
-  console.log('[ChartRenderer] Props:', { dataLength: data?.length, chartType, chartConfig, dataMapping, height });
-  console.log('[ChartRenderer] Stacked config:', chartConfig?.stacked, 'Type:', typeof chartConfig?.stacked);
+  console.log("[ChartRenderer] Props:", {
+    dataLength: data?.length,
+    chartType,
+    chartConfig,
+    dataMapping,
+    height,
+  });
+  console.log(
+    "[ChartRenderer] Stacked config:",
+    chartConfig?.stacked,
+    "Type:",
+    typeof chartConfig?.stacked
+  );
 
   // Convert Recharts-style config to ECharts config
   const echartsConfig = convertRechartsToECharts(chartType, chartConfig, dataMapping);

@@ -1,9 +1,9 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -11,13 +11,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+} from "@/components/ui/dropdown-menu";
 import {
   RefreshCw,
   Clock,
@@ -27,14 +27,14 @@ import {
   Download,
   Trash,
   Pause,
-} from 'lucide-react'
-import { toast } from 'sonner'
-import { formatDateTime } from '@/lib/utils'
-import type { JobDefinition, JobExecution } from '@/types/database'
+} from "lucide-react";
+import { toast } from "sonner";
+import { formatDateTime } from "@/lib/utils";
+import type { JobDefinition, JobExecution } from "@/types/database";
 
-export const Route = createFileRoute('/_authed/jobs/')({
+export const Route = createFileRoute("/_authed/jobs/")({
   component: JobsPage,
-})
+});
 
 const statusIcons: Record<string, React.ReactNode> = {
   pending: <Clock className="h-4 w-4" />,
@@ -42,54 +42,54 @@ const statusIcons: Record<string, React.ReactNode> = {
   completed: <CheckCircle className="h-4 w-4" />,
   failed: <XCircle className="h-4 w-4" />,
   cancelled: <Pause className="h-4 w-4" />,
-}
+};
 
 function JobsPage() {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   const { data: queueStatus, refetch: refetchStatus } = useQuery({
-    queryKey: ['queue-status'],
+    queryKey: ["queue-status"],
     queryFn: async () => {
-      const res = await fetch('/api/jobs/status')
-      const data = await res.json()
-      return data.data
+      const res = await fetch("/api/jobs/status");
+      const data = await res.json();
+      return data.data;
     },
     refetchInterval: 5000,
-  })
+  });
 
   const { data: jobDefinitions, isLoading: isLoadingDefinitions } = useQuery<JobDefinition[]>({
-    queryKey: ['job-definitions'],
+    queryKey: ["job-definitions"],
     queryFn: async () => {
-      const res = await fetch('/api/jobs')
-      const data = await res.json()
-      return data.data?.items || []
+      const res = await fetch("/api/jobs");
+      const data = await res.json();
+      return data.data?.items || [];
     },
-  })
+  });
 
   const { data: recentExecutions, isLoading: isLoadingExecutions } = useQuery<JobExecution[]>({
-    queryKey: ['job-executions'],
+    queryKey: ["job-executions"],
     queryFn: async () => {
-      const res = await fetch('/api/jobs/executions?limit=20')
-      const data = await res.json()
-      return data.data?.items || []
+      const res = await fetch("/api/jobs/executions?limit=20");
+      const data = await res.json();
+      return data.data?.items || [];
     },
     refetchInterval: 10000,
-  })
+  });
 
   const cancelMutation = useMutation({
     mutationFn: async (jobId: string) => {
-      const res = await fetch(`/api/jobs/${jobId}`, { method: 'DELETE' })
-      return res.json()
+      const res = await fetch(`/api/jobs/${jobId}`, { method: "DELETE" });
+      return res.json();
     },
     onSuccess: (data) => {
       if (data.success) {
-        toast.success('Job cancelled')
-        queryClient.invalidateQueries({ queryKey: ['job-executions'] })
+        toast.success("Job cancelled");
+        queryClient.invalidateQueries({ queryKey: ["job-executions"] });
       } else {
-        toast.error(data.error?.message || 'Failed to cancel job')
+        toast.error(data.error?.message || "Failed to cancel job");
       }
     },
-  })
+  });
 
   return (
     <div className="space-y-6">
@@ -167,9 +167,7 @@ function JobsPage() {
               {isLoadingExecutions ? (
                 <div className="text-center py-8 text-muted-foreground">Loading...</div>
               ) : recentExecutions?.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No job executions yet
-                </div>
+                <div className="text-center py-8 text-muted-foreground">No job executions yet</div>
               ) : (
                 <Table>
                   <TableHeader>
@@ -189,26 +187,21 @@ function JobsPage() {
                           {execution.id.substring(0, 8)}...
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            variant="secondary"
-                            className="flex items-center gap-1 w-fit"
-                          >
+                          <Badge variant="secondary" className="flex items-center gap-1 w-fit">
                             {statusIcons[execution.status]}
                             {execution.status}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-muted-foreground">
-                          {execution.started_at ? formatDateTime(execution.started_at) : '-'}
+                          {execution.started_at ? formatDateTime(execution.started_at) : "-"}
                         </TableCell>
                         <TableCell className="text-muted-foreground">
-                          {execution.completed_at
-                            ? formatDateTime(execution.completed_at)
-                            : '-'}
+                          {execution.completed_at ? formatDateTime(execution.completed_at) : "-"}
                         </TableCell>
                         <TableCell>
                           {execution.execution_metadata
-                            ? JSON.parse(execution.execution_metadata).duration + 'ms'
-                            : '-'}
+                            ? JSON.parse(execution.execution_metadata).duration + "ms"
+                            : "-"}
                         </TableCell>
                         <TableCell>
                           <DropdownMenu>
@@ -226,8 +219,8 @@ function JobsPage() {
                                   </a>
                                 </DropdownMenuItem>
                               )}
-                              {(execution.status === 'pending' ||
-                                execution.status === 'running') && (
+                              {(execution.status === "pending" ||
+                                execution.status === "running") && (
                                 <DropdownMenuItem
                                   onClick={() => cancelMutation.mutate(execution.id)}
                                   className="text-destructive"
@@ -280,12 +273,10 @@ function JobsPage() {
                           <TableCell>
                             <Badge variant="outline">{job.job_type}</Badge>
                           </TableCell>
-                          <TableCell className="font-mono text-sm">
-                            {job.schedule_cron}
-                          </TableCell>
+                          <TableCell className="font-mono text-sm">{job.schedule_cron}</TableCell>
                           <TableCell>
-                            <Badge variant={job.is_active ? 'default' : 'secondary'}>
-                              {job.is_active ? 'Active' : 'Paused'}
+                            <Badge variant={job.is_active ? "default" : "secondary"}>
+                              {job.is_active ? "Active" : "Paused"}
                             </Badge>
                           </TableCell>
                           <TableCell>
@@ -303,5 +294,5 @@ function JobsPage() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

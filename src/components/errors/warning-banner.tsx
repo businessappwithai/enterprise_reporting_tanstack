@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { AlertTriangle, Info, X, Lightbulb } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useState, useEffect } from 'react';
+import { AlertTriangle, Info, X, Lightbulb } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useState, useEffect } from "react";
 
 export interface WarningMessage {
   id: string;
-  severity: 'info' | 'warning' | 'critical';
+  severity: "info" | "warning" | "critical";
   title: string;
   message: string;
   suggestions?: string[];
@@ -47,24 +47,24 @@ export function WarningBanner({ warning, onDismiss, onAction, actionLabel }: War
   const severityConfig = {
     info: {
       icon: Info,
-      variant: 'default' as const,
-      iconColor: 'text-blue-500',
-      bgColor: 'bg-blue-50 dark:bg-blue-950/20',
-      borderColor: 'border-blue-200 dark:border-blue-900/30',
+      variant: "default" as const,
+      iconColor: "text-blue-500",
+      bgColor: "bg-blue-50 dark:bg-blue-950/20",
+      borderColor: "border-blue-200 dark:border-blue-900/30",
     },
     warning: {
       icon: AlertTriangle,
-      variant: 'default' as const,
-      iconColor: 'text-yellow-500',
-      bgColor: 'bg-yellow-50 dark:bg-yellow-950/20',
-      borderColor: 'border-yellow-200 dark:border-yellow-900/30',
+      variant: "default" as const,
+      iconColor: "text-yellow-500",
+      bgColor: "bg-yellow-50 dark:bg-yellow-950/20",
+      borderColor: "border-yellow-200 dark:border-yellow-900/30",
     },
     critical: {
       icon: AlertTriangle,
-      variant: 'destructive' as const,
-      iconColor: 'text-red-500',
-      bgColor: 'bg-red-50 dark:bg-red-950/20',
-      borderColor: 'border-red-200 dark:border-red-900/30',
+      variant: "destructive" as const,
+      iconColor: "text-red-500",
+      bgColor: "bg-red-50 dark:bg-red-950/20",
+      borderColor: "border-red-200 dark:border-red-900/30",
     },
   };
 
@@ -79,11 +79,15 @@ export function WarningBanner({ warning, onDismiss, onAction, actionLabel }: War
       <Icon className={`h-4 w-4 ${config.iconColor}`} />
       <AlertTitle className="flex items-center gap-2">
         {warning.title}
-        <span className={`text-xs px-2 py-0.5 rounded-full ${
-          warning.severity === 'critical' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-          warning.severity === 'warning' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
-          'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-        }`}>
+        <span
+          className={`text-xs px-2 py-0.5 rounded-full ${
+            warning.severity === "critical"
+              ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+              : warning.severity === "warning"
+                ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+                : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+          }`}
+        >
           {warning.severity.toUpperCase()}
         </span>
       </AlertTitle>
@@ -115,12 +119,7 @@ export function WarningBanner({ warning, onDismiss, onAction, actionLabel }: War
             )}
           </div>
           {onDismiss && (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-8 px-2"
-              onClick={handleDismiss}
-            >
+            <Button size="sm" variant="ghost" className="h-8 px-2" onClick={handleDismiss}>
               <X className="h-4 w-4 mr-1" />
               Dismiss
             </Button>
@@ -137,17 +136,17 @@ interface WarningBannerContainerProps {
   className?: string;
 }
 
-export function WarningBannerContainer({ warnings, onDismiss, className }: WarningBannerContainerProps) {
+export function WarningBannerContainer({
+  warnings,
+  onDismiss,
+  className,
+}: WarningBannerContainerProps) {
   if (warnings.length === 0) return null;
 
   return (
     <div className={`space-y-3 ${className}`}>
       {warnings.map((warning) => (
-        <WarningBanner
-          key={warning.id}
-          warning={warning}
-          onDismiss={onDismiss}
-        />
+        <WarningBanner key={warning.id} warning={warning} onDismiss={onDismiss} />
       ))}
     </div>
   );

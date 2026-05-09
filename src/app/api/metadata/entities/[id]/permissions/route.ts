@@ -6,42 +6,33 @@
  * Permission management for metadata entities using the ds_entity_permissions table.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/lib/db/config';
-import { EntityService } from '@/lib/metadata/entity-service';
-import { hasPermission, getSecurityContext } from '@/lib/auth/rbac';
-import { getEntityPermissionSummary } from '@/lib/metadata/permissions';
-import { getDsEntityPermissions, upsertDsEntityPermission } from '@/lib/permissions/ds-rbac';
+import { type NextRequest, NextResponse } from "next/server";
+import { getDb } from "@/lib/db/config";
+import { EntityService } from "@/lib/metadata/entity-service";
+import { hasPermission, getSecurityContext } from "@/lib/auth/rbac";
+import { getEntityPermissionSummary } from "@/lib/metadata/permissions";
+import { getDsEntityPermissions, upsertDsEntityPermission } from "@/lib/permissions/ds-rbac";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const context = await getSecurityContext();
     if (!context) {
       return NextResponse.json(
-        { success: false, error: { code: 'UNAUTHORIZED' } },
+        { success: false, error: { code: "UNAUTHORIZED" } },
         { status: 401 }
       );
     }
 
-    const canView = hasPermission(context, 'metadata_entity:view');
+    const canView = hasPermission(context, "metadata_entity:view");
 
     if (!canView) {
-      return NextResponse.json(
-        { success: false, error: { code: 'FORBIDDEN' } },
-        { status: 403 }
-      );
+      return NextResponse.json({ success: false, error: { code: "FORBIDDEN" } }, { status: 403 });
     }
 
     const entity = await EntityService.getById(params.id);
 
     if (!entity) {
-      return NextResponse.json(
-        { success: false, error: { code: 'NOT_FOUND' } },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: { code: "NOT_FOUND" } }, { status: 404 });
     }
 
     // Get permission summary for the current user
@@ -52,7 +43,7 @@ export async function GET(
 
     // Filter permissions for this entity
     const entitySpecificPermissions = entityPermissions.filter(
-      p => p.entity_name === entity.entity_name
+      (p) => p.entity_name === entity.entity_name
     );
 
     return NextResponse.json({
@@ -66,13 +57,13 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Error getting entity permissions:', error);
+    console.error("Error getting entity permissions:", error);
     return NextResponse.json(
       {
         success: false,
         error: {
-          code: 'INTERNAL_ERROR',
-          message: 'Failed to get entity permissions',
+          code: "INTERNAL_ERROR",
+          message: "Failed to get entity permissions",
         },
       },
       { status: 500 }
@@ -80,71 +71,74 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const context = await getSecurityContext();
     if (!context) {
       return NextResponse.json(
-        { success: false, error: { code: 'UNAUTHORIZED' } },
+        { success: false, error: { code: "UNAUTHORIZED" } },
         { status: 401 }
       );
     }
 
-    const canAdmin = hasPermission(context, 'metadata_entity:admin');
+    const canAdmin = hasPermission(context, "metadata_entity:admin");
 
     if (!canAdmin) {
-      return NextResponse.json(
-        { success: false, error: { code: 'FORBIDDEN' } },
-        { status: 403 }
-      );
+      return NextResponse.json({ success: false, error: { code: "FORBIDDEN" } }, { status: 403 });
     }
 
     const entity = await EntityService.getById(params.id);
 
     if (!entity) {
-      return NextResponse.json(
-        { success: false, error: { code: 'NOT_FOUND' } },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: { code: "NOT_FOUND" } }, { status: 404 });
     }
 
     const body = await request.json();
     const { ds_role_id, permission_level } = body;
 
     // Validate input
-    if (!ds_role_id || typeof ds_role_id !== 'string') {
+    if (!ds_role_id || typeof ds_role_id !== "string") {
       return NextResponse.json(
-        { success: false, error: { code: 'VALIDATION_ERROR', message: 'ds_role_id is required' } },
+        { success: false, error: { code: "VALIDATION_ERROR", message: "ds_role_id is required" } },
         { status: 400 }
       );
     }
 
-    if (!permission_level || typeof permission_level !== 'string') {
+    if (!permission_level || typeof permission_level !== "string") {
       return NextResponse.json(
-        { success: false, error: { code: 'VALIDATION_ERROR', message: 'permission_level is required' } },
+        {
+          success: false,
+          error: { code: "VALIDATION_ERROR", message: "permission_level is required" },
+        },
         { status: 400 }
       );
     }
 
-    if (!['none', 'select', 'insert', 'update', 'delete', 'admin'].includes(permission_level)) {
+    if (!["none", "select", "insert", "update", "delete", "admin"].includes(permission_level)) {
       return NextResponse.json(
-        { success: false, error: { code: 'VALIDATION_ERROR', message: 'permission_level must be one of: none, select, insert, update, delete, admin' } },
+        {
+          success: false,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "permission_level must be one of: none, select, insert, update, delete, admin",
+          },
+        },
         { status: 400 }
       );
     }
 
     // Verify the role exists and belongs to this datasource
-    const role = await getDb()('ds_roles')
-      .where('id', ds_role_id)
-      .where('data_source_id', entity.data_source_id)
+    const role = await getDb()("ds_roles")
+      .where("id", ds_role_id)
+      .where("data_source_id", entity.data_source_id)
       .first();
 
     if (!role) {
       return NextResponse.json(
-        { success: false, error: { code: 'NOT_FOUND', message: 'Role not found for this datasource' } },
+        {
+          success: false,
+          error: { code: "NOT_FOUND", message: "Role not found for this datasource" },
+        },
         { status: 404 }
       );
     }
@@ -163,13 +157,13 @@ export async function PUT(
       data: permission,
     });
   } catch (error) {
-    console.error('Error updating entity permissions:', error);
+    console.error("Error updating entity permissions:", error);
     return NextResponse.json(
       {
         success: false,
         error: {
-          code: 'INTERNAL_ERROR',
-          message: 'Failed to update entity permissions',
+          code: "INTERNAL_ERROR",
+          message: "Failed to update entity permissions",
         },
       },
       { status: 500 }

@@ -1,58 +1,72 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { json } from '@/lib/server/response'
-import { validateSQL } from '@/lib/sql/validator'
-import { getDb } from '@/lib/db/config'
-import { verifySession } from '@/lib/auth/session'
-import type { DataSource } from '@/types/database'
+import { createFileRoute } from "@tanstack/react-router";
+import { json } from "@/lib/server/response";
+import { validateSQL } from "@/lib/sql/validator";
+import { getDb } from "@/lib/db/config";
+import { verifySession } from "@/lib/auth/session";
+import type { DataSource } from "@/types/database";
 
 async function getSession(request: Request) {
-  const cookie = request.headers.get('cookie') || ''
-  const match = cookie.match(/session_token=([^;]+)/)
-  const token = match?.[1]
-  if (!token) return null
-  return verifySession(token)
+  const cookie = request.headers.get("cookie") || "";
+  const match = cookie.match(/session_token=([^;]+)/);
+  const token = match?.[1];
+  if (!token) return null;
+  return verifySession(token);
 }
 
-export const Route = createFileRoute('/api/sql/validate')({
+export const Route = createFileRoute("/api/sql/validate")({
   server: {
     handlers: {
       POST: async ({ request }) => {
         try {
-          const session = await getSession(request)
+          const session = await getSession(request);
           if (!session?.user) {
-            return json({ success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } }, { status: 401 })
+            return json(
+              { success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } },
+              { status: 401 }
+            );
           }
 
-          const body = await request.json() as { sql: string; dataSourceId?: string }
-          const { sql, dataSourceId } = body
+          const body = (await request.json()) as { sql: string; dataSourceId?: string };
+          const { sql, dataSourceId } = body;
 
           if (!sql) {
-            return json({ success: false, error: { code: 'INVALID_INPUT', message: 'SQL content is required' } }, { status: 400 })
+            return json(
+              {
+                success: false,
+                error: { code: "INVALID_INPUT", message: "SQL content is required" },
+              },
+              { status: 400 }
+            );
           }
 
-          let dialect = 'sqlite3'
+          let dialect = "sqlite3";
           if (dataSourceId) {
-            const db = getDb()
-            const dataSource = await db<DataSource>('data_sources').where('id', dataSourceId).first()
+            const db = getDb();
+            const dataSource = await db<DataSource>("data_sources")
+              .where("id", dataSourceId)
+              .first();
             if (dataSource) {
-              dialect = dataSource.client_type
+              dialect = dataSource.client_type;
             }
           }
 
-          const validationResult = validateSQL(sql, dialect)
+          const validationResult = validateSQL(sql, dialect);
 
-          return json({ success: true, data: validationResult })
+          return json({ success: true, data: validationResult });
         } catch (error) {
-          console.error('SQL validation error:', error)
-          return json({
-            success: false,
-            error: {
-              code: 'VALIDATION_ERROR',
-              message: error instanceof Error ? error.message : 'Unknown error',
+          console.error("SQL validation error:", error);
+          return json(
+            {
+              success: false,
+              error: {
+                code: "VALIDATION_ERROR",
+                message: error instanceof Error ? error.message : "Unknown error",
+              },
             },
-          }, { status: 500 })
+            { status: 500 }
+          );
         }
       },
     },
   },
-})
+});

@@ -4,8 +4,8 @@
  * React Query mutations for entity and field metadata operations.
  */
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 interface ApiResponse<T> {
   success: boolean;
@@ -35,31 +35,31 @@ export function useUpdateEntityMetadata() {
       };
     }) => {
       const response = await fetch(`/api/metadata/entities/${entityId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
 
       if (!response.ok) {
         const error: ApiResponse<never> = await response.json();
-        throw new Error(error.error?.message || 'Failed to update entity metadata');
+        throw new Error(error.error?.message || "Failed to update entity metadata");
       }
 
       return response.json() as Promise<ApiResponse<any>>;
     },
     onSuccess: (data, variables) => {
-      toast.success('Entity metadata updated successfully');
+      toast.success("Entity metadata updated successfully");
 
       // Invalidate related queries
       queryClient.invalidateQueries({
-        queryKey: ['metadata-entity', variables.entityId],
+        queryKey: ["metadata-entity", variables.entityId],
       });
       queryClient.invalidateQueries({
-        queryKey: ['metadata-entities'],
+        queryKey: ["metadata-entities"],
       });
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update entity metadata');
+      toast.error(error.message || "Failed to update entity metadata");
     },
   });
 }
@@ -83,35 +83,35 @@ export function useUpdateFieldMetadata() {
         is_display_field?: boolean;
         is_searchable?: boolean;
         display_order?: number;
-        relationship_ui_type?: 'dropdown' | 'popup' | null;
+        relationship_ui_type?: "dropdown" | "popup" | null;
       };
     }) => {
       const response = await fetch(`/api/metadata/entities/${entityId}/fields/${fieldId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
 
       if (!response.ok) {
         const error: ApiResponse<never> = await response.json();
-        throw new Error(error.error?.message || 'Failed to update field metadata');
+        throw new Error(error.error?.message || "Failed to update field metadata");
       }
 
       return response.json() as Promise<ApiResponse<any>>;
     },
     onSuccess: (data, variables) => {
-      toast.success('Field metadata updated successfully');
+      toast.success("Field metadata updated successfully");
 
       // Invalidate related queries
       queryClient.invalidateQueries({
-        queryKey: ['metadata-entity', variables.entityId],
+        queryKey: ["metadata-entity", variables.entityId],
       });
       queryClient.invalidateQueries({
-        queryKey: ['entity-fields', variables.entityId],
+        queryKey: ["entity-fields", variables.entityId],
       });
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update field metadata');
+      toast.error(error.message || "Failed to update field metadata");
     },
   });
 }
@@ -135,19 +135,19 @@ export function useBatchUpdateFieldMetadata() {
           is_display_field?: boolean;
           is_searchable?: boolean;
           display_order?: number;
-          relationship_ui_type?: 'dropdown' | 'popup' | null;
+          relationship_ui_type?: "dropdown" | "popup" | null;
         };
       }>;
     }) => {
       const response = await fetch(`/api/metadata/entities/${entityId}/fields/batch`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ updates }),
       });
 
       if (!response.ok) {
         const error: ApiResponse<never> = await response.json();
-        throw new Error(error.error?.message || 'Failed to batch update field metadata');
+        throw new Error(error.error?.message || "Failed to batch update field metadata");
       }
 
       return response.json() as Promise<ApiResponse<any>>;
@@ -157,14 +157,14 @@ export function useBatchUpdateFieldMetadata() {
 
       // Invalidate related queries
       queryClient.invalidateQueries({
-        queryKey: ['metadata-entity', variables.entityId],
+        queryKey: ["metadata-entity", variables.entityId],
       });
       queryClient.invalidateQueries({
-        queryKey: ['entity-fields', variables.entityId],
+        queryKey: ["entity-fields", variables.entityId],
       });
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to batch update field metadata');
+      toast.error(error.message || "Failed to batch update field metadata");
     },
   });
 }
@@ -177,15 +177,15 @@ export function useSyncDatasource() {
 
   return useMutation({
     mutationFn: async ({ dataSourceId }: { dataSourceId: string }) => {
-      const response = await fetch('/api/metadata/entities/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/metadata/entities/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ dataSourceId }),
       });
 
       if (!response.ok) {
         const error: ApiResponse<never> = await response.json();
-        throw new Error(error.error?.message || 'Failed to sync datasource');
+        throw new Error(error.error?.message || "Failed to sync datasource");
       }
 
       return response.json() as Promise<ApiResponse<any>>;
@@ -202,11 +202,11 @@ export function useSyncDatasource() {
 
       // Invalidate all metadata queries
       queryClient.invalidateQueries({
-        queryKey: ['metadata-entities'],
+        queryKey: ["metadata-entities"],
       });
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to sync datasource');
+      toast.error(error.message || "Failed to sync datasource");
     },
   });
 }
@@ -226,31 +226,31 @@ export function useUpdateDatasourceConfig() {
       is_editable: boolean;
     }) => {
       const response = await fetch(`/api/data-sources/${dataSourceId}/config`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ is_editable }),
       });
 
       if (!response.ok) {
         const error: ApiResponse<never> = await response.json();
-        throw new Error(error.error?.message || 'Failed to update datasource config');
+        throw new Error(error.error?.message || "Failed to update datasource config");
       }
 
       return response.json() as Promise<ApiResponse<any>>;
     },
     onSuccess: (data, variables) => {
-      toast.success(`Datasource is now ${variables.is_editable ? 'editable' : 'read-only'}`);
+      toast.success(`Datasource is now ${variables.is_editable ? "editable" : "read-only"}`);
 
       // Invalidate related queries
       queryClient.invalidateQueries({
-        queryKey: ['datasource', variables.dataSourceId],
+        queryKey: ["datasource", variables.dataSourceId],
       });
       queryClient.invalidateQueries({
-        queryKey: ['datasources'],
+        queryKey: ["datasources"],
       });
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update datasource config');
+      toast.error(error.message || "Failed to update datasource config");
     },
   });
 }

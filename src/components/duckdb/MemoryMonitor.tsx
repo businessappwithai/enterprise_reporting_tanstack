@@ -1,24 +1,24 @@
-'use client';
+"use client";
 
 /**
  * Displays current DuckDB-Wasm memory usage with a progress bar.
  */
 
-import React from 'react';
-import { useDuckDB } from './DuckDBProvider';
+import React from "react";
+import { useDuckDB } from "./DuckDBProvider";
 
 function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B';
-  const units = ['B', 'KB', 'MB', 'GB'];
+  if (bytes === 0) return "0 B";
+  const units = ["B", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  const value = bytes / Math.pow(1024, i);
+  const value = bytes / 1024 ** i;
   return `${value.toFixed(1)} ${units[i]}`;
 }
 
 export function MemoryMonitor() {
   const { getMemoryUsage, status } = useDuckDB();
 
-  if (status !== 'ready') return null;
+  if (status !== "ready") return null;
 
   const usage = getMemoryUsage();
   const pct = usage.limit > 0 ? (usage.used / usage.limit) * 100 : 0;
@@ -37,7 +37,7 @@ export function MemoryMonitor() {
       <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
         <div
           className={`h-full rounded-full transition-all ${
-            pct > 90 ? 'bg-destructive' : pct > 70 ? 'bg-yellow-500' : 'bg-primary'
+            pct > 90 ? "bg-destructive" : pct > 70 ? "bg-yellow-500" : "bg-primary"
           }`}
           style={{ width: `${Math.min(pct, 100)}%` }}
         />

@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
 /**
  * Enhanced dataset hook with offline mode support.
  * Checks IndexedDB cache before fetching from server.
  */
 
-import { useCallback, useEffect, useState } from 'react';
-import { useDuckDB } from '@/components/duckdb/DuckDBProvider';
-import type { DatasetInfo } from '@/types/wasm';
-import { isFeatureEnabled } from '@/lib/feature-flags';
+import { useCallback, useEffect, useState } from "react";
+import { useDuckDB } from "@/components/duckdb/DuckDBProvider";
+import type { DatasetInfo } from "@/types/wasm";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 interface UseDatasetEnhancedReturn {
   datasets: DatasetInfo[];
@@ -33,7 +33,7 @@ export function useDatasetEnhanced(): UseDatasetEnhancedReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [isOffline, setIsOffline] = useState(
-    typeof navigator !== 'undefined' ? !navigator.onLine : false,
+    typeof navigator !== "undefined" ? !navigator.onLine : false
   );
 
   // Track online/offline status
@@ -41,12 +41,12 @@ export function useDatasetEnhanced(): UseDatasetEnhancedReturn {
     const handleOnline = () => setIsOffline(false);
     const handleOffline = () => setIsOffline(true);
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
   }, []);
 
@@ -58,9 +58,9 @@ export function useDatasetEnhanced(): UseDatasetEnhancedReturn {
       url: string;
       forceRefresh?: boolean;
     }) => {
-      if (status !== 'ready') throw new Error('DuckDB not ready');
+      if (status !== "ready") throw new Error("DuckDB not ready");
 
-      const offlineEnabled = isFeatureEnabled('offlineEnabled');
+      const offlineEnabled = isFeatureEnabled("offlineEnabled");
       const tableName = `ds_${params.id}`;
 
       setIsLoading(true);
@@ -76,7 +76,7 @@ export function useDatasetEnhanced(): UseDatasetEnhancedReturn {
         fileSize: 0,
         memorySize: 0,
         schema: [],
-        cacheStatus: 'not-cached',
+        cacheStatus: "not-cached",
         isLoading: true,
         loadProgress: 0,
         loadedAt: new Date(),
@@ -90,8 +90,8 @@ export function useDatasetEnhanced(): UseDatasetEnhancedReturn {
         // Try to load from IndexedDB cache first (if offline mode is enabled)
         if (offlineEnabled && !params.forceRefresh) {
           try {
-            const { get } = await import('idb-keyval');
-            const cached = await get(`parquet_${params.id}`) as Uint8Array | undefined;
+            const { get } = await import("idb-keyval");
+            const cached = (await get(`parquet_${params.id}`)) as Uint8Array | undefined;
 
             if (cached) {
               console.log(`[Dataset] Loading from cache: ${params.name}`);
@@ -103,12 +103,12 @@ export function useDatasetEnhanced(): UseDatasetEnhancedReturn {
                   d.id === params.id
                     ? {
                         ...d,
-                        cacheStatus: 'cached' as const,
+                        cacheStatus: "cached" as const,
                         loadedAt: new Date(),
                         loadProgress: 0.5,
                       }
-                    : d,
-                ),
+                    : d
+                )
               );
 
               // If online, refresh in background
@@ -118,7 +118,7 @@ export function useDatasetEnhanced(): UseDatasetEnhancedReturn {
                   .then(async (freshBuffer) => {
                     const fresh = new Uint8Array(freshBuffer);
                     // Update cache silently
-                    const { set } = await import('idb-keyval');
+                    const { set } = await import("idb-keyval");
                     await set(`parquet_${params.id}`, fresh);
                   })
                   .catch(() => {
@@ -131,23 +131,19 @@ export function useDatasetEnhanced(): UseDatasetEnhancedReturn {
               buffer = await fetchParquetBuffer(params.url, (loaded, total) => {
                 setDatasets((prev) =>
                   prev.map((d) =>
-                    d.id === params.id
-                      ? { ...d, loadProgress: total > 0 ? loaded / total : 0 }
-                      : d,
-                  ),
+                    d.id === params.id ? { ...d, loadProgress: total > 0 ? loaded / total : 0 } : d
+                  )
                 );
               });
             }
           } catch (cacheError) {
             // IndexedDB not available or error, fetch from server
-            console.warn('[Dataset] Cache access failed, fetching from server:', cacheError);
+            console.warn("[Dataset] Cache access failed, fetching from server:", cacheError);
             buffer = await fetchParquetBuffer(params.url, (loaded, total) => {
               setDatasets((prev) =>
                 prev.map((d) =>
-                  d.id === params.id
-                    ? { ...d, loadProgress: total > 0 ? loaded / total : 0 }
-                    : d,
-                ),
+                  d.id === params.id ? { ...d, loadProgress: total > 0 ? loaded / total : 0 } : d
+                )
               );
             });
           }
@@ -156,10 +152,8 @@ export function useDatasetEnhanced(): UseDatasetEnhancedReturn {
           buffer = await fetchParquetBuffer(params.url, (loaded, total) => {
             setDatasets((prev) =>
               prev.map((d) =>
-                d.id === params.id
-                  ? { ...d, loadProgress: total > 0 ? loaded / total : 0 }
-                  : d,
-              ),
+                d.id === params.id ? { ...d, loadProgress: total > 0 ? loaded / total : 0 } : d
+              )
             );
           });
         }
@@ -179,20 +173,18 @@ export function useDatasetEnhanced(): UseDatasetEnhancedReturn {
           fileSize: buffer.byteLength,
           memorySize: buffer.byteLength,
           schema: schema.columns,
-          cacheStatus: 'cached',
+          cacheStatus: "cached",
           isLoading: false,
           loadProgress: 1,
           loadedAt: new Date(),
         };
 
-        setDatasets((prev) =>
-          prev.map((d) => (d.id === params.id ? updatedDataset : d)),
-        );
+        setDatasets((prev) => prev.map((d) => (d.id === params.id ? updatedDataset : d)));
 
         // Cache for offline use
         if (offlineEnabled) {
           try {
-            const { set } = await import('idb-keyval');
+            const { set } = await import("idb-keyval");
             await set(`parquet_${params.id}`, buffer);
           } catch {
             // IndexedDB caching is best-effort
@@ -206,7 +198,7 @@ export function useDatasetEnhanced(): UseDatasetEnhancedReturn {
         setIsLoading(false);
       }
     },
-    [status, loadParquetBuffer, getTableSchema, isOffline],
+    [status, loadParquetBuffer, getTableSchema, isOffline]
   );
 
   const unloadDataset = useCallback(
@@ -217,7 +209,7 @@ export function useDatasetEnhanced(): UseDatasetEnhancedReturn {
         setDatasets((prev) => prev.filter((d) => d.id !== datasetId));
       }
     },
-    [datasets, dropTable],
+    [datasets, dropTable]
   );
 
   const refreshDataset = useCallback(
@@ -233,25 +225,23 @@ export function useDatasetEnhanced(): UseDatasetEnhancedReturn {
         forceRefresh: true,
       });
     },
-    [datasets, unloadDataset, loadDataset],
+    [datasets, unloadDataset, loadDataset]
   );
 
   // Preload datasets from IndexedDB on mount (if offline mode is enabled)
   const preloadFromCache = useCallback(async () => {
-    if (!isFeatureEnabled('offlineEnabled')) return;
+    if (!isFeatureEnabled("offlineEnabled")) return;
 
     try {
-      const { keys, entries } = await import('idb-keyval');
+      const { keys, entries } = await import("idb-keyval");
       const allKeys = await keys();
-      const parquetKeys = allKeys.filter(
-        (k) => typeof k === 'string' && k.startsWith('parquet_'),
-      );
+      const parquetKeys = allKeys.filter((k) => typeof k === "string" && k.startsWith("parquet_"));
 
       if (parquetKeys.length > 0) {
         const allEntries = await entries();
         for (const [key, buffer] of allEntries) {
-          if (typeof key === 'string' && key.startsWith('parquet_')) {
-            const datasetId = key.replace('parquet_', '');
+          if (typeof key === "string" && key.startsWith("parquet_")) {
+            const datasetId = key.replace("parquet_", "");
             const existing = datasets.find((d) => d.id === datasetId);
 
             if (!existing) {
@@ -281,7 +271,7 @@ export function useDatasetEnhanced(): UseDatasetEnhancedReturn {
 // Helper function to fetch with progress
 async function fetchParquetBuffer(
   url: string,
-  onProgress: (loaded: number, total: number) => void,
+  onProgress: (loaded: number, total: number) => void
 ): Promise<Uint8Array> {
   const response = await fetch(url);
 
@@ -289,12 +279,12 @@ async function fetchParquetBuffer(
     throw new Error(`Failed to fetch: ${response.statusText}`);
   }
 
-  const contentLength = response.headers.get('content-length');
+  const contentLength = response.headers.get("content-length");
   const total = contentLength ? parseInt(contentLength, 10) : 0;
 
   const reader = response.body?.getReader();
   if (!reader) {
-    throw new Error('Response body is not readable');
+    throw new Error("Response body is not readable");
   }
 
   const chunks: Uint8Array[] = [];

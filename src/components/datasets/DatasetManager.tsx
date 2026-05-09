@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
 /**
  * Main dataset manager component.
  * Shows loaded datasets, memory usage, and actions.
  */
 
-import React from 'react';
-import { DatasetCard } from './DatasetCard';
-import { MemoryMonitor } from '@/components/duckdb/MemoryMonitor';
-import { Button } from '@/components/ui/button';
-import type { DatasetInfo } from '@/types/wasm';
+import React from "react";
+import { DatasetCard } from "./DatasetCard";
+import { MemoryMonitor } from "@/components/duckdb/MemoryMonitor";
+import { Button } from "@/components/ui/button";
+import type { DatasetInfo } from "@/types/wasm";
 
 interface DatasetManagerProps {
   datasets: DatasetInfo[];
@@ -41,7 +41,7 @@ export function DatasetManager({
           </Button>
         )}
         <span className="ml-auto text-sm text-muted-foreground">
-          {datasets.length} dataset{datasets.length !== 1 ? 's' : ''}
+          {datasets.length} dataset{datasets.length !== 1 ? "s" : ""}
         </span>
       </div>
 

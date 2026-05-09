@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /*
  * SQL Editor Page - Tested and Working Features (2026-01-28)
@@ -17,21 +17,21 @@
  * - No state updates inside queryFn functions
  */
 
-import { useState, useCallback, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useSearchParams } from 'next/navigation';
-import { MonacoSQLEditorWrapper } from '@/components/sql-editor/monaco-editor-wrapper';
-import { SchemaBrowser } from '@/components/sql-editor/schema-browser';
-import { QueryResults } from '@/components/sql-editor/query-results';
-import { RefreshCw } from 'lucide-react';
-import type { DataSource } from '@/types/database';
-import type { SQLExecutionResponse } from '@/types/api';
+import { useState, useCallback, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "next/navigation";
+import { MonacoSQLEditorWrapper } from "@/components/sql-editor/monaco-editor-wrapper";
+import { SchemaBrowser } from "@/components/sql-editor/schema-browser";
+import { QueryResults } from "@/components/sql-editor/query-results";
+import { RefreshCw } from "lucide-react";
+import type { DataSource } from "@/types/database";
+import type { SQLExecutionResponse } from "@/types/api";
 
 export default function SQLEditorPage() {
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const [sqlContent, setSqlContent] = useState('SELECT * FROM actor LIMIT 10;');
-  const [selectedDataSource, setSelectedDataSource] = useState<string>('');
+  const [sqlContent, setSqlContent] = useState("SELECT * FROM actor LIMIT 10;");
+  const [selectedDataSource, setSelectedDataSource] = useState<string>("");
   const [queryResult, setQueryResult] = useState<SQLExecutionResponse | null>(null);
   const [executionError, setExecutionError] = useState<string | null>(null);
   const [validationResult, setValidationResult] = useState<{
@@ -53,13 +53,13 @@ export default function SQLEditorPage() {
 
   // Saved query state
   const [saveQueryModal, setSaveQueryModal] = useState(false);
-  const [queryName, setQueryName] = useState('');
-  const [queryDescription, setQueryDescription] = useState('');
+  const [queryName, setQueryName] = useState("");
+  const [queryDescription, setQueryDescription] = useState("");
   const [editingQueryId, setEditingQueryId] = useState<string | null>(null);
 
   // Load query from URL parameter
   useEffect(() => {
-    const queryId = searchParams.get('queryId');
+    const queryId = searchParams.get("queryId");
     if (queryId) {
       setEditingQueryId(queryId);
       fetch(`/api/queries/${queryId}`)
@@ -70,11 +70,11 @@ export default function SQLEditorPage() {
             setSqlContent(query.sql_content);
             setSelectedDataSource(query.data_source_id);
             setQueryName(query.name);
-            setQueryDescription(query.description || '');
+            setQueryDescription(query.description || "");
           }
         })
         .catch((error) => {
-          console.error('Failed to load query:', error);
+          console.error("Failed to load query:", error);
         });
     } else {
       setEditingQueryId(null);
@@ -82,19 +82,19 @@ export default function SQLEditorPage() {
   }, [searchParams]);
 
   // Results tabs state
-  const [activeTab, setActiveTab] = useState<'results' | 'errors' | 'logs'>('results');
+  const [activeTab, setActiveTab] = useState<"results" | "errors" | "logs">("results");
   const [queryLogs, setQueryLogs] = useState<string[]>([]);
 
   // Save query mutation
   const saveQueryMutation = useMutation({
     mutationFn: async ({ name, description }: { name: string; description?: string }) => {
       // If editing existing query, use PUT to update, otherwise POST to create
-      const url = editingQueryId ? `/api/queries/${editingQueryId}` : '/api/queries';
-      const method = editingQueryId ? 'PUT' : 'POST';
+      const url = editingQueryId ? `/api/queries/${editingQueryId}` : "/api/queries";
+      const method = editingQueryId ? "PUT" : "POST";
 
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
           description,
@@ -107,8 +107,8 @@ export default function SQLEditorPage() {
     onSuccess: (data) => {
       if (data.success) {
         setSaveQueryModal(false);
-        setQueryName('');
-        setQueryDescription('');
+        setQueryName("");
+        setQueryDescription("");
         // If it was a new query, update the editingQueryId so subsequent saves update the same query
         if (!editingQueryId && data.data?.id) {
           setEditingQueryId(data.data.id);
@@ -119,9 +119,9 @@ export default function SQLEditorPage() {
 
   // Fetch data sources
   const { data: dataSources, isLoading: isLoadingDataSources } = useQuery<DataSource[]>({
-    queryKey: ['data-sources', 'active'],
+    queryKey: ["data-sources", "active"],
     queryFn: async () => {
-      const res = await fetch('/api/data-sources');
+      const res = await fetch("/api/data-sources");
       const data = await res.json();
       const sources = data.data?.items || [];
       return sources.filter((ds: DataSource) => ds.is_active);
@@ -137,13 +137,13 @@ export default function SQLEditorPage() {
     logs?: string[];
     warning?: string;
   }>({
-    queryKey: ['schema', selectedDataSource],
+    queryKey: ["schema", selectedDataSource],
     queryFn: async () => {
       const res = await fetch(`/api/sql/schema/${selectedDataSource}`);
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data.error?.message || 'Failed to load schema');
-      if (!data.success) throw new Error(data.error?.message || 'Failed to load schema');
+      if (!res.ok) throw new Error(data.error?.message || "Failed to load schema");
+      if (!data.success) throw new Error(data.error?.message || "Failed to load schema");
 
       return data.data;
     },
@@ -156,9 +156,9 @@ export default function SQLEditorPage() {
   // Execute SQL mutation
   const executeMutation = useMutation({
     mutationFn: async ({ sql }: { sql: string }) => {
-      const res = await fetch('/api/sql/execute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/sql/execute", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sql,
           dataSourceId: selectedDataSource,
@@ -170,7 +170,7 @@ export default function SQLEditorPage() {
     },
     onSuccess: (data) => {
       const timestamp = new Date().toISOString();
-      setQueryLogs(prev => [`[${timestamp}] Executing query...`, ...prev]);
+      setQueryLogs((prev) => [`[${timestamp}] Executing query...`, ...prev]);
 
       if (data.success) {
         const result = data.data;
@@ -184,8 +184,8 @@ export default function SQLEditorPage() {
           setCurrentOffset(0);
           setTotalRows(null);
           setHasMore(false);
-          setQueryLogs(prev => [`[${timestamp}] Warning: ${result.warning.message}`, ...prev]);
-          setActiveTab('logs');
+          setQueryLogs((prev) => [`[${timestamp}] Warning: ${result.warning.message}`, ...prev]);
+          setActiveTab("logs");
         } else {
           // Clear previous query state
           setAccumulatedRows(result.rows || []);
@@ -201,28 +201,34 @@ export default function SQLEditorPage() {
             rows: result.rows || [],
           });
 
-          setQueryLogs(prev => [
+          setQueryLogs((prev) => [
             `[${timestamp}] Query executed successfully`,
-            `[${timestamp}] Returned ${result.rowCount} rows${result.totalRows ? ` of ${result.totalRows} total` : ''} in ${result.executionTime}ms`,
-            ...prev
+            `[${timestamp}] Returned ${result.rowCount} rows${result.totalRows ? ` of ${result.totalRows} total` : ""} in ${result.executionTime}ms`,
+            ...prev,
           ]);
-          setActiveTab('results');
+          setActiveTab("results");
         }
       } else {
-        setExecutionError(data.error?.message || 'Query execution failed');
+        setExecutionError(data.error?.message || "Query execution failed");
         setQueryResult(null);
         setWarning(null);
-        setQueryLogs(prev => [`[${timestamp}] Error: ${data.error?.message || 'Query execution failed'}`, ...prev]);
-        setActiveTab('errors');
+        setQueryLogs((prev) => [
+          `[${timestamp}] Error: ${data.error?.message || "Query execution failed"}`,
+          ...prev,
+        ]);
+        setActiveTab("errors");
       }
     },
     onError: (error) => {
       const timestamp = new Date().toISOString();
-      setExecutionError(error instanceof Error ? error.message : 'Unknown error');
+      setExecutionError(error instanceof Error ? error.message : "Unknown error");
       setQueryResult(null);
       setWarning(null);
-      setQueryLogs(prev => [`[${timestamp}] Exception: ${error instanceof Error ? error.message : 'Unknown error'}`, ...prev]);
-      setActiveTab('errors');
+      setQueryLogs((prev) => [
+        `[${timestamp}] Exception: ${error instanceof Error ? error.message : "Unknown error"}`,
+        ...prev,
+      ]);
+      setActiveTab("errors");
     },
   });
 
@@ -230,14 +236,14 @@ export default function SQLEditorPage() {
   const loadMoreMutation = useMutation({
     mutationFn: async () => {
       if (!selectedDataSource || !sqlContent) {
-        throw new Error('No data source or query');
+        throw new Error("No data source or query");
       }
 
       const nextOffset = currentOffset + (accumulatedRows.length || 0);
 
-      const res = await fetch('/api/sql/execute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/sql/execute", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sql: sqlContent,
           dataSourceId: selectedDataSource,
@@ -250,30 +256,34 @@ export default function SQLEditorPage() {
     onSuccess: (data) => {
       if (data.success && !data.data.warning) {
         const newRows = data.data.rows || [];
-        setAccumulatedRows(prev => [...prev, ...newRows]);
+        setAccumulatedRows((prev) => [...prev, ...newRows]);
         setCurrentOffset(nextOffset);
         setHasMore(data.data.pagination?.hasMore || false);
         setTotalRows(data.data.pagination?.totalRows || null);
 
         // Update query result with accumulated rows
-        setQueryResult(prev => prev ? {
-          ...prev,
-          rows: [...accumulatedRows, ...newRows],
-          rowCount: [...accumulatedRows, ...newRows].length,
-        } : null);
+        setQueryResult((prev) =>
+          prev
+            ? {
+                ...prev,
+                rows: [...accumulatedRows, ...newRows],
+                rowCount: [...accumulatedRows, ...newRows].length,
+              }
+            : null
+        );
       }
     },
   });
 
   const _handleLoadMore = useCallback(() => {
-    if (hasMore && !isLoadingMore && (accumulatedRows.length < 5000)) {
+    if (hasMore && !isLoadingMore && accumulatedRows.length < 5000) {
       loadMoreMutation.mutate();
     }
   }, [hasMore, isLoadingMore, accumulatedRows.length, sqlContent, selectedDataSource]);
 
   const handleExecute = useCallback(() => {
     if (!selectedDataSource) {
-      setExecutionError('Please select a data source');
+      setExecutionError("Please select a data source");
       return;
     }
     executeMutation.mutate({ sql: sqlContent });
@@ -281,43 +291,46 @@ export default function SQLEditorPage() {
 
   const handleRefreshSchema = useCallback(() => {
     if (selectedDataSource) {
-      queryClient.invalidateQueries({ queryKey: ['schema', selectedDataSource] });
+      queryClient.invalidateQueries({ queryKey: ["schema", selectedDataSource] });
     }
   }, [selectedDataSource, queryClient]);
 
   // Handle pagination - fetch specific page from server
-  const handlePageChange = useCallback(async (offset: number) => {
-    if (!selectedDataSource || !sqlContent) {
-      return;
-    }
+  const handlePageChange = useCallback(
+    async (offset: number) => {
+      if (!selectedDataSource || !sqlContent) {
+        return;
+      }
 
-    const res = await fetch('/api/sql/execute', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sql: sqlContent,
-        dataSourceId: selectedDataSource,
-        limit: 500,
-        offset,
-      }),
-    });
-
-    const data = await res.json();
-    if (data.success && !data.data.warning) {
-      setQueryResult({
-        ...data.data,
-        rows: data.data.rows || [],
+      const res = await fetch("/api/sql/execute", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sql: sqlContent,
+          dataSourceId: selectedDataSource,
+          limit: 500,
+          offset,
+        }),
       });
-      setCurrentOffset(offset);
-      setHasMore(data.data.pagination?.hasMore || false);
-    }
-  }, [sqlContent, selectedDataSource]);
+
+      const data = await res.json();
+      if (data.success && !data.data.warning) {
+        setQueryResult({
+          ...data.data,
+          rows: data.data.rows || [],
+        });
+        setCurrentOffset(offset);
+        setHasMore(data.data.pagination?.hasMore || false);
+      }
+    },
+    [sqlContent, selectedDataSource]
+  );
 
   const handleValidate = useCallback(async () => {
     if (!sqlContent.trim()) {
       setValidationResult({
         isValid: false,
-        errors: [{ message: 'SQL query cannot be empty' }],
+        errors: [{ message: "SQL query cannot be empty" }],
         warnings: [],
       });
       return;
@@ -325,9 +338,9 @@ export default function SQLEditorPage() {
 
     setIsValidating(true);
     try {
-      const res = await fetch('/api/sql/validate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/sql/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sql: sqlContent,
           dataSourceId: selectedDataSource,
@@ -340,14 +353,14 @@ export default function SQLEditorPage() {
       } else {
         setValidationResult({
           isValid: false,
-          errors: [{ message: data.error?.message || 'Validation failed' }],
+          errors: [{ message: data.error?.message || "Validation failed" }],
           warnings: [],
         });
       }
     } catch (error) {
       setValidationResult({
         isValid: false,
-        errors: [{ message: error instanceof Error ? error.message : 'Unknown error' }],
+        errors: [{ message: error instanceof Error ? error.message : "Unknown error" }],
         warnings: [],
       });
     } finally {
@@ -362,7 +375,7 @@ export default function SQLEditorPage() {
   const handleColumnClick = (tableName: string, columnName: string) => {
     setSqlContent((prev) => {
       const insertion = `${tableName}.${columnName}`;
-      return prev + (prev.endsWith(' ') || prev.endsWith('\n') ? '' : ' ') + insertion;
+      return prev + (prev.endsWith(" ") || prev.endsWith("\n") ? "" : " ") + insertion;
     });
   };
 
@@ -386,14 +399,14 @@ export default function SQLEditorPage() {
             disabled={isValidating}
             className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isValidating ? 'Validating...' : 'Validate'}
+            {isValidating ? "Validating..." : "Validate"}
           </button>
           <button
             onClick={handleExecute}
             disabled={executeMutation.isPending}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {executeMutation.isPending ? 'Running...' : 'Run Query'}
+            {executeMutation.isPending ? "Running..." : "Run Query"}
           </button>
           <button
             onClick={() => setSaveQueryModal(true)}
@@ -406,11 +419,13 @@ export default function SQLEditorPage() {
       </div>
 
       {validationResult && (
-        <div className={`mb-4 border rounded p-3 ${
-          validationResult.isValid && validationResult.errors.length === 0
-            ? 'border-green-300 bg-green-50'
-            : 'border-red-300 bg-red-50'
-        }`}>
+        <div
+          className={`mb-4 border rounded p-3 ${
+            validationResult.isValid && validationResult.errors.length === 0
+              ? "border-green-300 bg-green-50"
+              : "border-red-300 bg-red-50"
+          }`}
+        >
           {validationResult.isValid && validationResult.errors.length === 0 ? (
             <div className="text-sm text-green-700">
               <p className="font-medium">✓ SQL is valid</p>
@@ -476,19 +491,20 @@ export default function SQLEditorPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             {isLoadingDataSources && <p className="text-xs text-muted-foreground">Loading...</p>}
-            {dataSources && dataSources.map((ds) => (
-              <button
-                key={ds.id}
-                onClick={() => setSelectedDataSource(ds.id)}
-                className={`px-3 py-1.5 text-sm rounded border transition-colors ${
-                  selectedDataSource === ds.id
-                    ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700'
-                    : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-                }`}
-              >
-                {ds.name}
-              </button>
-            ))}
+            {dataSources &&
+              dataSources.map((ds) => (
+                <button
+                  key={ds.id}
+                  onClick={() => setSelectedDataSource(ds.id)}
+                  className={`px-3 py-1.5 text-sm rounded border transition-colors ${
+                    selectedDataSource === ds.id
+                      ? "bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700"
+                      : "bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  {ds.name}
+                </button>
+              ))}
           </div>
         </div>
       ) : (
@@ -501,8 +517,9 @@ export default function SQLEditorPage() {
             <span>▼</span>
             <span className="font-medium">
               {selectedDataSource
-                ? dataSources?.find((ds) => ds.id === selectedDataSource)?.name || 'Select Data Source'
-                : 'Select Data Source'}
+                ? dataSources?.find((ds) => ds.id === selectedDataSource)?.name ||
+                  "Select Data Source"
+                : "Select Data Source"}
             </span>
           </button>
         </div>
@@ -522,7 +539,15 @@ export default function SQLEditorPage() {
       {!schemaBrowserCollapsed ? (
         <div className="mt-4 border rounded p-4">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium">Schema Browser ({isLoadingSchema ? 'Loading...' : selectedDataSource ? `${schema?.tables.length || 0} tables, ${schema?.views.length || 0} views` : 'Select a data source'})</p>
+            <p className="text-sm font-medium">
+              Schema Browser (
+              {isLoadingSchema
+                ? "Loading..."
+                : selectedDataSource
+                  ? `${schema?.tables.length || 0} tables, ${schema?.views.length || 0} views`
+                  : "Select a data source"}
+              )
+            </p>
             <div className="flex items-center gap-2">
               {selectedDataSource && (
                 <button
@@ -543,7 +568,7 @@ export default function SQLEditorPage() {
               </button>
             </div>
           </div>
-          <div style={{ maxHeight: '300px', overflow: 'auto' }}>
+          <div style={{ maxHeight: "300px", overflow: "auto" }}>
             {selectedDataSource ? (
               <SchemaBrowser
                 schema={schema || null}
@@ -565,7 +590,13 @@ export default function SQLEditorPage() {
           >
             <span>▲</span>
             <span className="font-medium">
-              Schema Browser ({isLoadingSchema ? 'Loading...' : selectedDataSource ? `${schema?.tables.length || 0} tables, ${schema?.views.length || 0} views` : 'Select a data source'})
+              Schema Browser (
+              {isLoadingSchema
+                ? "Loading..."
+                : selectedDataSource
+                  ? `${schema?.tables.length || 0} tables, ${schema?.views.length || 0} views`
+                  : "Select a data source"}
+              )
             </span>
           </button>
         </div>
@@ -576,31 +607,31 @@ export default function SQLEditorPage() {
         {/* Tab Headers */}
         <div className="flex border-b">
           <button
-            onClick={() => setActiveTab('results')}
+            onClick={() => setActiveTab("results")}
             className={`px-4 py-2 text-sm font-medium transition-colors ${
-              activeTab === 'results'
-                ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-600 dark:bg-blue-900/20 dark:text-blue-400'
-                : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800'
+              activeTab === "results"
+                ? "bg-blue-50 text-blue-700 border-b-2 border-blue-600 dark:bg-blue-900/20 dark:text-blue-400"
+                : "text-gray-600 hover:text-gray-800 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800"
             }`}
           >
             Results
           </button>
           <button
-            onClick={() => setActiveTab('errors')}
+            onClick={() => setActiveTab("errors")}
             className={`px-4 py-2 text-sm font-medium transition-colors ${
-              activeTab === 'errors'
-                ? 'bg-red-50 text-red-700 border-b-2 border-red-600 dark:bg-red-900/20 dark:text-red-400'
-                : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800'
+              activeTab === "errors"
+                ? "bg-red-50 text-red-700 border-b-2 border-red-600 dark:bg-red-900/20 dark:text-red-400"
+                : "text-gray-600 hover:text-gray-800 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800"
             }`}
           >
             Errors
           </button>
           <button
-            onClick={() => setActiveTab('logs')}
+            onClick={() => setActiveTab("logs")}
             className={`px-4 py-2 text-sm font-medium transition-colors ${
-              activeTab === 'logs'
-                ? 'bg-gray-50 text-gray-700 border-b-2 border-gray-600 dark:bg-gray-800 dark:text-gray-300'
-                : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800'
+              activeTab === "logs"
+                ? "bg-gray-50 text-gray-700 border-b-2 border-gray-600 dark:bg-gray-800 dark:text-gray-300"
+                : "text-gray-600 hover:text-gray-800 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800"
             }`}
           >
             Logs
@@ -609,7 +640,7 @@ export default function SQLEditorPage() {
 
         {/* Tab Content */}
         <div className="p-4">
-          {activeTab === 'results' && (
+          {activeTab === "results" && (
             <div>
               {queryResult && (
                 <div className="space-y-2">
@@ -637,19 +668,27 @@ export default function SQLEditorPage() {
             </div>
           )}
 
-          {activeTab === 'errors' && (
+          {activeTab === "errors" && (
             <div>
               {executionError && (
                 <div className="border border-red-300 bg-red-50 dark:bg-red-900/20 rounded p-4">
                   <h3 className="font-semibold text-red-700 dark:text-red-400 mb-2">Query Error</h3>
-                  <pre className="text-sm text-red-600 dark:text-red-300 whitespace-pre-wrap">{executionError}</pre>
+                  <pre className="text-sm text-red-600 dark:text-red-300 whitespace-pre-wrap">
+                    {executionError}
+                  </pre>
                 </div>
               )}
               {warning && (
                 <div className="border border-yellow-300 bg-yellow-50 dark:bg-yellow-900/20 rounded p-4">
-                  <h3 className="font-semibold text-yellow-700 dark:text-yellow-400 mb-2">Warning</h3>
-                  <p className="text-sm text-yellow-600 dark:text-yellow-300 mb-2">{warning.message}</p>
-                  <p className="text-sm text-yellow-600 dark:text-yellow-300">💡 <strong>Suggestion:</strong> {warning.suggestion}</p>
+                  <h3 className="font-semibold text-yellow-700 dark:text-yellow-400 mb-2">
+                    Warning
+                  </h3>
+                  <p className="text-sm text-yellow-600 dark:text-yellow-300 mb-2">
+                    {warning.message}
+                  </p>
+                  <p className="text-sm text-yellow-600 dark:text-yellow-300">
+                    💡 <strong>Suggestion:</strong> {warning.suggestion}
+                  </p>
                 </div>
               )}
               {!executionError && !warning && (
@@ -660,13 +699,15 @@ export default function SQLEditorPage() {
             </div>
           )}
 
-          {activeTab === 'logs' && (
+          {activeTab === "logs" && (
             <div>
               {queryLogs.length > 0 ? (
                 <div className="bg-gray-50 dark:bg-gray-900 rounded p-4 max-h-96 overflow-auto">
                   <pre className="text-xs font-mono space-y-1">
                     {queryLogs.map((log, index) => (
-                      <div key={index} className="whitespace-pre-wrap">{log}</div>
+                      <div key={index} className="whitespace-pre-wrap">
+                        {log}
+                      </div>
                     ))}
                   </pre>
                 </div>
@@ -682,9 +723,14 @@ export default function SQLEditorPage() {
 
       {/* Save Query Modal */}
       {saveQueryModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center" style={{ zIndex: 99999 }}>
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center"
+          style={{ zIndex: 99999 }}
+        >
           <div className="bg-background rounded-lg p-6 max-w-md w-full mx-4 shadow-lg">
-            <h2 className="text-xl font-bold mb-4">{editingQueryId ? 'Update Query' : 'Save Query'}</h2>
+            <h2 className="text-xl font-bold mb-4">
+              {editingQueryId ? "Update Query" : "Save Query"}
+            </h2>
             <div className="space-y-4">
               <div>
                 <label htmlFor="queryName" className="block text-sm font-medium mb-1">
@@ -717,16 +763,23 @@ export default function SQLEditorPage() {
                 />
               </div>
               <div className="text-xs text-muted-foreground bg-gray-50 dark:bg-gray-800 p-2 rounded">
-                <p>• Data Source: <strong>{dataSources?.find((ds) => ds.id === selectedDataSource)?.name || 'None'}</strong></p>
-                <p>• Query Length: <strong>{sqlContent.length}</strong> characters</p>
+                <p>
+                  • Data Source:{" "}
+                  <strong>
+                    {dataSources?.find((ds) => ds.id === selectedDataSource)?.name || "None"}
+                  </strong>
+                </p>
+                <p>
+                  • Query Length: <strong>{sqlContent.length}</strong> characters
+                </p>
               </div>
             </div>
             <div className="flex gap-2 mt-6">
               <button
                 onClick={() => {
                   setSaveQueryModal(false);
-                  setQueryName('');
-                  setQueryDescription('');
+                  setQueryName("");
+                  setQueryDescription("");
                 }}
                 className="flex-1 px-4 py-2 border rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-sm font-medium"
               >
@@ -737,7 +790,7 @@ export default function SQLEditorPage() {
                 disabled={saveQueryMutation.isPending || !queryName.trim()}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
               >
-                {saveQueryMutation.isPending ? 'Saving...' : (editingQueryId ? 'Update' : 'Save')}
+                {saveQueryMutation.isPending ? "Saving..." : editingQueryId ? "Update" : "Save"}
               </button>
             </div>
           </div>
@@ -746,9 +799,14 @@ export default function SQLEditorPage() {
 
       {/* Save Query Modal */}
       {saveQueryModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center" style={{ zIndex: 99999 }}>
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center"
+          style={{ zIndex: 99999 }}
+        >
           <div className="bg-background rounded-lg p-6 max-w-md w-full mx-4 shadow-lg">
-            <h2 className="text-xl font-bold mb-4">{editingQueryId ? 'Update Query' : 'Save Query'}</h2>
+            <h2 className="text-xl font-bold mb-4">
+              {editingQueryId ? "Update Query" : "Save Query"}
+            </h2>
             <div className="space-y-4">
               <div>
                 <label htmlFor="queryName" className="block text-sm font-medium mb-1">
@@ -781,16 +839,23 @@ export default function SQLEditorPage() {
                 />
               </div>
               <div className="text-xs text-muted-foreground bg-gray-50 dark:bg-gray-800 p-2 rounded">
-                <p>• Data Source: <strong>{dataSources?.find((ds) => ds.id === selectedDataSource)?.name || 'None'}</strong></p>
-                <p>• Query Length: <strong>{sqlContent.length}</strong> characters</p>
+                <p>
+                  • Data Source:{" "}
+                  <strong>
+                    {dataSources?.find((ds) => ds.id === selectedDataSource)?.name || "None"}
+                  </strong>
+                </p>
+                <p>
+                  • Query Length: <strong>{sqlContent.length}</strong> characters
+                </p>
               </div>
             </div>
             <div className="flex gap-2 mt-6">
               <button
                 onClick={() => {
                   setSaveQueryModal(false);
-                  setQueryName('');
-                  setQueryDescription('');
+                  setQueryName("");
+                  setQueryDescription("");
                 }}
                 className="flex-1 px-4 py-2 border rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-sm font-medium"
               >
@@ -801,7 +866,7 @@ export default function SQLEditorPage() {
                 disabled={saveQueryMutation.isPending || !queryName.trim()}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
               >
-                {saveQueryMutation.isPending ? 'Saving...' : (editingQueryId ? 'Update' : 'Save')}
+                {saveQueryMutation.isPending ? "Saving..." : editingQueryId ? "Update" : "Save"}
               </button>
             </div>
           </div>

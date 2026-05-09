@@ -1,21 +1,18 @@
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import {
-  TableCell,
-  TableRow,
-} from '@/components/ui/table';
-import { GripVertical, Trash } from 'lucide-react';
-import type { ColumnDefinition, FormatterType } from '@/types/database';
+} from "@/components/ui/select";
+import { TableCell, TableRow } from "@/components/ui/table";
+import { GripVertical, Trash } from "lucide-react";
+import type { ColumnDefinition, FormatterType } from "@/types/database";
 
 interface SortableColumnRowProps {
   column: ColumnDefinition;
@@ -24,8 +21,15 @@ interface SortableColumnRowProps {
   onDelete: (id: string) => void;
 }
 
-export function SortableColumnRow({ column, availableFields, onUpdate, onDelete }: SortableColumnRowProps) {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: column.id });
+export function SortableColumnRow({
+  column,
+  availableFields,
+  onUpdate,
+  onDelete,
+}: SortableColumnRowProps) {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+    id: column.id,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -53,7 +57,9 @@ export function SortableColumnRow({ column, availableFields, onUpdate, onDelete 
           </SelectTrigger>
           <SelectContent>
             {availableFields.map((field) => (
-              <SelectItem key={field} value={field}>{field}</SelectItem>
+              <SelectItem key={field} value={field}>
+                {field}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -61,25 +67,38 @@ export function SortableColumnRow({ column, availableFields, onUpdate, onDelete 
       <TableCell>
         <Input
           type="number"
-          value={column.width || ''}
-          onChange={(e) => onUpdate(column.id, { width: e.target.value ? Number(e.target.value) : undefined })}
+          value={column.width || ""}
+          onChange={(e) =>
+            onUpdate(column.id, { width: e.target.value ? Number(e.target.value) : undefined })
+          }
           className="h-8 w-20 rounded-none"
           placeholder="Auto"
         />
       </TableCell>
       <TableCell>
-        <Switch checked={column.visible} onCheckedChange={(visible) => onUpdate(column.id, { visible })} />
+        <Switch
+          checked={column.visible}
+          onCheckedChange={(visible) => onUpdate(column.id, { visible })}
+        />
       </TableCell>
       <TableCell>
-        <Switch checked={column.sortable} onCheckedChange={(sortable) => onUpdate(column.id, { sortable })} />
+        <Switch
+          checked={column.sortable}
+          onCheckedChange={(sortable) => onUpdate(column.id, { sortable })}
+        />
       </TableCell>
       <TableCell>
-        <Switch checked={column.filterable} onCheckedChange={(filterable) => onUpdate(column.id, { filterable })} />
+        <Switch
+          checked={column.filterable}
+          onCheckedChange={(filterable) => onUpdate(column.id, { filterable })}
+        />
       </TableCell>
       <TableCell>
         <Select
-          value={column.formatter?.type || 'text'}
-          onValueChange={(type) => onUpdate(column.id, { formatter: { type: type as FormatterType, options: {} } })}
+          value={column.formatter?.type || "text"}
+          onValueChange={(type) =>
+            onUpdate(column.id, { formatter: { type: type as FormatterType, options: {} } })
+          }
         >
           <SelectTrigger className="h-8 w-24 rounded-none">
             <SelectValue />
@@ -96,7 +115,12 @@ export function SortableColumnRow({ column, availableFields, onUpdate, onDelete 
         </Select>
       </TableCell>
       <TableCell>
-        <Button variant="ghost" size="icon" onClick={() => onDelete(column.id)} className="h-8 w-8 text-destructive">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onDelete(column.id)}
+          className="h-8 w-8 text-destructive"
+        >
           <Trash className="h-4 w-4" />
         </Button>
       </TableCell>

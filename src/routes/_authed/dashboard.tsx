@@ -1,125 +1,118 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
-import { createServerFn } from '@tanstack/react-start'
-import { getDb } from '@/lib/db/config'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  BarChart3,
-  Clock,
-  Database,
-  FileText,
-  LayoutDashboard,
-  Play,
-} from 'lucide-react'
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
+import { getDb } from "@/lib/db/config";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BarChart3, Clock, Database, FileText, LayoutDashboard, Play } from "lucide-react";
 
-const getDashboardStatsFn = createServerFn({ method: 'GET' }).handler(async () => {
-  const db = getDb()
+const getDashboardStatsFn = createServerFn({ method: "GET" }).handler(async () => {
+  const db = getDb();
 
-  const safeCount = async (tableName: string, column = '*') => {
+  const safeCount = async (tableName: string, column = "*") => {
     try {
-      const result = await db(tableName).count(`${column} as count`).first()
-      return Number((result as Record<string, unknown>)?.count || 0)
+      const result = await db(tableName).count(`${column} as count`).first();
+      return Number((result as Record<string, unknown>)?.count || 0);
     } catch (error: unknown) {
-      if (error instanceof Error && error.message?.includes('no such table')) {
-        return 0
+      if (error instanceof Error && error.message?.includes("no such table")) {
+        return 0;
       }
-      console.error(`Error counting ${tableName}:`, error)
-      return 0
+      console.error(`Error counting ${tableName}:`, error);
+      return 0;
     }
-  }
+  };
 
   const getJobsCount = async () => {
     try {
-      const result = await db('job_definitions')
-        .whereNotNull('schedule_cron')
-        .count('* as count')
-        .first()
-      return Number((result as Record<string, unknown>)?.count || 0)
+      const result = await db("job_definitions")
+        .whereNotNull("schedule_cron")
+        .count("* as count")
+        .first();
+      return Number((result as Record<string, unknown>)?.count || 0);
     } catch (error: unknown) {
-      if (error instanceof Error && error.message?.includes('no such table')) {
-        return 0
+      if (error instanceof Error && error.message?.includes("no such table")) {
+        return 0;
       }
-      console.error('Error counting jobs:', error)
-      return 0
+      console.error("Error counting jobs:", error);
+      return 0;
     }
-  }
+  };
 
   const [reportsCount, chartsCount, dashboardsCount, jobsCount] = await Promise.all([
-    safeCount('report_definitions'),
-    safeCount('chart_definitions'),
-    safeCount('dashboard_layouts'),
+    safeCount("report_definitions"),
+    safeCount("chart_definitions"),
+    safeCount("dashboard_layouts"),
     getJobsCount(),
-  ])
+  ]);
 
   return {
     reports: reportsCount,
     charts: chartsCount,
     dashboards: dashboardsCount,
     jobs: jobsCount,
-  }
-})
+  };
+});
 
 const quickLinks = [
   {
-    title: 'SQL Editor',
-    description: 'Write and execute SQL queries',
-    href: '/sql-editor',
+    title: "SQL Editor",
+    description: "Write and execute SQL queries",
+    href: "/sql-editor",
     icon: Database,
   },
   {
-    title: 'Reports',
-    description: 'View and manage reports',
-    href: '/reports',
+    title: "Reports",
+    description: "View and manage reports",
+    href: "/reports",
     icon: FileText,
   },
   {
-    title: 'Charts',
-    description: 'Create data visualizations',
-    href: '/charts',
+    title: "Charts",
+    description: "Create data visualizations",
+    href: "/charts",
     icon: BarChart3,
   },
   {
-    title: 'Dashboards',
-    description: 'Build interactive dashboards',
-    href: '/dashboards',
+    title: "Dashboards",
+    description: "Build interactive dashboards",
+    href: "/dashboards",
     icon: LayoutDashboard,
   },
-]
+];
 
-export const Route = createFileRoute('/_authed/dashboard')({
+export const Route = createFileRoute("/_authed/dashboard")({
   loader: () => getDashboardStatsFn(),
   component: DashboardPage,
-})
+});
 
 function DashboardPage() {
-  const stats = Route.useLoaderData()
-  const { session } = Route.useRouteContext()
+  const stats = Route.useLoaderData();
+  const { session } = Route.useRouteContext();
 
   const statItems = [
     {
-      title: 'Total Reports',
+      title: "Total Reports",
       value: stats.reports.toString(),
       icon: FileText,
-      href: '/reports',
+      href: "/reports",
     },
     {
-      title: 'Active Charts',
+      title: "Active Charts",
       value: stats.charts.toString(),
       icon: BarChart3,
-      href: '/charts',
+      href: "/charts",
     },
     {
-      title: 'Dashboards',
+      title: "Dashboards",
       value: stats.dashboards.toString(),
       icon: LayoutDashboard,
-      href: '/dashboards',
+      href: "/dashboards",
     },
     {
-      title: 'Scheduled Jobs',
+      title: "Scheduled Jobs",
       value: stats.jobs.toString(),
       icon: Clock,
-      href: '/jobs',
+      href: "/jobs",
     },
-  ]
+  ];
 
   return (
     <div className="space-y-6">
@@ -194,5 +187,5 @@ function DashboardPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

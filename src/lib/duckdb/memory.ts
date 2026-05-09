@@ -3,7 +3,7 @@
  * Implements LRU eviction for loaded datasets.
  */
 
-import type { MemoryUsage } from '@/types/wasm';
+import type { MemoryUsage } from "@/types/wasm";
 
 interface DatasetEntry {
   size: number;

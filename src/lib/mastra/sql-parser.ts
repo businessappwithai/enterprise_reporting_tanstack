@@ -4,8 +4,8 @@
  * Validates entity access against data source RBAC permissions.
  */
 
-import { Parser } from 'node-sql-parser';
-import { CharStream } from 'antlr4ng';
+import { Parser } from "node-sql-parser";
+import { CharStream } from "antlr4ng";
 import type {
   ParsedSqlEntity,
   AccessCheckDetail,
@@ -13,8 +13,8 @@ import type {
   SqlFromItem,
   SqlTableRef,
   SqlExpression,
-} from '@/types/database';
-import { checkEntityAccess } from '@/lib/permissions/ds-rbac';
+} from "@/types/database";
+import { checkEntityAccess } from "@/lib/permissions/ds-rbac";
 
 const sqlParser = new Parser();
 
@@ -22,7 +22,7 @@ const sqlParser = new Parser();
  * Parse a SQL statement and extract all referenced entities (tables, views, subqueries).
  * Uses node-sql-parser for cross-dialect AST parsing and antlr4ng for tokenization validation.
  */
-export function extractEntitiesFromSql(sql: string, dialect: string = 'sqlite'): ParsedSqlEntity[] {
+export function extractEntitiesFromSql(sql: string, dialect: string = "sqlite"): ParsedSqlEntity[] {
   const entities: ParsedSqlEntity[] = [];
   const seen = new Set<string>();
 
@@ -38,7 +38,7 @@ export function extractEntitiesFromSql(sql: string, dialect: string = 'sqlite'):
     }
   } catch (parseError) {
     // Fallback: use regex-based extraction if parser fails
-    console.warn('SQL parser failed, falling back to regex extraction:', parseError);
+    console.warn("SQL parser failed, falling back to regex extraction:", parseError);
     extractEntitiesViaRegex(sql, entities, seen);
   }
 
@@ -50,12 +50,17 @@ export function extractEntitiesFromSql(sql: string, dialect: string = 'sqlite'):
  */
 function mapDialect(dialect: string): string {
   switch (dialect) {
-    case 'pg': return 'PostgreSQL';
-    case 'mysql': return 'MySQL';
-    case 'mssql': return 'TransactSQL';
-    case 'sqlite3':
-    case 'sqlite': return 'SQLite';
-    default: return 'SQLite';
+    case "pg":
+      return "PostgreSQL";
+    case "mysql":
+      return "MySQL";
+    case "mssql":
+      return "TransactSQL";
+    case "sqlite3":
+    case "sqlite":
+      return "SQLite";
+    default:
+      return "SQLite";
   }
 }
 
@@ -68,10 +73,10 @@ function collectEntitiesFromAst(
   entities: ParsedSqlEntity[],
   seen: Set<string>
 ): void {
-  if (!node || typeof node !== 'object') return;
+  if (!node || typeof node !== "object") return;
 
   // Handle SELECT statements
-  if (node.type === 'select') {
+  if (node.type === "select") {
     // Process FROM clause
     if (node.from && Array.isArray(node.from)) {
       for (const fromItem of node.from) {
@@ -94,7 +99,7 @@ function collectEntitiesFromAst(
   if (node.table) {
     const tables = Array.isArray(node.table) ? node.table : [node.table];
     for (const t of tables) {
-      if (t && typeof t === 'object' && (t as SqlTableRef).table) {
+      if (t && typeof t === "object" && (t as SqlTableRef).table) {
         addEntity(t as SqlTableRef, entities, seen);
       }
     }
@@ -106,37 +111,33 @@ function collectEntitiesFromAst(
   }
 }
 
-function processFromItem(
-  item: SqlFromItem,
-  entities: ParsedSqlEntity[],
-  seen: Set<string>
-): void {
+function processFromItem(item: SqlFromItem, entities: ParsedSqlEntity[], seen: Set<string>): void {
   if (!item) return;
 
-  if (typeof item === 'object') {
+  if (typeof item === "object") {
     // Direct table reference
-    if (item.table && typeof item.table === 'string') {
-      const key = `${item.db || ''}|${item.table}`.toLowerCase();
+    if (item.table && typeof item.table === "string") {
+      const key = `${item.db || ""}|${item.table}`.toLowerCase();
       if (!seen.has(key)) {
         seen.add(key);
         entities.push({
           name: item.table,
           schema: item.db || undefined,
           alias: item.as || undefined,
-          type: 'table',
+          type: "table",
         });
       }
     }
 
     // Subquery in FROM
-    if (item.expr && typeof item.expr === 'object' && item.expr.type) {
+    if (item.expr && typeof item.expr === "object" && item.expr.type) {
       if (item.as) {
         const key = `subquery|${item.as}`.toLowerCase();
         if (!seen.has(key)) {
           seen.add(key);
           entities.push({
             name: item.as,
-            type: 'subquery',
+            type: "subquery",
           });
         }
       }
@@ -145,14 +146,10 @@ function processFromItem(
   }
 }
 
-function addEntity(
-  tableExpr: SqlTableRef,
-  entities: ParsedSqlEntity[],
-  seen: Set<string>
-): void {
+function addEntity(tableExpr: SqlTableRef, entities: ParsedSqlEntity[], seen: Set<string>): void {
   if (!tableExpr.table) return;
 
-  const key = `${tableExpr.db || ''}|${tableExpr.table}`.toLowerCase();
+  const key = `${tableExpr.db || ""}|${tableExpr.table}`.toLowerCase();
   if (seen.has(key)) return;
   seen.add(key);
 
@@ -160,7 +157,7 @@ function addEntity(
     name: tableExpr.table,
     schema: tableExpr.db || undefined,
     alias: tableExpr.as || undefined,
-    type: 'table',
+    type: "table",
   });
 }
 
@@ -169,9 +166,9 @@ function processExpressionForSubqueries(
   entities: ParsedSqlEntity[],
   seen: Set<string>
 ): void {
-  if (!expr || typeof expr !== 'object') return;
+  if (!expr || typeof expr !== "object") return;
 
-  if (expr.type === 'select') {
+  if (expr.type === "select") {
     collectEntitiesFromAst(expr as SqlAstNode, entities, seen);
     return;
   }
@@ -179,10 +176,10 @@ function processExpressionForSubqueries(
   // Recursively search for subqueries in expression trees
   for (const key of Object.keys(expr)) {
     const value = expr[key];
-    if (value && typeof value === 'object') {
+    if (value && typeof value === "object") {
       if (Array.isArray(value)) {
         for (const item of value) {
-          if (item && typeof item === 'object') {
+          if (item && typeof item === "object") {
             processExpressionForSubqueries(item as SqlExpression, entities, seen);
           }
         }
@@ -213,27 +210,27 @@ function extractEntitiesViaRegex(
   for (const pattern of patterns) {
     let match;
     while ((match = pattern.exec(sql)) !== null) {
-      let tableName = match[1].replace(/[`"']/g, '');
+      let tableName = match[1].replace(/[`"']/g, "");
       let schema: string | undefined;
 
       // Handle schema.table notation
-      if (tableName.includes('.')) {
-        const parts = tableName.split('.');
+      if (tableName.includes(".")) {
+        const parts = tableName.split(".");
         schema = parts[0];
         tableName = parts[1];
       }
 
       // Skip SQL keywords that might be mistakenly matched
-      const keywords = ['select', 'where', 'set', 'values', 'as', 'on', 'and', 'or'];
+      const keywords = ["select", "where", "set", "values", "as", "on", "and", "or"];
       if (keywords.includes(tableName.toLowerCase())) continue;
 
-      const key = `${schema || ''}|${tableName}`.toLowerCase();
+      const key = `${schema || ""}|${tableName}`.toLowerCase();
       if (!seen.has(key)) {
         seen.add(key);
         entities.push({
           name: tableName,
           schema,
-          type: 'table',
+          type: "table",
         });
       }
     }
@@ -258,15 +255,15 @@ export function validateSqlTokens(sql: string): { valid: boolean; errors: string
 
     for (let i = 0; i < sql.length; i++) {
       const char = sql[i];
-      const prevChar = i > 0 ? sql[i - 1] : '';
+      const prevChar = i > 0 ? sql[i - 1] : "";
 
-      if (char === "'" && !inDoubleQuote && prevChar !== '\\') {
+      if (char === "'" && !inDoubleQuote && prevChar !== "\\") {
         inSingleQuote = !inSingleQuote;
-      } else if (char === '"' && !inSingleQuote && prevChar !== '\\') {
+      } else if (char === '"' && !inSingleQuote && prevChar !== "\\") {
         inDoubleQuote = !inDoubleQuote;
       } else if (!inSingleQuote && !inDoubleQuote) {
-        if (char === '(') parenDepth++;
-        else if (char === ')') parenDepth--;
+        if (char === "(") parenDepth++;
+        else if (char === ")") parenDepth--;
 
         if (parenDepth < 0) {
           errors.push(`Unmatched closing parenthesis at position ${i}`);
@@ -274,13 +271,13 @@ export function validateSqlTokens(sql: string): { valid: boolean; errors: string
       }
     }
 
-    if (inSingleQuote) errors.push('Unterminated single quote');
-    if (inDoubleQuote) errors.push('Unterminated double quote');
+    if (inSingleQuote) errors.push("Unterminated single quote");
+    if (inDoubleQuote) errors.push("Unterminated double quote");
     if (parenDepth > 0) errors.push(`${parenDepth} unclosed parenthesis(es)`);
 
     // Additional validation using node-sql-parser
     try {
-      sqlParser.astify(sql, { database: 'SQLite' });
+      sqlParser.astify(sql, { database: "SQLite" });
     } catch (parseError: unknown) {
       const message = parseError instanceof Error ? parseError.message : String(parseError);
       errors.push(`SQL parse error: ${message}`);
@@ -314,7 +311,7 @@ export async function validateSqlAccess(
   const entities = extractEntitiesFromSql(sql, dialect);
 
   // Filter out subqueries (they don't need direct access checks)
-  const tableEntities = entities.filter((e) => e.type !== 'subquery');
+  const tableEntities = entities.filter((e) => e.type !== "subquery");
 
   if (tableEntities.length === 0) {
     return {
@@ -328,9 +325,7 @@ export async function validateSqlAccess(
   // Check access for each entity
   const accessResults = await checkEntityAccess(userId, dataSourceId, tableEntities);
 
-  const deniedEntities = accessResults
-    .filter((r) => !r.hasAccess)
-    .map((r) => r.entity);
+  const deniedEntities = accessResults.filter((r) => !r.hasAccess).map((r) => r.entity);
 
   return {
     entities,

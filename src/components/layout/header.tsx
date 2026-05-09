@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { useTheme } from 'next-themes';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from '@tanstack/react-router';
-import { logoutFn } from '@/server-fns/auth';
-import { Button } from '@/components/ui/button';
+import { useState } from "react";
+import { useTheme } from "next-themes";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
+import { logoutFn } from "@/server-fns/auth";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,13 +11,25 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Bell, LogOut, Moon, Settings, Sun, User, Database, Loader2, Check, X, CheckCheck } from 'lucide-react';
-import { useActiveDataSource } from '@/lib/hooks/use-active-datasource';
-import { toast } from 'sonner';
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Bell,
+  LogOut,
+  Moon,
+  Settings,
+  Sun,
+  User,
+  Database,
+  Loader2,
+  Check,
+  X,
+  CheckCheck,
+} from "lucide-react";
+import { useActiveDataSource } from "@/lib/hooks/use-active-datasource";
+import { toast } from "sonner";
 
 interface User {
   name?: string | null;
@@ -36,17 +48,20 @@ export function Header({ user }: HeaderProps) {
   const queryClient = useQueryClient();
   const [showReadNotifications, setShowReadNotifications] = useState(false);
 
-  const initials = user.name
-    ?.split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase() || user.email?.[0].toUpperCase() || 'U';
+  const initials =
+    user.name
+      ?.split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase() ||
+    user.email?.[0].toUpperCase() ||
+    "U";
 
   // Fetch notifications
   const { data: notifications = [], isLoading: isLoadingNotifications } = useQuery({
-    queryKey: ['notifications', showReadNotifications],
+    queryKey: ["notifications", showReadNotifications],
     queryFn: async () => {
-      const includeRead = showReadNotifications ? 'true' : 'false';
+      const includeRead = showReadNotifications ? "true" : "false";
       const res = await fetch(`/api/notifications?includeRead=${includeRead}`);
       const data = await res.json();
       return data.data || [];
@@ -61,13 +76,13 @@ export function Header({ user }: HeaderProps) {
   const markAsReadMutation = useMutation({
     mutationFn: async (id: string) => {
       await fetch(`/api/notifications/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isRead: true }),
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 
@@ -78,37 +93,37 @@ export function Header({ user }: HeaderProps) {
       await Promise.all(
         unread.map((n: any) =>
           fetch(`/api/notifications/${n.id}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ isRead: true }),
           })
         )
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      toast.success('All notifications marked as read');
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      toast.success("All notifications marked as read");
     },
   });
 
   // Delete notification mutation
   const deleteNotificationMutation = useMutation({
     mutationFn: async (id: string) => {
-      await fetch(`/api/notifications/${id}`, { method: 'DELETE' });
+      await fetch(`/api/notifications/${id}`, { method: "DELETE" });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      toast.success('Notification deleted');
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      toast.success("Notification deleted");
     },
   });
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'error':
+      case "error":
         return <X className="h-4 w-4 text-destructive" />;
-      case 'warning':
+      case "warning":
         return <div className="h-4 w-4 rounded-full bg-yellow-500" />;
-      case 'success':
+      case "success":
         return <Check className="h-4 w-4 text-green-500" />;
       default:
         return <div className="h-4 w-4 rounded-full bg-blue-500" />;
@@ -129,7 +144,7 @@ export function Header({ user }: HeaderProps) {
             variant="outline"
             size="sm"
             className="gap-2 rounded-md"
-            onClick={() => navigate({ to: '/data-sources' })}
+            onClick={() => navigate({ to: "/data-sources" })}
           >
             <Database className="h-4 w-4 text-green-500" />
             <span>{activeDataSource.name}</span>
@@ -142,7 +157,7 @@ export function Header({ user }: HeaderProps) {
             variant="outline"
             size="sm"
             className="gap-2 rounded-md"
-            onClick={() => navigate({ to: '/data-sources' })}
+            onClick={() => navigate({ to: "/data-sources" })}
           >
             <Database className="h-4 w-4 text-muted-foreground" />
             <span>No connection</span>
@@ -155,7 +170,7 @@ export function Header({ user }: HeaderProps) {
           variant="ghost"
           size="icon"
           className="rounded-md h-9 w-9"
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
         >
           <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
@@ -172,7 +187,7 @@ export function Header({ user }: HeaderProps) {
                   variant="destructive"
                   className="absolute -right-1 -top-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center"
                 >
-                  {unreadCount > 9 ? '9+' : unreadCount}
+                  {unreadCount > 9 ? "9+" : unreadCount}
                 </Badge>
               )}
               <span className="sr-only">Notifications</span>
@@ -188,7 +203,7 @@ export function Header({ user }: HeaderProps) {
                   className="h-8 text-xs"
                   onClick={() => setShowReadNotifications(!showReadNotifications)}
                 >
-                  {showReadNotifications ? 'Hide Read' : 'Show All'}
+                  {showReadNotifications ? "Hide Read" : "Show All"}
                 </Button>
               </div>
             </DropdownMenuLabel>
@@ -198,9 +213,7 @@ export function Header({ user }: HeaderProps) {
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
             ) : notifications.length === 0 ? (
-              <div className="py-8 text-center text-sm text-muted-foreground">
-                No notifications
-              </div>
+              <div className="py-8 text-center text-sm text-muted-foreground">No notifications</div>
             ) : (
               <>
                 <ScrollArea className="h-96">
@@ -209,7 +222,7 @@ export function Header({ user }: HeaderProps) {
                       <div
                         key={notification.id}
                         className={`mb-2 rounded-lg border p-3 transition-colors hover:bg-accent ${
-                          !notification.is_read ? 'bg-accent/50' : ''
+                          !notification.is_read ? "bg-accent/50" : ""
                         }`}
                       >
                         <div className="flex items-start gap-3">
@@ -271,7 +284,7 @@ export function Header({ user }: HeaderProps) {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-9 w-9 rounded-md p-0">
               <Avatar className="h-8 w-8">
-                <AvatarImage src={user.image || undefined} alt={user.name || 'User'} />
+                <AvatarImage src={user.image || undefined} alt={user.name || "User"} />
                 <AvatarFallback className="rounded-md text-xs">{initials}</AvatarFallback>
               </Avatar>
             </Button>
@@ -280,9 +293,7 @@ export function Header({ user }: HeaderProps) {
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium leading-none">{user.name}</p>
-                <p className="text-xs leading-none text-muted-foreground">
-                  {user.email}
-                </p>
+                <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />

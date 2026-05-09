@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
 /**
  * Public Chart Viewer - No authentication required
  * Displays charts that are marked as public (is_public = true)
  */
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Lock, Home, AlertCircle, BarChart3 } from 'lucide-react';
-import Link from 'next/link';
-import { ChartRenderer } from '@/components/charts/chart-renderer';
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Lock, Home, AlertCircle, BarChart3 } from "lucide-react";
+import Link from "next/link";
+import { ChartRenderer } from "@/components/charts/chart-renderer";
 
 interface ChartData {
   id: string;
@@ -50,24 +50,27 @@ function PublicChartContent() {
         const res = await fetch(`/api/share/chart/${chartId}?execute=true`);
 
         if (res.status === 404) {
-          setError({ code: 'NOT_FOUND', message: 'Chart not found' });
+          setError({ code: "NOT_FOUND", message: "Chart not found" });
           return;
         }
 
         if (res.status === 403) {
-          setError({ code: 'PRIVATE', message: 'This chart is private. Please log in to view it.' });
+          setError({
+            code: "PRIVATE",
+            message: "This chart is private. Please log in to view it.",
+          });
           return;
         }
 
         if (!res.ok) {
-          throw new Error('Failed to load chart');
+          throw new Error("Failed to load chart");
         }
 
         const data = await res.json();
         setChart(data.data);
       } catch (err) {
-        console.error('Error loading chart:', err);
-        setError({ code: 'ERROR', message: 'Failed to load chart' });
+        console.error("Error loading chart:", err);
+        setError({ code: "ERROR", message: "Failed to load chart" });
       } finally {
         setIsLoading(false);
       }
@@ -106,7 +109,7 @@ function PublicChartContent() {
         <Card className="max-w-md w-full">
           <CardContent className="pt-6">
             <div className="flex flex-col items-center text-center space-y-4">
-              {error.code === 'PRIVATE' ? (
+              {error.code === "PRIVATE" ? (
                 <>
                   <div className="p-3 bg-muted rounded-full">
                     <Lock className="h-6 w-6 text-muted-foreground" />
@@ -126,7 +129,7 @@ function PublicChartContent() {
                   </div>
                   <div>
                     <h2 className="text-lg font-semibold">
-                      {error.code === 'NOT_FOUND' ? 'Chart Not Found' : 'Error Loading Chart'}
+                      {error.code === "NOT_FOUND" ? "Chart Not Found" : "Error Loading Chart"}
                     </h2>
                     <p className="text-sm text-muted-foreground mt-2">{error.message}</p>
                   </div>
@@ -191,8 +194,7 @@ function PublicChartContent() {
             You are viewing a public chart. Some features may be limited.
             <Button asChild variant="link" className="ml-2 h-auto p-0" size="sm">
               <Link href="/login">Log in</Link>
-            </Button>
-            {' '}
+            </Button>{" "}
             for full access.
           </AlertDescription>
         </Alert>

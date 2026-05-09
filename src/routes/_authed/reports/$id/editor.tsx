@@ -1,27 +1,21 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { useState, useEffect, useRef } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Breadcrumb } from '@/components/layout/breadcrumb';
+import { createFileRoute } from "@tanstack/react-router";
+import { useState, useEffect, useRef } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Breadcrumb } from "@/components/layout/breadcrumb";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   DndContext,
   closestCenter,
@@ -30,35 +24,44 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
-} from '@dnd-kit/core';
+} from "@dnd-kit/core";
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { Save, Eye, Plus, X } from 'lucide-react';
-import { toast } from 'sonner';
-import type { ReportDefinition, SavedQuery, ColumnDefinition, FilterDefinition, ReportColorTheme } from '@/types/database';
-import { ReportFilterBuilder, type FilterGroup } from '@/components/reporting/report-filter-builder';
-import { SortableColumnRow } from '@/components/reporting/sortable-column-row';
+} from "@dnd-kit/sortable";
+import { Save, Eye, Plus, X } from "lucide-react";
+import { toast } from "sonner";
+import type {
+  ReportDefinition,
+  SavedQuery,
+  ColumnDefinition,
+  FilterDefinition,
+  ReportColorTheme,
+} from "@/types/database";
+import {
+  ReportFilterBuilder,
+  type FilterGroup,
+} from "@/components/reporting/report-filter-builder";
+import { SortableColumnRow } from "@/components/reporting/sortable-column-row";
 
-export const Route = createFileRoute('/_authed/reports/$id/editor')({
+export const Route = createFileRoute("/_authed/reports/$id/editor")({
   component: ReportEditorPage,
-})
+});
 
 function ReportEditorPage() {
-  const { id: reportId } = Route.useParams()
+  const { id: reportId } = Route.useParams();
   const queryClient = useQueryClient();
 
-  const [reportName, setReportName] = useState('');
-  const [reportDescription, setReportDescription] = useState('');
+  const [reportName, setReportName] = useState("");
+  const [reportDescription, setReportDescription] = useState("");
   const [columns, setColumns] = useState<ColumnDefinition[]>([]);
-  const [selectedQueryId, setSelectedQueryId] = useState<string>('');
+  const [selectedQueryId, setSelectedQueryId] = useState<string>("");
   const [availableFields, setAvailableFields] = useState<string[]>([]);
   const [filters, setFilters] = useState<FilterGroup>({
-    id: 'root',
-    logic: 'AND',
+    id: "root",
+    logic: "AND",
     conditions: [],
   });
   const [exportFormats, setExportFormats] = useState({
@@ -67,18 +70,18 @@ function ReportEditorPage() {
     pdf: false,
   });
   const [colorTheme, setColorTheme] = useState<ReportColorTheme>({
-    headerBackgroundColor: '#1e293b',
-    headerTextColor: '#ffffff',
-    headerFontWeight: '600',
-    rowBackgroundColor: '#ffffff',
-    rowTextColor: '#334155',
-    alternatingRowBackgroundColor: '#f8fafc',
-    alternatingRowTextColor: '#334155',
-    borderColor: '#e2e8f0',
+    headerBackgroundColor: "#1e293b",
+    headerTextColor: "#ffffff",
+    headerFontWeight: "600",
+    rowBackgroundColor: "#ffffff",
+    rowTextColor: "#334155",
+    alternatingRowBackgroundColor: "#f8fafc",
+    alternatingRowTextColor: "#334155",
+    borderColor: "#e2e8f0",
   });
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [selectedFilterId, setSelectedFilterId] = useState<string>('');
-  const [targetColumn, setTargetColumn] = useState<string>('');
+  const [selectedFilterId, setSelectedFilterId] = useState<string>("");
+  const [targetColumn, setTargetColumn] = useState<string>("");
   const isLoadingFromServer = useRef(false);
 
   const sensors = useSensors(
@@ -89,7 +92,7 @@ function ReportEditorPage() {
   );
 
   const { data: report, isLoading: isLoadingReport } = useQuery<ReportDefinition>({
-    queryKey: ['report', reportId],
+    queryKey: ["report", reportId],
     queryFn: async () => {
       const res = await fetch(`/api/reports/${reportId}`);
       const data = await res.json();
@@ -98,25 +101,25 @@ function ReportEditorPage() {
   });
 
   const { data: queries } = useQuery<SavedQuery[]>({
-    queryKey: ['queries'],
+    queryKey: ["queries"],
     queryFn: async () => {
-      const res = await fetch('/api/queries');
+      const res = await fetch("/api/queries");
       const data = await res.json();
       return data.data?.items || [];
     },
   });
 
   const { data: availableFilters } = useQuery<FilterDefinition[]>({
-    queryKey: ['filters'],
+    queryKey: ["filters"],
     queryFn: async () => {
-      const res = await fetch('/api/filters');
+      const res = await fetch("/api/filters");
       if (!res.ok) return [];
       return res.json();
     },
   });
 
   const { data: reportFilters, refetch: refetchReportFilters } = useQuery({
-    queryKey: ['report-filters', reportId],
+    queryKey: ["report-filters", reportId],
     queryFn: async () => {
       const res = await fetch(`/api/reports/${reportId}/filters`);
       if (!res.ok) return [];
@@ -126,14 +129,14 @@ function ReportEditorPage() {
   });
 
   const { data: queryResult } = useQuery({
-    queryKey: ['query-result', selectedQueryId],
+    queryKey: ["query-result", selectedQueryId],
     queryFn: async () => {
       if (!selectedQueryId) return null;
       const selectedQuery = queries?.find((q) => q.id === selectedQueryId);
       if (!selectedQuery) return null;
-      const res = await fetch('/api/sql/execute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/sql/execute", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sql: selectedQuery.sql_content,
           dataSourceId: selectedQuery.data_source_id,
@@ -161,19 +164,49 @@ function ReportEditorPage() {
     if (report) {
       isLoadingFromServer.current = true;
       setReportName(report.name);
-      setReportDescription(report.description || '');
-      setSelectedQueryId(report.saved_query_id || '');
-      try { setColumns(JSON.parse(report.column_config) || []); } catch { setColumns([]); }
-      try { setFilters(JSON.parse(report.filter_config || '{"id":"root","logic":"AND","conditions":[]}')); } catch { setFilters({ id: 'root', logic: 'AND', conditions: [] }); }
-      try { setExportFormats(JSON.parse(report.export_formats || '{"csv":true,"excel":true,"pdf":true}')); } catch { setExportFormats({ csv: true, excel: true, pdf: true }); }
+      setReportDescription(report.description || "");
+      setSelectedQueryId(report.saved_query_id || "");
       try {
-        const parsedColorTheme = JSON.parse(report.color_theme || '{"headerBackgroundColor":"#1e293b","headerTextColor":"#ffffff","headerFontWeight":"600","rowBackgroundColor":"#ffffff","rowTextColor":"#334155","alternatingRowBackgroundColor":"#f8fafc","alternatingRowTextColor":"#334155","borderColor":"#e2e8f0"}');
+        setColumns(JSON.parse(report.column_config) || []);
+      } catch {
+        setColumns([]);
+      }
+      try {
+        setFilters(
+          JSON.parse(report.filter_config || '{"id":"root","logic":"AND","conditions":[]}')
+        );
+      } catch {
+        setFilters({ id: "root", logic: "AND", conditions: [] });
+      }
+      try {
+        setExportFormats(
+          JSON.parse(report.export_formats || '{"csv":true,"excel":true,"pdf":true}')
+        );
+      } catch {
+        setExportFormats({ csv: true, excel: true, pdf: true });
+      }
+      try {
+        const parsedColorTheme = JSON.parse(
+          report.color_theme ||
+            '{"headerBackgroundColor":"#1e293b","headerTextColor":"#ffffff","headerFontWeight":"600","rowBackgroundColor":"#ffffff","rowTextColor":"#334155","alternatingRowBackgroundColor":"#f8fafc","alternatingRowTextColor":"#334155","borderColor":"#e2e8f0"}'
+        );
         setColorTheme(parsedColorTheme);
       } catch {
-        setColorTheme({ headerBackgroundColor: '#1e293b', headerTextColor: '#ffffff', headerFontWeight: '600', rowBackgroundColor: '#ffffff', rowTextColor: '#334155', alternatingRowBackgroundColor: '#f8fafc', alternatingRowTextColor: '#334155', borderColor: '#e2e8f0' });
+        setColorTheme({
+          headerBackgroundColor: "#1e293b",
+          headerTextColor: "#ffffff",
+          headerFontWeight: "600",
+          rowBackgroundColor: "#ffffff",
+          rowTextColor: "#334155",
+          alternatingRowBackgroundColor: "#f8fafc",
+          alternatingRowTextColor: "#334155",
+          borderColor: "#e2e8f0",
+        });
       }
       setHasUnsavedChanges(false);
-      setTimeout(() => { isLoadingFromServer.current = false; }, 100);
+      setTimeout(() => {
+        isLoadingFromServer.current = false;
+      }, 100);
     }
   }, [report]);
 
@@ -181,13 +214,22 @@ function ReportEditorPage() {
     if (report && !isLoadingFromServer.current) {
       setHasUnsavedChanges(true);
     }
-  }, [reportName, reportDescription, selectedQueryId, columns, filters, exportFormats, colorTheme, report]);
+  }, [
+    reportName,
+    reportDescription,
+    selectedQueryId,
+    columns,
+    filters,
+    exportFormats,
+    colorTheme,
+    report,
+  ]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
       const res = await fetch(`/api/reports/${reportId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: reportName,
           description: reportDescription,
@@ -203,11 +245,11 @@ function ReportEditorPage() {
     },
     onSuccess: (data) => {
       if (data.success) {
-        toast.success('Report saved successfully');
-        queryClient.invalidateQueries({ queryKey: ['report', reportId] });
+        toast.success("Report saved successfully");
+        queryClient.invalidateQueries({ queryKey: ["report", reportId] });
         setHasUnsavedChanges(false);
       } else {
-        toast.error(data.error?.message || 'Failed to save report');
+        toast.error(data.error?.message || "Failed to save report");
       }
     },
   });
@@ -215,10 +257,10 @@ function ReportEditorPage() {
   const saveDraftMutation = useMutation({
     mutationFn: async () => {
       const res = await fetch(`/api/reports/${reportId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: reportName || 'Draft Report',
+          name: reportName || "Draft Report",
           description: reportDescription,
           savedQueryId: selectedQueryId || undefined,
           columnConfig: columns,
@@ -232,11 +274,11 @@ function ReportEditorPage() {
     },
     onSuccess: (data) => {
       if (data.success) {
-        toast.success('Draft saved');
-        queryClient.invalidateQueries({ queryKey: ['report', reportId] });
+        toast.success("Draft saved");
+        queryClient.invalidateQueries({ queryKey: ["report", reportId] });
         window.location.href = `/reports/${reportId}/viewer`;
       } else {
-        toast.error(data.error?.message || 'Failed to save draft');
+        toast.error(data.error?.message || "Failed to save draft");
       }
     },
   });
@@ -244,28 +286,30 @@ function ReportEditorPage() {
   const addFilterMutation = useMutation({
     mutationFn: async ({ filterId, targetColumn }: { filterId: string; targetColumn: string }) => {
       const res = await fetch(`/api/reports/${reportId}/filters`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ filter_id: filterId, target_column: targetColumn }),
       });
-      if (!res.ok) throw new Error('Failed to add filter');
+      if (!res.ok) throw new Error("Failed to add filter");
       return res.json();
     },
     onSuccess: () => {
-      toast.success('Filter added');
-      queryClient.invalidateQueries({ queryKey: ['report-filters', reportId] });
+      toast.success("Filter added");
+      queryClient.invalidateQueries({ queryKey: ["report-filters", reportId] });
     },
   });
 
   const removeFilterMutation = useMutation({
     mutationFn: async (filterLinkId: string) => {
-      const res = await fetch(`/api/reports/${reportId}/filters/${filterLinkId}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to remove filter');
+      const res = await fetch(`/api/reports/${reportId}/filters/${filterLinkId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to remove filter");
       return res.json();
     },
     onSuccess: () => {
-      toast.success('Filter removed');
-      queryClient.invalidateQueries({ queryKey: ['report-filters', reportId] });
+      toast.success("Filter removed");
+      queryClient.invalidateQueries({ queryKey: ["report-filters", reportId] });
     },
   });
 
@@ -291,8 +335,8 @@ function ReportEditorPage() {
   const handleAddColumn = () => {
     const newColumn: ColumnDefinition = {
       id: `col-${Date.now()}`,
-      field: 'new_field',
-      header: 'New Column',
+      field: "new_field",
+      header: "New Column",
       visible: true,
       sortable: true,
       filterable: true,
@@ -321,9 +365,9 @@ function ReportEditorPage() {
     <div className="space-y-6">
       <Breadcrumb
         items={[
-          { label: 'Reports', href: '/reports' },
+          { label: "Reports", href: "/reports" },
           { label: report.name, href: `/reports/${reportId}/viewer` },
-          { label: 'Edit' },
+          { label: "Edit" },
         ]}
       />
 
@@ -347,11 +391,11 @@ function ReportEditorPage() {
             disabled={saveDraftMutation.isPending}
           >
             <Eye className="h-4 w-4 mr-2" />
-            {saveDraftMutation.isPending ? 'Saving...' : 'Preview'}
+            {saveDraftMutation.isPending ? "Saving..." : "Preview"}
           </Button>
           <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
             <Save className="h-4 w-4 mr-2" />
-            {saveMutation.isPending ? 'Saving...' : 'Save'}
+            {saveMutation.isPending ? "Saving..." : "Save"}
           </Button>
         </div>
       </div>
@@ -370,7 +414,9 @@ function ReportEditorPage() {
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="text-sm font-medium">Name</Label>
+                  <Label htmlFor="name" className="text-sm font-medium">
+                    Name
+                  </Label>
                   <Input
                     id="name"
                     value={reportName}
@@ -379,21 +425,27 @@ function ReportEditorPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="query" className="text-sm font-medium">Data Source Query</Label>
+                  <Label htmlFor="query" className="text-sm font-medium">
+                    Data Source Query
+                  </Label>
                   <Select value={selectedQueryId} onValueChange={setSelectedQueryId}>
                     <SelectTrigger className="h-10">
                       <SelectValue placeholder="Select a query" />
                     </SelectTrigger>
                     <SelectContent>
                       {queries?.map((query) => (
-                        <SelectItem key={query.id} value={query.id}>{query.name}</SelectItem>
+                        <SelectItem key={query.id} value={query.id}>
+                          {query.name}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="description" className="text-sm font-medium">Description</Label>
+                <Label htmlFor="description" className="text-sm font-medium">
+                  Description
+                </Label>
                 <Textarea
                   id="description"
                   value={reportDescription}
@@ -416,7 +468,11 @@ function ReportEditorPage() {
             </Button>
           </div>
           <div>
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -432,7 +488,10 @@ function ReportEditorPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  <SortableContext items={columns.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+                  <SortableContext
+                    items={columns.map((c) => c.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
                     {columns.map((column) => (
                       <SortableColumnRow
                         key={column.id}
@@ -459,7 +518,8 @@ function ReportEditorPage() {
             <div>
               <h3 className="text-lg font-semibold mb-2">Reusable Query Filters</h3>
               <p className="text-sm text-muted-foreground mb-6">
-                Add pre-configured filters that users can select from dropdowns when viewing the report.
+                Add pre-configured filters that users can select from dropdowns when viewing the
+                report.
               </p>
               <div className="space-y-6">
                 <div className="flex items-end gap-4">
@@ -470,16 +530,16 @@ function ReportEditorPage() {
                         <SelectValue placeholder="Choose a filter..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {availableFilters?.filter(f =>
-                          !reportFilters?.some((rf: any) => rf.filter_id === f.id)
-                        ).map((filter) => (
-                          <SelectItem key={filter.id} value={filter.id}>
-                            {filter.name}
-                            <span className="text-muted-foreground text-xs ml-2">
-                              ({filter.display_field} → {filter.value_field})
-                            </span>
-                          </SelectItem>
-                        ))}
+                        {availableFilters
+                          ?.filter((f) => !reportFilters?.some((rf: any) => rf.filter_id === f.id))
+                          .map((filter) => (
+                            <SelectItem key={filter.id} value={filter.id}>
+                              {filter.name}
+                              <span className="text-muted-foreground text-xs ml-2">
+                                ({filter.display_field} → {filter.value_field})
+                              </span>
+                            </SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -491,7 +551,9 @@ function ReportEditorPage() {
                       </SelectTrigger>
                       <SelectContent>
                         {availableFields.map((field) => (
-                          <SelectItem key={field} value={field}>{field}</SelectItem>
+                          <SelectItem key={field} value={field}>
+                            {field}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -500,8 +562,8 @@ function ReportEditorPage() {
                     onClick={() => {
                       if (selectedFilterId && targetColumn) {
                         addFilterMutation.mutate({ filterId: selectedFilterId, targetColumn });
-                        setSelectedFilterId('');
-                        setTargetColumn('');
+                        setSelectedFilterId("");
+                        setTargetColumn("");
                       }
                     }}
                     disabled={!selectedFilterId || !targetColumn || addFilterMutation.isPending}
@@ -523,8 +585,9 @@ function ReportEditorPage() {
                             <div className="flex-1">
                               <div className="font-medium">{filterDef.name}</div>
                               <div className="text-sm text-muted-foreground">
-                                Filter: <code>{filterDef.display_field}</code> → <code>{filterDef.value_field}</code>
-                                {' '}| Target: <code>{rf.target_column}</code>
+                                Filter: <code>{filterDef.display_field}</code> →{" "}
+                                <code>{filterDef.value_field}</code> | Target:{" "}
+                                <code>{rf.target_column}</code>
                               </div>
                             </div>
                             <Button
@@ -555,7 +618,11 @@ function ReportEditorPage() {
                     <p>No fields available. Please select a data source query first.</p>
                   </div>
                 ) : (
-                  <ReportFilterBuilder filters={filters} availableFields={availableFields} onChange={setFilters} />
+                  <ReportFilterBuilder
+                    filters={filters}
+                    availableFields={availableFields}
+                    onChange={setFilters}
+                  />
                 )}
               </div>
             </div>
@@ -575,7 +642,9 @@ function ReportEditorPage() {
                   <Switch
                     id="export-csv"
                     checked={exportFormats.csv}
-                    onCheckedChange={(checked) => setExportFormats((prev) => ({ ...prev, csv: checked }))}
+                    onCheckedChange={(checked) =>
+                      setExportFormats((prev) => ({ ...prev, csv: checked }))
+                    }
                   />
                 </div>
                 <div className="flex items-center justify-between">
@@ -586,7 +655,9 @@ function ReportEditorPage() {
                   <Switch
                     id="export-excel"
                     checked={exportFormats.excel}
-                    onCheckedChange={(checked) => setExportFormats((prev) => ({ ...prev, excel: checked }))}
+                    onCheckedChange={(checked) =>
+                      setExportFormats((prev) => ({ ...prev, excel: checked }))
+                    }
                   />
                 </div>
                 <div className="flex items-center justify-between">
@@ -597,7 +668,9 @@ function ReportEditorPage() {
                   <Switch
                     id="export-pdf"
                     checked={exportFormats.pdf}
-                    onCheckedChange={(checked) => setExportFormats((prev) => ({ ...prev, pdf: checked }))}
+                    onCheckedChange={(checked) =>
+                      setExportFormats((prev) => ({ ...prev, pdf: checked }))
+                    }
                   />
                 </div>
               </div>
@@ -606,22 +679,24 @@ function ReportEditorPage() {
                 <h4 className="text-sm font-semibold mb-4">Color Theme</h4>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                   {[
-                    { key: 'headerBackgroundColor', label: 'Header Background' },
-                    { key: 'headerTextColor', label: 'Header Text' },
-                    { key: 'rowBackgroundColor', label: 'Row Background' },
-                    { key: 'alternatingRowBackgroundColor', label: 'Alternating Row Background' },
-                    { key: 'borderColor', label: 'Border Color' },
+                    { key: "headerBackgroundColor", label: "Header Background" },
+                    { key: "headerTextColor", label: "Header Text" },
+                    { key: "rowBackgroundColor", label: "Row Background" },
+                    { key: "alternatingRowBackgroundColor", label: "Alternating Row Background" },
+                    { key: "borderColor", label: "Border Color" },
                   ].map(({ key, label }) => (
                     <div key={key} className="space-y-2">
                       <Label>{label}</Label>
                       <div className="flex items-center gap-2">
                         <input
                           type="color"
-                          value={(colorTheme as any)[key] || '#000000'}
+                          value={(colorTheme as any)[key] || "#000000"}
                           onChange={(e) => setColorTheme({ ...colorTheme, [key]: e.target.value })}
                           className="h-9 w-16 rounded cursor-pointer"
                         />
-                        <span className="text-xs text-muted-foreground">{(colorTheme as any)[key]}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {(colorTheme as any)[key]}
+                        </span>
                       </div>
                     </div>
                   ))}

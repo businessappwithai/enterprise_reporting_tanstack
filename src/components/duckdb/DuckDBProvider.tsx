@@ -1,11 +1,12 @@
-'use client';
+"use client";
 
 /**
  * React Context provider for a shared DuckDB-Wasm instance.
  * Wraps the app and exposes the DuckDB instance plus helper methods.
  */
 
-import React, {
+import type React from "react";
+import {
   createContext,
   useCallback,
   useContext,
@@ -13,9 +14,9 @@ import React, {
   useMemo,
   useRef,
   useState,
-} from 'react';
-import type { DuckDBConfig, MemoryUsage, QueryResult, TableSchema } from '@/types/wasm';
-import type { DuckDBStatus } from '@/types/wasm';
+} from "react";
+import type { DuckDBConfig, MemoryUsage, QueryResult, TableSchema } from "@/types/wasm";
+import type { DuckDBStatus } from "@/types/wasm";
 
 // ---------------------------------------------------------------------------
 // Context value
@@ -46,9 +47,9 @@ export function DuckDBProvider({
   config?: DuckDBConfig;
   children: React.ReactNode;
 }) {
-  const [status, setStatus] = useState<DuckDBStatus>('initializing');
+  const [status, setStatus] = useState<DuckDBStatus>("initializing");
   const [error, setError] = useState<Error | null>(null);
-  const libRef = useRef<typeof import('@/lib/duckdb') | null>(null);
+  const libRef = useRef<typeof import("@/lib/duckdb") | null>(null);
 
   // Initialise DuckDB-Wasm lazily on mount
   useEffect(() => {
@@ -57,7 +58,7 @@ export function DuckDBProvider({
     async function init() {
       try {
         // Dynamic import so the WASM bundle is only loaded client-side
-        const lib = await import('@/lib/duckdb');
+        const lib = await import("@/lib/duckdb");
         if (cancelled) return;
         libRef.current = lib;
 
@@ -66,11 +67,11 @@ export function DuckDBProvider({
           enableLogging: config?.enableLogging,
         });
 
-        if (!cancelled) setStatus('ready');
+        if (!cancelled) setStatus("ready");
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err : new Error(String(err)));
-          setStatus('error');
+          setStatus("error");
         }
       }
     }
@@ -85,7 +86,7 @@ export function DuckDBProvider({
 
   const executeQuery = useCallback(async (sql: string): Promise<QueryResult> => {
     const lib = libRef.current;
-    if (!lib) throw new Error('DuckDB not initialised');
+    if (!lib) throw new Error("DuckDB not initialised");
     const res = await lib.executeQuery(sql);
     return {
       rows: res.rows as Record<string, unknown>[],
@@ -98,24 +99,21 @@ export function DuckDBProvider({
 
   const loadParquet = useCallback(async (tableName: string, url: string) => {
     const lib = libRef.current;
-    if (!lib) throw new Error('DuckDB not initialised');
+    if (!lib) throw new Error("DuckDB not initialised");
     await lib.loadParquetFromUrl(tableName, url);
   }, []);
 
-  const loadParquetBuffer = useCallback(
-    async (tableName: string, buffer: Uint8Array) => {
-      const lib = libRef.current;
-      if (!lib) throw new Error('DuckDB not initialised');
-      const db = lib.getDuckDB();
-      if (!db) throw new Error('DuckDB instance not available');
-      await lib.loadParquetFromBuffer(tableName, buffer, db);
-    },
-    [],
-  );
+  const loadParquetBuffer = useCallback(async (tableName: string, buffer: Uint8Array) => {
+    const lib = libRef.current;
+    if (!lib) throw new Error("DuckDB not initialised");
+    const db = lib.getDuckDB();
+    if (!db) throw new Error("DuckDB instance not available");
+    await lib.loadParquetFromBuffer(tableName, buffer, db);
+  }, []);
 
   const getTableSchema = useCallback(async (tableName: string): Promise<TableSchema> => {
     const lib = libRef.current;
-    if (!lib) throw new Error('DuckDB not initialised');
+    if (!lib) throw new Error("DuckDB not initialised");
     const info = await lib.getTableSchema(tableName);
     return {
       tableName: info.name,
@@ -130,13 +128,13 @@ export function DuckDBProvider({
 
   const listTablesFn = useCallback(async (): Promise<string[]> => {
     const lib = libRef.current;
-    if (!lib) throw new Error('DuckDB not initialised');
+    if (!lib) throw new Error("DuckDB not initialised");
     return lib.listTables();
   }, []);
 
   const dropTableFn = useCallback(async (tableName: string) => {
     const lib = libRef.current;
-    if (!lib) throw new Error('DuckDB not initialised');
+    if (!lib) throw new Error("DuckDB not initialised");
     await lib.dropTable(tableName);
   }, []);
 
@@ -170,7 +168,7 @@ export function DuckDBProvider({
       listTablesFn,
       dropTableFn,
       getMemoryUsageFn,
-    ],
+    ]
   );
 
   return <DuckDBContext.Provider value={value}>{children}</DuckDBContext.Provider>;
@@ -183,7 +181,7 @@ export function DuckDBProvider({
 export function useDuckDB(): DuckDBContextValue {
   const ctx = useContext(DuckDBContext);
   if (!ctx) {
-    throw new Error('useDuckDB must be used within a DuckDBProvider');
+    throw new Error("useDuckDB must be used within a DuckDBProvider");
   }
   return ctx;
 }

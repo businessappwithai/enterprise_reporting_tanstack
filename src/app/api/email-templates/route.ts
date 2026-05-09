@@ -1,32 +1,31 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth/config';
-import { getDb } from '@/lib/db/config';
-import { logAudit } from '@/lib/security/audit';
-import { v4 as uuidv4 } from 'uuid';
-import type { EmailTemplate } from '@/lib/email/email-service';
+import { type NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth/config";
+import { getDb } from "@/lib/db/config";
+import { logAudit } from "@/lib/security/audit";
+import { v4 as uuidv4 } from "uuid";
+import type { EmailTemplate } from "@/lib/email/email-service";
 
 export async function GET(_request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user) {
       return NextResponse.json(
-        { success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } },
+        { success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } },
         { status: 401 }
       );
     }
 
     const db = getDb();
-    const templates = await db<EmailTemplate>('email_templates')
-      .orderBy('created_at', 'desc');
+    const templates = await db<EmailTemplate>("email_templates").orderBy("created_at", "desc");
 
     return NextResponse.json({
       success: true,
       data: { items: templates, meta: { total: templates.length } },
     });
   } catch (error) {
-    console.error('Error fetching email templates:', error);
+    console.error("Error fetching email templates:", error);
     return NextResponse.json(
-      { success: false, error: { code: 'SERVER_ERROR', message: 'Failed to fetch templates' } },
+      { success: false, error: { code: "SERVER_ERROR", message: "Failed to fetch templates" } },
       { status: 500 }
     );
   }
@@ -37,7 +36,7 @@ export async function POST(request: NextRequest) {
     const session = await auth();
     if (!session?.user) {
       return NextResponse.json(
-        { success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } },
+        { success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } },
         { status: 401 }
       );
     }
@@ -47,7 +46,10 @@ export async function POST(request: NextRequest) {
 
     if (!name || !subject || !htmlBody) {
       return NextResponse.json(
-        { success: false, error: { code: 'INVALID_INPUT', message: 'Name, subject, and HTML body are required' } },
+        {
+          success: false,
+          error: { code: "INVALID_INPUT", message: "Name, subject, and HTML body are required" },
+        },
         { status: 400 }
       );
     }
@@ -55,7 +57,7 @@ export async function POST(request: NextRequest) {
     const db = getDb();
     const templateId = uuidv4();
 
-    await db<EmailTemplate>('email_templates').insert({
+    await db<EmailTemplate>("email_templates").insert({
       id: templateId,
       name,
       subject,
@@ -68,22 +70,22 @@ export async function POST(request: NextRequest) {
 
     await logAudit({
       userId: session.user.id,
-      action: 'create',
-      resourceType: 'email_template',
+      action: "create",
+      resourceType: "email_template",
       resourceId: templateId,
       details: { name },
     });
 
-    const template = await db<EmailTemplate>('email_templates').where('id', templateId).first();
+    const template = await db<EmailTemplate>("email_templates").where("id", templateId).first();
 
     return NextResponse.json({
       success: true,
       data: template,
     });
   } catch (error) {
-    console.error('Error creating email template:', error);
+    console.error("Error creating email template:", error);
     return NextResponse.json(
-      { success: false, error: { code: 'SERVER_ERROR', message: 'Failed to create template' } },
+      { success: false, error: { code: "SERVER_ERROR", message: "Failed to create template" } },
       { status: 500 }
     );
   }

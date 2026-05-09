@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/config";
 import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
@@ -19,10 +19,7 @@ function inferColumnType(value: unknown): string {
   return "text";
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
     if (!session?.user) {
@@ -31,7 +28,7 @@ export async function POST(
           success: false,
           error: { code: "UNAUTHORIZED", message: "Not authenticated" },
         },
-        { status: 401 },
+        { status: 401 }
       );
     }
 
@@ -45,7 +42,7 @@ export async function POST(
           success: false,
           error: { code: "NOT_FOUND", message: "Query not found" },
         },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -63,7 +60,7 @@ export async function POST(
             message: "Data source not found",
           },
         },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -118,7 +115,7 @@ export async function POST(
         success: false,
         error: { code: "SERVER_ERROR", message: "Failed to execute query" },
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

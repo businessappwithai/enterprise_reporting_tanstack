@@ -19,8 +19,8 @@ class ErrorLogger {
       errorMessage: error.message,
       errorStack: error.stack,
       componentStack: errorInfo?.componentStack,
-      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'Unknown',
-      url: typeof window !== 'undefined' ? window.location.href : 'Unknown',
+      userAgent: typeof window !== "undefined" ? window.navigator.userAgent : "Unknown",
+      url: typeof window !== "undefined" ? window.location.href : "Unknown",
       userId: this.getCurrentUserId(),
       metadata,
     };
@@ -33,13 +33,13 @@ class ErrorLogger {
     }
 
     // Also log to console in development
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Error logged:', errorLog);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error logged:", errorLog);
     }
 
     // Store in sessionStorage for persistence across page reloads
     try {
-      sessionStorage.setItem('errorLogs', JSON.stringify(this.logs));
+      sessionStorage.setItem("errorLogs", JSON.stringify(this.logs));
     } catch (e) {
       // Ignore sessionStorage errors
     }
@@ -58,7 +58,7 @@ class ErrorLogger {
   clearLogs(): void {
     this.logs = [];
     try {
-      sessionStorage.removeItem('errorLogs');
+      sessionStorage.removeItem("errorLogs");
     } catch (e) {
       // Ignore sessionStorage errors
     }
@@ -66,27 +66,27 @@ class ErrorLogger {
 
   formatErrorForEmail(errorLog: ErrorLog): string {
     const sections = [
-      'ERROR REPORT',
-      '============',
-      '',
+      "ERROR REPORT",
+      "============",
+      "",
       `Timestamp: ${errorLog.timestamp}`,
       `Error: ${errorLog.errorMessage}`,
-      '',
+      "",
     ];
 
     if (errorLog.errorStack) {
-      sections.push('Stack Trace:');
+      sections.push("Stack Trace:");
       sections.push(errorLog.errorStack);
-      sections.push('');
+      sections.push("");
     }
 
     if (errorLog.componentStack) {
-      sections.push('Component Stack:');
+      sections.push("Component Stack:");
       sections.push(errorLog.componentStack);
-      sections.push('');
+      sections.push("");
     }
 
-    sections.push('Context:');
+    sections.push("Context:");
     sections.push(`URL: ${errorLog.url}`);
     sections.push(`User Agent: ${errorLog.userAgent}`);
     if (errorLog.userId) {
@@ -94,17 +94,20 @@ class ErrorLogger {
     }
 
     if (errorLog.metadata) {
-      sections.push('');
-      sections.push('Additional Information:');
+      sections.push("");
+      sections.push("Additional Information:");
       sections.push(JSON.stringify(errorLog.metadata, null, 2));
     }
 
-    return sections.join('\n');
+    return sections.join("\n");
   }
 
-  generateErrorReportEmail(errorLog: ErrorLog, email: string): { subject: string; body: string; to: string } {
+  generateErrorReportEmail(
+    errorLog: ErrorLog,
+    email: string
+  ): { subject: string; body: string; to: string } {
     const body = this.formatErrorForEmail(errorLog);
-    const subject = `[Error Report] ${errorLog.errorMessage.substring(0, 50)}${errorLog.errorMessage.length > 50 ? '...' : ''}`;
+    const subject = `[Error Report] ${errorLog.errorMessage.substring(0, 50)}${errorLog.errorMessage.length > 50 ? "..." : ""}`;
 
     return {
       to: email,
@@ -115,7 +118,7 @@ class ErrorLogger {
 
   private getCurrentUserId(): string | undefined {
     try {
-      const sessionData = sessionStorage.getItem('session');
+      const sessionData = sessionStorage.getItem("session");
       if (sessionData) {
         const session = JSON.parse(sessionData);
         return session.user?.id;
@@ -128,7 +131,7 @@ class ErrorLogger {
 
   loadPersistedLogs(): void {
     try {
-      const savedLogs = sessionStorage.getItem('errorLogs');
+      const savedLogs = sessionStorage.getItem("errorLogs");
       if (savedLogs) {
         this.logs = JSON.parse(savedLogs);
       }

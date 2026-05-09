@@ -1,14 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth/config';
-import { resumeQueue } from '@/lib/queue';
-import { logAudit } from '@/lib/security/audit';
+import { type NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth/config";
+import { resumeQueue } from "@/lib/queue";
+import { logAudit } from "@/lib/security/audit";
 
 export async function POST(_request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user) {
       return NextResponse.json(
-        { success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } },
+        { success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } },
         { status: 401 }
       );
     }
@@ -17,20 +17,20 @@ export async function POST(_request: NextRequest) {
 
     await logAudit({
       userId: session.user.id,
-      action: 'resume',
-      resourceType: 'queue',
-      resourceId: 'reporting',
+      action: "resume",
+      resourceType: "queue",
+      resourceId: "reporting",
       details: {},
     });
 
     return NextResponse.json({
       success: true,
-      data: { message: 'Queue resumed successfully' },
+      data: { message: "Queue resumed successfully" },
     });
   } catch (error) {
-    console.error('Error resuming queue:', error);
+    console.error("Error resuming queue:", error);
     return NextResponse.json(
-      { success: false, error: { code: 'SERVER_ERROR', message: 'Failed to resume queue' } },
+      { success: false, error: { code: "SERVER_ERROR", message: "Failed to resume queue" } },
       { status: 500 }
     );
   }

@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Eye, Save } from 'lucide-react';
-import { toast } from 'sonner';
+import { useState, useEffect } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Eye, Save } from "lucide-react";
+import { toast } from "sonner";
 import type {
   ChartDefinition,
   SavedQuery,
@@ -11,91 +11,91 @@ import type {
   ChartConfig,
   DataMapping,
   FilterDefinition,
-} from '@/types/database';
-import { ChartBasicInfo } from '@/components/charts/editor/chart-basic-info';
-import { ChartDataSource } from '@/components/charts/editor/chart-data-source';
-import { ChartTypeSelector } from '@/components/charts/editor/chart-type-selector';
-import { ChartAxisConfig } from '@/components/charts/editor/chart-axis-config';
-import { ChartAppearance } from '@/components/charts/editor/chart-appearance';
-import { ChartReusableFilters } from '@/components/charts/editor/chart-reusable-filters';
-import { ChartPreviewPanel } from '@/components/charts/editor/chart-preview-panel';
+} from "@/types/database";
+import { ChartBasicInfo } from "@/components/charts/editor/chart-basic-info";
+import { ChartDataSource } from "@/components/charts/editor/chart-data-source";
+import { ChartTypeSelector } from "@/components/charts/editor/chart-type-selector";
+import { ChartAxisConfig } from "@/components/charts/editor/chart-axis-config";
+import { ChartAppearance } from "@/components/charts/editor/chart-appearance";
+import { ChartReusableFilters } from "@/components/charts/editor/chart-reusable-filters";
+import { ChartPreviewPanel } from "@/components/charts/editor/chart-preview-panel";
 
-export const Route = createFileRoute('/_authed/charts/editor/$id')({
+export const Route = createFileRoute("/_authed/charts/editor/$id")({
   component: ChartEditorPage,
-})
+});
 
 function ChartEditorPage() {
   const { id: chartId } = Route.useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [chartName, setChartName] = useState('');
-  const [chartDescription, setChartDescription] = useState('');
-  const [chartType, setChartType] = useState<ChartType>('bar');
-  const [selectedQueryId, setSelectedQueryId] = useState('');
+  const [chartName, setChartName] = useState("");
+  const [chartDescription, setChartDescription] = useState("");
+  const [chartType, setChartType] = useState<ChartType>("bar");
+  const [selectedQueryId, setSelectedQueryId] = useState("");
   const [chartConfig, setChartConfig] = useState<ChartConfig>({
-    title: { show: true, text: '' },
-    legend: { show: true, position: 'bottom' },
+    title: { show: true, text: "" },
+    legend: { show: true, position: "bottom" },
     tooltip: { enabled: true },
     animation: true,
     stacked: false,
-    colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+    colors: ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"],
   });
   const [dataMapping, setDataMapping] = useState<DataMapping>({
-    xAxis: { field: '', label: '' },
+    xAxis: { field: "", label: "" },
     yAxis: [],
-    groupBy: '',
-    colorBy: '',
+    groupBy: "",
+    colorBy: "",
   });
   const [showPreview, setShowPreview] = useState(true);
   const [previewData, setPreviewData] = useState<Record<string, unknown>[]>([]);
-  const [selectedFilterId, setSelectedFilterId] = useState<string>('');
-  const [targetColumn, setTargetColumn] = useState<string>('');
+  const [selectedFilterId, setSelectedFilterId] = useState<string>("");
+  const [targetColumn, setTargetColumn] = useState<string>("");
 
   const { data: chart } = useQuery<ChartDefinition>({
-    queryKey: ['chart', chartId],
+    queryKey: ["chart", chartId],
     queryFn: async () => {
       const res = await fetch(`/api/charts/${chartId}`);
       const data = await res.json();
       return data.data;
     },
-    enabled: !!chartId && chartId !== 'new',
+    enabled: !!chartId && chartId !== "new",
   });
 
   const { data: queries } = useQuery<SavedQuery[]>({
-    queryKey: ['queries'],
+    queryKey: ["queries"],
     queryFn: async () => {
-      const res = await fetch('/api/queries');
+      const res = await fetch("/api/queries");
       const data = await res.json();
       return data.data?.items || [];
     },
   });
 
   const { data: availableFilters } = useQuery<FilterDefinition[]>({
-    queryKey: ['filters'],
+    queryKey: ["filters"],
     queryFn: async () => {
-      const res = await fetch('/api/filters');
+      const res = await fetch("/api/filters");
       if (!res.ok) return [];
       return res.json();
     },
   });
 
   const { data: chartFilters } = useQuery({
-    queryKey: ['chart-filters', chartId],
+    queryKey: ["chart-filters", chartId],
     queryFn: async () => {
-      if (chartId === 'new') return [];
+      if (chartId === "new") return [];
       const res = await fetch(`/api/charts/${chartId}/filters`);
       if (!res.ok) return [];
       return res.json();
     },
-    enabled: !!chartId && chartId !== 'new',
+    enabled: !!chartId && chartId !== "new",
   });
 
   const { data: queryResults, isLoading: queryResultsLoading } = useQuery({
-    queryKey: ['chart-data-preview', selectedQueryId, chartId],
+    queryKey: ["chart-data-preview", selectedQueryId, chartId],
     queryFn: async () => {
       if (!selectedQueryId) return { rows: [] };
-      const res = await fetch(`/api/queries/${selectedQueryId}/execute`, { method: 'POST' });
+      const res = await fetch(`/api/queries/${selectedQueryId}/execute`, { method: "POST" });
       if (!res.ok) return { rows: [] };
       const data = await res.json();
       return data.data;
@@ -105,25 +105,29 @@ function ChartEditorPage() {
 
   useEffect(() => {
     if (chart) {
-      setChartName(chart.name || '');
-      setChartDescription(chart.description || '');
-      setChartType(chart.chart_type || 'bar');
-      setSelectedQueryId(chart.saved_query_id || '');
+      setChartName(chart.name || "");
+      setChartDescription(chart.description || "");
+      setChartType(chart.chart_type || "bar");
+      setSelectedQueryId(chart.saved_query_id || "");
 
       if (chart.chart_config) {
         try {
           let configStr = chart.chart_config;
-          if (typeof configStr === 'string' && configStr.startsWith('"') && configStr.includes('\\"')) {
+          if (
+            typeof configStr === "string" &&
+            configStr.startsWith('"') &&
+            configStr.includes('\\"')
+          ) {
             configStr = JSON.parse(configStr);
           }
-          const parsed = typeof configStr === 'string' ? JSON.parse(configStr) : configStr;
+          const parsed = typeof configStr === "string" ? JSON.parse(configStr) : configStr;
           setChartConfig({
-            title: parsed.title || { show: true, text: '' },
-            legend: parsed.legend || { show: true, position: 'bottom' },
+            title: parsed.title || { show: true, text: "" },
+            legend: parsed.legend || { show: true, position: "bottom" },
             tooltip: parsed.tooltip || { enabled: true },
             animation: parsed.animation !== undefined ? parsed.animation : true,
             stacked: parsed.stacked || false,
-            colors: parsed.colors || ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+            colors: parsed.colors || ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"],
           });
         } catch {
           // keep defaults
@@ -133,15 +137,19 @@ function ChartEditorPage() {
       if (chart.data_mapping) {
         try {
           let mappingStr = chart.data_mapping;
-          if (typeof mappingStr === 'string' && mappingStr.startsWith('"') && mappingStr.includes('\\"')) {
+          if (
+            typeof mappingStr === "string" &&
+            mappingStr.startsWith('"') &&
+            mappingStr.includes('\\"')
+          ) {
             mappingStr = JSON.parse(mappingStr);
           }
-          const parsed = typeof mappingStr === 'string' ? JSON.parse(mappingStr) : mappingStr;
+          const parsed = typeof mappingStr === "string" ? JSON.parse(mappingStr) : mappingStr;
           setDataMapping({
-            xAxis: parsed.xAxis || { field: '', label: '' },
+            xAxis: parsed.xAxis || { field: "", label: "" },
             yAxis: parsed.yAxis || [],
-            groupBy: parsed.groupBy || '',
-            colorBy: parsed.colorBy || '',
+            groupBy: parsed.groupBy || "",
+            colorBy: parsed.colorBy || "",
           });
         } catch {
           // keep defaults
@@ -158,7 +166,7 @@ function ChartEditorPage() {
 
   useEffect(() => {
     if (selectedQueryId && chart) {
-      setDataMapping({ xAxis: { field: '', label: '' }, yAxis: [], groupBy: '', colorBy: '' });
+      setDataMapping({ xAxis: { field: "", label: "" }, yAxis: [], groupBy: "", colorBy: "" });
     }
   }, [selectedQueryId, chartId]);
 
@@ -174,25 +182,25 @@ function ChartEditorPage() {
         chartConfig: JSON.stringify(chartConfig),
         dataMapping: JSON.stringify(dataMapping),
       };
-      const url = chartId === 'new' ? '/api/charts' : `/api/charts/${chartId}`;
-      const method = chartId === 'new' ? 'POST' : 'PUT';
+      const url = chartId === "new" ? "/api/charts" : `/api/charts/${chartId}`;
+      const method = chartId === "new" ? "POST" : "PUT";
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(error.error?.message || 'Failed to save chart');
+        throw new Error(error.error?.message || "Failed to save chart");
       }
       return res.json();
     },
     onSuccess: (data) => {
-      toast.success('Chart saved successfully');
-      queryClient.invalidateQueries({ queryKey: ['charts'] });
-      queryClient.invalidateQueries({ queryKey: ['chart'] });
-      if (chartId === 'new') {
-        navigate({ to: '/charts/editor/$id', params: { id: data.data.id } });
+      toast.success("Chart saved successfully");
+      queryClient.invalidateQueries({ queryKey: ["charts"] });
+      queryClient.invalidateQueries({ queryKey: ["chart"] });
+      if (chartId === "new") {
+        navigate({ to: "/charts/editor/$id", params: { id: data.data.id } });
       }
     },
     onError: (error: Error) => {
@@ -203,28 +211,30 @@ function ChartEditorPage() {
   const addFilterMutation = useMutation({
     mutationFn: async ({ filterId, targetColumn }: { filterId: string; targetColumn: string }) => {
       const res = await fetch(`/api/charts/${chartId}/filters`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ filter_id: filterId, target_column: targetColumn }),
       });
-      if (!res.ok) throw new Error('Failed to add filter');
+      if (!res.ok) throw new Error("Failed to add filter");
       return res.json();
     },
     onSuccess: () => {
-      toast.success('Filter added');
-      queryClient.invalidateQueries({ queryKey: ['chart-filters', chartId] });
+      toast.success("Filter added");
+      queryClient.invalidateQueries({ queryKey: ["chart-filters", chartId] });
     },
   });
 
   const removeFilterMutation = useMutation({
     mutationFn: async (filterLinkId: string) => {
-      const res = await fetch(`/api/charts/${chartId}/filters/${filterLinkId}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to remove filter');
+      const res = await fetch(`/api/charts/${chartId}/filters/${filterLinkId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to remove filter");
       return res.json();
     },
     onSuccess: () => {
-      toast.success('Filter removed');
-      queryClient.invalidateQueries({ queryKey: ['chart-filters', chartId] });
+      toast.success("Filter removed");
+      queryClient.invalidateQueries({ queryKey: ["chart-filters", chartId] });
     },
   });
 
@@ -241,18 +251,18 @@ function ChartEditorPage() {
             <div>
               <h1 className="text-2xl font-bold">Chart Editor</h1>
               <p className="text-sm text-gray-500">
-                {chartId === 'new' ? 'Create a new chart' : 'Edit chart configuration'}
+                {chartId === "new" ? "Create a new chart" : "Edit chart configuration"}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={() => setShowPreview(!showPreview)}>
               <Eye className="mr-2 h-4 w-4" />
-              {showPreview ? 'Hide' : 'Show'} Preview
+              {showPreview ? "Hide" : "Show"} Preview
             </Button>
             <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
               <Save className="mr-2 h-4 w-4" />
-              {saveMutation.isPending ? 'Saving...' : 'Save Chart'}
+              {saveMutation.isPending ? "Saving..." : "Save Chart"}
             </Button>
           </div>
         </div>
@@ -271,7 +281,7 @@ function ChartEditorPage() {
               availableFields={availableFields}
               onQueryChange={setSelectedQueryId}
             />
-            {chartId !== 'new' && (
+            {chartId !== "new" && (
               <ChartReusableFilters
                 availableFilters={availableFilters}
                 chartFilters={chartFilters}
@@ -282,8 +292,8 @@ function ChartEditorPage() {
                 onTargetColumnChange={setTargetColumn}
                 onAddFilter={(filterId, col) => {
                   addFilterMutation.mutate({ filterId, targetColumn: col });
-                  setSelectedFilterId('');
-                  setTargetColumn('');
+                  setSelectedFilterId("");
+                  setTargetColumn("");
                 }}
                 onRemoveFilter={(id) => removeFilterMutation.mutate(id)}
                 isAdding={addFilterMutation.isPending}

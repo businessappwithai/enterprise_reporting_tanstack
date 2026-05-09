@@ -6,12 +6,11 @@
 
 export class EmbeddingService {
   private ollamaUrl: string;
-  private model: string = 'bge-small'; // Small, efficient model for semantic search
+  private model: string = "bge-small"; // Small, efficient model for semantic search
   private cache: Map<string, number[]> = new Map();
 
   constructor() {
-    this.ollamaUrl =
-      process.env.OLLAMA_URL || 'http://localhost:11434';
+    this.ollamaUrl = process.env.OLLAMA_URL || "http://localhost:11434";
   }
 
   /**
@@ -30,9 +29,9 @@ export class EmbeddingService {
 
     try {
       const response = await fetch(`${this.ollamaUrl}/api/embed`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           model: this.model,
@@ -44,10 +43,10 @@ export class EmbeddingService {
         throw new Error(`Ollama API error: ${response.statusText}`);
       }
 
-      const data = await response.json() as { embeddings?: number[][] };
+      const data = (await response.json()) as { embeddings?: number[][] };
 
       if (!data.embeddings || data.embeddings.length === 0) {
-        console.warn('[Embedding] No embeddings returned from Ollama');
+        console.warn("[Embedding] No embeddings returned from Ollama");
         return [];
       }
 
@@ -64,7 +63,7 @@ export class EmbeddingService {
 
       return embedding;
     } catch (error) {
-      console.error('[Embedding] Failed to generate embedding:', error);
+      console.error("[Embedding] Failed to generate embedding:", error);
       // Return zero vector on error (similarity will be 0)
       return [];
     }
@@ -113,11 +112,11 @@ export class EmbeddingService {
   async isAvailable(): Promise<boolean> {
     try {
       const response = await fetch(`${this.ollamaUrl}/api/tags`, {
-        method: 'GET',
+        method: "GET",
       });
       return response.ok;
     } catch (error) {
-      console.warn('[Embedding] Ollama not available:', error);
+      console.warn("[Embedding] Ollama not available:", error);
       return false;
     }
   }
@@ -128,22 +127,22 @@ export class EmbeddingService {
   async isModelLoaded(): Promise<boolean> {
     try {
       const response = await fetch(`${this.ollamaUrl}/api/tags`, {
-        method: 'GET',
+        method: "GET",
       });
 
       if (!response.ok) {
         return false;
       }
 
-      const data = await response.json() as { models?: Array<{ name: string }> };
+      const data = (await response.json()) as { models?: Array<{ name: string }> };
 
       if (!data.models) {
         return false;
       }
 
-      return data.models.some(m => m.name.includes(this.model));
+      return data.models.some((m) => m.name.includes(this.model));
     } catch (error) {
-      console.warn('[Embedding] Failed to check model status:', error);
+      console.warn("[Embedding] Failed to check model status:", error);
       return false;
     }
   }
