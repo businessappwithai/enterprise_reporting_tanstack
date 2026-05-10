@@ -95,7 +95,7 @@ export default function BullBoardPage() {
         setIsPaused(true);
         toast.success("Queue paused successfully");
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to pause queue");
     }
   };
@@ -107,7 +107,7 @@ export default function BullBoardPage() {
         setIsPaused(false);
         toast.success("Queue resumed successfully");
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to resume queue");
     }
   };
@@ -120,7 +120,7 @@ export default function BullBoardPage() {
         fetchJobs();
         fetchStats();
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to clean old jobs");
     }
   };
@@ -133,7 +133,7 @@ export default function BullBoardPage() {
         fetchJobs();
         fetchStats();
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to retry job");
     }
   };
@@ -146,7 +146,7 @@ export default function BullBoardPage() {
         fetchJobs();
         fetchStats();
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to delete job");
     }
   };
@@ -158,7 +158,7 @@ export default function BullBoardPage() {
       fetchStats();
     }, 5000);
     return () => clearInterval(interval);
-  }, [activeTab]);
+  }, []);
 
   const StatCard = ({
     title,
@@ -247,7 +247,7 @@ export default function BullBoardPage() {
           <CardDescription>View and manage jobs by status</CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "waiting" | "active" | "completed" | "failed")}>
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="waiting">Waiting ({stats.waiting})</TabsTrigger>
               <TabsTrigger value="active">Active ({stats.active})</TabsTrigger>
