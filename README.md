@@ -1,6 +1,6 @@
 # Enterprise Reporting and Dashboard System
 
-A production-ready enterprise reporting system built with **Next.js 14**, **Bun runtime**, **SQLite**, **BullMQ**, and **shadcn/ui**. Provides real-time data visualization, SQL querying, role-based access control, job scheduling, and multi-format export capabilities.
+A production-ready enterprise reporting system built with **TanStack Start**, **Bun runtime**, **SQLite**, **BullMQ**, and **shadcn/ui**. Provides real-time data visualization, SQL querying, role-based access control, job scheduling, and multi-format export capabilities.
 
 ## 🚀 Key Features
 
@@ -31,27 +31,27 @@ A production-ready enterprise reporting system built with **Next.js 14**, **Bun 
 - **User Management** - Admin panel for users, roles, and permissions
 - **Metadata Management** - Dynamic entity and field management
 - **Natural Language Queries** - AI-powered SQL generation with OpenAI + CopilotKit
-- **Session Management** - Secure NextAuth v5 authentication
+- **Session Management** - Secure JWT-based authentication with HTTP-only cookies
 
 ## 📋 Technology Stack
 
 | Layer | Technology |
 |-------|-----------|
 | **Runtime** | Bun >= 1.3.0 |
-| **Framework** | Next.js 14.2+ (App Router) |
-| **Language** | TypeScript (strict mode) |
+| **Framework** | TanStack Start 1.167+ (Vite-based, full-stack React) |
+| **Language** | TypeScript (strict mode, ES2022 target) |
 | **UI Library** | shadcn/ui (Radix UI + Tailwind CSS 3) |
-| **State Management** | TanStack Query + TanStack Table + TanStack Form |
+| **State Management** | TanStack Query v5 + TanStack Table v8 + TanStack Form v1 |
 | **Database** | SQLite (via better-sqlite3 + Knex.js) |
-| **Authentication** | NextAuth v5 (credentials provider) |
-| **Charts** | Recharts |
+| **Authentication** | Custom JWT with jose + HTTP-only cookies |
+| **Charts** | Recharts, ECharts |
 | **Job Queue** | BullMQ + Redis (ioredis) |
 | **AI/NL Query** | OpenAI (via @ai-sdk/openai) + CopilotKit |
 | **Export Formats** | ExcelJS, PDFKit, PapaParse |
 | **Email** | Nodemailer (SMTP) |
 | **Testing** | Playwright (E2E only) |
-| **Styling** | Tailwind CSS with CSS variables (HSL) |
-| **Deployment** | Docker (Bun Alpine), Nginx, Hostinger VPS |
+| **Styling** | Tailwind CSS with CSS variables (HSL color system) |
+| **Deployment** | Docker (Bun Alpine), Nginx reverse proxy |
 
 ## 🛠️ Installation
 
@@ -102,7 +102,8 @@ bun run jobs:worker
 See [CLAUDE.md](CLAUDE.md) for detailed project structure and architecture.
 
 Key directories:
-- `src/app/` - Next.js App Router pages and API routes
+- `src/routes/` - TanStack Router file-based routes (pages and API)
+- `src/server-fns/` - Server functions (RPC endpoints)
 - `src/components/` - React components (UI, features, layouts)
 - `src/lib/` - Core libraries (database, auth, permissions, jobs, security)
 - `src/lib/db/` - Database layer (Knex migrations, seeds, connection)
@@ -118,11 +119,11 @@ Key directories:
 - Query parsing and sanitization
 
 ### Authentication & Authorization
-- NextAuth v5 with credentials provider
+- Custom JWT-based authentication with jose library
 - Bcrypt password hashing (10 rounds)
 - Role-based access control (RBAC)
 - Resource-level permissions
-- Session management with secure cookies
+- Session management with HTTP-only cookies
 
 ### Data Protection
 - AES-256-GCM encryption for data source credentials
@@ -284,11 +285,11 @@ docker build -t enterprise-reporting .
 ### Docker Services (via docker-compose.yml)
 - **Nginx** - Reverse proxy with SSL support
 - **Redis** - Job queue backend
-- **App** - Next.js application
+- **App** - TanStack Start application
 
 ### Environment Variables
 Key variables for deployment:
-- `AUTH_SECRET` - NextAuth secret (min 32 chars)
+- `AUTH_SECRET` - JWT secret for token signing (min 32 chars)
 - `DATABASE_PATH` - SQLite database file path
 - `REDIS_URL` - Redis connection URL
 - `ENCRYPTION_KEY` - AES-256 encryption key for credentials

@@ -27,7 +27,7 @@ This guide explains how to deploy the Enterprise Reporting System on a Hostinger
 |---------|---------------|------|---------|
 | **Nginx** | ers-nginx | 80, 443 | Reverse proxy with SSL |
 | **Redis** | ers-redis | 6379 | Job queue backend (BullMQ) |
-| **App** | ers-app | 4050 | Next.js application (Bun runtime) |
+| **App** | ers-app | 4050 | TanStack Start application (Bun runtime) |
 
 **Key Note**: The application uses **SQLite** (embedded database) for all data - no separate database service needed.
 
@@ -575,4 +575,4 @@ docker compose up -d
 
 ---
 
-**Built with Bun, Next.js, SQLite, and BullMQ for enterprise-grade reporting.**
+**Built with Bun, TanStack Start, SQLite, and BullMQ for enterprise-grade reporting.**
