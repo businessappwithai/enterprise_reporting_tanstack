@@ -248,12 +248,17 @@ export const introspectSchema = createServerFn({
   const { introspectSchema: introspect } = await import("@/lib/sql/schema-introspection");
   const { schema, logs } = await introspect(connection, dataSource.client_type);
 
-  let syncResult;
+  let syncResult: {
+    entitiesCreated: number;
+    entitiesUpdated: number;
+    fieldsCreated: number;
+    fieldsUpdated: number;
+  } | undefined;
   try {
     const { SyncService } = await import("@/lib/metadata/sync-service");
     syncResult = await SyncService.syncDataSource(dataSourceId, session.user.id);
-  } catch (e) {
-    console.error("[Schema Sync] Failed to sync metadata:", e);
+  } catch (_e) {
+    console.error("[Schema Sync] Failed to sync metadata:", _e);
   }
 
   if (schema.tables.length === 0 && schema.views.length === 0) {
