@@ -211,7 +211,7 @@ Render independently → No cross-widget filtering
 ### 2.7 Current API Route Inventory
 
 **Total API Routes:** 80+ endpoints across these groups:
-- `api/auth/` — Authentication (NextAuth)
+- `api/auth/` — Authentication (Custom JWT)
 - `api/admin/` — Admin operations (users, roles, permissions, queues, audit)
 - `api/sql/` — SQL execution, validation, schema introspection
 - `api/queries/` — Saved query CRUD + execution
@@ -804,10 +804,10 @@ The refactoring MUST be done in phases to maintain a working system throughout:
 
 The following are explicitly **NOT** part of this refactoring:
 
-1. **Authentication/Authorization changes** — NextAuth v5 + RBAC stays as-is
+1. **Authentication/Authorization changes** — Custom JWT + RBAC stays as-is
 2. **Database schema changes** for the config DB — schema preserved
 3. **Docker/deployment changes** — may need COOP/COEP header config in Nginx
-4. **UI framework change** — Next.js 14, shadcn/ui, Tailwind stay as-is
+4. **UI framework change** — TanStack Start, shadcn/ui, Tailwind stay as-is
 5. **Background job system changes** — BullMQ + Redis stays as-is
 6. **Email system changes** — Nodemailer stays as-is
 7. **AI/NL query model changes** — OpenAI/CopilotKit stays (execution moves to client)
@@ -891,7 +891,7 @@ The following are explicitly **NOT** part of this refactoring:
 - `src/components/layout/Sidebar.tsx` — Add "Datasets" navigation
 - `src/app/api/sql/execute/route.ts` — Add Parquet/Arrow output
 - `src/app/api/queries/[id]/execute/route.ts` — Add Parquet/Arrow output
-- `next.config.js` — COOP/COEP headers, WASM support
+- `vite.config.ts` — COOP/COEP headers, WASM support
 - `package.json` — New dependencies
 
 ### Files UNCHANGED:
