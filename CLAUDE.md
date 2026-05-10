@@ -149,8 +149,8 @@ enterprise-reporting-system/
 │   │   │   ├── migrations/           # Knex migrations (timestamped .ts files)
 │   │   │   ├── seeds/                # Seed data (001_initial_data.ts)
 │   │   │   └── sample-data/          # Sample schema and seed scripts
-│   │   ├── auth/                     # Authentication (NextAuth config, RBAC)
-│   │   │   ├── config.ts             # NextAuth configuration
+│   │   ├── auth/                     # Authentication (JWT, RBAC)
+│   │   │   ├── middleware.ts         # Auth middleware (requireAuth)
 │   │   │   └── rbac.ts               # Role-based access control
 │   │   ├── permissions/              # Permission system
 │   │   │   ├── permissions.ts        # Permission definitions and checks
@@ -222,7 +222,7 @@ enterprise-reporting-system/
 │   ├── settings.json                 # Plugin settings
 │   └── skills/                       # Claude skills documentation
 ├── playwright.config.ts              # Playwright configuration
-├── next.config.js                    # Next.js configuration
+├── vite.config.ts                    # Vite configuration (TanStack Start)
 ├── tailwind.config.ts                # Tailwind CSS configuration
 ├── tsconfig.json                     # TypeScript configuration
 ├── package.json                      # Dependencies and scripts
@@ -367,9 +367,9 @@ import { requireAuth } from '@/lib/auth/middleware'
 - Types defined in `src/types/api.ts` and `src/types/database.ts`
 - Path alias `@/*` maps to `./src/*`
 
-### ESLint
+### Linting & Formatting
 
-Config extends `next/core-web-vitals` and `next/typescript`. Run with:
+Uses Biome for linting and formatting. Run with:
 ```bash
 bun run lint       # Check
 bun run lint:fix   # Auto-fix
@@ -441,8 +441,8 @@ Migrations live in `src/lib/db/migrations/` and follow the pattern:
 ### Docker Build
 
 Multi-stage build using `oven/bun:1.3-alpine`:
-1. **Builder stage**: Install deps, compile migrations/seeds, init DB, build Next.js
-2. **Runner stage**: Copy standalone output + node_modules + migrations + DB
+1. **Builder stage**: Install deps, compile migrations/seeds, init DB, build with Vite
+2. **Runner stage**: Copy .output directory + migrations + DB
 
 ### Services (docker-compose.yml)
 
@@ -455,7 +455,7 @@ Multi-stage build using `oven/bun:1.3-alpine`:
 | Variable | Purpose |
 |----------|---------|
 | `DATABASE_PATH` | SQLite database file path |
-| `AUTH_SECRET` | NextAuth secret (min 32 chars) |
+| `AUTH_SECRET` | JWT secret for token signing (min 32 chars) |
 | `REDIS_URL` | Redis connection for BullMQ |
 | `ENCRYPTION_KEY` | AES-256 key for credential encryption |
 | `OPENAI_API_KEY` | OpenAI API key for NL query feature |

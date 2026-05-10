@@ -7,13 +7,13 @@ Enterprise Reporting System - Technical architecture and key design decisions.
 | Layer | Technology |
 |-------|-----------|
 | Runtime | Bun >= 1.3.0 |
-| Framework | Next.js 14.2.11 (App Router, standalone output) |
+| Framework | TanStack Start 1.167+ (Vite-based, full-stack React) |
 | Language | TypeScript (strict mode, ES2022) |
 | UI Components | shadcn/ui (Radix UI + Tailwind CSS 3) |
-| State/Data | TanStack Query, TanStack Table, TanStack Form |
+| State/Data | TanStack Query v5, TanStack Table v8, TanStack Form v1 |
 | Database | SQLite via better-sqlite3 + Knex.js query builder |
-| Auth | NextAuth v5 (beta) with credentials provider |
-| Charts | Recharts |
+| Auth | Custom JWT with jose + HTTP-only cookies |
+| Charts | Recharts, ECharts |
 | Job Queue | BullMQ + Redis (ioredis) |
 | Styling | Tailwind CSS with CSS variables (HSL color system) |
 
@@ -22,14 +22,14 @@ Enterprise Reporting System - Technical architecture and key design decisions.
 ```
 enterprise-reporting-system/
 ├── src/
-│   ├── app/                          # Next.js App Router
-│   │   ├── layout.tsx                # Root layout
-│   │   ├── providers.tsx             # Client providers
-│   │   ├── (auth)/                   # Auth route group
-│   │   │   └── login/                # Login page
-│   │   ├── (dashboard)/              # Main app (authenticated)
-│   │   │   ├── page.tsx              # Dashboard home
-│   │   │   ├── sql-editor/           # SQL editor page
+│   ├── routes/                       # TanStack Router file-based routes
+│   │   ├── __root.tsx                # Root layout (layout + error boundary)
+│   │   ├── index.tsx                 # Home/login redirect
+│   │   ├── login.tsx                 # Login page
+│   │   ├── _authed.tsx               # Auth guard layout (requires session)
+│   │   ├── _authed/                  # Authenticated routes
+│   │   │   ├── dashboard.tsx         # Dashboard home
+│   │   │   ├── sql-editor.tsx        # SQL editor page
 │   │   │   ├── reports/              # Report pages
 │   │   │   ├── charts/               # Chart pages
 │   │   │   ├── dashboards/           # Dashboard pages
@@ -82,10 +82,10 @@ enterprise-reporting-system/
 
 ## Authentication & Authorization
 
-### NextAuth Configuration
-- **Provider**: Credentials (email/password)
-- **Session**: JWT with 30-day expiry
-- **Location**: `src/lib/auth/config.ts`
+### JWT Configuration
+- **Provider**: Custom implementation with jose library
+- **Session**: JWT with HTTP-only cookies
+- **Location**: `src/lib/auth/middleware.ts`
 
 ### RBAC (Role-Based Access Control)
 - **Permission levels**: `view`, `edit`, `execute`, `admin`
@@ -138,7 +138,7 @@ const { limit, offset } = buildSqlPagination(page, pageSize);
 ### Major Route Groups
 | Route | Purpose |
 |-------|---------|
-| `api/auth/` | NextAuth authentication |
+| `api/auth/` | Authentication endpoints |
 | `api/admin/` | Admin operations (users, roles, permissions) |
 | `api/reports/` | Report data and management |
 | `api/dashboards/` | Dashboard CRUD |
@@ -151,19 +151,21 @@ const { limit, offset } = buildSqlPagination(page, pageSize);
 | `api/metadata/` | Metadata entity operations |
 | `api/health/` | Health check |
 
-### Route Pattern
+### Route Pattern (TanStack Start)
 ```typescript
-// src/app/api/your-route/route.ts
-import { getNextServerSession } from '@/lib/auth/config';
-import { getDb } from '@/lib/db/config';
+// src/routes/api/your-route.ts (file-based routing)
+import { createAPIFileRoute } from '@tanstack/react-router'
+import { requireAuth } from '@/lib/auth/middleware'
+import { getDb } from '@/lib/db/config'
 
-export async function GET(request: Request) {
-  const session = await getNextServerSession();
-  if (!session) return new Response('Unauthorized', { status: 401 });
-
-  const db = getDb();
-  // ... logic
-}
+export const Route = createAPIFileRoute('/api/your-route')({
+  async GET() {
+    const session = await requireAuth()
+    const db = getDb()
+    // ... logic
+    return Response.json({ data: ... })
+  }
+})
 ```
 
 ## Security
@@ -211,11 +213,12 @@ export async function GET(request: Request) {
 - Migration system built-in
 - Good TypeScript support
 
-### Why Next.js App Router?
-- Server components by default
-- Better performance
-- Streaming support
-- Improved data fetching patterns
+### Why TanStack Start?
+- Full-stack React framework with Vite
+- File-based routing (like Next.js)
+- Server functions (RPC) for type-safe client-server communication
+- Better performance with Vite
+- Full control over build process
 
 ### Why TanStack Query?
 - Automatic caching

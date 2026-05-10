@@ -128,10 +128,10 @@ Transform to a **WASM-centric architecture** where:
 │                    Server-Side (Node/Bun)                       │
 ├─────────────────────────────────────────────────────────────────┤
 │ Runtime         │ Bun >= 1.3.0                                  │
-│ Framework       │ Next.js 14 (App Router)                       │
+│ Framework       │ TanStack Start 1.167+ (Vite)                  │
 │ Config DB       │ SQLite via better-sqlite3                     │
 │ Export Engine   │ Apache Arrow JS + Parquet-Wasm                │
-│ Auth            │ NextAuth v5                                   │
+│ Auth            │ Custom JWT with jose                          │
 │ Jobs            │ BullMQ + Redis                                │
 │ Deployment      │ Docker (Bun Alpine) + Nginx                   │
 └─────────────────────────────────────────────────────────────────┘
@@ -196,10 +196,10 @@ Transform to a **WASM-centric architecture** where:
 ├─────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                 │
 │  ┌─────────────────────────────────────────────────────────────────────────┐   │
-│  │                        API Gateway (Next.js)                            │   │
+│  │                    API Gateway (TanStack Start)                         │   │
 │  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐   │   │
 │  │  │   Auth       │ │   RBAC       │ │  Validation  │ │  Rate Limit  │   │   │
-│  │  │  (NextAuth)  │ │  (Custom)    │ │   (Zod)      │ │   (Optional) │   │   │
+│  │  │  (JWT)       │ │  (Custom)    │ │   (Zod)      │ │   (Optional) │   │   │
 │  │  └──────────────┘ └──────────────┘ └──────────────┘ └──────────────┘   │   │
 │  └─────────────────────────────────────────────────────────────────────────┘   │
 │                                     ↓                                          │
@@ -2337,9 +2337,9 @@ const ERROR_CODES = {
 │     └─ DDoS protection (optional)                              │
 │                                                                 │
 │  2. AUTHENTICATION LAYER                                        │
-│     ├─ NextAuth v5 (credentials provider)                      │
+│     ├─ Custom JWT (jose library)                               │
 │     ├─ Session management (httpOnly cookies)                   │
-│     ├─ CSRF protection                                         │
+│     ├─ CSRF protection (SameSite cookie policy)                │
 │     └─ Session expiration (configurable)                       │
 │                                                                 │
 │  3. AUTHORIZATION LAYER                                         │
@@ -2535,18 +2535,16 @@ class SessionDuckDBManager {
 ### 7.4 Security Headers
 
 ```typescript
-// next.config.js - Security headers
+// vite.config.ts - Security headers for TanStack Start
 
-const securityHeaders = [
-  // COOP/COEP for SharedArrayBuffer (required for DuckDB-Wasm)
-  {
-    key: 'Cross-Origin-Opener-Policy',
-    value: 'same-origin',
+const serverConfig = {
+  port: 4050,
+  headers: {
+    // COOP/COEP for SharedArrayBuffer (required for DuckDB-Wasm)
+    'Cross-Origin-Opener-Policy': 'same-origin',
+    'Cross-Origin-Embedder-Policy': 'require-corp',
   },
-  {
-    key: 'Cross-Origin-Embedder-Policy',
-    value: 'require-corp',
-  },
+}
 
   // Content Security Policy
   {
