@@ -1,10 +1,15 @@
 import type { Knex } from "knex";
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from "url";
 
 const DATABASE_URL = process.env.DATABASE_URL || "";
-const DATABASE_PATH = process.env.DATABASE_PATH || "./data/config.sqlite";
 const isProduction = process.env.NODE_ENV === "production";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const projectRoot = path.resolve(__dirname, "../../..");
+const DATABASE_PATH = process.env.DATABASE_PATH || path.join(projectRoot, "data/config.sqlite");
 
 function getMigrationsDirectory(): string {
   if (isProduction) {
