@@ -9,29 +9,178 @@ import { logAudit } from "@/lib/security/audit";
 import { validateSQLWithAllowlist } from "@/lib/sql/antlr-validator";
 import { isReadOnlyQuery } from "@/lib/sql/validator";
 import { executeSqlSchema, validateSqlSchema, introspectSchemaSchema } from "@/lib/schemas/sql";
+import { withErrorHandler, NotFoundError } from "@/lib/server-fns/with-error-handler";
 
 const DEFAULT_TIMEOUT = 30000;
+
+interface BatchQueryInput {
+  queries: Array<{
+    widgetId: string;
+    sql: string;
+    dataSourceId: string;
+    limit?: number;
+    offset?: number;
+  }>;
+}
+
+export const batchExecuteSql = createServerFn({
+  method: "POST",
+}).handler(async (input: BatchQueryInput) => {
+  const session = await requireAuth();
+
+  return withErrorHandler(
+    async () => {
+      if (!input.queries || input.queries.length === 0) {
+        throw new Error("At least one query is required");
+      }
+
+      if (input.queries.length > 50) {
+        throw new Error("Batch size cannot exceed 50 queries");
+      }
+
+      // Validate all queries first
+      const validatedQueries = await Promise.all(
+        input.queries.map(async (q) => {
+          const validated = await executeSqlSchema.parseAsync({
+            sql: q.sql,
+            dataSourceId: q.dataSourceId,
+            limit: q.limit,
+            offset: q.offset,
+          });
+          return { widgetId: q.widgetId, ...validated };
+        })
+      );
+
+      // Execute all queries in parallel
+      const results = await Promise.allSettled(
+        validatedQueries.map(async (query) => {
+          const { widgetId, sql, dataSourceId, limit, offset = 0, timeout = DEFAULT_TIMEOUT } = query;
+
+          if (!isReadOnlyQuery(sql)) {
+            throw new Error("Only SELECT queries are allowed");
+          }
+
+          const antlrValidation = validateSQLWithAllowlist(sql);
+          if (!antlrValidation.valid) {
+            const errorMessages = antlrValidation.errors.map((e) => e.message).join("; ");
+            throw new Error(`SQL validation failed: ${errorMessages}`);
+          }
+
+          const db = getDb();
+          const dataSource = await db
+            .selectFrom("data_sources")
+            .selectAll()
+            .where("id", "=", dataSourceId)
+            .where("is_active", "=", true)
+            .executeTakeFirst();
+
+          if (!dataSource) {
+            throw new Error(`Data source not found: ${dataSourceId}`);
+          }
+
+          const connection = await getConnection(dataSource);
+          const PAGE_SIZE = sqlEditorConfig.serverPageSize;
+
+          // Execute with timeout
+          const startTime = Date.now();
+          const result =
+            dataSource.client_type === "sqlite3"
+              ? await connection.raw(sql)
+              : await connection.raw(sql).timeout(timeout);
+
+          const executionTime = Date.now() - startTime;
+
+          let rows: Record<string, unknown>[] = [];
+          let columns: { name: string; type: string }[] = [];
+
+          if (Array.isArray(result)) {
+            rows = result;
+          } else if (result.rows) {
+            rows = result.rows;
+          } else if (result[0]) {
+            rows = Array.isArray(result[0]) ? result[0] : [result[0]];
+          }
+
+          if (rows.length > 0) {
+            columns = Object.keys(rows[0]).map((name) => ({
+              name,
+              type: typeof rows[0][name],
+            }));
+          }
+
+          return {
+            widgetId,
+            result: {
+              columns,
+              rows,
+              rowCount: rows.length,
+              executionTime,
+              truncated: rows.length >= PAGE_SIZE,
+              pagination: {
+                limit: PAGE_SIZE,
+                offset,
+                hasMore: false,
+                serverSide: true,
+              },
+            },
+          };
+        })
+      );
+
+      // Map results back to widget IDs
+      const batchResults: Record<string, unknown> = {};
+      const errors: Record<string, string> = {};
+
+      for (const result of results) {
+        if (result.status === "fulfilled") {
+          batchResults[result.value.widgetId] = result.value.result;
+        } else {
+          const widgetId = validatedQueries[results.indexOf(result)]?.widgetId || "unknown";
+          const errorMsg = result.reason instanceof Error ? result.reason.message : String(result.reason);
+          errors[widgetId] = errorMsg;
+        }
+      }
+
+      // Log the batch execution
+      await logAudit({
+        userId: session.user.id,
+        action: "batch_execute",
+        resourceType: "queries",
+        details: {
+          queryCount: input.queries.length,
+          successCount: Object.keys(batchResults).length,
+          errorCount: Object.keys(errors).length,
+        },
+      }).catch(() => {
+        // Ignore audit log errors
+      });
+
+      return { results: batchResults, errors };
+    },
+    {
+      user: session.user,
+      action: "batch_execute",
+      resourceType: "queries",
+      details: { queryCount: input.queries.length },
+    }
+  );
+});
 
 export const executeSql = createServerFn({
   method: "POST",
 }).handler(async (input) => {
-  const validated = await executeSqlSchema.parseAsync(input).catch((err) => {
-    throw new Error(`Validation failed: ${err.message}`);
-  });
   const session = await requireAuth();
-  const { sql, dataSourceId, limit, offset = 0, timeout = DEFAULT_TIMEOUT } = validated;
 
-  if (!sql) {
-    throw new Error("SQL content is required");
-  }
+  return withErrorHandler(
+    async () => {
+      const validated = await executeSqlSchema.parseAsync(input).catch((err) => {
+        throw new Error(`Validation failed: ${err.message}`);
+      });
+      const { sql, dataSourceId, limit, offset = 0, timeout = DEFAULT_TIMEOUT } = validated;
 
-  if (!dataSourceId) {
-    throw new Error("Data source ID is required");
-  }
-
-  if (!isReadOnlyQuery(sql)) {
-    throw new Error("Only SELECT queries are allowed in the SQL editor");
-  }
+      if (!isReadOnlyQuery(sql)) {
+        throw new Error("Only SELECT queries are allowed in the SQL editor");
+      }
 
   // ANTLR validation: keyword allowlist enforcement (D11)
   const antlrValidation = validateSQLWithAllowlist(sql);
@@ -166,22 +315,30 @@ export const executeSql = createServerFn({
     details: { sql: sql.substring(0, 500), rowCount: rows.length, executionTime },
   });
 
-  return {
-    columns,
-    rows,
-    rowCount: rows.length,
-    totalRows: totalRowCount,
-    executionTime,
-    truncated: rows.length >= PAGE_SIZE,
-    pagination: {
-      limit: PAGE_SIZE,
-      offset,
-      totalRows: totalRowCount,
-      hasMore: totalRowCount > 0 ? offset + rows.length < totalRowCount : false,
-      serverSide: true,
-      maxClientRows: MAX_CLIENT_ROWS,
+      return {
+        columns,
+        rows,
+        rowCount: rows.length,
+        totalRows: totalRowCount,
+        executionTime,
+        truncated: rows.length >= PAGE_SIZE,
+        pagination: {
+          limit: PAGE_SIZE,
+          offset,
+          totalRows: totalRowCount,
+          hasMore: totalRowCount > 0 ? offset + rows.length < totalRowCount : false,
+          serverSide: true,
+          maxClientRows: MAX_CLIENT_ROWS,
+        },
+      };
     },
-  };
+    {
+      user: session.user,
+      action: "execute",
+      resourceType: "query",
+      resourceId: dataSourceId,
+    }
+  );
 });
 
 export const validateSql = createServerFn({
