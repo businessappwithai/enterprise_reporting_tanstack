@@ -222,7 +222,7 @@ export default defineConfig({
 
 2. **Missing Unit Test Framework**: No Jest/Vitest setup
    - **Created**: SQL validator unit tests (needs test framework setup)
-   - **Recommended**: Install Vitest for Next.js compatibility
+   - **Recommended**: Install Vitest for TanStack Start compatibility
 
 3. **Query Status Badges**: Not implemented in UI yet
    - Tests expect these badges but they don't exist

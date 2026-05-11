@@ -120,7 +120,7 @@ Transform to a **WASM-centric architecture** where:
 │ Data Grid       │ Glide Data Grid (MIT)                         │
 │ Charts          │ Apache ECharts (Apache-2.0)                   │
 │ Data Format     │ Apache Arrow / Parquet (Apache-2.0)           │
-│ Framework       │ Next.js 14 + React 18                         │
+│ Framework       │ TanStack Start + React 18                         │
 │ UI Components   │ shadcn/ui (Radix UI + Tailwind)              │
 └─────────────────────────────────────────────────────────────────┘
 
@@ -128,7 +128,7 @@ Transform to a **WASM-centric architecture** where:
 │                    Server-Side (Node/Bun)                       │
 ├─────────────────────────────────────────────────────────────────┤
 │ Runtime         │ Bun >= 1.3.0                                  │
-│ Framework       │ Next.js 14 (App Router)                       │
+│ Framework       │ TanStack Start (App Router)                       │
 │ Config DB       │ SQLite via better-sqlite3                     │
 │ Export Engine   │ Apache Arrow JS + Parquet-Wasm                │
 │ Auth            │ NextAuth v5                                   │
@@ -161,7 +161,7 @@ Transform to a **WASM-centric architecture** where:
 ├─────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                 │
 │  ┌─────────────────────────────────────────────────────────────────────────┐   │
-│  │                        Application Layer (Next.js)                      │   │
+│  │                        Application Layer (TanStack Start)                      │   │
 │  │  ┌───────────────┐ ┌───────────────┐ ┌───────────────┐ ┌─────────────┐  │   │
 │  │  │   Pages       │ │  Components   │ │   Hooks       │ │  Context    │  │   │
 │  │  └───────────────┘ └───────────────┘ └───────────────┘ └─────────────┘  │   │
@@ -196,7 +196,7 @@ Transform to a **WASM-centric architecture** where:
 ├─────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                 │
 │  ┌─────────────────────────────────────────────────────────────────────────┐   │
-│  │                        API Gateway (Next.js)                            │   │
+│  │                        API Gateway (TanStack Start)                            │   │
 │  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐   │   │
 │  │  │   Auth       │ │   RBAC       │ │  Validation  │ │  Rate Limit  │   │   │
 │  │  │  (NextAuth)  │ │  (Custom)    │ │   (Zod)      │ │   (Optional) │   │   │
@@ -3724,7 +3724,7 @@ http {
         gzip_types text/plain application/json application/javascript text/css;
         gzip_min_length 1000;
 
-        # Next.js app
+        # TanStack Start app
         location / {
             proxy_pass http://app;
             proxy_http_version 1.1;
@@ -3945,7 +3945,7 @@ class WasmErrorBoundary extends React.Component {
 | Apache Parquet | https://parquet.apache.org/ |
 | Glide Data Grid | https://grid.glideapps.com/ |
 | Apache ECharts | https://echarts.apache.org/ |
-| Next.js 14 | https://nextjs.org/docs |
+| TanStack Start | https://nextjs.org/docs |
 | COOP/COEP | https://web.dev/coop-coep/ |
 
 ### Appendix C: Type Definitions

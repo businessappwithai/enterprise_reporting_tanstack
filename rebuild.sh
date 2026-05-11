@@ -12,8 +12,8 @@ echo "Powered by Bun"
 echo "=========================================="
 echo ""
 
-# Step 1: Clear Next.js build cache
-echo "Step 1: Clearing Next.js build cache..."
+# Step 1: Clear TanStack Start build cache
+echo "Step 1: Clearing TanStack Start build cache..."
 rm -rf .next
 echo "✓ Cleared .next directory"
 echo ""

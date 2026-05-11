@@ -1,6 +1,6 @@
 # Enterprise Reporting and Dashboard System
 
-A production-ready enterprise reporting system built with **Next.js 14**, **Bun runtime**, **SQLite**, **BullMQ**, and **shadcn/ui**. Provides real-time data visualization, SQL querying, role-based access control, job scheduling, and multi-format export capabilities.
+A production-ready enterprise reporting system built with **TanStack Start**, **Bun runtime**, **SQLite**, **BullMQ**, and **shadcn/ui**. Provides real-time data visualization, SQL querying, role-based access control, job scheduling, and multi-format export capabilities.
 
 ## 🚀 Key Features
 
@@ -31,19 +31,19 @@ A production-ready enterprise reporting system built with **Next.js 14**, **Bun 
 - **User Management** - Admin panel for users, roles, and permissions
 - **Metadata Management** - Dynamic entity and field management
 - **Natural Language Queries** - AI-powered SQL generation with OpenAI + CopilotKit
-- **Session Management** - Secure NextAuth v5 authentication
+- **Session Management** - Secure Custom JWT auth authentication
 
 ## 📋 Technology Stack
 
 | Layer | Technology |
 |-------|-----------|
 | **Runtime** | Bun >= 1.3.0 |
-| **Framework** | Next.js 14.2+ (App Router) |
+| **Framework** | TanStack Start 1.167+ (Full-stack React) |
 | **Language** | TypeScript (strict mode) |
 | **UI Library** | shadcn/ui (Radix UI + Tailwind CSS 3) |
 | **State Management** | TanStack Query + TanStack Table + TanStack Form |
 | **Database** | SQLite (via bun:sqlite + Kysely) |
-| **Authentication** | NextAuth v5 (credentials provider) |
+| **Authentication** | Custom JWT (jose) + HTTP-only cookies |
 | **Charts** | Recharts |
 | **Job Queue** | BullMQ + Redis (ioredis) |
 | **AI/NL Query** | OpenAI (via @ai-sdk/openai) + CopilotKit |
@@ -102,7 +102,7 @@ bun run jobs:worker
 See [CLAUDE.md](CLAUDE.md) for detailed project structure and architecture.
 
 Key directories:
-- `src/app/` - Next.js App Router pages and API routes
+- `src/app/` - TanStack Start App Router pages and API routes
 - `src/components/` - React components (UI, features, layouts)
 - `src/lib/` - Core libraries (database, auth, permissions, jobs, security)
 - `src/lib/db/` - Database layer (Kysely queries, seeds, connection)
@@ -118,7 +118,7 @@ Key directories:
 - Query parsing and sanitization
 
 ### Authentication & Authorization
-- NextAuth v5 with credentials provider
+- Custom JWT auth with credentials provider
 - Bcrypt password hashing (10 rounds)
 - Role-based access control (RBAC)
 - Resource-level permissions
@@ -284,7 +284,7 @@ docker build -t enterprise-reporting .
 ### Docker Services (via docker-compose.yml)
 - **Nginx** - Reverse proxy with SSL support
 - **Redis** - Job queue backend
-- **App** - Next.js application
+- **App** - TanStack Start application
 
 ### Environment Variables
 Key variables for deployment:

@@ -79,10 +79,10 @@ This document defines the requirements for refactoring the Enterprise Reporting 
 
 ### 2.1 Architecture Overview
 
-The current system is a **Next.js 14 App Router** application using **Bun runtime** with a classic server-centric data flow:
+The current system is a **TanStack Start** application using **Bun runtime** with a classic server-centric data flow:
 
 ```
-[Browser] → REST API → [Next.js Server] → Kysely → [SQLite/PostgreSQL/MySQL/MSSQL/Oracle]
+[Browser] → REST API → [TanStack Start Server] → Kysely → [SQLite/PostgreSQL/MySQL/MSSQL/Oracle]
                                           ↓
                                     JSON Response
                                           ↓
@@ -807,7 +807,7 @@ The following are explicitly **NOT** part of this refactoring:
 1. **Authentication/Authorization changes** — NextAuth v5 + RBAC stays as-is
 2. **Database schema changes** for the config DB — schema preserved
 3. **Docker/deployment changes** — may need COOP/COEP header config in Nginx
-4. **UI framework change** — Next.js 14, shadcn/ui, Tailwind stay as-is
+4. **UI framework change** — TanStack Start, shadcn/ui, Tailwind stay as-is
 5. **Background job system changes** — BullMQ + Redis stays as-is
 6. **Email system changes** — Nodemailer stays as-is
 7. **AI/NL query model changes** — OpenAI/CopilotKit stays (execution moves to client)

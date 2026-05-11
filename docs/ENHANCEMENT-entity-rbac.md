@@ -15,7 +15,7 @@ This enhancement extends the existing RBAC (Role-Based Access Control) system to
 2. **Metadata Management** - Editable entity/field descriptions via TanStack Form
 3. **Permission Control** - Two-tier permissions (metadata + data access via `ds_entity_permissions`)
 4. **Optional Datasource Editing** - Admin-controlled CRUD interface with server-side pagination
-5. **TanStack.js Integration** - TanStack Form, TanStack Table, TanStack Query on Next.js
+5. **TanStack.js Integration** - TanStack Form, TanStack Table, TanStack Query on TanStack Start
 
 ## Current State Analysis
 
@@ -632,7 +632,7 @@ Administrators can configure datasources as **editable**, enabling a CRUD interf
 - **TanStack Table** - Server-side paginated data grids
 - **TanStack Form** - Record editing with validation
 - **TanStack Query** - Data fetching and caching
-- **Next.js** - API routes and server components
+- **TanStack Start** - API routes and server components
 
 ### API Endpoints
 
@@ -1060,7 +1060,7 @@ When a datasource is configured as editable (`is_editable = TRUE`), users with a
 - **TanStack Table** (`@tanstack/react-table`) - Server-side paginated data grid
 - **TanStack Query** (`@tanstack/react-query`) - Data fetching, caching, synchronization
 - **TanStack Form** (`@tanstack/react-form`) - Record editing
-- **Next.js** - App Router, Server Components, API Routes
+- **TanStack Start** - App Router, Server Components, API Routes
 
 #### 1. Entity Browser Component
 
@@ -2517,6 +2517,6 @@ src/
 ### Related Packages (Already in Use)
 
 - React - UI framework
-- Next.js - App router and API routes
+- TanStack Start - App router and API routes
 - Kysely - Database query builder
 - Zod - Schema validation (can be integrated with TanStack Form validators)

@@ -37,8 +37,6 @@ export interface Database {
   ds_roles: DsRolesTable;
   ds_user_roles: DsUserRolesTable;
   ds_entity_permissions: DsEntityPermissionsTable;
-  // Legacy/alias - route code references 'jobs' table directly
-  jobs: JobsTable;
 }
 
 // Table type definitions — column names match actual DB schema from migrations

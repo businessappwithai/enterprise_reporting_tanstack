@@ -69,8 +69,9 @@ export function Header({ user }: HeaderProps) {
     refetchInterval: 30000, // Refetch every 30 seconds
   });
 
+  const safeNotifications = Array.isArray(notifications) ? notifications : [];
   // Get unread count
-  const unreadCount = notifications.filter((n: any) => !n.is_read).length;
+  const unreadCount = safeNotifications.filter((n: any) => !n.is_read).length;
 
   // Mark as read mutation
   const markAsReadMutation = useMutation({
@@ -89,7 +90,7 @@ export function Header({ user }: HeaderProps) {
   // Mark all as read mutation
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
-      const unread = notifications.filter((n: any) => !n.is_read);
+      const unread = safeNotifications.filter((n: any) => !n.is_read);
       await Promise.all(
         unread.map((n: any) =>
           fetch(`/api/notifications/${n.id}`, {
@@ -212,13 +213,13 @@ export function Header({ user }: HeaderProps) {
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
-            ) : notifications.length === 0 ? (
+            ) : safeNotifications.length === 0 ? (
               <div className="py-8 text-center text-sm text-muted-foreground">No notifications</div>
             ) : (
               <>
                 <ScrollArea className="h-96">
                   <div className="p-2">
-                    {notifications.map((notification: any) => (
+                    {safeNotifications.map((notification: any) => (
                       <div
                         key={notification.id}
                         className={`mb-2 rounded-lg border p-3 transition-colors hover:bg-accent ${

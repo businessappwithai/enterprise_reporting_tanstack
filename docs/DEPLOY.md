@@ -10,7 +10,7 @@ This system uses:
 - **SQLite** for application database (embedded, zero configuration)
 - **Redis** for BullMQ job queue backend
 - **Nginx** for reverse proxy and SSL
-- **Bun** runtime for Next.js application
+- **Bun** runtime for TanStack Start application
 
 ### Prerequisites
 

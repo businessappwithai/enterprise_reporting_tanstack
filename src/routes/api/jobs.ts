@@ -26,13 +26,28 @@ export const Route = createFileRoute("/api/jobs")({
           }
 
           const db = getDb();
+          const { searchParams } = new URL(request.url);
+          const page = parseInt(searchParams.get("page") || "0", 10);
+          const pageSize = Math.min(parseInt(searchParams.get("pageSize") || "50", 10), 1000);
+
           const jobs = await db
-            .selectFrom("jobs")
+            .selectFrom("job_definitions")
             .selectAll()
+            .where("is_deleted", "=", false)
             .orderBy("created_at", "desc")
+            .limit(pageSize)
+            .offset(page * pageSize)
             .execute();
 
-          return json({ success: true, data: { items: jobs, meta: { total: jobs.length } } });
+          const totalResult = await db
+            .selectFrom("job_definitions")
+            .select((eb) => eb.fn.count("id").as("total"))
+            .where("is_deleted", "=", false)
+            .executeTakeFirst();
+
+          const total = Number(totalResult?.total ?? 0);
+
+          return json({ success: true, data: { items: jobs, meta: { total, page, pageSize } } });
         } catch (error) {
           console.error("Error fetching jobs:", error);
           return json(
@@ -54,31 +69,31 @@ export const Route = createFileRoute("/api/jobs")({
 
           const body = (await request.json()) as {
             name?: string;
-            description?: string;
+            job_type?: string;
             target_id?: string;
             schedule_cron?: string;
-            query_id?: string;
-            report_id?: string;
+            parameters?: Record<string, unknown>;
+            notification_config?: Record<string, unknown>;
             is_active?: boolean;
           };
 
           const {
             name,
-            description,
+            job_type = "report",
             target_id,
             schedule_cron,
-            query_id,
-            report_id,
+            parameters,
+            notification_config,
             is_active = true,
           } = body;
 
-          if (!name || !target_id || !schedule_cron) {
+          if (!name || !target_id) {
             return json(
               {
                 success: false,
                 error: {
                   code: "INVALID_INPUT",
-                  message: "Name, target ID, and schedule are required",
+                  message: "Name and target ID are required",
                 },
               },
               { status: 400 }
@@ -90,15 +105,19 @@ export const Route = createFileRoute("/api/jobs")({
           const now = new Date().toISOString();
 
           await db
-            .insertInto("jobs")
+            .insertInto("job_definitions")
             .values({
               id: jobId,
               name,
-              description: description ?? null,
-              query_id: target_id || query_id || null,
-              report_id: report_id ?? null,
-              schedule: schedule_cron,
+              job_type,
+              target_id,
+              schedule_cron: schedule_cron ?? null,
+              parameters: parameters ? JSON.stringify(parameters) : null,
+              notification_config: notification_config ? JSON.stringify(notification_config) : null,
               is_active,
+              is_deleted: false,
+              deleted_at: null,
+              deleted_by: null,
               created_by: session.user.id,
               created_at: now,
               updated_at: now,

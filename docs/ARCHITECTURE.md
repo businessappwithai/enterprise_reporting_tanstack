@@ -7,12 +7,12 @@ Enterprise Reporting System - Technical architecture and key design decisions.
 | Layer | Technology |
 |-------|-----------|
 | Runtime | Bun >= 1.3.0 |
-| Framework | Next.js 14.2.11 (App Router, standalone output) |
+| Framework | TanStack Start 1.167+ (Full-stack React, Vite-based) |
 | Language | TypeScript (strict mode, ES2022) |
 | UI Components | shadcn/ui (Radix UI + Tailwind CSS 3) |
 | State/Data | TanStack Query, TanStack Table, TanStack Form |
 | Database | SQLite via better-sqlite3 + Kysely query builder |
-| Auth | NextAuth v5 (beta) with credentials provider |
+| Auth | Custom JWT auth (beta) with credentials provider |
 | Charts | Recharts |
 | Job Queue | BullMQ + Redis (ioredis) |
 | Styling | Tailwind CSS with CSS variables (HSL color system) |
@@ -22,7 +22,7 @@ Enterprise Reporting System - Technical architecture and key design decisions.
 ```
 enterprise-reporting-system/
 ├── src/
-│   ├── app/                          # Next.js App Router
+│   ├── app/                          # TanStack Router
 │   │   ├── layout.tsx                # Root layout
 │   │   ├── providers.tsx             # Client providers
 │   │   ├── (auth)/                   # Auth route group
@@ -211,7 +211,7 @@ export async function GET(request: Request) {
 - Migration system built-in
 - Good TypeScript support
 
-### Why Next.js App Router?
+### Why TanStack Router?
 - Server components by default
 - Better performance
 - Streaming support

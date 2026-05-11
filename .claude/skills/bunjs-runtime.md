@@ -2,7 +2,7 @@
 
 ## Overview
 
-This skill provides comprehensive guidelines for using Bun.js as the runtime for the ERDwithAI project. This guide covers Bun.js specific features, optimizations, configurations, and best practices for running Next.js, NestJS, OpenUI5, and OData applications on Bun.
+This skill provides comprehensive guidelines for using Bun.js as the runtime for the ERDwithAI project. This guide covers Bun.js specific features, optimizations, configurations, and best practices for running TanStack Start, NestJS, OpenUI5, and OData applications on Bun.
 
 ## Table of Contents
 
