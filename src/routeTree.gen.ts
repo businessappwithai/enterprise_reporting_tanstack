@@ -40,9 +40,6 @@ import { Route as ApiSqlExecuteRouteImport } from './routes/api/sql/execute'
 import { Route as ApiReportsIdRouteImport } from './routes/api/reports/$id'
 import { Route as ApiNlQueryExecuteRouteImport } from './routes/api/nl-query/execute'
 import { Route as ApiAuthPermissionsRouteImport } from './routes/api/auth/permissions'
-import { Route as ApiAdminUsersRouteImport } from './routes/api/admin/users'
-import { Route as ApiAdminRolesRouteImport } from './routes/api/admin/roles'
-import { Route as ApiAdminPermissionsRouteImport } from './routes/api/admin/permissions'
 import { Route as AuthedSettingsEmailIndexRouteImport } from './routes/_authed/settings/email/index'
 import { Route as AuthedMetadataEntitiesIndexRouteImport } from './routes/_authed/metadata/entities/index'
 import { Route as AuthedDashboardsIdIndexRouteImport } from './routes/_authed/dashboards/$id/index'
@@ -52,16 +49,12 @@ import { Route as AuthedAdminPermissionsIndexRouteImport } from './routes/_authe
 import { Route as ApiSqlSchemaDataSourceIdRouteImport } from './routes/api/sql/schema.$dataSourceId'
 import { Route as ApiReportsIdFiltersRouteImport } from './routes/api/reports/$id/filters'
 import { Route as ApiReportsIdExportRouteImport } from './routes/api/reports/$id/export'
-import { Route as ApiAdminUsersIdRouteImport } from './routes/api/admin/users/$id'
-import { Route as ApiAdminRolesIdRouteImport } from './routes/api/admin/roles/$id'
 import { Route as AuthedReportsIdEditorRouteImport } from './routes/_authed/reports/$id/editor'
 import { Route as AuthedDataSourcesIdPermissionsRouteImport } from './routes/_authed/data-sources/$id/permissions'
 import { Route as AuthedChartsViewerIdRouteImport } from './routes/_authed/charts/viewer/$id'
 import { Route as AuthedChartsEditorIdRouteImport } from './routes/_authed/charts/editor/$id'
 import { Route as AuthedMetadataEntitiesIdIndexRouteImport } from './routes/_authed/metadata/entities/$id/index'
 import { Route as ApiReportsIdFiltersFilterLinkIdRouteImport } from './routes/api/reports/$id/filters/$filterLinkId'
-import { Route as ApiAdminUsersIdRolesRouteImport } from './routes/api/admin/users/$id/roles'
-import { Route as ApiAdminRolesIdPermissionsRouteImport } from './routes/api/admin/roles/$id/permissions'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -218,21 +211,6 @@ const ApiAuthPermissionsRoute = ApiAuthPermissionsRouteImport.update({
   path: '/api/auth/permissions',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiAdminUsersRoute = ApiAdminUsersRouteImport.update({
-  id: '/api/admin/users',
-  path: '/api/admin/users',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAdminRolesRoute = ApiAdminRolesRouteImport.update({
-  id: '/api/admin/roles',
-  path: '/api/admin/roles',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAdminPermissionsRoute = ApiAdminPermissionsRouteImport.update({
-  id: '/api/admin/permissions',
-  path: '/api/admin/permissions',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthedSettingsEmailIndexRoute =
   AuthedSettingsEmailIndexRouteImport.update({
     id: '/settings/email/',
@@ -282,16 +260,6 @@ const ApiReportsIdExportRoute = ApiReportsIdExportRouteImport.update({
   path: '/export',
   getParentRoute: () => ApiReportsIdRoute,
 } as any)
-const ApiAdminUsersIdRoute = ApiAdminUsersIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ApiAdminUsersRoute,
-} as any)
-const ApiAdminRolesIdRoute = ApiAdminRolesIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ApiAdminRolesRoute,
-} as any)
 const AuthedReportsIdEditorRoute = AuthedReportsIdEditorRouteImport.update({
   id: '/reports/$id/editor',
   path: '/reports/$id/editor',
@@ -325,17 +293,6 @@ const ApiReportsIdFiltersFilterLinkIdRoute =
     path: '/$filterLinkId',
     getParentRoute: () => ApiReportsIdFiltersRoute,
   } as any)
-const ApiAdminUsersIdRolesRoute = ApiAdminUsersIdRolesRouteImport.update({
-  id: '/roles',
-  path: '/roles',
-  getParentRoute: () => ApiAdminUsersIdRoute,
-} as any)
-const ApiAdminRolesIdPermissionsRoute =
-  ApiAdminRolesIdPermissionsRouteImport.update({
-    id: '/permissions',
-    path: '/permissions',
-    getParentRoute: () => ApiAdminRolesIdRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -349,9 +306,6 @@ export interface FileRoutesByFullPath {
   '/api/notifications': typeof ApiNotificationsRoute
   '/api/queries': typeof ApiQueriesRoute
   '/api/reports': typeof ApiReportsRouteWithChildren
-  '/api/admin/permissions': typeof ApiAdminPermissionsRoute
-  '/api/admin/roles': typeof ApiAdminRolesRouteWithChildren
-  '/api/admin/users': typeof ApiAdminUsersRouteWithChildren
   '/api/auth/permissions': typeof ApiAuthPermissionsRoute
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
   '/api/reports/$id': typeof ApiReportsIdRouteWithChildren
@@ -375,8 +329,6 @@ export interface FileRoutesByFullPath {
   '/charts/viewer/$id': typeof AuthedChartsViewerIdRoute
   '/data-sources/$id/permissions': typeof AuthedDataSourcesIdPermissionsRoute
   '/reports/$id/editor': typeof AuthedReportsIdEditorRoute
-  '/api/admin/roles/$id': typeof ApiAdminRolesIdRouteWithChildren
-  '/api/admin/users/$id': typeof ApiAdminUsersIdRouteWithChildren
   '/api/reports/$id/export': typeof ApiReportsIdExportRoute
   '/api/reports/$id/filters': typeof ApiReportsIdFiltersRouteWithChildren
   '/api/sql/schema/$dataSourceId': typeof ApiSqlSchemaDataSourceIdRoute
@@ -386,8 +338,6 @@ export interface FileRoutesByFullPath {
   '/dashboards/$id/': typeof AuthedDashboardsIdIndexRoute
   '/metadata/entities/': typeof AuthedMetadataEntitiesIndexRoute
   '/settings/email/': typeof AuthedSettingsEmailIndexRoute
-  '/api/admin/roles/$id/permissions': typeof ApiAdminRolesIdPermissionsRoute
-  '/api/admin/users/$id/roles': typeof ApiAdminUsersIdRolesRoute
   '/api/reports/$id/filters/$filterLinkId': typeof ApiReportsIdFiltersFilterLinkIdRoute
   '/metadata/entities/$id/': typeof AuthedMetadataEntitiesIdIndexRoute
 }
@@ -403,9 +353,6 @@ export interface FileRoutesByTo {
   '/api/notifications': typeof ApiNotificationsRoute
   '/api/queries': typeof ApiQueriesRoute
   '/api/reports': typeof ApiReportsRouteWithChildren
-  '/api/admin/permissions': typeof ApiAdminPermissionsRoute
-  '/api/admin/roles': typeof ApiAdminRolesRouteWithChildren
-  '/api/admin/users': typeof ApiAdminUsersRouteWithChildren
   '/api/auth/permissions': typeof ApiAuthPermissionsRoute
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
   '/api/reports/$id': typeof ApiReportsIdRouteWithChildren
@@ -429,8 +376,6 @@ export interface FileRoutesByTo {
   '/charts/viewer/$id': typeof AuthedChartsViewerIdRoute
   '/data-sources/$id/permissions': typeof AuthedDataSourcesIdPermissionsRoute
   '/reports/$id/editor': typeof AuthedReportsIdEditorRoute
-  '/api/admin/roles/$id': typeof ApiAdminRolesIdRouteWithChildren
-  '/api/admin/users/$id': typeof ApiAdminUsersIdRouteWithChildren
   '/api/reports/$id/export': typeof ApiReportsIdExportRoute
   '/api/reports/$id/filters': typeof ApiReportsIdFiltersRouteWithChildren
   '/api/sql/schema/$dataSourceId': typeof ApiSqlSchemaDataSourceIdRoute
@@ -440,8 +385,6 @@ export interface FileRoutesByTo {
   '/dashboards/$id': typeof AuthedDashboardsIdIndexRoute
   '/metadata/entities': typeof AuthedMetadataEntitiesIndexRoute
   '/settings/email': typeof AuthedSettingsEmailIndexRoute
-  '/api/admin/roles/$id/permissions': typeof ApiAdminRolesIdPermissionsRoute
-  '/api/admin/users/$id/roles': typeof ApiAdminUsersIdRolesRoute
   '/api/reports/$id/filters/$filterLinkId': typeof ApiReportsIdFiltersFilterLinkIdRoute
   '/metadata/entities/$id': typeof AuthedMetadataEntitiesIdIndexRoute
 }
@@ -459,9 +402,6 @@ export interface FileRoutesById {
   '/api/notifications': typeof ApiNotificationsRoute
   '/api/queries': typeof ApiQueriesRoute
   '/api/reports': typeof ApiReportsRouteWithChildren
-  '/api/admin/permissions': typeof ApiAdminPermissionsRoute
-  '/api/admin/roles': typeof ApiAdminRolesRouteWithChildren
-  '/api/admin/users': typeof ApiAdminUsersRouteWithChildren
   '/api/auth/permissions': typeof ApiAuthPermissionsRoute
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
   '/api/reports/$id': typeof ApiReportsIdRouteWithChildren
@@ -485,8 +425,6 @@ export interface FileRoutesById {
   '/_authed/charts/viewer/$id': typeof AuthedChartsViewerIdRoute
   '/_authed/data-sources/$id/permissions': typeof AuthedDataSourcesIdPermissionsRoute
   '/_authed/reports/$id/editor': typeof AuthedReportsIdEditorRoute
-  '/api/admin/roles/$id': typeof ApiAdminRolesIdRouteWithChildren
-  '/api/admin/users/$id': typeof ApiAdminUsersIdRouteWithChildren
   '/api/reports/$id/export': typeof ApiReportsIdExportRoute
   '/api/reports/$id/filters': typeof ApiReportsIdFiltersRouteWithChildren
   '/api/sql/schema/$dataSourceId': typeof ApiSqlSchemaDataSourceIdRoute
@@ -496,8 +434,6 @@ export interface FileRoutesById {
   '/_authed/dashboards/$id/': typeof AuthedDashboardsIdIndexRoute
   '/_authed/metadata/entities/': typeof AuthedMetadataEntitiesIndexRoute
   '/_authed/settings/email/': typeof AuthedSettingsEmailIndexRoute
-  '/api/admin/roles/$id/permissions': typeof ApiAdminRolesIdPermissionsRoute
-  '/api/admin/users/$id/roles': typeof ApiAdminUsersIdRolesRoute
   '/api/reports/$id/filters/$filterLinkId': typeof ApiReportsIdFiltersFilterLinkIdRoute
   '/_authed/metadata/entities/$id/': typeof AuthedMetadataEntitiesIdIndexRoute
 }
@@ -515,9 +451,6 @@ export interface FileRouteTypes {
     | '/api/notifications'
     | '/api/queries'
     | '/api/reports'
-    | '/api/admin/permissions'
-    | '/api/admin/roles'
-    | '/api/admin/users'
     | '/api/auth/permissions'
     | '/api/nl-query/execute'
     | '/api/reports/$id'
@@ -541,8 +474,6 @@ export interface FileRouteTypes {
     | '/charts/viewer/$id'
     | '/data-sources/$id/permissions'
     | '/reports/$id/editor'
-    | '/api/admin/roles/$id'
-    | '/api/admin/users/$id'
     | '/api/reports/$id/export'
     | '/api/reports/$id/filters'
     | '/api/sql/schema/$dataSourceId'
@@ -552,8 +483,6 @@ export interface FileRouteTypes {
     | '/dashboards/$id/'
     | '/metadata/entities/'
     | '/settings/email/'
-    | '/api/admin/roles/$id/permissions'
-    | '/api/admin/users/$id/roles'
     | '/api/reports/$id/filters/$filterLinkId'
     | '/metadata/entities/$id/'
   fileRoutesByTo: FileRoutesByTo
@@ -569,9 +498,6 @@ export interface FileRouteTypes {
     | '/api/notifications'
     | '/api/queries'
     | '/api/reports'
-    | '/api/admin/permissions'
-    | '/api/admin/roles'
-    | '/api/admin/users'
     | '/api/auth/permissions'
     | '/api/nl-query/execute'
     | '/api/reports/$id'
@@ -595,8 +521,6 @@ export interface FileRouteTypes {
     | '/charts/viewer/$id'
     | '/data-sources/$id/permissions'
     | '/reports/$id/editor'
-    | '/api/admin/roles/$id'
-    | '/api/admin/users/$id'
     | '/api/reports/$id/export'
     | '/api/reports/$id/filters'
     | '/api/sql/schema/$dataSourceId'
@@ -606,8 +530,6 @@ export interface FileRouteTypes {
     | '/dashboards/$id'
     | '/metadata/entities'
     | '/settings/email'
-    | '/api/admin/roles/$id/permissions'
-    | '/api/admin/users/$id/roles'
     | '/api/reports/$id/filters/$filterLinkId'
     | '/metadata/entities/$id'
   id:
@@ -624,9 +546,6 @@ export interface FileRouteTypes {
     | '/api/notifications'
     | '/api/queries'
     | '/api/reports'
-    | '/api/admin/permissions'
-    | '/api/admin/roles'
-    | '/api/admin/users'
     | '/api/auth/permissions'
     | '/api/nl-query/execute'
     | '/api/reports/$id'
@@ -650,8 +569,6 @@ export interface FileRouteTypes {
     | '/_authed/charts/viewer/$id'
     | '/_authed/data-sources/$id/permissions'
     | '/_authed/reports/$id/editor'
-    | '/api/admin/roles/$id'
-    | '/api/admin/users/$id'
     | '/api/reports/$id/export'
     | '/api/reports/$id/filters'
     | '/api/sql/schema/$dataSourceId'
@@ -661,8 +578,6 @@ export interface FileRouteTypes {
     | '/_authed/dashboards/$id/'
     | '/_authed/metadata/entities/'
     | '/_authed/settings/email/'
-    | '/api/admin/roles/$id/permissions'
-    | '/api/admin/users/$id/roles'
     | '/api/reports/$id/filters/$filterLinkId'
     | '/_authed/metadata/entities/$id/'
   fileRoutesById: FileRoutesById
@@ -677,9 +592,6 @@ export interface RootRouteChildren {
   ApiNotificationsRoute: typeof ApiNotificationsRoute
   ApiQueriesRoute: typeof ApiQueriesRoute
   ApiReportsRoute: typeof ApiReportsRouteWithChildren
-  ApiAdminPermissionsRoute: typeof ApiAdminPermissionsRoute
-  ApiAdminRolesRoute: typeof ApiAdminRolesRouteWithChildren
-  ApiAdminUsersRoute: typeof ApiAdminUsersRouteWithChildren
   ApiAuthPermissionsRoute: typeof ApiAuthPermissionsRoute
   ApiNlQueryExecuteRoute: typeof ApiNlQueryExecuteRoute
   ApiSqlExecuteRoute: typeof ApiSqlExecuteRoute
@@ -909,27 +821,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthPermissionsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/admin/users': {
-      id: '/api/admin/users'
-      path: '/api/admin/users'
-      fullPath: '/api/admin/users'
-      preLoaderRoute: typeof ApiAdminUsersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/admin/roles': {
-      id: '/api/admin/roles'
-      path: '/api/admin/roles'
-      fullPath: '/api/admin/roles'
-      preLoaderRoute: typeof ApiAdminRolesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/admin/permissions': {
-      id: '/api/admin/permissions'
-      path: '/api/admin/permissions'
-      fullPath: '/api/admin/permissions'
-      preLoaderRoute: typeof ApiAdminPermissionsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authed/settings/email/': {
       id: '/_authed/settings/email/'
       path: '/settings/email'
@@ -993,20 +884,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiReportsIdExportRouteImport
       parentRoute: typeof ApiReportsIdRoute
     }
-    '/api/admin/users/$id': {
-      id: '/api/admin/users/$id'
-      path: '/$id'
-      fullPath: '/api/admin/users/$id'
-      preLoaderRoute: typeof ApiAdminUsersIdRouteImport
-      parentRoute: typeof ApiAdminUsersRoute
-    }
-    '/api/admin/roles/$id': {
-      id: '/api/admin/roles/$id'
-      path: '/$id'
-      fullPath: '/api/admin/roles/$id'
-      preLoaderRoute: typeof ApiAdminRolesIdRouteImport
-      parentRoute: typeof ApiAdminRolesRoute
-    }
     '/_authed/reports/$id/editor': {
       id: '/_authed/reports/$id/editor'
       path: '/reports/$id/editor'
@@ -1048,20 +925,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/reports/$id/filters/$filterLinkId'
       preLoaderRoute: typeof ApiReportsIdFiltersFilterLinkIdRouteImport
       parentRoute: typeof ApiReportsIdFiltersRoute
-    }
-    '/api/admin/users/$id/roles': {
-      id: '/api/admin/users/$id/roles'
-      path: '/roles'
-      fullPath: '/api/admin/users/$id/roles'
-      preLoaderRoute: typeof ApiAdminUsersIdRolesRouteImport
-      parentRoute: typeof ApiAdminUsersIdRoute
-    }
-    '/api/admin/roles/$id/permissions': {
-      id: '/api/admin/roles/$id/permissions'
-      path: '/permissions'
-      fullPath: '/api/admin/roles/$id/permissions'
-      preLoaderRoute: typeof ApiAdminRolesIdPermissionsRouteImport
-      parentRoute: typeof ApiAdminRolesIdRoute
     }
   }
 }
@@ -1162,54 +1025,6 @@ const ApiReportsRouteWithChildren = ApiReportsRoute._addFileChildren(
   ApiReportsRouteChildren,
 )
 
-interface ApiAdminRolesIdRouteChildren {
-  ApiAdminRolesIdPermissionsRoute: typeof ApiAdminRolesIdPermissionsRoute
-}
-
-const ApiAdminRolesIdRouteChildren: ApiAdminRolesIdRouteChildren = {
-  ApiAdminRolesIdPermissionsRoute: ApiAdminRolesIdPermissionsRoute,
-}
-
-const ApiAdminRolesIdRouteWithChildren = ApiAdminRolesIdRoute._addFileChildren(
-  ApiAdminRolesIdRouteChildren,
-)
-
-interface ApiAdminRolesRouteChildren {
-  ApiAdminRolesIdRoute: typeof ApiAdminRolesIdRouteWithChildren
-}
-
-const ApiAdminRolesRouteChildren: ApiAdminRolesRouteChildren = {
-  ApiAdminRolesIdRoute: ApiAdminRolesIdRouteWithChildren,
-}
-
-const ApiAdminRolesRouteWithChildren = ApiAdminRolesRoute._addFileChildren(
-  ApiAdminRolesRouteChildren,
-)
-
-interface ApiAdminUsersIdRouteChildren {
-  ApiAdminUsersIdRolesRoute: typeof ApiAdminUsersIdRolesRoute
-}
-
-const ApiAdminUsersIdRouteChildren: ApiAdminUsersIdRouteChildren = {
-  ApiAdminUsersIdRolesRoute: ApiAdminUsersIdRolesRoute,
-}
-
-const ApiAdminUsersIdRouteWithChildren = ApiAdminUsersIdRoute._addFileChildren(
-  ApiAdminUsersIdRouteChildren,
-)
-
-interface ApiAdminUsersRouteChildren {
-  ApiAdminUsersIdRoute: typeof ApiAdminUsersIdRouteWithChildren
-}
-
-const ApiAdminUsersRouteChildren: ApiAdminUsersRouteChildren = {
-  ApiAdminUsersIdRoute: ApiAdminUsersIdRouteWithChildren,
-}
-
-const ApiAdminUsersRouteWithChildren = ApiAdminUsersRoute._addFileChildren(
-  ApiAdminUsersRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthedRoute: AuthedRouteWithChildren,
@@ -1220,9 +1035,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiNotificationsRoute: ApiNotificationsRoute,
   ApiQueriesRoute: ApiQueriesRoute,
   ApiReportsRoute: ApiReportsRouteWithChildren,
-  ApiAdminPermissionsRoute: ApiAdminPermissionsRoute,
-  ApiAdminRolesRoute: ApiAdminRolesRouteWithChildren,
-  ApiAdminUsersRoute: ApiAdminUsersRouteWithChildren,
   ApiAuthPermissionsRoute: ApiAuthPermissionsRoute,
   ApiNlQueryExecuteRoute: ApiNlQueryExecuteRoute,
   ApiSqlExecuteRoute: ApiSqlExecuteRoute,
