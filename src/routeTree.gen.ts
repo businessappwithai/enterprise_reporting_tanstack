@@ -21,6 +21,7 @@ import { Route as ApiFiltersRouteImport } from './routes/api/filters'
 import { Route as AuthedSqlEditorRouteImport } from './routes/_authed/sql-editor'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
 import { Route as AuthedBullBoardRouteImport } from './routes/_authed/bull-board'
+import { Route as AuthedAdminRouteImport } from './routes/_authed/admin'
 import { Route as AuthedSettingsIndexRouteImport } from './routes/_authed/settings/index'
 import { Route as AuthedReportsIndexRouteImport } from './routes/_authed/reports/index'
 import { Route as AuthedQueriesIndexRouteImport } from './routes/_authed/queries/index'
@@ -113,6 +114,11 @@ const AuthedDashboardRoute = AuthedDashboardRouteImport.update({
 const AuthedBullBoardRoute = AuthedBullBoardRouteImport.update({
   id: '/bull-board',
   path: '/bull-board',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedAdminRoute = AuthedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedSettingsIndexRoute = AuthedSettingsIndexRouteImport.update({
@@ -229,20 +235,20 @@ const AuthedDashboardsIdIndexRoute = AuthedDashboardsIdIndexRouteImport.update({
   getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedAdminUsersIndexRoute = AuthedAdminUsersIndexRouteImport.update({
-  id: '/admin/users/',
-  path: '/admin/users/',
-  getParentRoute: () => AuthedRoute,
+  id: '/users/',
+  path: '/users/',
+  getParentRoute: () => AuthedAdminRoute,
 } as any)
 const AuthedAdminRolesIndexRoute = AuthedAdminRolesIndexRouteImport.update({
-  id: '/admin/roles/',
-  path: '/admin/roles/',
-  getParentRoute: () => AuthedRoute,
+  id: '/roles/',
+  path: '/roles/',
+  getParentRoute: () => AuthedAdminRoute,
 } as any)
 const AuthedAdminPermissionsIndexRoute =
   AuthedAdminPermissionsIndexRouteImport.update({
-    id: '/admin/permissions/',
-    path: '/admin/permissions/',
-    getParentRoute: () => AuthedRoute,
+    id: '/permissions/',
+    path: '/permissions/',
+    getParentRoute: () => AuthedAdminRoute,
   } as any)
 const ApiSqlSchemaDataSourceIdRoute =
   ApiSqlSchemaDataSourceIdRouteImport.update({
@@ -297,6 +303,7 @@ const ApiReportsIdFiltersFilterLinkIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/admin': typeof AuthedAdminRouteWithChildren
   '/bull-board': typeof AuthedBullBoardRoute
   '/dashboard': typeof AuthedDashboardRoute
   '/sql-editor': typeof AuthedSqlEditorRoute
@@ -344,6 +351,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/admin': typeof AuthedAdminRouteWithChildren
   '/bull-board': typeof AuthedBullBoardRoute
   '/dashboard': typeof AuthedDashboardRoute
   '/sql-editor': typeof AuthedSqlEditorRoute
@@ -393,6 +401,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authed': typeof AuthedRouteWithChildren
   '/login': typeof LoginRoute
+  '/_authed/admin': typeof AuthedAdminRouteWithChildren
   '/_authed/bull-board': typeof AuthedBullBoardRoute
   '/_authed/dashboard': typeof AuthedDashboardRoute
   '/_authed/sql-editor': typeof AuthedSqlEditorRoute
@@ -442,6 +451,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/admin'
     | '/bull-board'
     | '/dashboard'
     | '/sql-editor'
@@ -489,6 +499,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/admin'
     | '/bull-board'
     | '/dashboard'
     | '/sql-editor'
@@ -537,6 +548,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authed'
     | '/login'
+    | '/_authed/admin'
     | '/_authed/bull-board'
     | '/_authed/dashboard'
     | '/_authed/sql-editor'
@@ -686,6 +698,13 @@ declare module '@tanstack/react-router' {
       path: '/bull-board'
       fullPath: '/bull-board'
       preLoaderRoute: typeof AuthedBullBoardRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/admin': {
+      id: '/_authed/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthedAdminRouteImport
       parentRoute: typeof AuthedRoute
     }
     '/_authed/settings/': {
@@ -844,24 +863,24 @@ declare module '@tanstack/react-router' {
     }
     '/_authed/admin/users/': {
       id: '/_authed/admin/users/'
-      path: '/admin/users'
+      path: '/users'
       fullPath: '/admin/users/'
       preLoaderRoute: typeof AuthedAdminUsersIndexRouteImport
-      parentRoute: typeof AuthedRoute
+      parentRoute: typeof AuthedAdminRoute
     }
     '/_authed/admin/roles/': {
       id: '/_authed/admin/roles/'
-      path: '/admin/roles'
+      path: '/roles'
       fullPath: '/admin/roles/'
       preLoaderRoute: typeof AuthedAdminRolesIndexRouteImport
-      parentRoute: typeof AuthedRoute
+      parentRoute: typeof AuthedAdminRoute
     }
     '/_authed/admin/permissions/': {
       id: '/_authed/admin/permissions/'
-      path: '/admin/permissions'
+      path: '/permissions'
       fullPath: '/admin/permissions/'
       preLoaderRoute: typeof AuthedAdminPermissionsIndexRouteImport
-      parentRoute: typeof AuthedRoute
+      parentRoute: typeof AuthedAdminRoute
     }
     '/api/sql/schema/$dataSourceId': {
       id: '/api/sql/schema/$dataSourceId'
@@ -929,7 +948,24 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthedAdminRouteChildren {
+  AuthedAdminPermissionsIndexRoute: typeof AuthedAdminPermissionsIndexRoute
+  AuthedAdminRolesIndexRoute: typeof AuthedAdminRolesIndexRoute
+  AuthedAdminUsersIndexRoute: typeof AuthedAdminUsersIndexRoute
+}
+
+const AuthedAdminRouteChildren: AuthedAdminRouteChildren = {
+  AuthedAdminPermissionsIndexRoute: AuthedAdminPermissionsIndexRoute,
+  AuthedAdminRolesIndexRoute: AuthedAdminRolesIndexRoute,
+  AuthedAdminUsersIndexRoute: AuthedAdminUsersIndexRoute,
+}
+
+const AuthedAdminRouteWithChildren = AuthedAdminRoute._addFileChildren(
+  AuthedAdminRouteChildren,
+)
+
 interface AuthedRouteChildren {
+  AuthedAdminRoute: typeof AuthedAdminRouteWithChildren
   AuthedBullBoardRoute: typeof AuthedBullBoardRoute
   AuthedDashboardRoute: typeof AuthedDashboardRoute
   AuthedSqlEditorRoute: typeof AuthedSqlEditorRoute
@@ -948,9 +984,6 @@ interface AuthedRouteChildren {
   AuthedChartsViewerIdRoute: typeof AuthedChartsViewerIdRoute
   AuthedDataSourcesIdPermissionsRoute: typeof AuthedDataSourcesIdPermissionsRoute
   AuthedReportsIdEditorRoute: typeof AuthedReportsIdEditorRoute
-  AuthedAdminPermissionsIndexRoute: typeof AuthedAdminPermissionsIndexRoute
-  AuthedAdminRolesIndexRoute: typeof AuthedAdminRolesIndexRoute
-  AuthedAdminUsersIndexRoute: typeof AuthedAdminUsersIndexRoute
   AuthedDashboardsIdIndexRoute: typeof AuthedDashboardsIdIndexRoute
   AuthedMetadataEntitiesIndexRoute: typeof AuthedMetadataEntitiesIndexRoute
   AuthedSettingsEmailIndexRoute: typeof AuthedSettingsEmailIndexRoute
@@ -958,6 +991,7 @@ interface AuthedRouteChildren {
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
+  AuthedAdminRoute: AuthedAdminRouteWithChildren,
   AuthedBullBoardRoute: AuthedBullBoardRoute,
   AuthedDashboardRoute: AuthedDashboardRoute,
   AuthedSqlEditorRoute: AuthedSqlEditorRoute,
@@ -976,9 +1010,6 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedChartsViewerIdRoute: AuthedChartsViewerIdRoute,
   AuthedDataSourcesIdPermissionsRoute: AuthedDataSourcesIdPermissionsRoute,
   AuthedReportsIdEditorRoute: AuthedReportsIdEditorRoute,
-  AuthedAdminPermissionsIndexRoute: AuthedAdminPermissionsIndexRoute,
-  AuthedAdminRolesIndexRoute: AuthedAdminRolesIndexRoute,
-  AuthedAdminUsersIndexRoute: AuthedAdminUsersIndexRoute,
   AuthedDashboardsIdIndexRoute: AuthedDashboardsIdIndexRoute,
   AuthedMetadataEntitiesIndexRoute: AuthedMetadataEntitiesIndexRoute,
   AuthedSettingsEmailIndexRoute: AuthedSettingsEmailIndexRoute,
