@@ -1,6 +1,7 @@
 import { type QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { ThemeProvider } from "next-themes";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { ErrorBoundary } from "@/components/errors/error-boundary";
 import { Toaster } from "@/components/ui/sonner";
 import "@/styles/globals.css";
@@ -36,17 +37,19 @@ function RootComponent() {
       </head>
       <body className="min-h-screen bg-background font-sans antialiased">
         <ErrorBoundary>
-          <QueryClientProvider client={queryClient}>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="system"
-              enableSystem
-              disableTransitionOnChange
-            >
-              <Outlet />
-              <Toaster />
-            </ThemeProvider>
-          </QueryClientProvider>
+          <TooltipProvider>
+            <QueryClientProvider client={queryClient}>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="system"
+                enableSystem
+                disableTransitionOnChange
+              >
+                <Outlet />
+                <Toaster />
+              </ThemeProvider>
+            </QueryClientProvider>
+          </TooltipProvider>
         </ErrorBoundary>
         <Scripts />
       </body>

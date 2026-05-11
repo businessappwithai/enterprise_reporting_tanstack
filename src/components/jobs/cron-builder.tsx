@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface CronBuilderProps {
   value: string;
@@ -153,13 +153,12 @@ export function CronBuilder({ value, onChange }: CronBuilderProps) {
 
           <div className="flex items-center gap-2">
             <span className="text-sm font-mono font-medium">Current: {getCronExpression()}</span>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <HelpCircle className="h-4 w-4 text-muted-foreground" />
-                </TooltipTrigger>
-                <TooltipContent className="max-w-xs">
-                  <div className="space-y-1 text-xs">
+            <Tooltip>
+              <TooltipTrigger>
+                <HelpCircle className="h-4 w-4 text-muted-foreground" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <div className="space-y-1 text-xs">
                     <p>
                       <strong>Minute:</strong> 0-59 or *
                     </p>
@@ -184,7 +183,6 @@ export function CronBuilder({ value, onChange }: CronBuilderProps) {
                   </div>
                 </TooltipContent>
               </Tooltip>
-            </TooltipProvider>
           </div>
 
           <div className="space-y-2">

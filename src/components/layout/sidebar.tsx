@@ -19,7 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCanView, usePermissions } from "@/lib/hooks/usePermissions";
 import { cn } from "@/lib/utils";
 
@@ -156,12 +156,11 @@ export function Sidebar({ collapsed, onCollapse }: SidebarProps) {
   };
 
   return (
-    <TooltipProvider>
-      <aside
-        className={cn(
-          "fixed left-0 top-0 z-40 h-screen border-r border-border bg-background transition-all duration-300",
-          collapsed ? "w-16" : "w-64"
-        )}
+    <aside
+      className={cn(
+        "fixed left-0 top-0 z-40 h-screen border-r border-border bg-background transition-all duration-300",
+        collapsed ? "w-16" : "w-64"
+      )}
       >
         <div className="flex h-14 items-center justify-between border-b border-border px-4">
           {!collapsed && (
@@ -220,6 +219,5 @@ export function Sidebar({ collapsed, onCollapse }: SidebarProps) {
           {collapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
         </Button>
       </aside>
-    </TooltipProvider>
   );
 }
