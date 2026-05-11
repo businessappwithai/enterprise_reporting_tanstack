@@ -67,12 +67,12 @@ for (const file of migrationFiles) {
     const migration = await import(migrationPath);
     
     if (typeof migration.up === 'function') {
-      // For Knex-style migrations, we need to adapt them to work with bun:sqlite
-      // Since the migrations use Knex schema builder, we'll execute raw SQL
+      // These are legacy migration files (db schema builder format)
+      // The migrations use schema builder syntax, so we execute via raw SQL
       // This is a simplified approach - in production, you might want to use a proper adapter
       
       // For now, we'll skip the migration and log a warning
-      console.warn(`  ⚠ Migration ${migrationName} uses Knex schema builder`);
+      console.warn(`  ⚠ Migration ${migrationName} uses schema builder (legacy)`);
       console.warn(`  Skipping... (migrations should use raw SQL for bun:sqlite)`);
       
       // Mark as executed to avoid infinite loops

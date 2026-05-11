@@ -1,8 +1,8 @@
-import type { Knex } from "knex";
 
-export async function up(knex: Knex): Promise<void> {
-  return knex.schema.createTable("notifications", (table) => {
-    table.uuid("id").primary().defaultTo(knex.raw("(uuid_to_bytes(uuid()))"));
+
+export async function up(db: any): Promise<void> {
+  return db.schema.createTable("notifications", (table) => {
+    table.uuid("id").primary().defaultTo(db.raw("(uuid_to_bytes(uuid()))"));
     table.uuid("user_id").notNullable();
     table.string("type", 50).notNullable(); // info, warning, error, success
     table.string("title", 255).notNullable();
@@ -16,6 +16,6 @@ export async function up(knex: Knex): Promise<void> {
   });
 }
 
-export async function down(knex: Knex): Promise<void> {
-  return knex.schema.dropTableIfExists("notifications");
+export async function down(db: any): Promise<void> {
+  return db.schema.dropTableIfExists("notifications");
 }

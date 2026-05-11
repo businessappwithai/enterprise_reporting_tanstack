@@ -2518,5 +2518,5 @@ src/
 
 - React - UI framework
 - Next.js - App router and API routes
-- Knex.js - Database query builder
+- Kysely - Database query builder
 - Zod - Schema validation (can be integrated with TanStack Form validators)

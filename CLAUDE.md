@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview - Enterprise Reporting System
 
-Enterprise Reporting and Dashboard System built with **TanStack Start** (full-stack React), **Bun runtime**, **PostgreSQL** (via Knex.js) with **TanStack DB** for reactive client-side collections, and **shadcn/ui**. Provides data visualization, SQL querying, role-based access control, job scheduling, and multi-format export capabilities.
+Enterprise Reporting and Dashboard System built with **TanStack Start** (full-stack React), **Bun runtime**, **PostgreSQL** (via Kysely) with **TanStack DB** for reactive client-side collections, and **shadcn/ui**. Provides data visualization, SQL querying, role-based access control, job scheduling, and multi-format export capabilities.
 
 ## Tech Stack
 
@@ -17,7 +17,7 @@ Enterprise Reporting and Dashboard System built with **TanStack Start** (full-st
 | UI Components | shadcn/ui (Radix UI + Tailwind CSS 3) |
 | State/Data | TanStack Query v5, TanStack Table v8, TanStack Form v1 |
 | Reactive DB | TanStack DB v0.6 (client-side collections, PostgreSQL sync) |
-| Database | PostgreSQL (Knex.js) or SQLite (fallback via better-sqlite3) |
+| Database | PostgreSQL (Kysely) or SQLite (bun:sqlite via Kysely) |
 | Auth | Custom JWT (jose) with HTTP-only cookies |
 | Charts | Recharts, ECharts |
 | Job Queue | BullMQ + Redis (ioredis) |
@@ -45,9 +45,9 @@ bun run build:check      # lint + typecheck + build
 
 # Database
 bun run db:migrate       # Run pending migrations
-bun run db:migrate:make  # Create new migration file
+# db:migrate:make removed (use scripts/rebuild-db.ts for schema changes)
 bun run db:seed          # Run seed files
-bun run db:rollback      # Rollback last migration batch
+# db:rollback: use scripts/rebuild-db.ts to recreate schema
 bun run db:sample        # Seed sample data (src/lib/db/sample-data/seed.ts)
 
 # Testing (Playwright E2E)
@@ -142,11 +142,11 @@ enterprise-reporting-system/
 │   │   └── errors/                   # Error boundary components
 │   ├── lib/
 │   │   ├── db/                       # Database layer
-│   │   │   ├── config.ts             # Knex connection (getDb(), getConfigDB())
-│   │   │   ├── knexfile.ts           # Knex config (dev: better-sqlite3, prod: better-sqlite3)
+│   │   │   ├── config.ts             # Kysely connection (getDb(), getConfigDB())
+
 │   │   │   ├── connection-manager.ts # Connection management
 │   │   │   ├── bun-sqlite-wrapper.ts # Bun SQLite wrapper
-│   │   │   ├── migrations/           # Knex migrations (timestamped .ts files)
+│   │   │   ├── migrations/           # Legacy migrations (timestamped .ts files)
 │   │   │   ├── seeds/                # Seed data (001_initial_data.ts)
 │   │   │   └── sample-data/          # Sample schema and seed scripts
 │   │   ├── auth/                     # Authentication (JWT session, RBAC)
@@ -324,7 +324,7 @@ import { requireAuth } from '@/lib/auth/middleware'
 
 ### Database Access
 
-- **Knex.js**: All database queries use Knex, never raw SQL
+- **Kysely**: All database queries use Kysely (type-safe SQL query builder)
 - **Instance**: Get via `getDb()` from `@/lib/db/config`
 - **Database**: SQLite with foreign keys enabled via PRAGMA
 - **Migrations**: `src/lib/db/migrations/YYYYMMDDHHMMSS_description.ts`
@@ -420,7 +420,7 @@ bun run test:batches  # All batches sequentially
 
 ## Database Migrations
 
-Create and run migrations using Knex CLI through Bun:
+Database management with Kysely:
 
 ```bash
 # Create a new migration

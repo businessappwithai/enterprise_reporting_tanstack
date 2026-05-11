@@ -1,6 +1,6 @@
 /**
  * Filter to SQL conversion utilities
- * Converts filter configurations to SQL WHERE clauses using Knex parameterized queries
+ * Converts filter configurations to SQL WHERE clauses using parameterized queries
  * All filters are executed at the database level for security and performance
  */
 
@@ -50,7 +50,7 @@ export function escapeIdentifier(identifier: string): string {
 
 /**
  * Convert a filter condition to SQL WHERE clause fragment with parameters
- * Returns SQL fragment and parameter values for Knex parameterized queries
+ * Returns SQL fragment and parameter values for parameterized queries
  *
  * Number field operators: equals, not_equals, greater_than, less_than, between
  * Date field operators: before (same as less_than), after (same as greater_than), between
@@ -136,7 +136,7 @@ export function conditionToSQL(condition: FilterCondition): {
 
 /**
  * Convert filter group to SQL WHERE clause with parameters
- * Returns SQL fragment and parameter values for Knex parameterized queries
+ * Returns SQL fragment and parameter values for parameterized queries
  */
 export function filterGroupToSQL(group: FilterGroup): {
   sql: string;
@@ -164,7 +164,7 @@ export function filterGroupToSQL(group: FilterGroup): {
  * Returns SQL with ? placeholders and separate parameter array
  *
  * This ensures all filtering happens at the database level using SQL WHERE clauses
- * with Knex parameterized queries for SQL injection prevention.
+ * with parameterized queries for SQL injection prevention.
  */
 export function buildSQLWithFilters(
   baseSQL: string,

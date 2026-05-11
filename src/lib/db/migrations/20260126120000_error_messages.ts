@@ -1,9 +1,9 @@
-import type { Knex } from "knex";
 
-export async function up(knex: Knex): Promise<void> {
+
+export async function up(db: any): Promise<void> {
   // Error messages configuration table
-  await knex.schema.createTable("error_messages", (table) => {
-    table.string("id", 36).primary().defaultTo(knex.raw("(lower(hex(randomblob(16))))"));
+  await db.schema.createTable("error_messages", (table) => {
+    table.string("id", 36).primary().defaultTo(db.raw("(lower(hex(randomblob(16))))"));
     table.string("error_code", 100).notNullable().unique();
     table.string("severity").defaultTo("error"); // 'error', 'warning', 'info'
     table.string("title").notNullable();
@@ -14,13 +14,13 @@ export async function up(knex: Knex): Promise<void> {
     table.boolean("is_active").defaultTo(true);
     table.string("category"); // 'database', 'auth', 'api', 'ui', 'system'
     table.text("metadata"); // JSON for additional config
-    table.timestamp("created_at").defaultTo(knex.fn.now());
-    table.timestamp("updated_at").defaultTo(knex.fn.now());
+    table.timestamp("created_at").defaultTo(db.fn.now());
+    table.timestamp("updated_at").defaultTo(db.fn.now());
   });
 
   // Warning configurations table (for proactive warnings)
-  await knex.schema.createTable("warning_configs", (table) => {
-    table.string("id", 36).primary().defaultTo(knex.raw("(lower(hex(randomblob(16))))"));
+  await db.schema.createTable("warning_configs", (table) => {
+    table.string("id", 36).primary().defaultTo(db.raw("(lower(hex(randomblob(16))))"));
     table.string("warning_code", 100).notNullable().unique();
     table.string("name").notNullable();
     table.text("description");
@@ -35,13 +35,13 @@ export async function up(knex: Knex): Promise<void> {
     table.boolean("enable_auto_resolve").defaultTo(true);
     table.integer("auto_resolve_after").defaultTo(30000); // Auto-dismiss after ms
     table.text("metadata"); // JSON for additional config
-    table.timestamp("created_at").defaultTo(knex.fn.now());
-    table.timestamp("updated_at").defaultTo(knex.fn.now());
+    table.timestamp("created_at").defaultTo(db.fn.now());
+    table.timestamp("updated_at").defaultTo(db.fn.now());
   });
 
   // Error occurrence tracking table
-  await knex.schema.createTable("error_occurrences", (table) => {
-    table.string("id", 36).primary().defaultTo(knex.raw("(lower(hex(randomblob(16))))"));
+  await db.schema.createTable("error_occurrences", (table) => {
+    table.string("id", 36).primary().defaultTo(db.raw("(lower(hex(randomblob(16))))"));
     table.string("error_code", 100).notNullable();
     table.string("user_id", 36).references("id").inTable("users");
     table.text("error_message");
@@ -53,7 +53,7 @@ export async function up(knex: Knex): Promise<void> {
     table.boolean("is_reported").defaultTo(false);
     table.boolean("is_resolved").defaultTo(false);
     table.timestamp("resolved_at");
-    table.timestamp("created_at").defaultTo(knex.fn.now());
+    table.timestamp("created_at").defaultTo(db.fn.now());
 
     table.index(["error_code", "created_at"]);
     table.index(["user_id", "created_at"]);
@@ -62,7 +62,7 @@ export async function up(knex: Knex): Promise<void> {
   });
 
   // Insert default error messages
-  await knex("error_messages").insert([
+  await db("error_messages").insert([
     {
       id: "err_0001",
       error_code: "DATABASE_CONNECTION_FAILED",
@@ -246,7 +246,7 @@ export async function up(knex: Knex): Promise<void> {
   ]);
 
   // Insert default warning configurations
-  await knex("warning_configs").insert([
+  await db("warning_configs").insert([
     {
       id: "warn_0001",
       warning_code: "LARGE_RESULT_SET",
@@ -320,8 +320,8 @@ export async function up(knex: Knex): Promise<void> {
   ]);
 }
 
-export async function down(knex: Knex): Promise<void> {
-  await knex.schema.dropTableIfExists("error_occurrences");
-  await knex.schema.dropTableIfExists("warning_configs");
-  await knex.schema.dropTableIfExists("error_messages");
+export async function down(db: any): Promise<void> {
+  await db.schema.dropTableIfExists("error_occurrences");
+  await db.schema.dropTableIfExists("warning_configs");
+  await db.schema.dropTableIfExists("error_messages");
 }

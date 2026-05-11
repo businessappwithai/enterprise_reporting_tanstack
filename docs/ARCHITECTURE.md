@@ -11,7 +11,7 @@ Enterprise Reporting System - Technical architecture and key design decisions.
 | Language | TypeScript (strict mode, ES2022) |
 | UI Components | shadcn/ui (Radix UI + Tailwind CSS 3) |
 | State/Data | TanStack Query, TanStack Table, TanStack Form |
-| Database | SQLite via better-sqlite3 + Knex.js query builder |
+| Database | SQLite via better-sqlite3 + Kysely query builder |
 | Auth | NextAuth v5 (beta) with credentials provider |
 | Charts | Recharts |
 | Job Queue | BullMQ + Redis (ioredis) |
@@ -61,7 +61,7 @@ enterprise-reporting-system/
 ### Connection
 - **Config DB**: `data/config.sqlite` (users, roles, reports, etc.)
 - **Get connection**: `getDb()` from `@/lib/db/config`
-- **Query builder**: Knex.js
+- **Query builder**: Kysely
 - **Migrations**: Timestamp-based in `src/lib/db/migrations/`
 
 ### Schema Tables
@@ -175,7 +175,7 @@ export async function GET(request: Request) {
 - **Key**: `ENCRYPTION_KEY` env var (32-byte hex)
 
 ### SQL Injection Prevention
-- Parameterized queries via Knex
+- Parameterized queries via Kysely
 - Input validation in `src/lib/sql/validator.ts`
 - Read-only query enforcement
 
@@ -205,7 +205,7 @@ export async function GET(request: Request) {
 - Embedded in application
 - Sufficient for config/metadata storage
 
-### Why Knex.js?
+### Why Kysely?
 - Query builder with type safety
 - Database agnostic (supports multiple DBs)
 - Migration system built-in

@@ -287,14 +287,15 @@ ORDER BY total_revenue DESC`,
 const queryIdMap: Record<string, string> = {};
 
 async function seedQueries() {
-  const db = getDb();
+  // biome-ignore lint/suspicious/noExplicitAny: seed script uses dynamic table inserts
+  const db = getDb() as any;
 
   console.log('📊 Creating saved queries...');
 
   for (const query of queries) {
     const id = uuidv4();
 
-    await db('saved_queries').insert({
+    await db.insertInto('saved_queries').values({
       id,
       name: query.name,
       description: query.description,
@@ -303,7 +304,7 @@ async function seedQueries() {
       created_by: SYSTEM_USER_ID,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-    });
+    }).execute();
 
     queryIdMap[query.name] = id;
     console.log(`  ✓ Created query: ${query.name}`);
@@ -314,7 +315,8 @@ async function seedQueries() {
 }
 
 async function seedReports(queryIds: Record<string, string>) {
-  const db = getDb();
+  // biome-ignore lint/suspicious/noExplicitAny: seed script uses dynamic table inserts
+  const db = getDb() as any;
 
   console.log('📄 Creating reports...');
 
@@ -372,7 +374,7 @@ async function seedReports(queryIds: Record<string, string>) {
     const id = uuidv4();
     const queryId = queryIds[report.query_name];
 
-    await db('report_definitions').insert({
+    await db.insertInto('report_definitions').values({
       id,
       name: report.name,
       description: report.description,
@@ -381,7 +383,7 @@ async function seedReports(queryIds: Record<string, string>) {
       created_by: SYSTEM_USER_ID,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-    });
+    }).execute();
 
     console.log(`  ✓ Created report: ${report.name}`);
   }
@@ -390,7 +392,8 @@ async function seedReports(queryIds: Record<string, string>) {
 }
 
 async function seedCharts(queryIds: Record<string, string>) {
-  const db = getDb();
+  // biome-ignore lint/suspicious/noExplicitAny: seed script uses dynamic table inserts
+  const db = getDb() as any;
 
   console.log('📈 Creating charts...');
 
@@ -505,7 +508,7 @@ async function seedCharts(queryIds: Record<string, string>) {
     const id = uuidv4();
     const queryId = queryIds[chart.query_name];
 
-    await db('chart_definitions').insert({
+    await db.insertInto('chart_definitions').values({
       id,
       name: chart.name,
       description: chart.description,
@@ -519,7 +522,7 @@ async function seedCharts(queryIds: Record<string, string>) {
       created_by: SYSTEM_USER_ID,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-    });
+    }).execute();
 
     console.log(`  ✓ Created chart: ${chart.name}`);
   }
@@ -528,14 +531,15 @@ async function seedCharts(queryIds: Record<string, string>) {
 }
 
 async function seedDashboards(queryIds: Record<string, string>) {
-  const db = getDb();
+  // biome-ignore lint/suspicious/noExplicitAny: seed script uses dynamic table inserts
+  const db = getDb() as any;
 
   console.log('🎛️  Creating dashboards...');
 
   // First create the dashboard layout
   const dashboardId = uuidv4();
 
-  await db('dashboard_layouts').insert({
+  await db.insertInto('dashboard_layouts').values({
     id: dashboardId,
     name: 'Sakila Analytics Dashboard',
     description: 'Complete business analytics for Sakila DVD rental store',
@@ -545,20 +549,21 @@ async function seedDashboards(queryIds: Record<string, string>) {
     created_by: SYSTEM_USER_ID,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-  });
+  }).execute();
 
   console.log(`  ✓ Created dashboard layout: Sakila Analytics Dashboard`);
 
   // Get chart IDs
-  const charts = await db('chart_definitions')
-    .whereIn('name', [
+  const charts = await db.selectFrom('chart_definitions')
+    .select(['id', 'name'])
+    .where('name', 'in', [
       'Revenue Over Time',
       'Revenue by Category',
       'Store Comparison',
       'Top Films',
       'Inventory Utilization',
     ])
-    .select('id', 'name');
+    .execute();
 
   // Create widgets for the dashboard
   const widgets = [
@@ -575,7 +580,7 @@ async function seedDashboards(queryIds: Record<string, string>) {
 
     const widgetId = uuidv4();
 
-    await db('dashboard_widgets').insert({
+    await db.insertInto('dashboard_widgets').values({
       id: widgetId,
       dashboard_id: dashboardId,
       widget_type: 'chart',
@@ -591,7 +596,7 @@ async function seedDashboards(queryIds: Record<string, string>) {
       }),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-    });
+    }).execute();
 
     console.log(`  ✓ Created widget: ${widget.chart_name}`);
   }

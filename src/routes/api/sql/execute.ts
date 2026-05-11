@@ -6,6 +6,7 @@ import { isReadOnlyQuery } from "@/lib/sql/validator";
 import { logAudit } from "@/lib/security/audit";
 import { verifySession } from "@/lib/auth/session";
 import { sqlEditorConfig, validatePageSize } from "@/lib/config/pagination";
+import { sql as kyselySql } from "kysely";
 import type { DataSource } from "@/types/database";
 
 const DEFAULT_TIMEOUT = 30000;
@@ -99,14 +100,8 @@ export const Route = createFileRoute("/api/sql/execute")({
           const countSQL = `SELECT COUNT(*) as total FROM (${sql.replace(/;$/, "")}) as count_query`;
 
           try {
-            const countResult =
-              dataSource.client_type === "sqlite3"
-                ? await connection.raw(countSQL)
-                : await connection.raw(countSQL).timeout(5000);
-
-            if (Array.isArray(countResult) && countResult[0]) {
-              totalRowCount = Number(countResult[0].total) || 0;
-            }
+            const { rows: countRows } = await kyselySql.raw(countSQL).execute(connection);
+            totalRowCount = Number((countRows[0] as any)?.total) || 0;
           } catch (e) {
             console.error("Could not count total rows:", e);
           }
@@ -166,30 +161,15 @@ export const Route = createFileRoute("/api/sql/execute")({
 
           const startTime = Date.now();
 
-          const result =
-            dataSource.client_type === "sqlite3"
-              ? await connection.raw(limitedSQL)
-              : await connection.raw(limitedSQL).timeout(timeout);
+          const { rows: rawRows } = await kyselySql.raw(limitedSQL).execute(connection);
 
           const executionTime = Date.now() - startTime;
 
-          let rows: Record<string, unknown>[] = [];
-          let columns: { name: string; type: string }[] = [];
-
-          if (Array.isArray(result)) {
-            rows = result;
-          } else if (result.rows) {
-            rows = result.rows;
-          } else if (result[0]) {
-            rows = Array.isArray(result[0]) ? result[0] : [result[0]];
-          }
-
-          if (rows.length > 0) {
-            columns = Object.keys(rows[0]).map((name) => ({
-              name,
-              type: typeof rows[0][name],
-            }));
-          }
+          const rows = rawRows as Record<string, unknown>[];
+          const columns: { name: string; type: string }[] =
+            rows.length > 0
+              ? Object.keys(rows[0]).map((name) => ({ name, type: typeof rows[0][name] }))
+              : [];
 
           await logAudit({
             userId: session.user.id,

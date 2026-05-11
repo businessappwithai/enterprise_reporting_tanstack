@@ -59,7 +59,7 @@ This document defines the requirements for refactoring the Enterprise Reporting 
 
 | Layer | Current Technology | Target Technology | License |
 |-------|-------------------|-------------------|---------|
-| Query Engine | Server-side SQLite via Knex.js | **DuckDB-Wasm** (in-browser SQL) | MIT |
+| Query Engine | Server-side SQLite via Kysely | **DuckDB-Wasm** (in-browser SQL) | MIT |
 | Data Grid | TanStack Table + virtual scroll | **Glide Data Grid** (canvas-based) | MIT |
 | Charts | Recharts (SVG-based) | **Apache ECharts** (canvas-based) | Apache-2.0 |
 | Data Format | JSON over HTTP | **Apache Arrow / Parquet** | Apache-2.0 |
@@ -82,7 +82,7 @@ This document defines the requirements for refactoring the Enterprise Reporting 
 The current system is a **Next.js 14 App Router** application using **Bun runtime** with a classic server-centric data flow:
 
 ```
-[Browser] → REST API → [Next.js Server] → Knex.js → [SQLite/PostgreSQL/MySQL/MSSQL/Oracle]
+[Browser] → REST API → [Next.js Server] → Kysely → [SQLite/PostgreSQL/MySQL/MSSQL/Oracle]
                                           ↓
                                     JSON Response
                                           ↓
@@ -99,7 +99,7 @@ The current system is a **Next.js 14 App Router** application using **Bun runtim
 | `@tanstack/react-table@8.20.5` | Table rendering with virtual scrolling | Not canvas-based; DOM-based virtualization has limits at millions of rows |
 | `@tanstack/react-virtual@3.10.7` | Row virtualization for QueryResults | Replaced by Glide's native canvas virtualization |
 | `react-grid-layout@1.4.4` | Dashboard grid layout | **Retained** — orthogonal to data rendering concerns |
-| `knex@3.1.0` | Server-side SQL query builder | **Retained for config DB** — DuckDB-Wasm handles analytical queries client-side |
+| `kysely@0.29.0` | Server-side SQL query builder | **Retained for config DB — DuckDB-Wasm handles analytical queries client-side |
 | `better-sqlite3@11.3.0` | Server-side SQLite access | **Retained for config DB** — stores metadata, users, roles, permissions |
 | `node-sql-parser@5.4.0` | SQL validation/AST parsing | Partially replaced — DuckDB-Wasm has its own SQL parser; server-side validation still needed for config queries |
 | `sql-formatter@15.4.2` | SQL formatting | **Retained** — still useful for display formatting |
@@ -132,7 +132,7 @@ The current system is a **Next.js 14 App Router** application using **Bun runtim
 
 #### 2.4.1 SQL Editor Flow (Current)
 ```
-User types SQL → POST /api/sql/execute → Server validates → Server executes via Knex →
+User types SQL → POST /api/sql/execute → Server validates → Server executes via Kysely →
 JSON response (max 500 rows) → Client renders in QueryResults (virtual scroll)
 ```
 
@@ -177,7 +177,7 @@ Render independently → No cross-widget filtering
 | **Data export** | Server-side CSV/XLSX/PDF generation | `src/lib/jobs/workers/report-worker.ts`, `export-worker.ts` |
 | **Email batch** | Server-side report + email via SMTP | `src/lib/jobs/workers/email-batch-worker.ts` |
 | **NL query** | CopilotKit + OpenAI → SQL → server exec | `src/components/nl-query/NlQueryWorkspace.tsx` |
-| **Multi-DB support** | pg, mysql, mssql, sqlite3, oracledb via Knex | `src/lib/db/connection-manager.ts` |
+| **Multi-DB support** | pg, mysql, mssql, sqlite3, oracledb via Kysely | `src/lib/db/connection-manager.ts` |
 | **RBAC** | Role-based permissions with entity-level access | `src/lib/auth/rbac.ts`, `src/lib/permissions/` |
 | **Metadata system** | Entity/field introspection and management | `src/lib/metadata/` |
 | **Audit logging** | Action logging for security | `src/lib/security/audit.ts` |
@@ -283,7 +283,7 @@ The system will operate in a **hybrid mode**:
 Source Database (pg/mysql/mssql/sqlite/oracle)
        ↓
 [Server] Data Export Service
-  ├── Knex.js reads from source database
+  ├── Kysely reads from source database
   ├── Converts to Arrow RecordBatch
   ├── Writes as Parquet file (compressed)
   ├── Stores in /data/exports/ (or cloud storage)
@@ -576,7 +576,7 @@ Admin configures data source (unchanged)
     ↓
 Admin triggers "Prepare Dataset" for a query/table
     ↓
-Server executes query against source database (Knex.js)
+Server executes query against source database (Kysely)
     ↓
 Server converts results to Parquet (with Arrow intermediate)
     ↓

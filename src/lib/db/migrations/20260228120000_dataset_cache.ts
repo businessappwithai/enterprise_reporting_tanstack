@@ -3,11 +3,11 @@
  * Supports the WASM-centric Parquet export / dataset caching pipeline.
  */
 
-import type { Knex } from "knex";
 
-export async function up(knex: Knex): Promise<void> {
+
+export async function up(db: any): Promise<void> {
   // Dataset registry
-  await knex.schema.createTable("dataset_cache", (table) => {
+  await db.schema.createTable("dataset_cache", (table) => {
     table.text("id").primary();
     table.text("name").notNullable();
     table.text("description");
@@ -35,7 +35,7 @@ export async function up(knex: Knex): Promise<void> {
   });
 
   // Dataset refresh jobs
-  await knex.schema.createTable("dataset_refresh_jobs", (table) => {
+  await db.schema.createTable("dataset_refresh_jobs", (table) => {
     table.text("id").primary();
     table.text("dataset_id").notNullable().references("id").inTable("dataset_cache");
     table.text("status").notNullable().defaultTo("pending"); // pending | processing | completed | failed
@@ -52,7 +52,7 @@ export async function up(knex: Knex): Promise<void> {
   });
 }
 
-export async function down(knex: Knex): Promise<void> {
-  await knex.schema.dropTableIfExists("dataset_refresh_jobs");
-  await knex.schema.dropTableIfExists("dataset_cache");
+export async function down(db: any): Promise<void> {
+  await db.schema.dropTableIfExists("dataset_refresh_jobs");
+  await db.schema.dropTableIfExists("dataset_cache");
 }

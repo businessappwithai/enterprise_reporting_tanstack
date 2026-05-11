@@ -588,19 +588,19 @@ export interface NlQueryPipelineResult {
   error?: string;
 }
 
-// Data source user-role join result (from Knex JOIN query)
+// Data source user-role join result
 export interface DsUserRoleJoinRow extends DsUserRole {
   user_email?: string;
   user_display_name?: string;
   role_name?: string;
 }
 
-// Knex join result for user roles with permissions
+// Join result for user roles with permissions
 export interface UserRolePermissionRow {
   permissions: string;
 }
 
-// Knex join result for DS user roles with role info
+// Join result for DS user roles with role info
 export interface DsUserRoleWithRoleInfo {
   role_id: string;
   role_name: string;

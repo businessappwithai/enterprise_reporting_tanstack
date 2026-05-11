@@ -6,7 +6,7 @@ A production-ready enterprise reporting system built with **Next.js 14**, **Bun 
 
 ### Core Reporting Engine
 - **TanStack Table** - Headless data grid with server-side pagination, sorting, and filtering
-- **Knex.js** - SQL query builder for dynamic, secure data access
+- **Kysely** - Type-safe SQL query builder for dynamic, secure data access
 - **Application-Level RLS** - Row-level security at application layer
 - **Advanced Filtering** - Dynamic query builder with multiple operators
 - **SQL Validation** - Query validation to prevent injection and ensure correctness
@@ -42,7 +42,7 @@ A production-ready enterprise reporting system built with **Next.js 14**, **Bun 
 | **Language** | TypeScript (strict mode) |
 | **UI Library** | shadcn/ui (Radix UI + Tailwind CSS 3) |
 | **State Management** | TanStack Query + TanStack Table + TanStack Form |
-| **Database** | SQLite (via better-sqlite3 + Knex.js) |
+| **Database** | SQLite (via bun:sqlite + Kysely) |
 | **Authentication** | NextAuth v5 (credentials provider) |
 | **Charts** | Recharts |
 | **Job Queue** | BullMQ + Redis (ioredis) |
@@ -105,7 +105,7 @@ Key directories:
 - `src/app/` - Next.js App Router pages and API routes
 - `src/components/` - React components (UI, features, layouts)
 - `src/lib/` - Core libraries (database, auth, permissions, jobs, security)
-- `src/lib/db/` - Database layer (Knex migrations, seeds, connection)
+- `src/lib/db/` - Database layer (Kysely queries, seeds, connection)
 - `e2e/` - Playwright E2E test suite
 - `docs/` - Detailed documentation
 
@@ -113,7 +113,7 @@ Key directories:
 
 ### SQL Injection Prevention
 - Column name whitelisting
-- Parameterized queries via Knex.js
+- Parameterized queries via Kysely
 - Operator validation
 - Query parsing and sanitization
 

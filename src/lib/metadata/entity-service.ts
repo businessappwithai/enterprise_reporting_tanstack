@@ -6,111 +6,116 @@
  */
 
 import { getDb } from "@/lib/db/config";
-import type { Knex } from "knex";
+import { sql, type Kysely } from "kysely";
 import type {
   MetadataEntityHeader,
   MetadataEntityWithFields,
   MetadataEntityListParams,
 } from "@/types/database";
 
+// biome-ignore lint/suspicious/noExplicitAny: metadata tables not in main schema
+type AnyDB = Kysely<any>;
+
+interface FilterCondition {
+  column: string;
+  value: unknown;
+}
+
 /**
  * Query builder for metadata_entity_header with optional filters
  */
 export class EntityQueryBuilder {
-  private query: Knex.Query;
+  private filters: FilterCondition[] = [];
+  private limitVal: number | null = null;
+  private offsetVal: number | null = null;
+  private orderByCol = "entity_name";
+  private orderByDir: "asc" | "desc" = "asc";
 
-  constructor() {
-    this.query = getDb()("metadata_entity_header");
-  }
-
-  /**
-   * Filter by data source ID
-   */
   byDataSource(dataSourceId: string): EntityQueryBuilder {
-    this.query = this.query.where("data_source_id", dataSourceId);
+    this.filters.push({ column: "data_source_id", value: dataSourceId });
     return this;
   }
 
-  /**
-   * Filter by active status
-   */
   byActive(isActive: boolean): EntityQueryBuilder {
-    this.query = this.query.where("is_active", isActive);
+    this.filters.push({ column: "is_active", value: isActive });
     return this;
   }
 
-  /**
-   * Filter by hidden status
-   */
   byHidden(isHidden: boolean): EntityQueryBuilder {
-    this.query = this.query.where("is_hidden", isHidden);
+    this.filters.push({ column: "is_hidden", value: isHidden });
     return this;
   }
 
-  /**
-   * Filter by entity type
-   */
   byEntityType(entityType: "table" | "view"): EntityQueryBuilder {
-    this.query = this.query.where("entity_type", entityType);
+    this.filters.push({ column: "entity_type", value: entityType });
     return this;
   }
 
-  /**
-   * Search by entity name or description
-   */
   search(searchTerm: string): EntityQueryBuilder {
-    this.query = this.query.where((builder: Knex.Query) => {
-      builder
-        .where("entity_name", "like", `%${searchTerm}%`)
-        .orWhere("description", "like", `%${searchTerm}%`);
-    });
+    this.filters.push({ column: "__search__", value: searchTerm });
     return this;
   }
 
-  /**
-   * Include hidden entities in results
-   */
   includeHidden(): EntityQueryBuilder {
-    // No filter - returns all
     return this;
   }
 
-  /**
-   * Apply pagination
-   */
-  paginate(page: number = 1, limit: number = 50): EntityQueryBuilder {
-    const offset = (page - 1) * limit;
-    this.query = this.query.limit(limit).offset(offset);
+  paginate(page = 1, limit = 50): EntityQueryBuilder {
+    this.limitVal = limit;
+    this.offsetVal = (page - 1) * limit;
     return this;
   }
 
-  /**
-   * Order by field
-   */
   orderBy(column: string, direction: "asc" | "desc" = "asc"): EntityQueryBuilder {
-    this.query = this.query.orderBy(column, direction);
+    this.orderByCol = column;
+    this.orderByDir = direction;
     return this;
   }
 
-  /**
-   * Execute query and return results
-   */
-  async execute(): Promise<MetadataEntityHeader[]> {
-    return await this.query.select("*");
+  private buildQuery(forCount = false) {
+    const db = getDb() as AnyDB;
+    let query = db.selectFrom("metadata_entity_header").selectAll();
+
+    for (const f of this.filters) {
+      if (f.column === "__search__") {
+        const term = `%${f.value}%`;
+        query = query.where((eb) =>
+          eb.or([
+            eb("entity_name", "like", term),
+            eb("description", "like", term),
+          ])
+        );
+      } else {
+        query = query.where(f.column as never, "=", f.value);
+      }
+    }
+
+    if (!forCount) {
+      query = query.orderBy(this.orderByCol as never, this.orderByDir);
+      if (this.limitVal !== null) query = query.limit(this.limitVal);
+      if (this.offsetVal !== null) query = query.offset(this.offsetVal);
+    }
+
+    return query;
   }
 
-  /**
-   * Execute query with count
-   */
+  async execute(): Promise<MetadataEntityHeader[]> {
+    return (await this.buildQuery().execute()) as MetadataEntityHeader[];
+  }
+
   async withCount(): Promise<{ entities: MetadataEntityHeader[]; total: number }> {
-    const entities = await this.query.select("*");
+    const [entities, countRows] = await Promise.all([
+      this.buildQuery().execute(),
+      this.buildQuery(true)
+        .clearSelect()
+        .select(sql`count(*)`.as("total"))
+        .execute(),
+    ]);
 
-    // Clone query for count
-    const countQuery = this.query.clone();
-    countQuery.clearSelect().clearOrder().clearGroup();
-    const [{ total }] = await countQuery.count("* as total");
-
-    return { entities, total };
+    return {
+      entities: entities as MetadataEntityHeader[],
+      total: Number((countRows[0] as any)?.total || 0),
+    };
   }
 }
 
@@ -118,227 +123,199 @@ export class EntityQueryBuilder {
  * Entity Service
  */
 export class EntityService {
-  /**
-   * Get entities with optional filters and pagination
-   */
   static async list(
     params: MetadataEntityListParams = {}
   ): Promise<{ entities: MetadataEntityHeader[]; total: number }> {
     const builder = new EntityQueryBuilder();
 
-    // Apply filters
-    if (params.data_source_id) {
-      builder.byDataSource(params.data_source_id);
-    }
+    if (params.data_source_id) builder.byDataSource(params.data_source_id);
 
     if (params.include_hidden) {
-      // Include both active and inactive, visible and hidden
+      // include all
     } else {
-      // Default: only active and non-hidden
       builder.byActive(true).byHidden(false);
     }
 
-    if (params.search) {
-      builder.search(params.search);
-    }
+    if (params.search) builder.search(params.search);
 
-    // Apply pagination
     const page = params.page || 1;
     const limit = params.limit || 50;
     builder.paginate(page, limit);
-
-    // Apply default ordering
     builder.orderBy("entity_name", "asc");
 
-    return await builder.withCount();
+    return builder.withCount();
   }
 
-  /**
-   * Get single entity by ID with fields
-   */
   static async getById(id: string): Promise<MetadataEntityWithFields | null> {
-    const entity = await getDb()("metadata_entity_header").where("id", id).first();
+    const db = getDb() as AnyDB;
+    const entity = await db
+      .selectFrom("metadata_entity_header")
+      .selectAll()
+      .where("id", "=", id)
+      .executeTakeFirst();
 
-    if (!entity) {
-      return null;
-    }
+    if (!entity) return null;
 
-    // Fetch fields for this entity
-    const fields = await getDb()("metadata_entity_field")
-      .where("entity_header_id", id)
+    const fields = await db
+      .selectFrom("metadata_entity_field")
+      .selectAll()
+      .where("entity_header_id", "=", id)
       .orderBy("display_order", "asc")
-      .select("*");
+      .execute();
 
-    return {
-      ...entity,
-      fields,
-    } as MetadataEntityWithFields;
+    return { ...entity, fields } as MetadataEntityWithFields;
   }
 
-  /**
-   * Get entity by name (for foreign key lookups)
-   */
   static async getByName(
     dataSourceId: string,
     entityName: string,
     entitySchema?: string
   ): Promise<MetadataEntityWithFields | null> {
-    const entity = await getDb()("metadata_entity_header")
-      .where({
-        data_source_id: dataSourceId,
-        entity_name: entityName,
-        ...(entitySchema && { entity_schema: entitySchema }),
-      })
-      .first();
+    const db = getDb() as AnyDB;
+    let q = db
+      .selectFrom("metadata_entity_header")
+      .selectAll()
+      .where("data_source_id", "=", dataSourceId)
+      .where("entity_name", "=", entityName);
 
-    if (!entity) {
-      return null;
-    }
+    if (entitySchema) q = q.where("entity_schema", "=", entitySchema);
 
-    // Fetch fields for this entity
-    const fields = await getDb()("metadata_entity_field")
-      .where("entity_header_id", entity.id)
+    const entity = await q.executeTakeFirst();
+    if (!entity) return null;
+
+    const fields = await db
+      .selectFrom("metadata_entity_field")
+      .selectAll()
+      .where("entity_header_id", "=", entity.id)
       .orderBy("display_order", "asc")
-      .select("*");
+      .execute();
 
-    return {
-      ...entity,
-      fields,
-    } as MetadataEntityWithFields;
+    return { ...entity, fields } as MetadataEntityWithFields;
   }
 
-  /**
-   * Create new entity metadata
-   * Note: This is typically called during datasource inspection, not manually
-   */
   static async create(
     data: Omit<MetadataEntityHeader, "id" | "created_at" | "updated_at">
   ): Promise<MetadataEntityHeader> {
-    const [entity] = await getDb()("metadata_entity_header")
-      .insert({
-        ...data,
-        updated_at: getDb().fn.now(),
-      })
-      .returning("*");
+    const db = getDb() as AnyDB;
+    const now = new Date().toISOString();
+    const [entity] = await db
+      .insertInto("metadata_entity_header")
+      .values({ ...data, updated_at: now, created_at: now })
+      .returningAll()
+      .execute();
 
-    return entity;
+    return entity as MetadataEntityHeader;
   }
 
-  /**
-   * Update entity metadata
-   * Only editable fields can be updated: description, is_active, is_hidden
-   */
   static async update(
     id: string,
     data: Partial<Pick<MetadataEntityHeader, "description" | "is_active" | "is_hidden">>,
     userId?: string
   ): Promise<MetadataEntityHeader | null> {
-    const [entity] = await getDb()("metadata_entity_header")
-      .where("id", id)
-      .update({
-        ...data,
-        updated_at: getDb().fn.now(),
-      })
-      .returning("*");
+    const db = getDb() as AnyDB;
+    const now = new Date().toISOString();
+    const [entity] = await db
+      .updateTable("metadata_entity_header")
+      .set({ ...data, updated_at: now })
+      .where("id", "=", id)
+      .returningAll()
+      .execute();
 
-    if (!entity) {
-      return null;
-    }
+    if (!entity) return null;
 
-    // Log to audit trail
     if (userId) {
-      await getDb()("audit_log").insert({
+      await db.insertInto("audit_log").values({
+        id: crypto.randomUUID(),
         user_id: userId,
         action: "update",
         resource_type: "metadata_entity",
         resource_id: id,
-        details: JSON.stringify({
-          updated_fields: Object.keys(data),
-        }),
-        created_at: getDb().fn.now(),
-      });
+        details: JSON.stringify({ updated_fields: Object.keys(data) }),
+        ip_address: null,
+        user_agent: null,
+        created_at: now,
+      }).execute();
     }
 
-    return entity;
+    return entity as MetadataEntityHeader;
   }
 
-  /**
-   * Delete entity metadata (cascade deletes fields)
-   * Note: This is a destructive operation
-   */
   static async delete(id: string, userId?: string): Promise<boolean> {
-    const count = await getDb()("metadata_entity_header").where("id", id).delete();
+    const db = getDb() as AnyDB;
+    const result = await db
+      .deleteFrom("metadata_entity_header")
+      .where("id", "=", id)
+      .executeTakeFirst();
 
-    if (count > 0 && userId) {
-      // Log to audit trail
-      await getDb()("audit_log").insert({
+    const deleted = Number(result.numDeletedRows) > 0;
+
+    if (deleted && userId) {
+      const now = new Date().toISOString();
+      await db.insertInto("audit_log").values({
+        id: crypto.randomUUID(),
         user_id: userId,
         action: "delete",
         resource_type: "metadata_entity",
         resource_id: id,
-        details: JSON.stringify({
-          deleted: "entity_metadata",
-        }),
-        created_at: getDb().fn.now(),
-      });
+        details: JSON.stringify({ deleted: "entity_metadata" }),
+        ip_address: null,
+        user_agent: null,
+        created_at: now,
+      }).execute();
     }
 
-    return count > 0;
+    return deleted;
   }
 
-  /**
-   * Check if entity exists
-   */
   static async exists(
     dataSourceId: string,
     entityName: string,
     entitySchema?: string
   ): Promise<boolean> {
-    const result = await getDb()("metadata_entity_header")
-      .where({
-        data_source_id: dataSourceId,
-        entity_name: entityName,
-        ...(entitySchema && { entity_schema: entitySchema }),
-      })
-      .first();
+    const db = getDb() as AnyDB;
+    let q = db
+      .selectFrom("metadata_entity_header")
+      .select("id")
+      .where("data_source_id", "=", dataSourceId)
+      .where("entity_name", "=", entityName);
 
+    if (entitySchema) q = q.where("entity_schema", "=", entitySchema);
+
+    const result = await q.executeTakeFirst();
     return !!result;
   }
 
-  /**
-   * Get active entities count for a datasource
-   */
   static async countActive(dataSourceId: string): Promise<number> {
-    const [{ count }] = await getDb()("metadata_entity_header")
-      .where({
-        data_source_id: dataSourceId,
-        is_active: true,
-        is_hidden: false,
-      })
-      .count("* as count");
+    const db = getDb() as AnyDB;
+    const [row] = await db
+      .selectFrom("metadata_entity_header")
+      .select(sql`count(*)`.as("count"))
+      .where("data_source_id", "=", dataSourceId)
+      .where("is_active", "=", true)
+      .where("is_hidden", "=", false)
+      .execute();
 
-    return count;
+    return Number((row as any)?.count || 0);
   }
 
-  /**
-   * Get entities that need introspection (stale metadata)
-   */
   static async getStaleEntities(
     dataSourceId: string,
-    staleThresholdHours: number = 24
+    staleThresholdHours = 24
   ): Promise<MetadataEntityHeader[]> {
+    const db = getDb() as AnyDB;
     const staleDate = new Date();
     staleDate.setHours(staleDate.getHours() - staleThresholdHours);
 
-    return await getDb()("metadata_entity_header")
-      .where("data_source_id", dataSourceId)
-      .where("last_introspected_at", "<", staleDate)
-      .select("*");
+    const rows = await db
+      .selectFrom("metadata_entity_header")
+      .selectAll()
+      .where("data_source_id", "=", dataSourceId)
+      .where("last_introspected_at", "<", staleDate.toISOString())
+      .execute();
+
+    return rows as MetadataEntityHeader[];
   }
 
-  /**
-   * Get query builder for complex queries
-   */
   static query(): EntityQueryBuilder {
     return new EntityQueryBuilder();
   }

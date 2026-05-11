@@ -34,9 +34,8 @@ class Statement {
     this.reader = /^(SELECT|WITH|PRAGMA|EXPLAIN|VALUES)/.test(trimmed);
   }
 
-  // Knex passes bindings as a single array arg; Kysely spreads them individually.
-  // Detect and normalise before forwarding to bun:sqlite (which uses spread params).
-  // bun:sqlite rejects boolean values — must be converted to 0/1.
+  // Normalise args: detect single-array wrapping (some drivers wrap all params in one array)
+  // and convert booleans to 0/1 (bun:sqlite rejects boolean values).
   private _normalizeArgs(args: unknown[]): unknown[] {
     const arr = args.length === 1 && Array.isArray(args[0]) ? (args[0] as unknown[]) : args;
     return arr.map((v) => (typeof v === "boolean" ? (v ? 1 : 0) : v));

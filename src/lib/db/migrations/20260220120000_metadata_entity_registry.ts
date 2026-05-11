@@ -1,4 +1,4 @@
-import type { Knex } from "knex";
+
 
 /**
  * Migration: Metadata Entity Registry
@@ -15,19 +15,19 @@ import type { Knex } from "knex";
  * can activate entities, write descriptions, and configure display settings.
  */
 
-export async function up(knex: Knex): Promise<void> {
+export async function up(db: any): Promise<void> {
   // ========================================================================
   // 1. Add is_editable column to data_sources table
   // ========================================================================
-  await knex.schema.alterTable("data_sources", (table) => {
+  await db.schema.alterTable("data_sources", (table) => {
     table.boolean("is_editable").defaultTo(false).after("is_active");
   });
 
   // ========================================================================
   // 2. Create metadata_entity_header table
   // ========================================================================
-  await knex.schema.createTable("metadata_entity_header", (table) => {
-    table.string("id", 36).primary().defaultTo(knex.raw("(lower(hex(randomblob(16))))"));
+  await db.schema.createTable("metadata_entity_header", (table) => {
+    table.string("id", 36).primary().defaultTo(db.raw("(lower(hex(randomblob(16))))"));
 
     // Foreign key to data_sources
     table
@@ -44,7 +44,7 @@ export async function up(knex: Knex): Promise<void> {
 
     // Schema metadata (from inspection - read-only)
     table.text("schema_metadata").notNullable(); // JSON: complete schema info
-    table.timestamp("last_introspected_at").notNullable().defaultTo(knex.fn.now());
+    table.timestamp("last_introspected_at").notNullable().defaultTo(db.fn.now());
 
     // Editable metadata fields
     table.text("description"); // User-provided business description
@@ -53,8 +53,8 @@ export async function up(knex: Knex): Promise<void> {
 
     // Audit fields
     table.string("created_by", 36).references("id").inTable("users");
-    table.timestamp("created_at").defaultTo(knex.fn.now());
-    table.timestamp("updated_at").defaultTo(knex.fn.now());
+    table.timestamp("created_at").defaultTo(db.fn.now());
+    table.timestamp("updated_at").defaultTo(db.fn.now());
 
     // Unique constraint: one header per entity per datasource
     table.unique(["data_source_id", "entity_name", "entity_schema"]);
@@ -63,8 +63,8 @@ export async function up(knex: Knex): Promise<void> {
   // ========================================================================
   // 3. Create metadata_entity_field table
   // ========================================================================
-  await knex.schema.createTable("metadata_entity_field", (table) => {
-    table.string("id", 36).primary().defaultTo(knex.raw("(lower(hex(randomblob(16))))"));
+  await db.schema.createTable("metadata_entity_field", (table) => {
+    table.string("id", 36).primary().defaultTo(db.raw("(lower(hex(randomblob(16))))"));
 
     // Foreign key to entity header
     table
@@ -95,8 +95,8 @@ export async function up(knex: Knex): Promise<void> {
     table.string("relationship_ui_type"); // FK UI: 'dropdown', 'popup', 'tab', or NULL
 
     // Audit fields
-    table.timestamp("created_at").defaultTo(knex.fn.now());
-    table.timestamp("updated_at").defaultTo(knex.fn.now());
+    table.timestamp("created_at").defaultTo(db.fn.now());
+    table.timestamp("updated_at").defaultTo(db.fn.now());
 
     // Unique constraint: one field record per field per entity
     table.unique(["entity_header_id", "field_name"]);
@@ -107,62 +107,62 @@ export async function up(knex: Knex): Promise<void> {
   // ========================================================================
 
   // metadata_entity_header indexes
-  await knex.schema.raw(
+  await db.schema.raw(
     "CREATE INDEX idx_metadata_entity_header_ds ON metadata_entity_header(data_source_id)"
   );
-  await knex.schema.raw(
+  await db.schema.raw(
     "CREATE INDEX idx_metadata_entity_header_entity ON metadata_entity_header(entity_name)"
   );
-  await knex.schema.raw(
+  await db.schema.raw(
     "CREATE INDEX idx_metadata_entity_header_type ON metadata_entity_header(entity_type)"
   );
-  await knex.schema.raw(
+  await db.schema.raw(
     "CREATE INDEX idx_metadata_entity_header_active ON metadata_entity_header(is_active, is_hidden)"
   );
 
   // metadata_entity_field indexes
-  await knex.schema.raw(
+  await db.schema.raw(
     "CREATE INDEX idx_metadata_entity_field_header ON metadata_entity_field(entity_header_id)"
   );
-  await knex.schema.raw(
+  await db.schema.raw(
     "CREATE INDEX idx_metadata_entity_field_name ON metadata_entity_field(field_name)"
   );
-  await knex.schema.raw(
+  await db.schema.raw(
     "CREATE INDEX idx_metadata_entity_field_display ON metadata_entity_field(is_display_field)"
   );
-  await knex.schema.raw(
+  await db.schema.raw(
     "CREATE INDEX idx_metadata_entity_field_searchable ON metadata_entity_field(is_searchable)"
   );
-  await knex.schema.raw(
+  await db.schema.raw(
     "CREATE INDEX idx_metadata_entity_field_fk ON metadata_entity_field(is_foreign_key, foreign_key_table)"
   );
-  await knex.schema.raw(
+  await db.schema.raw(
     "CREATE INDEX idx_metadata_entity_field_section ON metadata_entity_field(entity_header_id, section_name, display_order)"
   );
 }
 
-export async function down(knex: Knex): Promise<void> {
+export async function down(db: any): Promise<void> {
   // Drop in reverse order of creation
 
   // Drop indexes
-  await knex.schema.raw("DROP INDEX IF EXISTS idx_metadata_entity_field_section");
-  await knex.schema.raw("DROP INDEX IF EXISTS idx_metadata_entity_field_fk");
-  await knex.schema.raw("DROP INDEX IF EXISTS idx_metadata_entity_field_searchable");
-  await knex.schema.raw("DROP INDEX IF EXISTS idx_metadata_entity_field_display");
-  await knex.schema.raw("DROP INDEX IF EXISTS idx_metadata_entity_field_name");
-  await knex.schema.raw("DROP INDEX IF EXISTS idx_metadata_entity_field_header");
+  await db.schema.raw("DROP INDEX IF EXISTS idx_metadata_entity_field_section");
+  await db.schema.raw("DROP INDEX IF EXISTS idx_metadata_entity_field_fk");
+  await db.schema.raw("DROP INDEX IF EXISTS idx_metadata_entity_field_searchable");
+  await db.schema.raw("DROP INDEX IF EXISTS idx_metadata_entity_field_display");
+  await db.schema.raw("DROP INDEX IF EXISTS idx_metadata_entity_field_name");
+  await db.schema.raw("DROP INDEX IF EXISTS idx_metadata_entity_field_header");
 
-  await knex.schema.raw("DROP INDEX IF EXISTS idx_metadata_entity_header_active");
-  await knex.schema.raw("DROP INDEX IF EXISTS idx_metadata_entity_header_type");
-  await knex.schema.raw("DROP INDEX IF EXISTS idx_metadata_entity_header_entity");
-  await knex.schema.raw("DROP INDEX IF EXISTS idx_metadata_entity_header_ds");
+  await db.schema.raw("DROP INDEX IF EXISTS idx_metadata_entity_header_active");
+  await db.schema.raw("DROP INDEX IF EXISTS idx_metadata_entity_header_type");
+  await db.schema.raw("DROP INDEX IF EXISTS idx_metadata_entity_header_entity");
+  await db.schema.raw("DROP INDEX IF EXISTS idx_metadata_entity_header_ds");
 
   // Drop tables
-  await knex.schema.dropTableIfExists("metadata_entity_field");
-  await knex.schema.dropTableIfExists("metadata_entity_header");
+  await db.schema.dropTableIfExists("metadata_entity_field");
+  await db.schema.dropTableIfExists("metadata_entity_header");
 
   // Remove is_editable from data_sources
-  await knex.schema.alterTable("data_sources", (table) => {
+  await db.schema.alterTable("data_sources", (table) => {
     table.dropColumn("is_editable");
   });
 }

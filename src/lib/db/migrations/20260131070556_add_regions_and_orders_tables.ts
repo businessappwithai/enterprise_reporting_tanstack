@@ -1,5 +1,5 @@
-import type { Knex } from "knex";
 
-export async function up(knex: Knex): Promise<void> {}
 
-export async function down(knex: Knex): Promise<void> {}
+export async function up(db: any): Promise<void> {}
+
+export async function down(db: any): Promise<void> {}

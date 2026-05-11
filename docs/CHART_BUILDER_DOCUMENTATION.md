@@ -445,7 +445,7 @@ Updates an existing chart.
 - **React Query** - Data fetching and caching
 - **Lucide React** - Icons
 - **Tailwind CSS** - Styling
-- **Knex.js** - Database queries (via saved queries)
+- **Kysely** - Database queries (via saved queries)
 
 ### Security
 - All queries validated as read-only

@@ -36,7 +36,7 @@ export async function executeSourceQuery(
   // In production this would connect to the external source DB.
   const rows = await db.raw(query);
 
-  // Knex raw for SQLite returns the rows directly as an array
+  // SQLite returns the rows directly as an array
   const resultRows: SourceRow[] = Array.isArray(rows) ? rows : [];
 
   const columns =

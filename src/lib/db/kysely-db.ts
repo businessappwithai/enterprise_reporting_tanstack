@@ -1,23 +1,17 @@
 /**
  * Kysely Database Configuration
- * Replaces Knex.js with Kysely for type-safe SQL queries
+ * Type-safe SQL query builder using Kysely (https://kysely.dev/)
  */
 
 import {
   Kysely,
   SqliteDialect,
   PostgresDialect,
-  type MigrationProvider,
 } from "kysely";
-import { createRequire } from "node:module";
 import { Pool } from "pg";
 import path from "path";
 import { existsSync, mkdirSync } from "fs";
-import { promises as fs } from "fs";
 import BunDatabase from "./bun-sqlite-compat";
-
-// createRequire enables CJS modules (knex) in ESM context
-const require = createRequire(import.meta.url);
 
 // Database schema type definition
 // This is the most important part - defines all tables and their columns
@@ -319,6 +313,7 @@ export type KyselyDB = Kysely<Database>;
 
 let db: KyselyDB | null = null;
 
+
 const DATABASE_URL = process.env.DATABASE_URL || "";
 const DATABASE_PATH = process.env.DATABASE_PATH || "./data/config.sqlite";
 
@@ -359,46 +354,6 @@ export function getConfigDB(): KyselyDB {
   return getDb();
 }
 
-// Knex instance cache
-let knexDb: ReturnType<typeof import("knex").default> | null = null;
-
-/**
- * Get or create a Knex database instance (for legacy Knex-style queries)
- * Uses the same SQLite file or PostgreSQL connection as Kysely.
- */
-export function getKnexDb() {
-  if (!knexDb) {
-    const knex = require("knex");
-
-    if (DATABASE_URL) {
-      // PostgreSQL
-      knexDb = knex({
-        client: "pg",
-        connection: DATABASE_URL,
-      });
-    } else {
-      // SQLite — extend Knex's better-sqlite3 client, swap driver to compat shim
-      const dirPath = path.dirname(DATABASE_PATH);
-      if (!existsSync(dirPath)) {
-        mkdirSync(dirPath, { recursive: true });
-      }
-
-      // biome-ignore lint/suspicious/noExplicitAny: Knex internals loaded via CJS
-      const Client_BetterSQLite3: any = require("knex/lib/dialects/better-sqlite3");
-      class BunSQLiteKnexClient extends Client_BetterSQLite3 {
-        _driver() { return BunDatabase; }
-      }
-
-      knexDb = knex({
-        client: BunSQLiteKnexClient,
-        connection: { filename: DATABASE_PATH },
-        useNullAsDefault: true,
-      });
-    }
-  }
-  return knexDb;
-}
-
 /**
  * Close database connection
  */
@@ -415,37 +370,3 @@ export async function closeDb(): Promise<void> {
 export function isPostgres(): boolean {
   return !!DATABASE_URL;
 }
-
-/**
- * Get Migrator instance for database migrations
- * TODO: Re-enable migrations once Kysely setup is fully stabilized
- */
-// export async function getMigrator(): Promise<Migrator> {
-//   const migrationsDir = path.join(process.cwd(), "src/lib/db/migrations");
-//
-//   const provider: MigrationProvider = {
-//     async getMigrations() {
-//       const migrations: Record<string, any> = {};
-//
-//       try {
-//         const files = await fs.readdir(migrationsDir);
-//         const tsFiles = files.filter((f) => f.endsWith(".ts"));
-//
-//         for (const file of tsFiles) {
-//           const filePath = path.join(migrationsDir, file);
-//           const migration = await import(filePath);
-//           migrations[file] = migration.default;
-//         }
-//       } catch (error) {
-//         console.warn("[Migrator] No migrations found or error loading:", error);
-//       }
-//
-//       return migrations;
-//     },
-//   };
-//
-//   return new Migrator({
-//     db: getDb(),
-//     provider,
-//   });
-// }

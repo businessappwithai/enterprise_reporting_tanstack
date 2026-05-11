@@ -1711,7 +1711,7 @@ const PARQUET_PRESETS = {
 │                                                                 │
 │  1. CREATION (Server-Side)                                     │
 │     Source Database                                             │
-│        ↓  Knex.js query                                        │
+│        ↓  Kysely query                                        │
 │     Arrow RecordBatches                                        │
 │        ↓  ParquetWriter                                        │
 │     Parquet File (compressed)                                  │
