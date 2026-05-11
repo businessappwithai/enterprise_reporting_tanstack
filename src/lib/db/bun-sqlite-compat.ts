@@ -66,8 +66,9 @@ export class Database {
 
   constructor(filename: string, _options?: { readonly?: boolean; nativeBinding?: string }) {
     this._db = new BunDB(filename);
-    this._db.query("PRAGMA foreign_keys = ON").run();
-    this._db.query("PRAGMA journal_mode = WAL").run();
+    // Use prepare().run() — compatible with both bun:sqlite and better-sqlite3
+    this._db.prepare("PRAGMA foreign_keys = ON").run();
+    this._db.prepare("PRAGMA journal_mode = WAL").run();
   }
 
   prepare(sql: string): Statement {
