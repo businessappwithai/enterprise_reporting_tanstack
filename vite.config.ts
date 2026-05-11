@@ -27,6 +27,6 @@ export default defineConfig({
     external: ['bun:sqlite'],
   },
   optimizeDeps: {
-    exclude: ['bun:sqlite', 'knex'],
+    exclude: ['bun:sqlite'],
   },
 })

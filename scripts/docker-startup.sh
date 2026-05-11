@@ -17,17 +17,9 @@ echo "Directories created/verified"
 if [ ! -f /app/data/.initialized ]; then
   echo "First run detected - initializing database..."
 
-  # Run migrations
-  if [ -f "/app/node_modules/.bin/knex" ]; then
-    echo "Running database migrations..."
-    node /app/node_modules/.bin/knex migrate:latest --knexfile=/app/src/lib/db/knexfile.ts || echo "Migrations already completed or failed"
-  fi
-
-  # Run seeds
-  if [ -f "/app/node_modules/.bin/knex" ]; then
-    echo "Running database seeds..."
-    node /app/node_modules/.bin/knex seed:run --knexfile=/app/src/lib/db/knexfile.ts || echo "Seeds already completed or failed"
-  fi
+  # Run database initialization with Kysely
+  echo "Running database initialization..."
+  bun /app/scripts/rebuild-db.ts || echo "Database initialization already completed or failed"
 
   # Mark as initialized
   touch /app/data/.initialized
