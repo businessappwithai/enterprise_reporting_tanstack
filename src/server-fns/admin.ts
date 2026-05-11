@@ -120,7 +120,7 @@ export const getUser = createServerFn({ method: "GET" })
       {
         userId: (await requireAuth()).user.id,
         action: "execute",
-        details: { operation: "getUser", userId: input.id },
+        details: { operation: "getUser", userId: validated.id },
       }
     );
   });
@@ -196,7 +196,7 @@ export const createUser = createServerFn({ method: "POST" })
       {
         userId: (await requireAuth()).user.id,
         action: "execute",
-        details: { operation: "createUser", email: input.email },
+        details: { operation: "createUser", email: validated.email },
       }
     );
   });
