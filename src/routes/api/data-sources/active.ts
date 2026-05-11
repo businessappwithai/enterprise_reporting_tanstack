@@ -1,14 +1,25 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { json } from '@/lib/server/response'
-import { requireAuth } from '@/lib/auth/middleware'
+import { auth } from '@/lib/auth/config'
 import { getDb } from '@/lib/db/config'
+
+async function getSession(request: Request) {
+  return auth(request)
+}
 
 export const Route = createFileRoute('/api/data-sources/active')({
   server: {
     handlers: {
-      GET: async () => {
+      GET: async ({ request }) => {
         try {
-          const session = await requireAuth()
+          const session = await getSession(request)
+          if (!session?.user) {
+            return json(
+              { success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } },
+              { status: 401 }
+            )
+          }
+
           const db = getDb()
 
           const dataSources = await db
@@ -39,7 +50,14 @@ export const Route = createFileRoute('/api/data-sources/active')({
 
       POST: async ({ request }) => {
         try {
-          const session = await requireAuth()
+          const session = await getSession(request)
+          if (!session?.user) {
+            return json(
+              { success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } },
+              { status: 401 }
+            )
+          }
+
           const body = (await request.json()) as { dataSourceId: string }
           const { dataSourceId } = body
 
