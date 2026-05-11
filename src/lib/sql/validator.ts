@@ -1,5 +1,6 @@
 import { format as formatSQL } from "sql-formatter";
-import { Parser } from "node-sql-parser";
+import pkg from "node-sql-parser";
+const { Parser } = pkg;
 
 export interface SQLValidationResult {
   isValid: boolean;
