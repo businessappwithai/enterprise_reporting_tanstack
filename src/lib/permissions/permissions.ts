@@ -59,15 +59,23 @@ export async function getUserPermissions(userId: string) {
 export async function isAdmin(userId: string): Promise<boolean> {
   const db = getDb();
 
-  const row = await db
+  const roles = await db
     .selectFrom("user_roles as ur")
     .innerJoin("roles as r", "ur.role_id", "r.id")
     .where("ur.user_id", "=", userId)
-    .where("r.name", "=", "Administrator")
-    .selectAll("r")
-    .executeTakeFirst();
+    .select(["r.name", "r.permissions"])
+    .execute();
 
-  return !!row;
+  return roles.some((r) => {
+    const name = r.name?.toLowerCase();
+    if (name === "admin" || name === "administrator") return true;
+    try {
+      const perms: string[] = JSON.parse(r.permissions || "[]");
+      return perms.includes("*") || perms.includes("admin:*");
+    } catch {
+      return false;
+    }
+  });
 }
 
 /**
