@@ -33,18 +33,21 @@ import { withErrorHandler } from "@/lib/server-fns/with-error-handler";
 // ============================================================================
 
 export const listUsers = createServerFn({ method: "GET" })
-  .validator(listUsersSchema)
-  .handler(async ({ data: input }) => {
+  .handler(async (input) => {
     return withErrorHandler(
       async () => {
+        const validated = await listUsersSchema.parseAsync(input).catch((err) => {
+          throw new Error(`Validation failed: ${err.message}`);
+        });
+
         const session = await requireAuth();
         const admin = await isAdmin(session.user.id);
         if (!admin) {
           throw new Error("FORBIDDEN");
         }
 
-        const page = input.page ?? 0;
-        const pageSize = Math.min(input.pageSize ?? 20, 100);
+        const page = validated.page ?? 0;
+        const pageSize = Math.min(validated.pageSize ?? 20, 100);
 
         const db = getDb();
         const users = await db
@@ -88,10 +91,13 @@ export const listUsers = createServerFn({ method: "GET" })
   });
 
 export const getUser = createServerFn({ method: "GET" })
-  .validator(getUserSchema)
-  .handler(async ({ data: input }) => {
+  .handler(async (input) => {
     return withErrorHandler(
       async () => {
+        const validated = await getUserSchema.parseAsync(input).catch((err) => {
+          throw new Error(`Validation failed: ${err.message}`);
+        });
+
         const session = await requireAuth();
         const admin = await isAdmin(session.user.id);
         if (!admin) {
@@ -102,7 +108,7 @@ export const getUser = createServerFn({ method: "GET" })
         const user = await db
           .selectFrom("users")
           .select(["id", "email", "display_name", "avatar_url", "is_active", "created_at", "updated_at"])
-          .where("id", "=", input.id)
+          .where("id", "=", validated.id)
           .executeTakeFirst();
 
         if (!user) {
@@ -120,10 +126,13 @@ export const getUser = createServerFn({ method: "GET" })
   });
 
 export const createUser = createServerFn({ method: "POST" })
-  .validator(createUserSchema)
-  .handler(async ({ data: input }) => {
+  .handler(async (input) => {
     return withErrorHandler(
       async () => {
+        const validated = await createUserSchema.parseAsync(input).catch((err) => {
+          throw new Error(`Validation failed: ${err.message}`);
+        });
+
         const session = await requireAuth();
         const admin = await isAdmin(session.user.id);
         if (!admin) {
@@ -136,7 +145,7 @@ export const createUser = createServerFn({ method: "POST" })
         const existing = await db
           .selectFrom("users")
           .select("id")
-          .where("email", "=", input.email)
+          .where("email", "=", validated.email)
           .executeTakeFirst();
 
         if (existing) {
@@ -144,29 +153,29 @@ export const createUser = createServerFn({ method: "POST" })
         }
 
         const userId = randomUUID();
-        const passwordHash = await bcrypt.hash(input.password, 10);
+        const passwordHash = await bcrypt.hash(validated.password, 10);
         const now = new Date().toISOString();
 
         await db
           .insertInto("users")
           .values({
             id: userId,
-            email: input.email,
+            email: validated.email,
             password_hash: passwordHash,
-            display_name: input.displayName,
+            display_name: validated.displayName,
             avatar_url: null,
-            is_active: input.isActive ?? true,
+            is_active: validated.isActive ?? true,
             created_at: now,
             updated_at: now,
           })
           .execute();
 
         // Assign roles if provided
-        if (input.roleIds && input.roleIds.length > 0) {
+        if (validated.roleIds && validated.roleIds.length > 0) {
           await db
             .insertInto("user_roles")
             .values(
-              input.roleIds.map((roleId) => ({
+              validated.roleIds.map((roleId) => ({
                 user_id: userId,
                 role_id: roleId,
               }))
@@ -179,7 +188,7 @@ export const createUser = createServerFn({ method: "POST" })
           action: "create",
           resourceType: "user",
           resourceId: userId,
-          details: { email: input.email, displayName: input.displayName },
+          details: { email: validated.email, displayName: validated.displayName },
         });
 
         return { id: userId };
@@ -193,10 +202,13 @@ export const createUser = createServerFn({ method: "POST" })
   });
 
 export const updateUser = createServerFn({ method: "PUT" })
-  .validator(updateUserSchema)
-  .handler(async ({ data: input }) => {
+  .handler(async (input) => {
     return withErrorHandler(
       async () => {
+        const validated = await updateUserSchema.parseAsync(input).catch((err) => {
+          throw new Error(`Validation failed: ${err.message}`);
+        });
+
         const session = await requireAuth();
         const admin = await isAdmin(session.user.id);
         if (!admin) {
@@ -207,7 +219,7 @@ export const updateUser = createServerFn({ method: "PUT" })
         const existing = await db
           .selectFrom("users")
           .selectAll()
-          .where("id", "=", input.id)
+          .where("id", "=", validated.id)
           .executeTakeFirst();
 
         if (!existing) {
@@ -215,21 +227,21 @@ export const updateUser = createServerFn({ method: "PUT" })
         }
 
         const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
-        if (input.email !== undefined) updates.email = input.email;
-        if (input.displayName !== undefined) updates.display_name = input.displayName;
-        if (input.isActive !== undefined) updates.is_active = input.isActive;
+        if (validated.email !== undefined) updates.email = validated.email;
+        if (validated.displayName !== undefined) updates.display_name = validated.displayName;
+        if (validated.isActive !== undefined) updates.is_active = validated.isActive;
 
-        await db.updateTable("users").set(updates).where("id", "=", input.id).execute();
+        await db.updateTable("users").set(updates).where("id", "=", validated.id).execute();
 
         // Update roles if provided
-        if (input.roleIds !== undefined) {
-          await db.deleteFrom("user_roles").where("user_id", "=", input.id).execute();
-          if (input.roleIds.length > 0) {
+        if (validated.roleIds !== undefined) {
+          await db.deleteFrom("user_roles").where("user_id", "=", validated.id).execute();
+          if (validated.roleIds.length > 0) {
             await db
               .insertInto("user_roles")
               .values(
-                input.roleIds.map((roleId) => ({
-                  user_id: input.id,
+                validated.roleIds.map((roleId) => ({
+                  user_id: validated.id,
                   role_id: roleId,
                 }))
               )
@@ -241,8 +253,8 @@ export const updateUser = createServerFn({ method: "PUT" })
           userId: session.user.id,
           action: "update",
           resourceType: "user",
-          resourceId: input.id,
-          details: { email: input.email },
+          resourceId: validated.id,
+          details: { email: validated.email },
         });
 
         return { success: true };
@@ -256,10 +268,13 @@ export const updateUser = createServerFn({ method: "PUT" })
   });
 
 export const deleteUser = createServerFn({ method: "DELETE" })
-  .validator(getUserSchema)
-  .handler(async ({ data: input }) => {
+  .handler(async (input) => {
     return withErrorHandler(
       async () => {
+        const validated = await getUserSchema.parseAsync(input).catch((err) => {
+          throw new Error(`Validation failed: ${err.message}`);
+        });
+
         const session = await requireAuth();
         const admin = await isAdmin(session.user.id);
         if (!admin) {
@@ -267,7 +282,7 @@ export const deleteUser = createServerFn({ method: "DELETE" })
         }
 
         // Prevent deletion of self
-        if (input.id === session.user.id) {
+        if (validated.id === session.user.id) {
           throw new Error("FORBIDDEN: Cannot delete your own account");
         }
 
@@ -275,21 +290,21 @@ export const deleteUser = createServerFn({ method: "DELETE" })
         const existing = await db
           .selectFrom("users")
           .selectAll()
-          .where("id", "=", input.id)
+          .where("id", "=", validated.id)
           .executeTakeFirst();
 
         if (!existing) {
           throw new Error("NOT_FOUND");
         }
 
-        await db.deleteFrom("user_roles").where("user_id", "=", input.id).execute();
-        await db.deleteFrom("users").where("id", "=", input.id).execute();
+        await db.deleteFrom("user_roles").where("user_id", "=", validated.id).execute();
+        await db.deleteFrom("users").where("id", "=", validated.id).execute();
 
         await logAudit({
           userId: session.user.id,
           action: "delete",
           resourceType: "user",
-          resourceId: input.id,
+          resourceId: validated.id,
         });
 
         return { success: true };
@@ -303,13 +318,16 @@ export const deleteUser = createServerFn({ method: "DELETE" })
   });
 
 export const changePassword = createServerFn({ method: "POST" })
-  .validator(changePasswordSchema)
-  .handler(async ({ data: input }) => {
+  .handler(async (input) => {
     return withErrorHandler(
       async () => {
+        const validated = await changePasswordSchema.parseAsync(input).catch((err) => {
+          throw new Error(`Validation failed: ${err.message}`);
+        });
+
         const session = await requireAuth();
         const admin = await isAdmin(session.user.id);
-        if (!admin && input.id !== session.user.id) {
+        if (!admin && validated.id !== session.user.id) {
           throw new Error("FORBIDDEN");
         }
 
@@ -317,7 +335,7 @@ export const changePassword = createServerFn({ method: "POST" })
         const user = await db
           .selectFrom("users")
           .select(["id", "password_hash"])
-          .where("id", "=", input.id)
+          .where("id", "=", validated.id)
           .executeTakeFirst();
 
         if (!user) {
@@ -325,23 +343,23 @@ export const changePassword = createServerFn({ method: "POST" })
         }
 
         // Verify current password
-        const isValid = await bcrypt.compare(input.currentPassword, user.password_hash);
+        const isValid = await bcrypt.compare(validated.currentPassword, user.password_hash);
         if (!isValid) {
           throw new Error("UNAUTHORIZED: Current password is incorrect");
         }
 
-        const newPasswordHash = await bcrypt.hash(input.newPassword, 10);
+        const newPasswordHash = await bcrypt.hash(validated.newPassword, 10);
         await db
           .updateTable("users")
           .set({ password_hash: newPasswordHash, updated_at: new Date().toISOString() })
-          .where("id", "=", input.id)
+          .where("id", "=", validated.id)
           .execute();
 
         await logAudit({
           userId: session.user.id,
           action: "update",
           resourceType: "user",
-          resourceId: input.id,
+          resourceId: validated.id,
           details: { operation: "changePassword" },
         });
 
@@ -359,7 +377,7 @@ export const changePassword = createServerFn({ method: "POST" })
 // ROLE MANAGEMENT
 // ============================================================================
 
-export const listRoles = createServerFn({ method: "GET" }).handler(async () => {
+export const listRoles = createServerFn({ method: "GET" }).handler(async (input) => {
   return withErrorHandler(
     async () => {
       const session = await requireAuth();
@@ -389,10 +407,13 @@ export const listRoles = createServerFn({ method: "GET" }).handler(async () => {
 });
 
 export const getRole = createServerFn({ method: "GET" })
-  .validator(getRoleSchema)
-  .handler(async ({ data: input }) => {
+  .handler(async (input) => {
     return withErrorHandler(
       async () => {
+        const validated = await getRoleSchema.parseAsync(input).catch((err) => {
+          throw new Error(`Validation failed: ${err.message}`);
+        });
+
         const session = await requireAuth();
         const admin = await isAdmin(session.user.id);
         if (!admin) {
@@ -403,7 +424,7 @@ export const getRole = createServerFn({ method: "GET" })
         const role = await db
           .selectFrom("roles")
           .selectAll()
-          .where("id", "=", input.id)
+          .where("id", "=", validated.id)
           .executeTakeFirst();
 
         if (!role) {
@@ -418,16 +439,19 @@ export const getRole = createServerFn({ method: "GET" })
       {
         userId: (await requireAuth()).user.id,
         action: "execute",
-        details: { operation: "getRole", roleId: input.id },
+        details: { operation: "getRole", roleId: validated.id },
       }
     );
   });
 
 export const createRole = createServerFn({ method: "POST" })
-  .validator(createRoleSchema)
-  .handler(async ({ data: input }) => {
+  .handler(async (input) => {
     return withErrorHandler(
       async () => {
+        const validated = await createRoleSchema.parseAsync(input).catch((err) => {
+          throw new Error(`Validation failed: ${err.message}`);
+        });
+
         const session = await requireAuth();
         const admin = await isAdmin(session.user.id);
         if (!admin) {
@@ -442,9 +466,9 @@ export const createRole = createServerFn({ method: "POST" })
           .insertInto("roles")
           .values({
             id: roleId,
-            name: input.name,
-            description: input.description ?? null,
-            permissions: JSON.stringify(input.permissions || []),
+            name: validated.name,
+            description: validated.description ?? null,
+            permissions: JSON.stringify(validated.permissions || []),
             created_at: now,
           })
           .execute();
@@ -454,7 +478,7 @@ export const createRole = createServerFn({ method: "POST" })
           action: "create",
           resourceType: "role",
           resourceId: roleId,
-          details: { name: input.name },
+          details: { name: validated.name },
         });
 
         return { id: roleId };
@@ -468,10 +492,13 @@ export const createRole = createServerFn({ method: "POST" })
   });
 
 export const updateRole = createServerFn({ method: "PUT" })
-  .validator(updateRoleSchema)
-  .handler(async ({ data: input }) => {
+  .handler(async (input) => {
     return withErrorHandler(
       async () => {
+        const validated = await updateRoleSchema.parseAsync(input).catch((err) => {
+          throw new Error(`Validation failed: ${err.message}`);
+        });
+
         const session = await requireAuth();
         const admin = await isAdmin(session.user.id);
         if (!admin) {
@@ -482,7 +509,7 @@ export const updateRole = createServerFn({ method: "PUT" })
         const existing = await db
           .selectFrom("roles")
           .selectAll()
-          .where("id", "=", input.id)
+          .where("id", "=", validated.id)
           .executeTakeFirst();
 
         if (!existing) {
@@ -490,18 +517,18 @@ export const updateRole = createServerFn({ method: "PUT" })
         }
 
         const updates: Record<string, unknown> = {};
-        if (input.name !== undefined) updates.name = input.name;
-        if (input.description !== undefined) updates.description = input.description;
-        if (input.permissions !== undefined) updates.permissions = JSON.stringify(input.permissions);
+        if (validated.name !== undefined) updates.name = validated.name;
+        if (validated.description !== undefined) updates.description = validated.description;
+        if (validated.permissions !== undefined) updates.permissions = JSON.stringify(validated.permissions);
 
-        await db.updateTable("roles").set(updates).where("id", "=", input.id).execute();
+        await db.updateTable("roles").set(updates).where("id", "=", validated.id).execute();
 
         await logAudit({
           userId: session.user.id,
           action: "update",
           resourceType: "role",
-          resourceId: input.id,
-          details: { name: input.name },
+          resourceId: validated.id,
+          details: { name: validated.name },
         });
 
         return { success: true };
@@ -515,10 +542,13 @@ export const updateRole = createServerFn({ method: "PUT" })
   });
 
 export const deleteRole = createServerFn({ method: "DELETE" })
-  .validator(getRoleSchema)
-  .handler(async ({ data: input }) => {
+  .handler(async (input) => {
     return withErrorHandler(
       async () => {
+        const validated = await getRoleSchema.parseAsync(input).catch((err) => {
+          throw new Error(`Validation failed: ${err.message}`);
+        });
+
         const session = await requireAuth();
         const admin = await isAdmin(session.user.id);
         if (!admin) {
@@ -529,7 +559,7 @@ export const deleteRole = createServerFn({ method: "DELETE" })
         const existing = await db
           .selectFrom("roles")
           .selectAll()
-          .where("id", "=", input.id)
+          .where("id", "=", validated.id)
           .executeTakeFirst();
 
         if (!existing) {
@@ -540,20 +570,20 @@ export const deleteRole = createServerFn({ method: "DELETE" })
         const usageCount = await db
           .selectFrom("user_roles")
           .select(db.fn.count<number>("role_id").as("count"))
-          .where("role_id", "=", input.id)
+          .where("role_id", "=", validated.id)
           .executeTakeFirst();
 
         if ((usageCount?.count ?? 0) > 0) {
           throw new Error("IN_USE: Cannot delete role that is assigned to users");
         }
 
-        await db.deleteFrom("roles").where("id", "=", input.id).execute();
+        await db.deleteFrom("roles").where("id", "=", validated.id).execute();
 
         await logAudit({
           userId: session.user.id,
           action: "delete",
           resourceType: "role",
-          resourceId: input.id,
+          resourceId: validated.id,
         });
 
         return { success: true };
