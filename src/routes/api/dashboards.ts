@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 
 async function getSession(request: Request) {
   const { auth } = await import("@/lib/auth/config");
-  return auth();
+  return auth(request);
 }
 
 export const Route = createFileRoute("/api/dashboards")({

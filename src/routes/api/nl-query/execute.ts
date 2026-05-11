@@ -4,7 +4,7 @@ import { executeNLQuery, executeNLQueryWithOverride } from "@/server-fns/nl-quer
 
 async function getSession(request: Request) {
   const { auth } = await import("@/lib/auth/config");
-  return auth();
+  return auth(request);
 }
 
 export const Route = createFileRoute("/api/nl-query/execute")({

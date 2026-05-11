@@ -1,18 +1,25 @@
 /**
  * SQLite compatibility shim matching the better-sqlite3 API surface.
  * Uses bun:sqlite under Bun runtime, falls back to better-sqlite3 under Node/Vite SSR.
+ *
+ * Avoids top-level await so this module can be statically imported by Vite SSR.
+ * Uses createRequire for synchronous loading of native modules.
  */
 
+import { createRequire } from "node:module";
+
+const _require = createRequire(import.meta.url);
+
+// biome-ignore lint/suspicious/noExplicitAny: runtime compat
 let BunDB: any;
 
 const isBun = typeof (globalThis as any).Bun !== "undefined";
 
 if (isBun) {
-  const mod = await import("bun:sqlite");
-  BunDB = mod.Database;
+  // bun:sqlite is synchronously available under Bun via require
+  BunDB = _require("bun:sqlite").Database;
 } else {
-  const mod = await import("better-sqlite3");
-  BunDB = mod.default;
+  BunDB = _require("better-sqlite3");
 }
 
 class Statement {
@@ -62,7 +69,8 @@ class Statement {
 }
 
 export class Database {
-  private _db: BunDB;
+  // biome-ignore lint/suspicious/noExplicitAny: bun:sqlite internals
+  private _db: any;
 
   constructor(filename: string, _options?: { readonly?: boolean; nativeBinding?: string }) {
     this._db = new BunDB(filename);
@@ -73,12 +81,6 @@ export class Database {
 
   prepare(sql: string): Statement {
     return new Statement(this._db.prepare(sql), sql);
-  }
-
-  // Runs arbitrary SQL (used by better-sqlite3 compat callers)
-  runSQL(sql: string): this {
-    this._db.query(sql).run();
-    return this;
   }
 
   pragma(str: string, options?: { simple?: boolean }): unknown {

@@ -8,7 +8,7 @@ import type {
 
 async function getSession(request: Request) {
   const { auth } = await import("@/lib/auth/config");
-  return auth();
+  return auth(request);
 }
 
 function hexToARGB(hex: string | undefined): string {

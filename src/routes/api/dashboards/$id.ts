@@ -3,7 +3,7 @@ import { json } from "@/lib/server/response";
 
 async function getSession(request: Request) {
   const { auth } = await import("@/lib/auth/config");
-  return auth();
+  return auth(request);
 }
 
 export const Route = createFileRoute("/api/dashboards/$id")({
