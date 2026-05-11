@@ -50,8 +50,8 @@ A production-ready enterprise reporting system built with **TanStack Start**, **
 | **Export Formats** | ExcelJS, PDFKit, PapaParse |
 | **Email** | Nodemailer (SMTP) |
 | **Testing** | Playwright (E2E only) |
-| **Styling** | Tailwind CSS with CSS variables (HSL) |
-| **Deployment** | Docker (Bun Alpine), Nginx, Hostinger VPS |
+| **Styling** | Tailwind CSS with CSS variables (HSL color system) |
+| **Deployment** | Docker (Bun Alpine), Nginx reverse proxy |
 
 ## 🛠️ Installation
 
@@ -122,7 +122,7 @@ Key directories:
 - Bcrypt password hashing (10 rounds)
 - Role-based access control (RBAC)
 - Resource-level permissions
-- Session management with secure cookies
+- Session management with HTTP-only cookies
 
 ### Data Protection
 - AES-256-GCM encryption for data source credentials
@@ -288,7 +288,7 @@ docker build -t enterprise-reporting .
 
 ### Environment Variables
 Key variables for deployment:
-- `AUTH_SECRET` - NextAuth secret (min 32 chars)
+- `AUTH_SECRET` - JWT secret for token signing (min 32 chars)
 - `DATABASE_PATH` - SQLite database file path
 - `REDIS_URL` - Redis connection URL
 - `ENCRYPTION_KEY` - AES-256 encryption key for credentials

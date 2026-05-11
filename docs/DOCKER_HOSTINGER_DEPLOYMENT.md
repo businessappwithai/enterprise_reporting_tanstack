@@ -116,7 +116,7 @@ Then upload to VPS:
 ```bash
 # From your local machine
 scp -r docker-compose.yml .env.docker.production root@your-vps-ip:/srv/enterprise-reporting-system/
-scp -r .next/ next.config.js package.json root@your-vps-ip:/srv/enterprise-reporting-system/
+scp -r .output/ vite.config.ts package.json root@your-vps-ip:/srv/enterprise-reporting-system/
 scp -r src/ public/ root@your-vps-ip:/srv/enterprise-reporting-system/
 ```
 

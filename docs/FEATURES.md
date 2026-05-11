@@ -7,8 +7,8 @@ Complete feature documentation for the Enterprise Reporting System.
 ### User Management
 - **Default Admin**: `admin@admin.com` / `admin` (change immediately)
 - **Default Analyst**: `analyst@example.com` / `analyst123`
-- **JWT Sessions**: 30-day expiration
-- **NextAuth v5**: Credentials provider
+- **JWT Sessions**: Secure HTTP-only cookies
+- **Custom JWT**: Implemented with jose library
 
 ### Role-Based Access Control (RBAC)
 - **Roles**: Admin, Analyst, Viewer
@@ -266,7 +266,7 @@ Complete feature documentation for the Enterprise Reporting System.
 - **Audit Logging**: All sensitive actions logged
 - **SQL Injection Prevention**: Parameterized queries
 - **XSS Prevention**: Input sanitization
-- **CSRF Protection**: NextAuth CSRF tokens
+- **CSRF Protection**: SameSite cookie policy with HTTP-only flags
 
 ## Quick Reference
 

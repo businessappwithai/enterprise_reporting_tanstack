@@ -401,8 +401,8 @@ export const introspectSchema = createServerFn({
   try {
     const { SyncService } = await import("@/lib/metadata/sync-service");
     syncResult = await SyncService.syncDataSource(dataSourceId, session.user.id);
-  } catch (e) {
-    console.error("[Schema Sync] Failed to sync metadata:", e);
+  } catch (_e) {
+    console.error("[Schema Sync] Failed to sync metadata:", _e);
   }
 
   if (schema.tables.length === 0 && schema.views.length === 0) {

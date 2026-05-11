@@ -82,10 +82,10 @@ enterprise-reporting-system/
 
 ## Authentication & Authorization
 
-### NextAuth Configuration
-- **Provider**: Credentials (email/password)
-- **Session**: JWT with 30-day expiry
-- **Location**: `src/lib/auth/config.ts`
+### JWT Configuration
+- **Provider**: Custom implementation with jose library
+- **Session**: JWT with HTTP-only cookies
+- **Location**: `src/lib/auth/middleware.ts`
 
 ### RBAC (Role-Based Access Control)
 - **Permission levels**: `view`, `edit`, `execute`, `admin`
@@ -138,7 +138,7 @@ const { limit, offset } = buildSqlPagination(page, pageSize);
 ### Major Route Groups
 | Route | Purpose |
 |-------|---------|
-| `api/auth/` | NextAuth authentication |
+| `api/auth/` | Authentication endpoints |
 | `api/admin/` | Admin operations (users, roles, permissions) |
 | `api/reports/` | Report data and management |
 | `api/dashboards/` | Dashboard CRUD |
@@ -151,19 +151,21 @@ const { limit, offset } = buildSqlPagination(page, pageSize);
 | `api/metadata/` | Metadata entity operations |
 | `api/health/` | Health check |
 
-### Route Pattern
+### Route Pattern (TanStack Start)
 ```typescript
-// src/app/api/your-route/route.ts
-import { getNextServerSession } from '@/lib/auth/config';
-import { getDb } from '@/lib/db/config';
+// src/routes/api/your-route.ts (file-based routing)
+import { createAPIFileRoute } from '@tanstack/react-router'
+import { requireAuth } from '@/lib/auth/middleware'
+import { getDb } from '@/lib/db/config'
 
-export async function GET(request: Request) {
-  const session = await getNextServerSession();
-  if (!session) return new Response('Unauthorized', { status: 401 });
-
-  const db = getDb();
-  // ... logic
-}
+export const Route = createAPIFileRoute('/api/your-route')({
+  async GET() {
+    const session = await requireAuth()
+    const db = getDb()
+    // ... logic
+    return Response.json({ data: ... })
+  }
+})
 ```
 
 ## Security

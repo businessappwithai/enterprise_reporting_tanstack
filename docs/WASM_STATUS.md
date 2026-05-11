@@ -396,28 +396,17 @@ echo $NEXT_PUBLIC_WASM_ENABLED  # Should be "true"
 ### SharedArrayBuffer Issues
 **Problem:** `SharedArrayBuffer is not defined`
 
-**Fix:** Add COOP/COEP headers to `next.config.js`:
-```javascript
-module.exports = {
-  async headers() {
-    return [
-      {
-        source: '/:path*',
-        headers: [
-          {
-            key: 'Cross-Origin-Opener-Policy',
-            value: 'same-origin',
-          },
-          {
-            key: 'Cross-Origin-Embedder-Policy',
-            value: 'require-corp',
-          },
-        ],
-      },
-    ];
+**Fix:** COOP/COEP headers are already configured in `vite.config.ts`:
+```typescript
+server: {
+  port: 4050,
+  headers: {
+    'Cross-Origin-Opener-Policy': 'same-origin',
+    'Cross-Origin-Embedder-Policy': 'require-corp',
   },
-};
+}
 ```
+These headers enable SharedArrayBuffer support for DuckDB-Wasm multi-threading.
 
 ### Fallback to Server-Side
 If WASM fails to initialize, system automatically falls back to server-side execution. No configuration needed.
