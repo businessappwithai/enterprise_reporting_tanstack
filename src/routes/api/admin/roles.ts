@@ -7,7 +7,7 @@ async function getSession(request: Request) {
   return auth(request)
 }
 
-export const Route = createFileRoute('/api/filters')({
+export const Route = createFileRoute('/api/admin/roles')({
   server: {
     handlers: {
       GET: async ({ request }) => {
@@ -18,12 +18,12 @@ export const Route = createFileRoute('/api/filters')({
           }
 
           const db = getDb()
-          const filters = await db.selectFrom('filter_definitions').selectAll().execute()
+          const roles = await db.selectFrom('roles').selectAll().execute()
 
-          return json({ success: true, data: filters })
+          return json({ success: true, data: roles })
         } catch (error) {
-          console.error('Error fetching filters:', error)
-          return json({ success: false, error: { message: 'Failed to fetch filters' } }, { status: 500 })
+          console.error('Error fetching roles:', error)
+          return json({ success: false, error: { message: 'Failed to fetch roles' } }, { status: 500 })
         }
       },
     },
