@@ -36,9 +36,10 @@ class Statement {
 
   // Knex passes bindings as a single array arg; Kysely spreads them individually.
   // Detect and normalise before forwarding to bun:sqlite (which uses spread params).
+  // bun:sqlite rejects boolean values — must be converted to 0/1.
   private _normalizeArgs(args: unknown[]): unknown[] {
-    if (args.length === 1 && Array.isArray(args[0])) return args[0] as unknown[];
-    return args;
+    const arr = args.length === 1 && Array.isArray(args[0]) ? (args[0] as unknown[]) : args;
+    return arr.map((v) => (typeof v === "boolean" ? (v ? 1 : 0) : v));
   }
 
   run(...args: unknown[]): { changes: number; lastInsertRowid: number | bigint } {
