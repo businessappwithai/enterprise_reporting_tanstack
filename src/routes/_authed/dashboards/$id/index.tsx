@@ -18,7 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { OfflineIndicator } from "@/components/wasm/OfflineIndicator";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import type { DashboardLayout, DashboardWidget } from "@/types/database";
-import type { ActiveFilter as ActiveFilterType } from "@/types/wasm";
+import type { ActiveFilter as ActiveFilterType } from "@/types/filters";
 
 interface WidgetWithData extends DashboardWidget {
   title?: string;

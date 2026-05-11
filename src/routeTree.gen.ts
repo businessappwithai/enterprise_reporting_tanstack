@@ -18,9 +18,6 @@ import { Route as ApiNotificationsRouteImport } from './routes/api/notifications
 import { Route as ApiJobsRouteImport } from './routes/api/jobs'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ApiFiltersRouteImport } from './routes/api/filters'
-import { Route as ApiDataSourcesRouteImport } from './routes/api/data-sources'
-import { Route as ApiDashboardsRouteImport } from './routes/api/dashboards'
-import { Route as ApiChartsRouteImport } from './routes/api/charts'
 import { Route as AuthedSqlEditorRouteImport } from './routes/_authed/sql-editor'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
 import { Route as AuthedBullBoardRouteImport } from './routes/_authed/bull-board'
@@ -42,10 +39,6 @@ import { Route as ApiSqlValidateRouteImport } from './routes/api/sql/validate'
 import { Route as ApiSqlExecuteRouteImport } from './routes/api/sql/execute'
 import { Route as ApiReportsIdRouteImport } from './routes/api/reports/$id'
 import { Route as ApiNlQueryExecuteRouteImport } from './routes/api/nl-query/execute'
-import { Route as ApiDataSourcesActiveRouteImport } from './routes/api/data-sources/active'
-import { Route as ApiDataSourcesIdRouteImport } from './routes/api/data-sources/$id'
-import { Route as ApiDashboardsIdRouteImport } from './routes/api/dashboards/$id'
-import { Route as ApiChartsIdRouteImport } from './routes/api/charts/$id'
 import { Route as ApiAuthPermissionsRouteImport } from './routes/api/auth/permissions'
 import { Route as ApiAdminUsersRouteImport } from './routes/api/admin/users'
 import { Route as ApiAdminRolesRouteImport } from './routes/api/admin/roles'
@@ -59,8 +52,6 @@ import { Route as AuthedAdminPermissionsIndexRouteImport } from './routes/_authe
 import { Route as ApiSqlSchemaDataSourceIdRouteImport } from './routes/api/sql/schema.$dataSourceId'
 import { Route as ApiReportsIdFiltersRouteImport } from './routes/api/reports/$id/filters'
 import { Route as ApiReportsIdExportRouteImport } from './routes/api/reports/$id/export'
-import { Route as ApiDashboardsIdWidgetsRouteImport } from './routes/api/dashboards/$id/widgets'
-import { Route as ApiChartsIdFiltersRouteImport } from './routes/api/charts/$id/filters'
 import { Route as ApiAdminUsersIdRouteImport } from './routes/api/admin/users/$id'
 import { Route as ApiAdminRolesIdRouteImport } from './routes/api/admin/roles/$id'
 import { Route as AuthedReportsIdEditorRouteImport } from './routes/_authed/reports/$id/editor'
@@ -69,8 +60,6 @@ import { Route as AuthedChartsViewerIdRouteImport } from './routes/_authed/chart
 import { Route as AuthedChartsEditorIdRouteImport } from './routes/_authed/charts/editor/$id'
 import { Route as AuthedMetadataEntitiesIdIndexRouteImport } from './routes/_authed/metadata/entities/$id/index'
 import { Route as ApiReportsIdFiltersFilterLinkIdRouteImport } from './routes/api/reports/$id/filters/$filterLinkId'
-import { Route as ApiDashboardsIdWidgetsWidgetIdRouteImport } from './routes/api/dashboards/$id/widgets/$widgetId'
-import { Route as ApiChartsIdFiltersFilterLinkIdRouteImport } from './routes/api/charts/$id/filters/$filterLinkId'
 import { Route as ApiAdminUsersIdRolesRouteImport } from './routes/api/admin/users/$id/roles'
 import { Route as ApiAdminRolesIdPermissionsRouteImport } from './routes/api/admin/roles/$id/permissions'
 
@@ -116,21 +105,6 @@ const ApiHealthRoute = ApiHealthRouteImport.update({
 const ApiFiltersRoute = ApiFiltersRouteImport.update({
   id: '/api/filters',
   path: '/api/filters',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiDataSourcesRoute = ApiDataSourcesRouteImport.update({
-  id: '/api/data-sources',
-  path: '/api/data-sources',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiDashboardsRoute = ApiDashboardsRouteImport.update({
-  id: '/api/dashboards',
-  path: '/api/dashboards',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiChartsRoute = ApiChartsRouteImport.update({
-  id: '/api/charts',
-  path: '/api/charts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthedSqlEditorRoute = AuthedSqlEditorRouteImport.update({
@@ -239,26 +213,6 @@ const ApiNlQueryExecuteRoute = ApiNlQueryExecuteRouteImport.update({
   path: '/api/nl-query/execute',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiDataSourcesActiveRoute = ApiDataSourcesActiveRouteImport.update({
-  id: '/active',
-  path: '/active',
-  getParentRoute: () => ApiDataSourcesRoute,
-} as any)
-const ApiDataSourcesIdRoute = ApiDataSourcesIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ApiDataSourcesRoute,
-} as any)
-const ApiDashboardsIdRoute = ApiDashboardsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ApiDashboardsRoute,
-} as any)
-const ApiChartsIdRoute = ApiChartsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ApiChartsRoute,
-} as any)
 const ApiAuthPermissionsRoute = ApiAuthPermissionsRouteImport.update({
   id: '/api/auth/permissions',
   path: '/api/auth/permissions',
@@ -328,16 +282,6 @@ const ApiReportsIdExportRoute = ApiReportsIdExportRouteImport.update({
   path: '/export',
   getParentRoute: () => ApiReportsIdRoute,
 } as any)
-const ApiDashboardsIdWidgetsRoute = ApiDashboardsIdWidgetsRouteImport.update({
-  id: '/widgets',
-  path: '/widgets',
-  getParentRoute: () => ApiDashboardsIdRoute,
-} as any)
-const ApiChartsIdFiltersRoute = ApiChartsIdFiltersRouteImport.update({
-  id: '/filters',
-  path: '/filters',
-  getParentRoute: () => ApiChartsIdRoute,
-} as any)
 const ApiAdminUsersIdRoute = ApiAdminUsersIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -381,18 +325,6 @@ const ApiReportsIdFiltersFilterLinkIdRoute =
     path: '/$filterLinkId',
     getParentRoute: () => ApiReportsIdFiltersRoute,
   } as any)
-const ApiDashboardsIdWidgetsWidgetIdRoute =
-  ApiDashboardsIdWidgetsWidgetIdRouteImport.update({
-    id: '/$widgetId',
-    path: '/$widgetId',
-    getParentRoute: () => ApiDashboardsIdWidgetsRoute,
-  } as any)
-const ApiChartsIdFiltersFilterLinkIdRoute =
-  ApiChartsIdFiltersFilterLinkIdRouteImport.update({
-    id: '/$filterLinkId',
-    path: '/$filterLinkId',
-    getParentRoute: () => ApiChartsIdFiltersRoute,
-  } as any)
 const ApiAdminUsersIdRolesRoute = ApiAdminUsersIdRolesRouteImport.update({
   id: '/roles',
   path: '/roles',
@@ -411,9 +343,6 @@ export interface FileRoutesByFullPath {
   '/bull-board': typeof AuthedBullBoardRoute
   '/dashboard': typeof AuthedDashboardRoute
   '/sql-editor': typeof AuthedSqlEditorRoute
-  '/api/charts': typeof ApiChartsRouteWithChildren
-  '/api/dashboards': typeof ApiDashboardsRouteWithChildren
-  '/api/data-sources': typeof ApiDataSourcesRouteWithChildren
   '/api/filters': typeof ApiFiltersRoute
   '/api/health': typeof ApiHealthRoute
   '/api/jobs': typeof ApiJobsRoute
@@ -424,10 +353,6 @@ export interface FileRoutesByFullPath {
   '/api/admin/roles': typeof ApiAdminRolesRouteWithChildren
   '/api/admin/users': typeof ApiAdminUsersRouteWithChildren
   '/api/auth/permissions': typeof ApiAuthPermissionsRoute
-  '/api/charts/$id': typeof ApiChartsIdRouteWithChildren
-  '/api/dashboards/$id': typeof ApiDashboardsIdRouteWithChildren
-  '/api/data-sources/$id': typeof ApiDataSourcesIdRoute
-  '/api/data-sources/active': typeof ApiDataSourcesActiveRoute
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
   '/api/reports/$id': typeof ApiReportsIdRouteWithChildren
   '/api/sql/execute': typeof ApiSqlExecuteRoute
@@ -452,8 +377,6 @@ export interface FileRoutesByFullPath {
   '/reports/$id/editor': typeof AuthedReportsIdEditorRoute
   '/api/admin/roles/$id': typeof ApiAdminRolesIdRouteWithChildren
   '/api/admin/users/$id': typeof ApiAdminUsersIdRouteWithChildren
-  '/api/charts/$id/filters': typeof ApiChartsIdFiltersRouteWithChildren
-  '/api/dashboards/$id/widgets': typeof ApiDashboardsIdWidgetsRouteWithChildren
   '/api/reports/$id/export': typeof ApiReportsIdExportRoute
   '/api/reports/$id/filters': typeof ApiReportsIdFiltersRouteWithChildren
   '/api/sql/schema/$dataSourceId': typeof ApiSqlSchemaDataSourceIdRoute
@@ -465,8 +388,6 @@ export interface FileRoutesByFullPath {
   '/settings/email/': typeof AuthedSettingsEmailIndexRoute
   '/api/admin/roles/$id/permissions': typeof ApiAdminRolesIdPermissionsRoute
   '/api/admin/users/$id/roles': typeof ApiAdminUsersIdRolesRoute
-  '/api/charts/$id/filters/$filterLinkId': typeof ApiChartsIdFiltersFilterLinkIdRoute
-  '/api/dashboards/$id/widgets/$widgetId': typeof ApiDashboardsIdWidgetsWidgetIdRoute
   '/api/reports/$id/filters/$filterLinkId': typeof ApiReportsIdFiltersFilterLinkIdRoute
   '/metadata/entities/$id/': typeof AuthedMetadataEntitiesIdIndexRoute
 }
@@ -476,9 +397,6 @@ export interface FileRoutesByTo {
   '/bull-board': typeof AuthedBullBoardRoute
   '/dashboard': typeof AuthedDashboardRoute
   '/sql-editor': typeof AuthedSqlEditorRoute
-  '/api/charts': typeof ApiChartsRouteWithChildren
-  '/api/dashboards': typeof ApiDashboardsRouteWithChildren
-  '/api/data-sources': typeof ApiDataSourcesRouteWithChildren
   '/api/filters': typeof ApiFiltersRoute
   '/api/health': typeof ApiHealthRoute
   '/api/jobs': typeof ApiJobsRoute
@@ -489,10 +407,6 @@ export interface FileRoutesByTo {
   '/api/admin/roles': typeof ApiAdminRolesRouteWithChildren
   '/api/admin/users': typeof ApiAdminUsersRouteWithChildren
   '/api/auth/permissions': typeof ApiAuthPermissionsRoute
-  '/api/charts/$id': typeof ApiChartsIdRouteWithChildren
-  '/api/dashboards/$id': typeof ApiDashboardsIdRouteWithChildren
-  '/api/data-sources/$id': typeof ApiDataSourcesIdRoute
-  '/api/data-sources/active': typeof ApiDataSourcesActiveRoute
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
   '/api/reports/$id': typeof ApiReportsIdRouteWithChildren
   '/api/sql/execute': typeof ApiSqlExecuteRoute
@@ -517,8 +431,6 @@ export interface FileRoutesByTo {
   '/reports/$id/editor': typeof AuthedReportsIdEditorRoute
   '/api/admin/roles/$id': typeof ApiAdminRolesIdRouteWithChildren
   '/api/admin/users/$id': typeof ApiAdminUsersIdRouteWithChildren
-  '/api/charts/$id/filters': typeof ApiChartsIdFiltersRouteWithChildren
-  '/api/dashboards/$id/widgets': typeof ApiDashboardsIdWidgetsRouteWithChildren
   '/api/reports/$id/export': typeof ApiReportsIdExportRoute
   '/api/reports/$id/filters': typeof ApiReportsIdFiltersRouteWithChildren
   '/api/sql/schema/$dataSourceId': typeof ApiSqlSchemaDataSourceIdRoute
@@ -530,8 +442,6 @@ export interface FileRoutesByTo {
   '/settings/email': typeof AuthedSettingsEmailIndexRoute
   '/api/admin/roles/$id/permissions': typeof ApiAdminRolesIdPermissionsRoute
   '/api/admin/users/$id/roles': typeof ApiAdminUsersIdRolesRoute
-  '/api/charts/$id/filters/$filterLinkId': typeof ApiChartsIdFiltersFilterLinkIdRoute
-  '/api/dashboards/$id/widgets/$widgetId': typeof ApiDashboardsIdWidgetsWidgetIdRoute
   '/api/reports/$id/filters/$filterLinkId': typeof ApiReportsIdFiltersFilterLinkIdRoute
   '/metadata/entities/$id': typeof AuthedMetadataEntitiesIdIndexRoute
 }
@@ -543,9 +453,6 @@ export interface FileRoutesById {
   '/_authed/bull-board': typeof AuthedBullBoardRoute
   '/_authed/dashboard': typeof AuthedDashboardRoute
   '/_authed/sql-editor': typeof AuthedSqlEditorRoute
-  '/api/charts': typeof ApiChartsRouteWithChildren
-  '/api/dashboards': typeof ApiDashboardsRouteWithChildren
-  '/api/data-sources': typeof ApiDataSourcesRouteWithChildren
   '/api/filters': typeof ApiFiltersRoute
   '/api/health': typeof ApiHealthRoute
   '/api/jobs': typeof ApiJobsRoute
@@ -556,10 +463,6 @@ export interface FileRoutesById {
   '/api/admin/roles': typeof ApiAdminRolesRouteWithChildren
   '/api/admin/users': typeof ApiAdminUsersRouteWithChildren
   '/api/auth/permissions': typeof ApiAuthPermissionsRoute
-  '/api/charts/$id': typeof ApiChartsIdRouteWithChildren
-  '/api/dashboards/$id': typeof ApiDashboardsIdRouteWithChildren
-  '/api/data-sources/$id': typeof ApiDataSourcesIdRoute
-  '/api/data-sources/active': typeof ApiDataSourcesActiveRoute
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
   '/api/reports/$id': typeof ApiReportsIdRouteWithChildren
   '/api/sql/execute': typeof ApiSqlExecuteRoute
@@ -584,8 +487,6 @@ export interface FileRoutesById {
   '/_authed/reports/$id/editor': typeof AuthedReportsIdEditorRoute
   '/api/admin/roles/$id': typeof ApiAdminRolesIdRouteWithChildren
   '/api/admin/users/$id': typeof ApiAdminUsersIdRouteWithChildren
-  '/api/charts/$id/filters': typeof ApiChartsIdFiltersRouteWithChildren
-  '/api/dashboards/$id/widgets': typeof ApiDashboardsIdWidgetsRouteWithChildren
   '/api/reports/$id/export': typeof ApiReportsIdExportRoute
   '/api/reports/$id/filters': typeof ApiReportsIdFiltersRouteWithChildren
   '/api/sql/schema/$dataSourceId': typeof ApiSqlSchemaDataSourceIdRoute
@@ -597,8 +498,6 @@ export interface FileRoutesById {
   '/_authed/settings/email/': typeof AuthedSettingsEmailIndexRoute
   '/api/admin/roles/$id/permissions': typeof ApiAdminRolesIdPermissionsRoute
   '/api/admin/users/$id/roles': typeof ApiAdminUsersIdRolesRoute
-  '/api/charts/$id/filters/$filterLinkId': typeof ApiChartsIdFiltersFilterLinkIdRoute
-  '/api/dashboards/$id/widgets/$widgetId': typeof ApiDashboardsIdWidgetsWidgetIdRoute
   '/api/reports/$id/filters/$filterLinkId': typeof ApiReportsIdFiltersFilterLinkIdRoute
   '/_authed/metadata/entities/$id/': typeof AuthedMetadataEntitiesIdIndexRoute
 }
@@ -610,9 +509,6 @@ export interface FileRouteTypes {
     | '/bull-board'
     | '/dashboard'
     | '/sql-editor'
-    | '/api/charts'
-    | '/api/dashboards'
-    | '/api/data-sources'
     | '/api/filters'
     | '/api/health'
     | '/api/jobs'
@@ -623,10 +519,6 @@ export interface FileRouteTypes {
     | '/api/admin/roles'
     | '/api/admin/users'
     | '/api/auth/permissions'
-    | '/api/charts/$id'
-    | '/api/dashboards/$id'
-    | '/api/data-sources/$id'
-    | '/api/data-sources/active'
     | '/api/nl-query/execute'
     | '/api/reports/$id'
     | '/api/sql/execute'
@@ -651,8 +543,6 @@ export interface FileRouteTypes {
     | '/reports/$id/editor'
     | '/api/admin/roles/$id'
     | '/api/admin/users/$id'
-    | '/api/charts/$id/filters'
-    | '/api/dashboards/$id/widgets'
     | '/api/reports/$id/export'
     | '/api/reports/$id/filters'
     | '/api/sql/schema/$dataSourceId'
@@ -664,8 +554,6 @@ export interface FileRouteTypes {
     | '/settings/email/'
     | '/api/admin/roles/$id/permissions'
     | '/api/admin/users/$id/roles'
-    | '/api/charts/$id/filters/$filterLinkId'
-    | '/api/dashboards/$id/widgets/$widgetId'
     | '/api/reports/$id/filters/$filterLinkId'
     | '/metadata/entities/$id/'
   fileRoutesByTo: FileRoutesByTo
@@ -675,9 +563,6 @@ export interface FileRouteTypes {
     | '/bull-board'
     | '/dashboard'
     | '/sql-editor'
-    | '/api/charts'
-    | '/api/dashboards'
-    | '/api/data-sources'
     | '/api/filters'
     | '/api/health'
     | '/api/jobs'
@@ -688,10 +573,6 @@ export interface FileRouteTypes {
     | '/api/admin/roles'
     | '/api/admin/users'
     | '/api/auth/permissions'
-    | '/api/charts/$id'
-    | '/api/dashboards/$id'
-    | '/api/data-sources/$id'
-    | '/api/data-sources/active'
     | '/api/nl-query/execute'
     | '/api/reports/$id'
     | '/api/sql/execute'
@@ -716,8 +597,6 @@ export interface FileRouteTypes {
     | '/reports/$id/editor'
     | '/api/admin/roles/$id'
     | '/api/admin/users/$id'
-    | '/api/charts/$id/filters'
-    | '/api/dashboards/$id/widgets'
     | '/api/reports/$id/export'
     | '/api/reports/$id/filters'
     | '/api/sql/schema/$dataSourceId'
@@ -729,8 +608,6 @@ export interface FileRouteTypes {
     | '/settings/email'
     | '/api/admin/roles/$id/permissions'
     | '/api/admin/users/$id/roles'
-    | '/api/charts/$id/filters/$filterLinkId'
-    | '/api/dashboards/$id/widgets/$widgetId'
     | '/api/reports/$id/filters/$filterLinkId'
     | '/metadata/entities/$id'
   id:
@@ -741,9 +618,6 @@ export interface FileRouteTypes {
     | '/_authed/bull-board'
     | '/_authed/dashboard'
     | '/_authed/sql-editor'
-    | '/api/charts'
-    | '/api/dashboards'
-    | '/api/data-sources'
     | '/api/filters'
     | '/api/health'
     | '/api/jobs'
@@ -754,10 +628,6 @@ export interface FileRouteTypes {
     | '/api/admin/roles'
     | '/api/admin/users'
     | '/api/auth/permissions'
-    | '/api/charts/$id'
-    | '/api/dashboards/$id'
-    | '/api/data-sources/$id'
-    | '/api/data-sources/active'
     | '/api/nl-query/execute'
     | '/api/reports/$id'
     | '/api/sql/execute'
@@ -782,8 +652,6 @@ export interface FileRouteTypes {
     | '/_authed/reports/$id/editor'
     | '/api/admin/roles/$id'
     | '/api/admin/users/$id'
-    | '/api/charts/$id/filters'
-    | '/api/dashboards/$id/widgets'
     | '/api/reports/$id/export'
     | '/api/reports/$id/filters'
     | '/api/sql/schema/$dataSourceId'
@@ -795,8 +663,6 @@ export interface FileRouteTypes {
     | '/_authed/settings/email/'
     | '/api/admin/roles/$id/permissions'
     | '/api/admin/users/$id/roles'
-    | '/api/charts/$id/filters/$filterLinkId'
-    | '/api/dashboards/$id/widgets/$widgetId'
     | '/api/reports/$id/filters/$filterLinkId'
     | '/_authed/metadata/entities/$id/'
   fileRoutesById: FileRoutesById
@@ -805,9 +671,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthedRoute: typeof AuthedRouteWithChildren
   LoginRoute: typeof LoginRoute
-  ApiChartsRoute: typeof ApiChartsRouteWithChildren
-  ApiDashboardsRoute: typeof ApiDashboardsRouteWithChildren
-  ApiDataSourcesRoute: typeof ApiDataSourcesRouteWithChildren
   ApiFiltersRoute: typeof ApiFiltersRoute
   ApiHealthRoute: typeof ApiHealthRoute
   ApiJobsRoute: typeof ApiJobsRoute
@@ -890,27 +753,6 @@ declare module '@tanstack/react-router' {
       path: '/api/filters'
       fullPath: '/api/filters'
       preLoaderRoute: typeof ApiFiltersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/data-sources': {
-      id: '/api/data-sources'
-      path: '/api/data-sources'
-      fullPath: '/api/data-sources'
-      preLoaderRoute: typeof ApiDataSourcesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/dashboards': {
-      id: '/api/dashboards'
-      path: '/api/dashboards'
-      fullPath: '/api/dashboards'
-      preLoaderRoute: typeof ApiDashboardsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/charts': {
-      id: '/api/charts'
-      path: '/api/charts'
-      fullPath: '/api/charts'
-      preLoaderRoute: typeof ApiChartsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authed/sql-editor': {
@@ -1060,34 +902,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiNlQueryExecuteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/data-sources/active': {
-      id: '/api/data-sources/active'
-      path: '/active'
-      fullPath: '/api/data-sources/active'
-      preLoaderRoute: typeof ApiDataSourcesActiveRouteImport
-      parentRoute: typeof ApiDataSourcesRoute
-    }
-    '/api/data-sources/$id': {
-      id: '/api/data-sources/$id'
-      path: '/$id'
-      fullPath: '/api/data-sources/$id'
-      preLoaderRoute: typeof ApiDataSourcesIdRouteImport
-      parentRoute: typeof ApiDataSourcesRoute
-    }
-    '/api/dashboards/$id': {
-      id: '/api/dashboards/$id'
-      path: '/$id'
-      fullPath: '/api/dashboards/$id'
-      preLoaderRoute: typeof ApiDashboardsIdRouteImport
-      parentRoute: typeof ApiDashboardsRoute
-    }
-    '/api/charts/$id': {
-      id: '/api/charts/$id'
-      path: '/$id'
-      fullPath: '/api/charts/$id'
-      preLoaderRoute: typeof ApiChartsIdRouteImport
-      parentRoute: typeof ApiChartsRoute
-    }
     '/api/auth/permissions': {
       id: '/api/auth/permissions'
       path: '/api/auth/permissions'
@@ -1179,20 +993,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiReportsIdExportRouteImport
       parentRoute: typeof ApiReportsIdRoute
     }
-    '/api/dashboards/$id/widgets': {
-      id: '/api/dashboards/$id/widgets'
-      path: '/widgets'
-      fullPath: '/api/dashboards/$id/widgets'
-      preLoaderRoute: typeof ApiDashboardsIdWidgetsRouteImport
-      parentRoute: typeof ApiDashboardsIdRoute
-    }
-    '/api/charts/$id/filters': {
-      id: '/api/charts/$id/filters'
-      path: '/filters'
-      fullPath: '/api/charts/$id/filters'
-      preLoaderRoute: typeof ApiChartsIdFiltersRouteImport
-      parentRoute: typeof ApiChartsIdRoute
-    }
     '/api/admin/users/$id': {
       id: '/api/admin/users/$id'
       path: '/$id'
@@ -1248,20 +1048,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/reports/$id/filters/$filterLinkId'
       preLoaderRoute: typeof ApiReportsIdFiltersFilterLinkIdRouteImport
       parentRoute: typeof ApiReportsIdFiltersRoute
-    }
-    '/api/dashboards/$id/widgets/$widgetId': {
-      id: '/api/dashboards/$id/widgets/$widgetId'
-      path: '/$widgetId'
-      fullPath: '/api/dashboards/$id/widgets/$widgetId'
-      preLoaderRoute: typeof ApiDashboardsIdWidgetsWidgetIdRouteImport
-      parentRoute: typeof ApiDashboardsIdWidgetsRoute
-    }
-    '/api/charts/$id/filters/$filterLinkId': {
-      id: '/api/charts/$id/filters/$filterLinkId'
-      path: '/$filterLinkId'
-      fullPath: '/api/charts/$id/filters/$filterLinkId'
-      preLoaderRoute: typeof ApiChartsIdFiltersFilterLinkIdRouteImport
-      parentRoute: typeof ApiChartsIdFiltersRoute
     }
     '/api/admin/users/$id/roles': {
       id: '/api/admin/users/$id/roles'
@@ -1338,93 +1124,6 @@ const AuthedRouteChildren: AuthedRouteChildren = {
 
 const AuthedRouteWithChildren =
   AuthedRoute._addFileChildren(AuthedRouteChildren)
-
-interface ApiChartsIdFiltersRouteChildren {
-  ApiChartsIdFiltersFilterLinkIdRoute: typeof ApiChartsIdFiltersFilterLinkIdRoute
-}
-
-const ApiChartsIdFiltersRouteChildren: ApiChartsIdFiltersRouteChildren = {
-  ApiChartsIdFiltersFilterLinkIdRoute: ApiChartsIdFiltersFilterLinkIdRoute,
-}
-
-const ApiChartsIdFiltersRouteWithChildren =
-  ApiChartsIdFiltersRoute._addFileChildren(ApiChartsIdFiltersRouteChildren)
-
-interface ApiChartsIdRouteChildren {
-  ApiChartsIdFiltersRoute: typeof ApiChartsIdFiltersRouteWithChildren
-}
-
-const ApiChartsIdRouteChildren: ApiChartsIdRouteChildren = {
-  ApiChartsIdFiltersRoute: ApiChartsIdFiltersRouteWithChildren,
-}
-
-const ApiChartsIdRouteWithChildren = ApiChartsIdRoute._addFileChildren(
-  ApiChartsIdRouteChildren,
-)
-
-interface ApiChartsRouteChildren {
-  ApiChartsIdRoute: typeof ApiChartsIdRouteWithChildren
-}
-
-const ApiChartsRouteChildren: ApiChartsRouteChildren = {
-  ApiChartsIdRoute: ApiChartsIdRouteWithChildren,
-}
-
-const ApiChartsRouteWithChildren = ApiChartsRoute._addFileChildren(
-  ApiChartsRouteChildren,
-)
-
-interface ApiDashboardsIdWidgetsRouteChildren {
-  ApiDashboardsIdWidgetsWidgetIdRoute: typeof ApiDashboardsIdWidgetsWidgetIdRoute
-}
-
-const ApiDashboardsIdWidgetsRouteChildren: ApiDashboardsIdWidgetsRouteChildren =
-  {
-    ApiDashboardsIdWidgetsWidgetIdRoute: ApiDashboardsIdWidgetsWidgetIdRoute,
-  }
-
-const ApiDashboardsIdWidgetsRouteWithChildren =
-  ApiDashboardsIdWidgetsRoute._addFileChildren(
-    ApiDashboardsIdWidgetsRouteChildren,
-  )
-
-interface ApiDashboardsIdRouteChildren {
-  ApiDashboardsIdWidgetsRoute: typeof ApiDashboardsIdWidgetsRouteWithChildren
-}
-
-const ApiDashboardsIdRouteChildren: ApiDashboardsIdRouteChildren = {
-  ApiDashboardsIdWidgetsRoute: ApiDashboardsIdWidgetsRouteWithChildren,
-}
-
-const ApiDashboardsIdRouteWithChildren = ApiDashboardsIdRoute._addFileChildren(
-  ApiDashboardsIdRouteChildren,
-)
-
-interface ApiDashboardsRouteChildren {
-  ApiDashboardsIdRoute: typeof ApiDashboardsIdRouteWithChildren
-}
-
-const ApiDashboardsRouteChildren: ApiDashboardsRouteChildren = {
-  ApiDashboardsIdRoute: ApiDashboardsIdRouteWithChildren,
-}
-
-const ApiDashboardsRouteWithChildren = ApiDashboardsRoute._addFileChildren(
-  ApiDashboardsRouteChildren,
-)
-
-interface ApiDataSourcesRouteChildren {
-  ApiDataSourcesIdRoute: typeof ApiDataSourcesIdRoute
-  ApiDataSourcesActiveRoute: typeof ApiDataSourcesActiveRoute
-}
-
-const ApiDataSourcesRouteChildren: ApiDataSourcesRouteChildren = {
-  ApiDataSourcesIdRoute: ApiDataSourcesIdRoute,
-  ApiDataSourcesActiveRoute: ApiDataSourcesActiveRoute,
-}
-
-const ApiDataSourcesRouteWithChildren = ApiDataSourcesRoute._addFileChildren(
-  ApiDataSourcesRouteChildren,
-)
 
 interface ApiReportsIdFiltersRouteChildren {
   ApiReportsIdFiltersFilterLinkIdRoute: typeof ApiReportsIdFiltersFilterLinkIdRoute
@@ -1515,9 +1214,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthedRoute: AuthedRouteWithChildren,
   LoginRoute: LoginRoute,
-  ApiChartsRoute: ApiChartsRouteWithChildren,
-  ApiDashboardsRoute: ApiDashboardsRouteWithChildren,
-  ApiDataSourcesRoute: ApiDataSourcesRouteWithChildren,
   ApiFiltersRoute: ApiFiltersRoute,
   ApiHealthRoute: ApiHealthRoute,
   ApiJobsRoute: ApiJobsRoute,

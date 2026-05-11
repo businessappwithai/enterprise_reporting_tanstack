@@ -1,10 +1,15 @@
 /**
- * Type definitions for the WASM-centric architecture.
- * Covers DuckDB, Arrow, Parquet, ECharts, and datasets.
+ * Type definitions for DuckDB WASM and in-memory analytics.
+ * This file contains ONLY WASM-specific types.
+ * General-purpose types have been moved to:
+ * - src/types/database.ts (ColumnSchema, TableSchema, QueryResult)
+ * - src/types/charts.ts (ChartType, EChartsConfig, etc.)
+ * - src/types/datasets.ts (DatasetInfo, DatasetMetadata)
+ * - src/types/filters.ts (FilterLink, ActiveFilter, etc.)
  */
 
 // ---------------------------------------------------------------------------
-// DuckDB types
+// DuckDB WASM Configuration
 // ---------------------------------------------------------------------------
 
 export type DuckDBStatus = "initializing" | "ready" | "error";
@@ -20,31 +25,6 @@ export interface DuckDBConfig {
   logger?: (message: string, level: "info" | "warn" | "error") => void;
 }
 
-export interface ColumnSchema {
-  name: string;
-  type: string;
-  nullable: boolean;
-}
-
-export interface TableSchema {
-  tableName: string;
-  columns: ColumnSchema[];
-  rowCount?: number;
-}
-
-export interface QueryResult {
-  /** Result rows as plain objects */
-  rows: Record<string, unknown>[];
-  /** Number of rows */
-  rowCount: number;
-  /** Column schema */
-  columns: ColumnSchema[];
-  /** Execution time in ms */
-  executionTime: number;
-  /** The SQL that was executed */
-  query: string;
-}
-
 export interface MemoryUsage {
   /** Currently used memory in bytes */
   used: number;
@@ -55,56 +35,7 @@ export interface MemoryUsage {
 }
 
 // ---------------------------------------------------------------------------
-// Dataset types
-// ---------------------------------------------------------------------------
-
-export type DatasetCacheStatus = "not-cached" | "cached" | "stale";
-export type DatasetStatus = "pending" | "ready" | "error";
-
-export interface DatasetInfo {
-  id: string;
-  name: string;
-  description?: string | null;
-  dataSourceId: string;
-  dataSourceName?: string;
-  tableName: string;
-  query?: string;
-  rowCount: number;
-  fileSize: number;
-  compressedSize?: number;
-  memorySize: number;
-  schema: ColumnSchema[];
-  loadedAt?: Date;
-  refreshedAt?: Date;
-  cacheStatus: DatasetCacheStatus;
-  isLoading: boolean;
-  loadProgress?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  lastAccessedAt?: string | null;
-  downloadUrl?: string;
-  status?: DatasetStatus;
-}
-
-export interface DatasetMetadata {
-  id: string;
-  name: string;
-  description: string | null;
-  dataSourceId: string;
-  dataSourceName: string;
-  rowCount: number;
-  fileSize: number;
-  compressedSize: number;
-  columns: ColumnSchema[];
-  createdAt: string;
-  updatedAt: string;
-  lastAccessedAt: string | null;
-  downloadUrl: string;
-  isCached: boolean;
-}
-
-// ---------------------------------------------------------------------------
-// Parquet export types
+// Parquet Export Types
 // ---------------------------------------------------------------------------
 
 export type ParquetCompression = "uncompressed" | "snappy" | "gzip" | "brotli" | "lz4" | "zstd";
@@ -126,7 +57,7 @@ export interface ParquetExportResult {
   rowCount: number;
   totalSize: number;
   compressionRatio: number;
-  schema: ColumnSchema[];
+  schema: Array<{ name: string; type: string }>;
   duration: number;
   createdAt: Date;
 }
@@ -141,148 +72,7 @@ export interface ExportProgress {
 }
 
 // ---------------------------------------------------------------------------
-// Chart / ECharts types
-// ---------------------------------------------------------------------------
-
-export type ChartType =
-  // Basic
-  | "bar"
-  | "line"
-  | "area"
-  | "pie"
-  | "doughnut"
-  | "scatter"
-  // Advanced
-  | "heatmap"
-  | "treemap"
-  | "sunburst"
-  | "sankey"
-  | "funnel"
-  | "gauge"
-  // Geospatial
-  | "map"
-  | "geoScatter"
-  // Relational
-  | "graph"
-  | "tree"
-  // Statistical
-  | "boxplot"
-  | "candlestick"
-  | "parallel"
-  // 3D (optional)
-  | "bar3d"
-  | "scatter3d"
-  | "surface3d";
-
-export interface AxisConfig {
-  type?: "category" | "value" | "time" | "log";
-  name?: string;
-  min?: number | string;
-  max?: number | string;
-  data?: string[];
-}
-
-export interface LegendConfig {
-  data?: string[];
-  orient?: "horizontal" | "vertical";
-  left?: string | number;
-  top?: string | number;
-}
-
-export interface TooltipConfig {
-  trigger?: "item" | "axis" | "none";
-  formatter?: string;
-}
-
-export interface AnimationConfig {
-  duration?: number;
-  easing?: string;
-}
-
-export interface DataMapping {
-  /** Column for x-axis / category */
-  x?: string;
-  /** Column(s) for y-axis / value */
-  y?: string | string[];
-  /** Column for color encoding */
-  color?: string;
-  /** Column for size encoding */
-  size?: string;
-  /** Column for grouping (series) */
-  group?: string;
-  /** Aggregation function */
-  aggregation?: "sum" | "avg" | "count" | "min" | "max" | "none";
-}
-
-export interface EChartsConfig {
-  type: ChartType;
-  title?: string;
-  subtitle?: string;
-  width?: string | number;
-  height?: string | number;
-  xAxis?: AxisConfig;
-  yAxis?: AxisConfig;
-  colors?: string[];
-  /** Per-series colors (maps to series order) */
-  seriesColors?: string[];
-  legend?: boolean | LegendConfig;
-  tooltip?: boolean | TooltipConfig;
-  dataMapping: DataMapping;
-  customOptions?: Record<string, unknown>;
-  animation?: boolean | AnimationConfig;
-}
-
-// ---------------------------------------------------------------------------
-// TanStack Table types (for data grid)
-// ---------------------------------------------------------------------------
-
-export interface TableFilterState {
-  columnId: string;
-  operator: "eq" | "ne" | "gt" | "lt" | "gte" | "lte" | "contains" | "startsWith" | "in" | "notIn";
-  value: unknown;
-}
-
-export interface TableSortState {
-  columnId: string;
-  direction: "asc" | "desc";
-}
-
-// ---------------------------------------------------------------------------
-// Cross-filter types
-// ---------------------------------------------------------------------------
-
-export interface FilterLink {
-  sourceWidgetId: string;
-  columnMapping: Record<string, string>;
-  operator?: "eq" | "in" | "range";
-}
-
-export interface WidgetFilterConfig {
-  widgetId: string;
-  type: "chart" | "table" | "metric";
-  datasetId: string;
-  baseQuery: string;
-  filterLinks: FilterLink[];
-  broadcastsFilters?: boolean;
-  filterableColumns?: string[];
-}
-
-export interface ActiveFilter {
-  id: string;
-  sourceWidgetId: string;
-  column: string;
-  values: unknown[];
-  operator: "eq" | "in" | "range";
-  affectedWidgets: string[];
-}
-
-export interface CrossFilterConfig {
-  dashboardId: string;
-  widgets: WidgetFilterConfig[];
-}
-
-// ---------------------------------------------------------------------------
-// Execution mode types
+// Browser Capability Detection
 // ---------------------------------------------------------------------------
 
 export type ExecutionMode = "auto" | "server" | "client";
@@ -296,7 +86,7 @@ export interface BrowserCapabilities {
 }
 
 // ---------------------------------------------------------------------------
-// API error codes
+// Error Codes & Presets (Constants)
 // ---------------------------------------------------------------------------
 
 export const ERROR_CODES = {
@@ -316,10 +106,6 @@ export const ERROR_CODES = {
   INTERNAL_ERROR: "SRV_001",
   SERVICE_UNAVAILABLE: "SRV_002",
 } as const;
-
-// ---------------------------------------------------------------------------
-// Parquet presets
-// ---------------------------------------------------------------------------
 
 export const PARQUET_PRESETS = {
   fast: {

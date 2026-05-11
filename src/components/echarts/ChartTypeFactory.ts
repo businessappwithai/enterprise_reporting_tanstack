@@ -1,5 +1,5 @@
 import type { EChartsOption } from "echarts";
-import type { ChartType, EChartsConfig } from "@/types/wasm";
+import type { ChartType, EChartsConfig } from "@/types/charts";
 import {
   buildFunnel,
   buildGauge,

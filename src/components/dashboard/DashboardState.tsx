@@ -8,7 +8,7 @@
 import type React from "react";
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import { useCrossFilter } from "@/hooks/useCrossFilter";
-import type { ActiveFilter, CrossFilterConfig } from "@/types/wasm";
+import type { ActiveFilter, CrossFilterConfig } from "@/types/filters";
 
 interface DashboardStateValue {
   /** Cross-filter state */

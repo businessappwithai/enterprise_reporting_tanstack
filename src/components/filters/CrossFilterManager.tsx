@@ -7,7 +7,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { ActiveFilter } from "@/types/wasm";
+import type { ActiveFilter } from "@/types/filters";
 
 interface CrossFilterManagerProps {
   activeFilters: ActiveFilter[];

@@ -6,11 +6,11 @@
 import { existsSync, statSync, writeFileSync } from "node:fs";
 import { nanoid } from "nanoid";
 import type {
-  ColumnSchema,
   ExportProgress,
   ParquetExportConfig,
   ParquetExportResult,
 } from "@/types/wasm";
+import type { ColumnSchema } from "@/types/database";
 import { rowsToArrowFile } from "./arrow-exporter";
 import { estimateRowCount, executeSourceQuery } from "./source-connector";
 import { ensureExportDir, getExportPath } from "./storage";

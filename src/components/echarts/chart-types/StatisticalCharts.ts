@@ -1,5 +1,5 @@
 import type { EChartsOption } from "echarts";
-import type { EChartsConfig } from "@/types/wasm";
+import type { EChartsConfig } from "@/types/charts";
 import { extractCategories } from "../DataAdapter";
 
 export function buildBoxplot(

@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { DatasetInfo } from "@/types/wasm";
+import type { DatasetInfo } from "@/types/datasets";
 
 interface DatasetSelectorProps {
   datasets: DatasetInfo[];

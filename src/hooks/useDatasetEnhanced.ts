@@ -8,7 +8,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useDuckDB } from "@/components/duckdb/DuckDBProvider";
 import { isFeatureEnabled } from "@/lib/feature-flags";
-import type { DatasetInfo } from "@/types/wasm";
+import type { DatasetInfo } from "@/types/datasets";
 
 interface UseDatasetEnhancedReturn {
   datasets: DatasetInfo[];

@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { ColumnSchema, TableFilterState } from "@/types/wasm";
+import type { ColumnSchema, TableFilterState } from "@/types/filters";
 
 interface DuckDBFilterBarProps {
   columns: ColumnSchema[];

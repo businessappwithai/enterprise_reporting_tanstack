@@ -7,7 +7,7 @@
 
 import { MemoryMonitor } from "@/components/duckdb/MemoryMonitor";
 import { Button } from "@/components/ui/button";
-import type { DatasetInfo } from "@/types/wasm";
+import type { DatasetInfo } from "@/types/datasets";
 import { DatasetCard } from "./DatasetCard";
 
 interface DatasetManagerProps {

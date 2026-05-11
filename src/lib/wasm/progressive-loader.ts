@@ -3,7 +3,7 @@
  * Streams data in chunks and renders partial results.
  */
 
-import type { ColumnSchema } from "@/types/wasm";
+import type { ColumnSchema } from "@/types/database";
 
 export interface ProgressiveLoadConfig {
   /** Total number of rows in the dataset */

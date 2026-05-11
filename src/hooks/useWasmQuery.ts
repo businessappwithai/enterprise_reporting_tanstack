@@ -6,7 +6,7 @@
 
 import { useCallback, useState } from "react";
 import { useDuckDB } from "@/components/duckdb/DuckDBProvider";
-import type { QueryResult } from "@/types/wasm";
+import type { QueryResult } from "@/types/database";
 
 interface UseWasmQueryReturn {
   result: QueryResult | null;

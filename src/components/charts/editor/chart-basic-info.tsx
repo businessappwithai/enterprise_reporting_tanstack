@@ -1,7 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { EditorPanel } from "./EditorPanel";
 
 interface ChartBasicInfoProps {
   chartName: string;
@@ -17,11 +17,7 @@ export function ChartBasicInfo({
   onDescriptionChange,
 }: ChartBasicInfoProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Basic Information</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <EditorPanel title="Basic Information" contentClassName="space-y-4">
         <div>
           <Label htmlFor="chart-name">Chart Name *</Label>
           <Input
@@ -41,7 +37,6 @@ export function ChartBasicInfo({
             rows={3}
           />
         </div>
-      </CardContent>
-    </Card>
+    </EditorPanel>
   );
 }

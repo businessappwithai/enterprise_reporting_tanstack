@@ -7,7 +7,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { DatasetInfo } from "@/types/wasm";
+import type { DatasetInfo } from "@/types/datasets";
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) return "0 B";

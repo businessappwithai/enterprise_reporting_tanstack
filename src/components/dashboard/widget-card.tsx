@@ -12,7 +12,7 @@ import { DataTable } from "@/components/reporting/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import type { ChartConfig, ChartType, DashboardWidget, DataMapping } from "@/types/database";
-import type { ActiveFilter } from "@/types/wasm";
+import type { ActiveFilter } from "@/types/filters";
 import { useDashboardState } from "./DashboardState";
 
 interface WidgetCardProps {

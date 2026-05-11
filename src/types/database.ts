@@ -800,3 +800,32 @@ export interface MetadataEntityListParams {
   page?: number;
   limit?: number;
 }
+
+// ---------------------------------------------------------------------------
+// Schema and Query Result types (moved from wasm.ts)
+// ---------------------------------------------------------------------------
+
+export interface ColumnSchema {
+  name: string;
+  type: string;
+  nullable: boolean;
+}
+
+export interface TableSchema {
+  tableName: string;
+  columns: ColumnSchema[];
+  rowCount?: number;
+}
+
+export interface QueryResult {
+  /** Result rows as plain objects */
+  rows: Record<string, unknown>[];
+  /** Number of rows */
+  rowCount: number;
+  /** Column schema */
+  columns: ColumnSchema[];
+  /** Execution time in ms */
+  executionTime: number;
+  /** The SQL that was executed */
+  query: string;
+}

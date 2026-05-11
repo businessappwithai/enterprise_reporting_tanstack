@@ -2,7 +2,7 @@
  * Data adapter: converts query result rows to ECharts data structures.
  */
 
-import type { DataMapping } from "@/types/wasm";
+import type { DataMapping } from "@/types/charts";
 
 /**
  * Extract category (x-axis) values from rows using the data mapping.

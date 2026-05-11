@@ -7,7 +7,8 @@
 
 import { EChartsRenderer } from "@/components/echarts/EChartsRenderer";
 import { DataTable } from "@/components/reporting/DataTable";
-import type { ColumnSchema, EChartsConfig } from "@/types/wasm";
+import type { ColumnSchema } from "@/types/database";
+import type { EChartsConfig } from "@/types/charts";
 
 interface WidgetRendererProps {
   type: "chart" | "table" | "metric";

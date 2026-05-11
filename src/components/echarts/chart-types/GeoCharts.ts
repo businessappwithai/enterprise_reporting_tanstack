@@ -1,5 +1,5 @@
 import type { EChartsOption } from "echarts";
-import type { EChartsConfig } from "@/types/wasm";
+import type { EChartsConfig } from "@/types/charts";
 
 export function buildMap(config: EChartsConfig, rows: Record<string, unknown>[]): EChartsOption {
   const valueCol = Array.isArray(config.dataMapping.y)

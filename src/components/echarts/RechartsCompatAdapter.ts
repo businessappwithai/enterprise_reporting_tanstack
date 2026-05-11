@@ -8,7 +8,7 @@ import type {
   EChartsConfig,
   ChartType as WasmChartType,
   DataMapping as WasmDataMapping,
-} from "@/types/wasm";
+} from "@/types/charts";
 
 const CHART_TYPE_MAP: Record<string, WasmChartType> = {
   bar: "bar",

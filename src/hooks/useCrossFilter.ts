@@ -6,7 +6,7 @@
 
 import { nanoid } from "nanoid";
 import { useCallback, useMemo, useState } from "react";
-import type { ActiveFilter, CrossFilterConfig, WidgetFilterConfig } from "@/types/wasm";
+import type { ActiveFilter, CrossFilterConfig, WidgetFilterConfig } from "@/types/filters";
 
 interface UseCrossFilterReturn {
   activeFilters: ActiveFilter[];

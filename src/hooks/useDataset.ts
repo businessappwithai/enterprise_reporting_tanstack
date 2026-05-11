@@ -9,7 +9,7 @@
 import { useCallback, useState } from "react";
 import { useDuckDB } from "@/components/duckdb/DuckDBProvider";
 import { fetchParquetBuffer } from "@/lib/arrow/parquet";
-import type { DatasetInfo } from "@/types/wasm";
+import type { DatasetInfo } from "@/types/datasets";
 
 interface UseDatasetReturn {
   datasets: DatasetInfo[];

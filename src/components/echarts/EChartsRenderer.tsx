@@ -38,7 +38,7 @@ import { CanvasRenderer } from "echarts/renderers";
 import ReactEChartsCore from "echarts-for-react/lib/core";
 import { useTheme } from "next-themes";
 import { useMemo } from "react";
-import type { EChartsConfig } from "@/types/wasm";
+import type { EChartsConfig } from "@/types/charts";
 import { buildChart } from "./ChartTypeFactory";
 import { getBaseEChartsOption, getEChartsThemeColors } from "./ThemeAdapter";
 

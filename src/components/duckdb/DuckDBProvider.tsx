@@ -19,9 +19,11 @@ import type {
   DuckDBConfig,
   DuckDBStatus,
   MemoryUsage,
+} from "@/types/wasm";
+import type {
   QueryResult,
   TableSchema,
-} from "@/types/wasm";
+} from "@/types/database";
 
 // ---------------------------------------------------------------------------
 // Context value

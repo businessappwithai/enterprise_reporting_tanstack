@@ -6,7 +6,7 @@
  */
 
 import React from "react";
-import type { CrossFilterConfig } from "@/types/wasm";
+import type { CrossFilterConfig } from "@/types/filters";
 import { DashboardStateProvider } from "./DashboardState";
 
 interface CrossFilterProviderProps {

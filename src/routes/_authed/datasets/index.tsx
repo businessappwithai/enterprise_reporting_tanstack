@@ -5,7 +5,7 @@ import { useDuckDB } from "@/components/duckdb/DuckDBProvider";
 import { Button } from "@/components/ui/button";
 import { useDataset } from "@/hooks/useDataset";
 import { isFeatureEnabled } from "@/lib/feature-flags";
-import type { DatasetInfo } from "@/types/wasm";
+import type { DatasetInfo } from "@/types/datasets";
 
 export const Route = createFileRoute("/_authed/datasets/")({
   component: DatasetsPage,
