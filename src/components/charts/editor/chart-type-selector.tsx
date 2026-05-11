@@ -1,5 +1,4 @@
 import { AreaChart, BarChart3, LineChart, PieChart, ScatterChart } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -9,6 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { EditorPanel } from "./EditorPanel";
 import type { ChartType } from "@/types/database";
 
 export const CHART_TYPES: {
@@ -83,42 +83,37 @@ interface ChartTypeSelectorProps {
 
 export function ChartTypeSelector({ chartType, onChartTypeChange }: ChartTypeSelectorProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Chart Type</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <Select value={chartType} onValueChange={(value) => onChartTypeChange(value as ChartType)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select chart type..." />
-          </SelectTrigger>
-          <SelectContent>
-            {CHART_TYPES.map(({ type, icon, label, description }) => (
-              <SelectItem key={type} value={type}>
-                <div className="flex items-center gap-2">
-                  {icon}
-                  <div>
-                    <div className="font-medium">{label}</div>
-                    <div className="text-xs text-gray-500">{description}</div>
-                  </div>
+    <EditorPanel title="Chart Type" contentClassName="space-y-4">
+      <Select value={chartType} onValueChange={(value) => onChartTypeChange(value as ChartType)}>
+        <SelectTrigger>
+          <SelectValue placeholder="Select chart type..." />
+        </SelectTrigger>
+        <SelectContent>
+          {CHART_TYPES.map(({ type, icon, label, description }) => (
+            <SelectItem key={type} value={type}>
+              <div className="flex items-center gap-2">
+                {icon}
+                <div>
+                  <div className="font-medium">{label}</div>
+                  <div className="text-xs text-gray-500">{description}</div>
                 </div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+              </div>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
-        {chartType && (
-          <div className="space-y-2">
-            <Label htmlFor="chart-usage">How to Use This Chart</Label>
-            <Textarea
-              id="chart-usage"
-              readOnly
-              value={CHART_TYPES.find((ct) => ct.type === chartType)?.usage || ""}
-              className="bg-gray-50 min-h-[120px] text-sm"
-            />
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      {chartType && (
+        <div className="space-y-2">
+          <Label htmlFor="chart-usage">How to Use This Chart</Label>
+          <Textarea
+            id="chart-usage"
+            readOnly
+            value={CHART_TYPES.find((ct) => ct.type === chartType)?.usage || ""}
+            className="bg-gray-50 min-h-[120px] text-sm"
+          />
+        </div>
+      )}
+    </EditorPanel>
   );
 }

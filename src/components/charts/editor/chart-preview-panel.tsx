@@ -1,5 +1,5 @@
 import { ChartRenderer } from "@/components/charts/chart-renderer";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EditorPanel } from "./EditorPanel";
 import type { ChartConfig, ChartType, DataMapping } from "@/types/database";
 
 interface ChartPreviewPanelProps {
@@ -23,11 +23,8 @@ export function ChartPreviewPanel({
 }: ChartPreviewPanelProps) {
   return (
     <div className="space-y-6">
-      <Card className="sticky top-6">
-        <CardHeader>
-          <CardTitle>Preview</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="sticky top-6">
+        <EditorPanel title="Preview">
           {isLoading ? (
             <div className="flex h-96 items-center justify-center">
               <p className="text-gray-500">Loading preview data...</p>
@@ -48,44 +45,39 @@ export function ChartPreviewPanel({
               dataMapping={dataMapping}
             />
           )}
-        </CardContent>
-      </Card>
+        </EditorPanel>
+      </div>
 
       {previewData.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Sample Data</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
+        <EditorPanel title="Sample Data">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  {availableFields.slice(0, 5).map((field) => (
+                    <th key={field} className="p-2 text-left font-medium">
+                      {field}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {previewData.slice(0, 5).map((row, i) => (
+                  <tr key={Object.values(row).join("-") || `row-${i}`} className="border-b">
                     {availableFields.slice(0, 5).map((field) => (
-                      <th key={field} className="p-2 text-left font-medium">
-                        {field}
-                      </th>
+                      <td key={field} className="p-2">
+                        {String(row[field] ?? "")}
+                      </td>
                     ))}
                   </tr>
-                </thead>
-                <tbody>
-                  {previewData.slice(0, 5).map((row, i) => (
-                    <tr key={Object.values(row).join("-") || `row-${i}`} className="border-b">
-                      {availableFields.slice(0, 5).map((field) => (
-                        <td key={field} className="p-2">
-                          {String(row[field] ?? "")}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {previewData.length > 5 && (
-              <p className="mt-2 text-xs text-gray-500">Showing 5 of {previewData.length} rows</p>
-            )}
-          </CardContent>
-        </Card>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {previewData.length > 5 && (
+            <p className="mt-2 text-xs text-gray-500">Showing 5 of {previewData.length} rows</p>
+          )}
+        </EditorPanel>
       )}
     </div>
   );

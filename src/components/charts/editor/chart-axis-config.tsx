@@ -1,6 +1,5 @@
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -10,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { EditorPanel } from "./EditorPanel";
 import type { ChartConfig, DataMapping, SeriesMapping } from "@/types/database";
 
 function hslToHex(h: number, s: number, l: number) {
@@ -74,11 +74,7 @@ export function ChartAxisConfig({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Axis Configuration</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <EditorPanel title="Axis Configuration" contentClassName="space-y-4">
         {/* X-Axis */}
         <div>
           <div className="flex items-center justify-between">
@@ -290,7 +286,6 @@ export function ChartAxisConfig({
             </SelectContent>
           </Select>
         </div>
-      </CardContent>
-    </Card>
+    </EditorPanel>
   );
 }

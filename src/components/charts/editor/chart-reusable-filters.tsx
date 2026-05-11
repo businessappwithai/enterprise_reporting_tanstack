@@ -1,6 +1,5 @@
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -9,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { EditorPanel } from "./EditorPanel";
 import type { FilterDefinition } from "@/types/database";
 
 interface ChartFilterLink {
@@ -45,14 +45,11 @@ export function ChartReusableFilters({
   isRemoving,
 }: ChartReusableFiltersProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Reusable Filters</CardTitle>
-        <p className="text-sm text-gray-500">
-          Add pre-configured filters that users can select from dropdowns when viewing the chart.
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <EditorPanel
+      title="Reusable Filters"
+      description="Add pre-configured filters that users can select from dropdowns when viewing the chart."
+      contentClassName="space-y-4"
+    >
         <div className="flex items-end gap-2">
           <div className="flex-1">
             <Label htmlFor="filter-select">Select Filter</Label>
@@ -139,7 +136,6 @@ export function ChartReusableFilters({
             No filters added. Add filters above to allow users to filter the chart.
           </div>
         )}
-      </CardContent>
-    </Card>
+    </EditorPanel>
   );
 }

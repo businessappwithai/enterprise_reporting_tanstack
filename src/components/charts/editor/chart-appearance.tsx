@@ -1,9 +1,9 @@
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { EditorPanel } from "./EditorPanel";
 import type { ChartConfig, ChartType } from "@/types/database";
 
 interface ChartAppearanceProps {
@@ -18,11 +18,7 @@ export function ChartAppearance({
   onChartConfigChange,
 }: ChartAppearanceProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Appearance</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <EditorPanel title="Appearance" contentClassName="space-y-4">
         <div className="flex items-center justify-between">
           <Label htmlFor="show-title">Show Title</Label>
           <Switch
@@ -176,7 +172,6 @@ export function ChartAppearance({
             Reset to Default
           </Button>
         </div>
-      </CardContent>
-    </Card>
+    </EditorPanel>
   );
 }
