@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, memo } from "react";
-import { ChevronRight, ChevronDown, Table, Eye, Key, Hash, Type } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ChevronDown, ChevronRight, Eye, Key, Table, Type } from "lucide-react";
+import { memo, useState } from "react";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import type { SchemaInfo, TableInfo, ViewInfo, ColumnSchema } from "@/types/api";
+import type { ColumnSchema, SchemaInfo, TableInfo, ViewInfo } from "@/types/api";
 
 interface SchemaBrowserProps {
   schema: SchemaInfo | null;
@@ -156,6 +156,11 @@ const TableItem = memo(function TableItem({
   return (
     <div className="mb-1">
       <div
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") onToggle();
+        }}
         className="flex items-center gap-1 px-2 py-1 rounded hover:bg-accent cursor-pointer"
         onClick={onToggle}
       >
@@ -166,6 +171,14 @@ const TableItem = memo(function TableItem({
         )}
         <Table className="h-4 w-4 text-blue-500" />
         <span
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.stopPropagation();
+              onTableClick?.(table.name);
+            }
+          }}
           className="text-sm truncate flex-1"
           onClick={(e) => {
             e.stopPropagation();
@@ -211,6 +224,11 @@ const ViewItem = memo(function ViewItem({
   return (
     <div className="mb-1">
       <div
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") onToggle();
+        }}
         className="flex items-center gap-1 px-2 py-1 rounded hover:bg-accent cursor-pointer"
         onClick={onToggle}
       >
@@ -221,6 +239,14 @@ const ViewItem = memo(function ViewItem({
         )}
         <Eye className="h-4 w-4 text-purple-500" />
         <span
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.stopPropagation();
+              onTableClick?.(view.name);
+            }
+          }}
           className="text-sm truncate flex-1"
           onClick={(e) => {
             e.stopPropagation();
@@ -264,6 +290,11 @@ const ColumnItem = memo(function ColumnItem({
 
   return (
     <div
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") onClick?.(tableName, column.name);
+      }}
       className="flex items-center gap-1 px-2 py-0.5 rounded hover:bg-accent cursor-pointer text-sm"
       onClick={() => onClick?.(tableName, column.name)}
     >

@@ -1,10 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
-import type {
-  ColumnDefinition,
-  ReportColorTheme,
-  DataSource,
-} from "@/types/database";
+import type { ColumnDefinition, DataSource, ReportColorTheme } from "@/types/database";
 
 async function getSession(request: Request) {
   const { auth } = await import("@/lib/auth/config");
@@ -178,7 +174,7 @@ export const Route = createFileRoute("/api/reports/$id/export")({
 
           const connection = await getConnection(dataSource as unknown as DataSource);
 
-          const maxExportRows = parseInt(process.env.EXPORT_PAGE_SIZE || "1000");
+          const maxExportRows = parseInt(process.env.EXPORT_PAGE_SIZE || "1000", 10);
           const sqlToRun = query.sql_content.replace(/;$/, "").trim();
           const result = await connection.raw(`${sqlToRun} LIMIT ${maxExportRows}`);
 
@@ -350,7 +346,7 @@ export const Route = createFileRoute("/api/reports/$id/export")({
               x: number,
               y: number,
               width: number,
-              height: number,
+              _height: number,
               text: string,
               bgColor: { r: number; g: number; b: number },
               textColor: { r: number; g: number; b: number },
@@ -363,10 +359,10 @@ export const Route = createFileRoute("/api/reports/$id/export")({
               const maxWidth = width - 2 * cellPadding;
               let displayText = text;
               if (doc.getTextWidth(text) > maxWidth) {
-                while (doc.getTextWidth(displayText + "...") > maxWidth && displayText.length > 0) {
+                while (doc.getTextWidth(`${displayText}...`) > maxWidth && displayText.length > 0) {
                   displayText = displayText.slice(0, -1);
                 }
-                displayText = displayText + "...";
+                displayText = `${displayText}...`;
               }
               doc.text(displayText, x + cellPadding, y);
             };

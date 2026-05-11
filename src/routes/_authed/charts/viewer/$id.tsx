@@ -1,15 +1,15 @@
-import { useState } from "react";
-import { createFileRoute, Link, useLocation } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, Link, useLocation } from "@tanstack/react-router";
+import { Download, RefreshCw, Settings } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import { ChartRenderer } from "@/components/charts/chart-renderer";
+import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { FilterBar } from "@/components/reporting/filter-bar";
 import { ShareDialog } from "@/components/share/ShareDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Breadcrumb } from "@/components/layout/breadcrumb";
-import { RefreshCw, Settings, Download } from "lucide-react";
-import { toast } from "sonner";
-import type { ChartDefinition, ChartConfig, DataMapping } from "@/types/database";
+import type { ChartConfig, ChartDefinition, DataMapping } from "@/types/database";
 
 export const Route = createFileRoute("/_authed/charts/viewer/$id")({
   component: ChartViewerPage,
@@ -100,7 +100,7 @@ function ChartViewerPage() {
       }
       chartConfig = JSON.parse(configStr);
     }
-  } catch (e) {
+  } catch (_e) {
     chartConfig = null;
   }
 
@@ -114,7 +114,7 @@ function ChartViewerPage() {
       }
       dataMapping = JSON.parse(mappingStr);
     }
-  } catch (e) {
+  } catch (_e) {
     dataMapping = null;
   }
 
@@ -200,8 +200,8 @@ function ChartViewerPage() {
               <ChartRenderer
                 data={chartData.rows || []}
                 chartType={chart.chart_type}
-                chartConfig={chartConfig!}
-                dataMapping={dataMapping!}
+                chartConfig={chartConfig ?? undefined}
+                dataMapping={dataMapping ?? undefined}
                 height={400}
               />
             </>

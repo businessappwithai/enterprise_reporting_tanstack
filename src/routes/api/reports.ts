@@ -1,6 +1,7 @@
+import { randomUUID } from "node:crypto";
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
-import { v4 as uuidv4 } from "uuid";
+import { createReportSchema } from "@/lib/schemas/reports";
 
 async function getSession(request: Request) {
   const { auth } = await import("@/lib/auth/config");
@@ -68,6 +69,15 @@ export const Route = createFileRoute("/api/reports")({
           }
 
           const body = await request.json();
+          const result = await createReportSchema.safeParseAsync(body);
+
+          if (!result.success) {
+            return json(
+              { success: false, error: { code: "INVALID_INPUT", message: "Validation failed", details: result.error.flatten() } },
+              { status: 422 }
+            );
+          }
+
           const {
             name,
             description,
@@ -77,19 +87,12 @@ export const Route = createFileRoute("/api/reports")({
             sortConfig,
             paginationConfig,
             exportFormats,
-          } = body;
-
-          if (!name) {
-            return json(
-              { success: false, error: { code: "INVALID_INPUT", message: "Name is required" } },
-              { status: 400 }
-            );
-          }
+          } = result.data;
 
           const { getDb } = await import("@/lib/db/config");
           const { logAudit } = await import("@/lib/security/audit");
           const db = getDb();
-          const id = uuidv4();
+          const id = randomUUID();
           const now = new Date().toISOString();
 
           await db
@@ -103,7 +106,9 @@ export const Route = createFileRoute("/api/reports")({
               filter_config: filterConfig ? JSON.stringify(filterConfig) : null,
               sort_config: sortConfig ? JSON.stringify(sortConfig) : null,
               pagination_config: paginationConfig ? JSON.stringify(paginationConfig) : null,
-              export_formats: exportFormats ? JSON.stringify(exportFormats) : '["csv","xlsx","pdf"]',
+              export_formats: exportFormats
+                ? JSON.stringify(exportFormats)
+                : '["csv","xlsx","pdf"]',
               color_theme: null,
               is_public: false,
               is_deleted: false,

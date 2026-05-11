@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -16,8 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 
 interface TemplateEditorProps {
   templateId?: string;
@@ -83,7 +83,7 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
   }, [existingTemplate]);
 
   // Fetch queries
-  const { data: queries = [], isLoading: isLoadingQueries } = useQuery<Query[]>({
+  const { data: queries = [] } = useQuery<Query[]>({
     queryKey: ["queries"],
     queryFn: async () => {
       const res = await fetch("/api/queries");
@@ -171,7 +171,7 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
   };
 
   const insertPlaceholder = (placeholder: string) => {
-    setHtmlBody((prev) => prev + `{{${placeholder}}}`);
+    setHtmlBody((prev) => `${prev}{{${placeholder}}}`);
   };
 
   if (isLoadingTemplate) {
@@ -362,8 +362,8 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
                       </tr>
                     </thead>
                     <tbody>
-                      {queryResults.slice(0, 3).map((row, i) => (
-                        <tr key={i} className="border-b">
+                      {queryResults.slice(0, 3).map((row) => (
+                        <tr key={JSON.stringify(Object.values(row))} className="border-b">
                           {availableColumns.map((col) => (
                             <td key={col} className="p-2">
                               {String(row[col] ?? "")}
@@ -416,6 +416,7 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
                   <CardContent>
                     <div
                       className="border rounded-lg p-4 bg-white"
+                      // biome-ignore lint/security/noDangerouslySetInnerHtml: email preview rendering
                       dangerouslySetInnerHTML={{ __html: preview.preview }}
                     />
                   </CardContent>

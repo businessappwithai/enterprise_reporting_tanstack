@@ -1,17 +1,11 @@
-import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Key, Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -28,9 +22,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Key, Trash2, Plus } from "lucide-react";
-import { toast } from "sonner";
-import type { ResourceType, PermissionLevel } from "@/types/database";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import type { PermissionLevel, ResourceType } from "@/types/database";
 
 const RESOURCE_TYPES: { value: ResourceType; label: string }[] = [
   { value: "dashboard", label: "Dashboard" },
@@ -202,7 +202,7 @@ function PermissionsManagementPage() {
     setSelectedPermissionLevel("view");
   };
 
-  const getResourceName = (type: ResourceType, id: string) => {
+  const _getResourceName = (_type: ResourceType, id: string) => {
     if (!Array.isArray(resources)) return id;
     const resource = resources.find((r) => r.id === id);
     return resource?.name || id;

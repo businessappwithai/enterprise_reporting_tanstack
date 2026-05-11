@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import GridLayout, { WidthProvider, type Layout } from "react-grid-layout";
+import { useCallback, useState } from "react";
+import GridLayout, { type Layout, WidthProvider } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Move, Settings, X } from "lucide-react";
 import { WidgetCard } from "@/components/dashboard/widget-card";
-import { X, Move, Settings, MoreVertical } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { DashboardWidget } from "@/types/database";
 
@@ -71,9 +71,10 @@ export function DashboardGrid({
       useCSSTransforms
     >
       {widgets.map((widget) => (
-        <div
+        <section
           key={widget.id}
           className="widget-container relative"
+          role="region"
           onMouseEnter={() => setHoveredWidget(widget.id)}
           onMouseLeave={() => setHoveredWidget(null)}
         >
@@ -140,7 +141,7 @@ export function DashboardGrid({
           {isEditing && (
             <div className="absolute bottom-1 right-1 w-3 h-3 border-2 border-primary rounded-sm opacity-50 pointer-events-none" />
           )}
-        </div>
+        </section>
       ))}
     </ResponsiveGridLayout>
   );

@@ -11,22 +11,29 @@ import type { MetadataEntityField } from "@/types/database";
 /**
  * Field Service
  */
+// biome-ignore lint/complexity/noStaticOnlyClass: service class pattern with cohesive static methods
 export class FieldService {
   /**
    * Get fields by entity header ID
    */
   static async getByEntityId(entityHeaderId: string): Promise<MetadataEntityField[]> {
-    return await getDb()("metadata_entity_field")
+    return await getDb()
+      .selectFrom("metadata_entity_field")
       .where("entity_header_id", entityHeaderId)
       .orderBy("display_order", "asc")
-      .select("*");
+      .selectAll()
+      .execute();
   }
 
   /**
    * Get single field by ID
    */
   static async getById(id: string): Promise<MetadataEntityField | null> {
-    return await getDb()("metadata_entity_field").where("id", id).first();
+    return await getDb()
+      .selectFrom("metadata_entity_field")
+      .where("id", id)
+      .selectAll()
+      .executeTakeFirst();
   }
 
   /**
@@ -36,12 +43,14 @@ export class FieldService {
   static async create(
     data: Omit<MetadataEntityField, "id" | "created_at" | "updated_at">
   ): Promise<MetadataEntityField> {
-    const [field] = await getDb()("metadata_entity_field")
-      .insert({
+    const field = await getDb()
+      .insertInto("metadata_entity_field")
+      .values({
         ...data,
         updated_at: getDb().fn.now(),
       })
-      .returning("*");
+      .returningAll()
+      .executeTakeFirst();
 
     return field;
   }
@@ -63,7 +72,11 @@ export class FieldService {
       updated_at: now,
     }));
 
-    return await getDb()("metadata_entity_field").insert(fieldData).returning("*");
+    return await getDb()
+      .insertInto("metadata_entity_field")
+      .values(fieldData)
+      .returningAll()
+      .execute();
   }
 
   /**
@@ -84,13 +97,15 @@ export class FieldService {
     >,
     userId?: string
   ): Promise<MetadataEntityField | null> {
-    const [field] = await getDb()("metadata_entity_field")
+    const field = await getDb()
+      .updateTable("metadata_entity_field")
       .where("id", id)
-      .update({
+      .set({
         ...data,
         updated_at: getDb().fn.now(),
       })
-      .returning("*");
+      .returningAll()
+      .executeTakeFirst();
 
     if (!field) {
       return null;
@@ -98,16 +113,19 @@ export class FieldService {
 
     // Log to audit trail
     if (userId) {
-      await getDb()("audit_log").insert({
-        user_id: userId,
-        action: "update",
-        resource_type: "metadata_entity",
-        resource_id: id,
-        details: JSON.stringify({
-          updated_fields: Object.keys(data),
-        }),
-        created_at: getDb().fn.now(),
-      });
+      await getDb()
+        .insertInto("audit_log")
+        .values({
+          user_id: userId,
+          action: "update",
+          resource_type: "metadata_entity",
+          resource_id: id,
+          details: JSON.stringify({
+            updated_fields: Object.keys(data),
+          }),
+          created_at: getDb().fn.now(),
+        })
+        .execute();
     }
 
     return field;
@@ -143,13 +161,15 @@ export class FieldService {
       const results: MetadataEntityField[] = [];
 
       for (const update of updates) {
-        const [field] = await trx("metadata_entity_field")
+        const field = await trx
+          .updateTable("metadata_entity_field")
           .where("id", update.id)
-          .update({
+          .set({
             ...update.data,
             updated_at: getDb().fn.now(),
           })
-          .returning("*");
+          .returningAll()
+          .executeTakeFirst();
 
         if (field) {
           results.push(field);
@@ -158,17 +178,20 @@ export class FieldService {
 
       // Single audit log entry for the batch update
       if (userId && results.length > 0) {
-        await trx("audit_log").insert({
-          user_id: userId,
-          action: "update",
-          resource_type: "metadata_entity",
-          resource_id: "bulk_field_update",
-          details: JSON.stringify({
-            updated_field_count: results.length,
-            field_ids: results.map((f) => f.id),
-          }),
-          created_at: getDb().fn.now(),
-        });
+        await trx
+          .insertInto("audit_log")
+          .values({
+            user_id: userId,
+            action: "update",
+            resource_type: "metadata_entity",
+            resource_id: "bulk_field_update",
+            details: JSON.stringify({
+              updated_field_count: results.length,
+              field_ids: results.map((f) => f.id),
+            }),
+            created_at: getDb().fn.now(),
+          })
+          .execute();
       }
 
       await trx.commit();
@@ -183,20 +206,24 @@ export class FieldService {
    * Delete field metadata
    */
   static async delete(id: string, userId?: string): Promise<boolean> {
-    const count = await getDb()("metadata_entity_field").where("id", id).delete();
+    const result = await getDb().deleteFrom("metadata_entity_field").where("id", id).execute();
+    const count = Number(result[0]?.numDeletedRows ?? 0);
 
     if (count > 0 && userId) {
       // Log to audit trail
-      await getDb()("audit_log").insert({
-        user_id: userId,
-        action: "delete",
-        resource_type: "metadata_entity",
-        resource_id: id,
-        details: JSON.stringify({
-          deleted: "field_metadata",
-        }),
-        created_at: getDb().fn.now(),
-      });
+      await getDb()
+        .insertInto("audit_log")
+        .values({
+          user_id: userId,
+          action: "delete",
+          resource_type: "metadata_entity",
+          resource_id: id,
+          details: JSON.stringify({
+            deleted: "field_metadata",
+          }),
+          created_at: getDb().fn.now(),
+        })
+        .execute();
     }
 
     return count > 0;
@@ -206,40 +233,48 @@ export class FieldService {
    * Delete all fields for an entity (cascade)
    */
   static async deleteByEntityId(entityHeaderId: string): Promise<number> {
-    return await getDb()("metadata_entity_field")
+    const delResult = await getDb()
+      .deleteFrom("metadata_entity_field")
       .where("entity_header_id", entityHeaderId)
-      .delete();
+      .execute();
+    return Number(delResult[0]?.numDeletedRows ?? 0);
   }
 
   /**
    * Get display fields for an entity
    */
   static async getDisplayFields(entityHeaderId: string): Promise<MetadataEntityField[]> {
-    return await getDb()("metadata_entity_field")
+    return await getDb()
+      .selectFrom("metadata_entity_field")
       .where("entity_header_id", entityHeaderId)
       .where("is_display_field", true)
       .orderBy("display_order", "asc")
-      .select("*");
+      .selectAll()
+      .execute();
   }
 
   /**
    * Get foreign key fields for an entity
    */
   static async getForeignKeyFields(entityHeaderId: string): Promise<MetadataEntityField[]> {
-    return await getDb()("metadata_entity_field")
+    return await getDb()
+      .selectFrom("metadata_entity_field")
       .where("entity_header_id", entityHeaderId)
       .where("is_foreign_key", true)
-      .select("*");
+      .selectAll()
+      .execute();
   }
 
   /**
    * Get searchable fields for an entity
    */
   static async getSearchableFields(entityHeaderId: string): Promise<MetadataEntityField[]> {
-    return await getDb()("metadata_entity_field")
+    return await getDb()
+      .selectFrom("metadata_entity_field")
       .where("entity_header_id", entityHeaderId)
       .where("is_searchable", true)
       .orderBy("display_order", "asc")
-      .select("*");
+      .selectAll()
+      .execute();
   }
 }

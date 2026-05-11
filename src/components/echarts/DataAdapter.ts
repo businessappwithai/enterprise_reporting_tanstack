@@ -8,8 +8,9 @@ import type { DataMapping } from "@/types/wasm";
  * Extract category (x-axis) values from rows using the data mapping.
  */
 export function extractCategories(rows: Record<string, unknown>[], mapping: DataMapping): string[] {
-  if (!mapping.x) return [];
-  return rows.map((r) => String(r[mapping.x!] ?? ""));
+  const { x } = mapping;
+  if (!x) return [];
+  return rows.map((r) => String(r[x] ?? ""));
 }
 
 /**
@@ -41,15 +42,19 @@ export function extractGroupedSeries(
   const groups = new Map<string, Map<string, number>>();
   const categories = new Set<string>();
 
+  const xCol = mapping.x ?? "";
   for (const row of rows) {
     const groupVal = String(row[mapping.group] ?? "");
-    const catVal = String(row[mapping.x!] ?? "");
+    const catVal = String(row[xCol] ?? "");
     const value = Number(row[yColumn] ?? 0);
 
     categories.add(catVal);
     if (!groups.has(groupVal)) groups.set(groupVal, new Map());
-    const existing = groups.get(groupVal)!.get(catVal) ?? 0;
-    groups.get(groupVal)!.set(catVal, existing + value);
+    const groupMap = groups.get(groupVal);
+    if (groupMap) {
+      const existing = groupMap.get(catVal) ?? 0;
+      groupMap.set(catVal, existing + value);
+    }
   }
 
   const catArray = Array.from(categories);
@@ -67,7 +72,8 @@ export function extractScatterData(
   mapping: DataMapping
 ): [number, number][] {
   const yColumn = Array.isArray(mapping.y) ? mapping.y[0] : (mapping.y ?? "");
-  return rows.map((r) => [Number(r[mapping.x!] ?? 0), Number(r[yColumn] ?? 0)]);
+  const xCol = mapping.x ?? "";
+  return rows.map((r) => [Number(r[xCol] ?? 0), Number(r[yColumn] ?? 0)]);
 }
 
 /**
@@ -78,8 +84,9 @@ export function extractPieData(
   mapping: DataMapping
 ): { name: string; value: number }[] {
   const yColumn = Array.isArray(mapping.y) ? mapping.y[0] : (mapping.y ?? "");
+  const xCol = mapping.x ?? "";
   return rows.map((r) => ({
-    name: String(r[mapping.x!] ?? ""),
+    name: String(r[xCol] ?? ""),
     value: Number(r[yColumn] ?? 0),
   }));
 }

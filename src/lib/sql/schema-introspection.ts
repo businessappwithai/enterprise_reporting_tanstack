@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { type Kysely, sql as kyselySql } from "kysely";
 import type {
-  SchemaInfo,
-  TableInfo,
-  ViewInfo,
   ColumnSchema,
   ForeignKeyInfo,
   IndexInfo,
+  SchemaInfo,
+  TableInfo,
+  ViewInfo,
 } from "@/types/api";
 
 // biome-ignore lint/suspicious/noExplicitAny: external data source connections have unknown schema
@@ -57,22 +57,26 @@ async function introspectSchemaInternal(
 
 async function introspectPostgres(
   connection: AnyKysely,
-  addLog: (msg: string) => void
+  _addLog: (msg: string) => void
 ): Promise<SchemaInfo> {
-  const { rows: tables } = await kyselySql.raw(`
+  const { rows: tables } = await kyselySql
+    .raw(`
     SELECT table_name, table_schema
     FROM information_schema.tables
     WHERE table_schema NOT IN ('information_schema', 'pg_catalog')
     AND table_type = 'BASE TABLE'
     ORDER BY table_name
-  `).execute(connection);
+  `)
+    .execute(connection);
 
-  const { rows: views } = await kyselySql.raw(`
+  const { rows: views } = await kyselySql
+    .raw(`
     SELECT table_name, table_schema, view_definition
     FROM information_schema.views
     WHERE table_schema NOT IN ('information_schema', 'pg_catalog')
     ORDER BY table_name
-  `).execute(connection);
+  `)
+    .execute(connection);
 
   const tableInfos: TableInfo[] = await Promise.all(
     (tables as Array<{ table_name: string; table_schema: string }>).map(async (t) => {
@@ -126,13 +130,15 @@ async function getPostgresColumns(
     ORDER BY ordinal_position
   `.execute(connection);
 
-  return (rows as Array<{
-    column_name: string;
-    data_type: string;
-    is_nullable: string;
-    column_default: string | null;
-    character_maximum_length: number | null;
-  }>).map((c) => ({
+  return (
+    rows as Array<{
+      column_name: string;
+      data_type: string;
+      is_nullable: string;
+      column_default: string | null;
+      character_maximum_length: number | null;
+    }>
+  ).map((c) => ({
     name: c.column_name,
     type: c.character_maximum_length
       ? `${c.data_type}(${c.character_maximum_length})`
@@ -181,13 +187,13 @@ async function getPostgresForeignKeys(
     AND tc.table_name = ${table}
   `.execute(connection);
 
-  return (rows as Array<{ column_name: string; referenced_table: string; referenced_column: string }>).map(
-    (r) => ({
-      column: r.column_name,
-      referencedTable: r.referenced_table,
-      referencedColumn: r.referenced_column,
-    })
-  );
+  return (
+    rows as Array<{ column_name: string; referenced_table: string; referenced_column: string }>
+  ).map((r) => ({
+    column: r.column_name,
+    referencedTable: r.referenced_table,
+    referencedColumn: r.referenced_column,
+  }));
 }
 
 async function getPostgresIndexes(
@@ -222,20 +228,24 @@ async function getPostgresIndexes(
 
 async function introspectMySQL(
   connection: AnyKysely,
-  addLog: (msg: string) => void
+  _addLog: (msg: string) => void
 ): Promise<SchemaInfo> {
-  const { rows: tables } = await kyselySql.raw(`
+  const { rows: tables } = await kyselySql
+    .raw(`
     SELECT table_name
     FROM information_schema.tables
     WHERE table_schema = DATABASE()
     AND table_type = 'BASE TABLE'
-  `).execute(connection);
+  `)
+    .execute(connection);
 
-  const { rows: views } = await kyselySql.raw(`
+  const { rows: views } = await kyselySql
+    .raw(`
     SELECT table_name, view_definition
     FROM information_schema.views
     WHERE table_schema = DATABASE()
-  `).execute(connection);
+  `)
+    .execute(connection);
 
   const tableInfos: TableInfo[] = await Promise.all(
     (tables as Array<{ table_name: string }>).map(async (t) => {
@@ -247,28 +257,34 @@ async function introspectMySQL(
     })
   );
 
-  const viewInfos: ViewInfo[] = (views as Array<{ table_name: string; view_definition: string }>).map(
-    (v) => ({
-      name: v.table_name,
-      columns: [],
-      definition: v.view_definition,
-    })
-  );
+  const viewInfos: ViewInfo[] = (
+    views as Array<{ table_name: string; view_definition: string }>
+  ).map((v) => ({
+    name: v.table_name,
+    columns: [],
+    definition: v.view_definition,
+  }));
 
   return { tables: tableInfos, views: viewInfos };
 }
 
 async function getMySQLColumns(connection: AnyKysely, table: string): Promise<ColumnSchema[]> {
   const { rows } = await kyselySql`DESCRIBE ${kyselySql.raw(table)}`.execute(connection);
-  return (rows as Array<{ Field: string; Type: string; Null: string; Default: string | null; Key: string }>).map(
-    (c) => ({
-      name: c.Field,
-      type: c.Type,
-      nullable: c.Null === "YES",
-      defaultValue: c.Default,
-      isPrimaryKey: c.Key === "PRI",
-    })
-  );
+  return (
+    rows as Array<{
+      Field: string;
+      Type: string;
+      Null: string;
+      Default: string | null;
+      Key: string;
+    }>
+  ).map((c) => ({
+    name: c.Field,
+    type: c.Type,
+    nullable: c.Null === "YES",
+    defaultValue: c.Default,
+    isPrimaryKey: c.Key === "PRI",
+  }));
 }
 
 async function introspectSQLite(
@@ -285,18 +301,22 @@ async function introspectSQLite(
     return { tables: [], views: [] };
   }
 
-  const { rows: tableRows } = await kyselySql.raw(`
+  const { rows: tableRows } = await kyselySql
+    .raw(`
     SELECT name FROM sqlite_master
     WHERE type = 'table'
     AND name NOT LIKE 'sqlite_%'
     ORDER BY name
-  `).execute(connection);
+  `)
+    .execute(connection);
 
-  const { rows: viewRows } = await kyselySql.raw(`
+  const { rows: viewRows } = await kyselySql
+    .raw(`
     SELECT name, sql FROM sqlite_master
     WHERE type = 'view'
     ORDER BY name
-  `).execute(connection);
+  `)
+    .execute(connection);
 
   const tableList = tableRows as Array<{ name: string }>;
   const viewList = viewRows as Array<{ name: string; sql: string }>;
@@ -333,13 +353,15 @@ async function getSQLiteColumns(
 
   addLog(`Found ${rows.length} columns for table: ${table}`);
 
-  return (rows as Array<{
-    name: string;
-    type: string;
-    notnull: number;
-    dflt_value: string | null;
-    pk: number;
-  }>).map((c) => ({
+  return (
+    rows as Array<{
+      name: string;
+      type: string;
+      notnull: number;
+      dflt_value: string | null;
+      pk: number;
+    }>
+  ).map((c) => ({
     name: c.name,
     type: c.type || "ANY",
     nullable: c.notnull === 0,
@@ -350,20 +372,24 @@ async function getSQLiteColumns(
 
 async function introspectMSSQL(
   connection: AnyKysely,
-  addLog: (msg: string) => void
+  _addLog: (msg: string) => void
 ): Promise<SchemaInfo> {
-  const { rows: tables } = await kyselySql.raw(`
+  const { rows: tables } = await kyselySql
+    .raw(`
     SELECT table_name, table_schema
     FROM information_schema.tables
     WHERE table_type = 'BASE TABLE'
     ORDER BY table_name
-  `).execute(connection);
+  `)
+    .execute(connection);
 
-  const { rows: views } = await kyselySql.raw(`
+  const { rows: views } = await kyselySql
+    .raw(`
     SELECT table_name, table_schema, view_definition
     FROM information_schema.views
     ORDER BY table_name
-  `).execute(connection);
+  `)
+    .execute(connection);
 
   const tableInfos: TableInfo[] = await Promise.all(
     (tables as Array<{ table_name: string; table_schema: string }>).map(async (t) => {
@@ -376,11 +402,13 @@ async function introspectMSSQL(
     })
   );
 
-  const viewInfos: ViewInfo[] = (views as Array<{
-    table_name: string;
-    table_schema: string;
-    view_definition: string;
-  }>).map((v) => ({
+  const viewInfos: ViewInfo[] = (
+    views as Array<{
+      table_name: string;
+      table_schema: string;
+      view_definition: string;
+    }>
+  ).map((v) => ({
     name: v.table_name,
     schema: v.table_schema,
     columns: [],
@@ -407,13 +435,15 @@ async function getMSSQLColumns(
     ORDER BY ordinal_position
   `.execute(connection);
 
-  return (rows as Array<{
-    column_name: string;
-    data_type: string;
-    is_nullable: string;
-    column_default: string | null;
-    character_maximum_length: number | null;
-  }>).map((c) => ({
+  return (
+    rows as Array<{
+      column_name: string;
+      data_type: string;
+      is_nullable: string;
+      column_default: string | null;
+      character_maximum_length: number | null;
+    }>
+  ).map((c) => ({
     name: c.column_name,
     type: c.character_maximum_length
       ? `${c.data_type}(${c.character_maximum_length})`
@@ -424,8 +454,8 @@ async function getMSSQLColumns(
 }
 
 async function introspectGeneric(
-  connection: AnyKysely,
-  addLog: (msg: string) => void
+  _connection: AnyKysely,
+  _addLog: (msg: string) => void
 ): Promise<SchemaInfo> {
   return { tables: [], views: [] };
 }

@@ -1,42 +1,20 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { createServerFn } from "@tanstack/react-start";
+import { requireAuth } from "@/lib/auth/middleware";
 import { getDb } from "@/lib/db/config";
 import { logAudit } from "@/lib/security/audit";
-import { randomUUID } from "crypto";
-import type { ReportDefinition } from "@/types/database";
-import { requireAuth } from "@/lib/auth/middleware";
-
-interface ListReportsInput {
-  page?: number;
-  pageSize?: number;
-}
-
-interface CreateReportInput {
-  name: string;
-  description?: string;
-  savedQueryId?: string;
-  columnConfig?: unknown[];
-  filterConfig?: unknown;
-  sortConfig?: unknown;
-  paginationConfig?: unknown;
-  exportFormats?: string[];
-}
-
-interface UpdateReportInput {
-  id: string;
-  name?: string;
-  description?: string;
-  columnConfig?: unknown[];
-  filterConfig?: unknown;
-  sortConfig?: unknown;
-}
+import { listReportsSchema, createReportSchema, updateReportSchema, getReportSchema } from "@/lib/schemas/reports";
 
 export const listReports = createServerFn({
   method: "GET",
-}).handler(async (input: ListReportsInput) => {
-  const session = await requireAuth();
-  const { page = 0, pageSize = 20 } = input;
+}).handler(async (input) => {
+  const validated = await listReportsSchema.parseAsync(input).catch((err) => {
+    throw new Error(`Validation failed: ${err.message}`);
+  });
+  const _session = await requireAuth();
+  const { page = 0, pageSize = 20 } = validated;
 
   const db = getDb();
   const reports = await db
@@ -61,9 +39,12 @@ export const listReports = createServerFn({
 
 export const getReport = createServerFn({
   method: "GET",
-}).handler(async (input: { id: string }) => {
-  const session = await requireAuth();
-  const { id } = input;
+}).handler(async (input) => {
+  const validated = await getReportSchema.parseAsync(input).catch((err) => {
+    throw new Error(`Validation failed: ${err.message}`);
+  });
+  const _session = await requireAuth();
+  const { id } = validated;
 
   const db = getDb();
   const report = await db
@@ -81,7 +62,10 @@ export const getReport = createServerFn({
 
 export const createReport = createServerFn({
   method: "POST",
-}).handler(async (input: CreateReportInput) => {
+}).handler(async (input) => {
+  const validated = await createReportSchema.parseAsync(input).catch((err) => {
+    throw new Error(`Validation failed: ${err.message}`);
+  });
   const session = await requireAuth();
 
   const {
@@ -93,11 +77,7 @@ export const createReport = createServerFn({
     sortConfig,
     paginationConfig,
     exportFormats,
-  } = input;
-
-  if (!name) {
-    throw new Error("Name is required");
-  }
+  } = validated;
 
   const db = getDb();
   const id = randomUUID();
@@ -133,9 +113,12 @@ export const createReport = createServerFn({
 
 export const updateReport = createServerFn({
   method: "PUT",
-}).handler(async (input: UpdateReportInput) => {
+}).handler(async (input) => {
+  const validated = await updateReportSchema.parseAsync(input).catch((err) => {
+    throw new Error(`Validation failed: ${err.message}`);
+  });
   const session = await requireAuth();
-  const { id, ...updates } = input;
+  const { id, ...updates } = validated;
 
   const db = getDb();
   await db
@@ -160,9 +143,12 @@ export const updateReport = createServerFn({
 
 export const deleteReport = createServerFn({
   method: "DELETE",
-}).handler(async (input: { id: string }) => {
+}).handler(async (input) => {
+  const validated = await getReportSchema.parseAsync(input).catch((err) => {
+    throw new Error(`Validation failed: ${err.message}`);
+  });
   const session = await requireAuth();
-  const { id } = input;
+  const { id } = validated;
 
   const db = getDb();
   await db.deleteFrom("report_definitions").where("id", "=", id).execute();

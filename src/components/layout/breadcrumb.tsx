@@ -20,7 +20,7 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
     .split("/")
     .filter(Boolean)
     .map((segment, index, array) => {
-      const href = "/" + array.slice(0, index + 1).join("/");
+      const href = `/${array.slice(0, index + 1).join("/")}`;
       const label = segment
         .split("-")
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -36,8 +36,8 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
         <Home className="h-4 w-4" />
       </Link>
 
-      {breadcrumbItems.map((item, index) => (
-        <div key={index} className="flex items-center">
+      {breadcrumbItems.map((item) => (
+        <div key={item.label + (item.href ?? "")} className="flex items-center">
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
           {item.href && index < breadcrumbItems.length - 1 ? (
             <Link to={item.href} className="ml-1 text-muted-foreground hover:text-foreground">

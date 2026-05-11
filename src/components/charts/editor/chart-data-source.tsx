@@ -1,3 +1,4 @@
+import { Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -8,7 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Info } from "lucide-react";
 import type { SavedQuery } from "@/types/database";
 
 interface ChartDataSourceProps {

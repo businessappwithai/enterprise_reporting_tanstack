@@ -125,11 +125,7 @@ export const Route = createFileRoute("/api/dashboards/$id")({
             updates.refresh_config = JSON.stringify(body.refreshConfig);
           if (body.isPublic !== undefined) updates.is_public = body.isPublic;
 
-          await db
-            .updateTable("dashboard_layouts")
-            .set(updates)
-            .where("id", "=", id)
-            .execute();
+          await db.updateTable("dashboard_layouts").set(updates).where("id", "=", id).execute();
 
           await logAudit({
             userId: session.user.id,

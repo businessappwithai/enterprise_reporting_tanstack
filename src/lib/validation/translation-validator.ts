@@ -5,8 +5,8 @@
  * by translating it back to English and comparing semantic similarity.
  */
 
-import { generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
+import { generateText } from "ai";
 
 export interface ReverseTranslationResult {
   englishMeaning: string;
@@ -99,7 +99,7 @@ Format your response as JSON:
         confidence: Math.min(1, Math.max(0, parsed.confidence || 0)),
         warnings: parsed.warnings || [],
       };
-    } catch (parseError) {
+    } catch (_parseError) {
       return {
         englishMeaning: response.text,
         confidence: 0.5,

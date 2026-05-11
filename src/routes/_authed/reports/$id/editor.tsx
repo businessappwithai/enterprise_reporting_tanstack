@@ -1,29 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect, useRef } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Breadcrumb } from "@/components/layout/breadcrumb";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import {
-  DndContext,
   closestCenter,
+  DndContext,
+  type DragEndEvent,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
-  type DragEndEvent,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -31,20 +13,38 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Save, Eye, Plus, X } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { Eye, Plus, Save, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { Breadcrumb } from "@/components/layout/breadcrumb";
+import {
+  type FilterGroup,
+  ReportFilterBuilder,
+} from "@/components/reporting/report-filter-builder";
+import { SortableColumnRow } from "@/components/reporting/sortable-column-row";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import type {
-  ReportDefinition,
-  SavedQuery,
   ColumnDefinition,
   FilterDefinition,
   ReportColorTheme,
+  ReportDefinition,
+  SavedQuery,
 } from "@/types/database";
-import {
-  ReportFilterBuilder,
-  type FilterGroup,
-} from "@/components/reporting/report-filter-builder";
-import { SortableColumnRow } from "@/components/reporting/sortable-column-row";
 
 export const Route = createFileRoute("/_authed/reports/$id/editor")({
   component: ReportEditorPage,
@@ -118,7 +118,7 @@ function ReportEditorPage() {
     },
   });
 
-  const { data: reportFilters, refetch: refetchReportFilters } = useQuery({
+  const { data: reportFilters } = useQuery({
     queryKey: ["report-filters", reportId],
     queryFn: async () => {
       const res = await fetch(`/api/reports/${reportId}/filters`);
@@ -153,7 +153,7 @@ function ReportEditorPage() {
 
   useEffect(() => {
     if (queryResult?.columns) {
-      const fields = queryResult.columns.map((col: any) => col.name);
+      const fields = queryResult.columns.map((col: { name: string }) => col.name);
       setAvailableFields(fields);
     } else {
       setAvailableFields([]);
@@ -214,16 +214,7 @@ function ReportEditorPage() {
     if (report && !isLoadingFromServer.current) {
       setHasUnsavedChanges(true);
     }
-  }, [
-    reportName,
-    reportDescription,
-    selectedQueryId,
-    columns,
-    filters,
-    exportFormats,
-    colorTheme,
-    report,
-  ]);
+  }, [report]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -531,7 +522,12 @@ function ReportEditorPage() {
                       </SelectTrigger>
                       <SelectContent>
                         {availableFilters
-                          ?.filter((f) => !reportFilters?.some((rf: any) => rf.filter_id === f.id))
+                          ?.filter(
+                            (f) =>
+                              !reportFilters?.some(
+                                (rf: { filter_id: string }) => rf.filter_id === f.id
+                              )
+                          )
                           .map((filter) => (
                             <SelectItem key={filter.id} value={filter.id}>
                               {filter.name}
@@ -577,30 +573,32 @@ function ReportEditorPage() {
                   <div className="space-y-2">
                     <Label>Active Filters</Label>
                     <div className="border rounded-lg divide-y">
-                      {reportFilters.map((rf: any) => {
-                        const filterDef = availableFilters?.find((f) => f.id === rf.filter_id);
-                        if (!filterDef) return null;
-                        return (
-                          <div key={rf.id} className="flex items-center justify-between p-3">
-                            <div className="flex-1">
-                              <div className="font-medium">{filterDef.name}</div>
-                              <div className="text-sm text-muted-foreground">
-                                Filter: <code>{filterDef.display_field}</code> →{" "}
-                                <code>{filterDef.value_field}</code> | Target:{" "}
-                                <code>{rf.target_column}</code>
+                      {reportFilters.map(
+                        (rf: { id: string; filter_id: string; target_column: string }) => {
+                          const filterDef = availableFilters?.find((f) => f.id === rf.filter_id);
+                          if (!filterDef) return null;
+                          return (
+                            <div key={rf.id} className="flex items-center justify-between p-3">
+                              <div className="flex-1">
+                                <div className="font-medium">{filterDef.name}</div>
+                                <div className="text-sm text-muted-foreground">
+                                  Filter: <code>{filterDef.display_field}</code> →{" "}
+                                  <code>{filterDef.value_field}</code> | Target:{" "}
+                                  <code>{rf.target_column}</code>
+                                </div>
                               </div>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => removeFilterMutation.mutate(rf.id)}
+                                disabled={removeFilterMutation.isPending}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => removeFilterMutation.mutate(rf.id)}
-                              disabled={removeFilterMutation.isPending}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        );
-                      })}
+                          );
+                        }
+                      )}
                     </div>
                   </div>
                 )}
@@ -690,12 +688,12 @@ function ReportEditorPage() {
                       <div className="flex items-center gap-2">
                         <input
                           type="color"
-                          value={(colorTheme as any)[key] || "#000000"}
+                          value={(colorTheme as Record<string, string>)[key] || "#000000"}
                           onChange={(e) => setColorTheme({ ...colorTheme, [key]: e.target.value })}
                           className="h-9 w-16 rounded cursor-pointer"
                         />
                         <span className="text-xs text-muted-foreground">
-                          {(colorTheme as any)[key]}
+                          {(colorTheme as Record<string, string>)[key]}
                         </span>
                       </div>
                     </div>

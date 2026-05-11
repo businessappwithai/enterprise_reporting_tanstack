@@ -1,17 +1,12 @@
-import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Database, Edit, Eye, FileText, Mail, MoreHorizontal, Plus, Trash } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { TemplateEditor } from "@/components/email/template-editor";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -25,9 +20,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { toast } from "sonner";
-import { Plus, Edit, Trash, Mail, Eye, FileText, Database, MoreHorizontal } from "lucide-react";
-import { TemplateEditor } from "@/components/email/template-editor";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import type { EmailTemplate } from "@/lib/email/email-service";
 
 export const Route = createFileRoute("/_authed/email-templates/")({

@@ -5,15 +5,15 @@
  * Uses local state for change tracking with Zod validation on submit.
  */
 
+import { ChevronRight, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Input } from "@/components/ui/input";
 import type { MetadataEntityField } from "@/types/database";
 
 const singleFieldSchema = z.object({
@@ -156,8 +156,11 @@ export function BatchFieldEditForm({
                   <div className="space-y-4">
                     {/* Description */}
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Description</label>
+                      <label htmlFor={`desc-${field.id}`} className="text-sm font-medium">
+                        Description
+                      </label>
                       <Input
+                        id={`desc-${field.id}`}
                         placeholder={field.description || "No description"}
                         defaultValue={field.description || ""}
                         onChange={(e) =>
@@ -212,15 +215,18 @@ export function BatchFieldEditForm({
 
                     {/* Display Order */}
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Display Order</label>
+                      <label htmlFor={`order-${field.id}`} className="text-sm font-medium">
+                        Display Order
+                      </label>
                       <Input
+                        id={`order-${field.id}`}
                         type="number"
                         min={0}
                         max={10000}
                         defaultValue={field.display_order}
                         onChange={(e) =>
                           updateFieldChange(field.id, {
-                            display_order: parseInt(e.target.value) || 0,
+                            display_order: parseInt(e.target.value, 10) || 0,
                             id: field.id,
                           })
                         }
@@ -230,8 +236,11 @@ export function BatchFieldEditForm({
                     {/* Relationship UI Type - Only for foreign keys */}
                     {isForeignKey && (
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">Relationship UI Type</label>
+                        <label htmlFor={`rel-${field.id}`} className="text-sm font-medium">
+                          Relationship UI Type
+                        </label>
                         <select
+                          id={`rel-${field.id}`}
                           className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                           defaultValue={field.relationship_ui_type || ""}
                           onChange={(e) =>

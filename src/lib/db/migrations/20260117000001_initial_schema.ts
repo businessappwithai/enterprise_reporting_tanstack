@@ -1,5 +1,3 @@
-
-
 export async function up(db: any): Promise<void> {
   // Users table
   await db.schema.createTable("users", (table) => {

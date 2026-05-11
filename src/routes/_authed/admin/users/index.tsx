@@ -1,17 +1,11 @@
-import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Key, Shield, Trash2, UserPlus } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -22,7 +16,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -30,10 +23,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { UserPlus, Shield, ShieldCheck, Trash2, Key } from "lucide-react";
-import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { formatDateTime } from "@/lib/utils";
-import type { User, Role } from "@/types/database";
+import type { Role, User } from "@/types/database";
 
 export const Route = createFileRoute("/_authed/admin/users/")({
   component: UsersManagementPage,
@@ -70,7 +70,9 @@ function UsersManagementPage() {
   });
 
   // Fetch user roles for selected user
-  const { data: userRoles = [], refetch: refetchUserRoles } = useQuery({
+  const { data: userRoles = [], refetch: refetchUserRoles } = useQuery<
+    { role_id: string; role_name: string }[]
+  >({
     queryKey: ["user-roles", selectedUser?.id],
     queryFn: async () => {
       if (!selectedUser) return [];
@@ -234,7 +236,7 @@ function UsersManagementPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
-                        {user.roles?.map((role: any) => (
+                        {user.roles?.map((role: { id: string; name: string }) => (
                           <Badge key={role.id} variant="outline" className="text-xs">
                             {role.name}
                           </Badge>
@@ -346,7 +348,7 @@ function UsersManagementPage() {
                 {userRoles.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No roles assigned</p>
                 ) : (
-                  userRoles.map((ur: any) => (
+                  userRoles.map((ur) => (
                     <div
                       key={ur.role_id}
                       className="flex items-center justify-between p-2 border rounded"
@@ -376,7 +378,7 @@ function UsersManagementPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {roles
-                    .filter((r) => !userRoles.some((ur: any) => ur.role_id === r.id))
+                    .filter((r) => !userRoles.some((ur) => ur.role_id === r.id))
                     .map((role) => (
                       <SelectItem key={role.id} value={role.id}>
                         {role.name} - {role.description || "No description"}

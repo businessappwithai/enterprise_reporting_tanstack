@@ -24,7 +24,7 @@ export class EmbeddingService {
     // Check cache first
     const cacheKey = this.getCacheKey(text);
     if (this.cache.has(cacheKey)) {
-      return this.cache.get(cacheKey)!;
+      return this.cache.get(cacheKey) as number[];
     }
 
     try {

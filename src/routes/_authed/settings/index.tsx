@@ -1,6 +1,6 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Mail, Database, Bell, Users as UsersIcon } from "lucide-react";
+import { Bell, Database, Mail, Users as UsersIcon } from "lucide-react";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const Route = createFileRoute("/_authed/settings/")({
   beforeLoad: () => {

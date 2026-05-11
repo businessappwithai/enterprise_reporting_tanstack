@@ -1,14 +1,13 @@
 "use client";
 
-import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Check, ChevronsUpDown, X } from "lucide-react";
-
-import { cn } from "@/lib/utils";
+import * as React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 const multiSelectVariants = cva("m-1 transition ease-in-out delay-150 duration-300", {
   variants: {
@@ -135,6 +134,12 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
                 return (
                   <div
                     key={option.value}
+                    role="option"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") handleSelectOption(option.value);
+                    }}
+                    aria-selected={isSelected}
                     className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-accent cursor-pointer select-none"
                     onClick={() => handleSelectOption(option.value)}
                   >

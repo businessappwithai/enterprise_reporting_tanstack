@@ -1,5 +1,3 @@
-
-
 export async function up(db: any): Promise<void> {
   return db.schema.createTable("notifications", (table) => {
     table.uuid("id").primary().defaultTo(db.raw("(uuid_to_bytes(uuid()))"));

@@ -1,5 +1,5 @@
-import { getDb, getConfigDB, closeDb, isPostgres, type KyselyDB } from "./kysely-db";
+import { closeDb, getConfigDB, getDb, isPostgres, type KyselyDB } from "./kysely-db";
 
-// Re-export Kysely DB functions
-export { getDb, getConfigDB, closeDb, isPostgres };
 export type { KyselyDB };
+// Re-export Kysely DB functions
+export { closeDb, getConfigDB, getDb, isPostgres };

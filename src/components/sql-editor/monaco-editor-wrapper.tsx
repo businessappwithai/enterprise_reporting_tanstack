@@ -1,10 +1,10 @@
 "use client";
 
-import { Suspense, lazy, useRef, useCallback, useMemo, useState } from "react";
+import type { OnMount } from "@monaco-editor/react";
 import { Loader2 } from "lucide-react";
-import type { OnMount, OnChange } from "@monaco-editor/react";
 import type { editor } from "monaco-editor";
 import { useTheme } from "next-themes";
+import { lazy, Suspense, useCallback, useMemo, useRef, useState } from "react";
 import type { SchemaInfo } from "@/types/api";
 
 interface MonacoSQLEditorProps {
@@ -81,7 +81,7 @@ export function MonacoSQLEditorWrapper(props: MonacoSQLEditorProps) {
       });
 
       // Monitor paste events from Monaco
-      editor.onDidPaste((event) => {
+      editor.onDidPaste((_event) => {
         console.log("✅✅✅ MONACO NATIVE PASTE SUCCESSFUL ✅✅✅");
         console.log("Current editor value:", editor.getValue().substring(0, 100));
       });
@@ -189,7 +189,7 @@ export function MonacoSQLEditorWrapper(props: MonacoSQLEditorProps) {
     });
 
     // Don't prevent default - let it propagate, but also handle it via clipboard API
-    if (editorRef.current && editorRef.current.hasTextFocus()) {
+    if (editorRef.current?.hasTextFocus()) {
       e.preventDefault();
       e.stopPropagation();
 
@@ -243,7 +243,7 @@ export function MonacoSQLEditorWrapper(props: MonacoSQLEditorProps) {
   );
 
   // Focus editor when clicking container
-  const handleClick = useCallback((e: React.MouseEvent) => {
+  const handleClick = useCallback((_e: React.MouseEvent) => {
     if (editorRef.current) {
       editorRef.current.focus();
     }
@@ -253,6 +253,9 @@ export function MonacoSQLEditorWrapper(props: MonacoSQLEditorProps) {
     <div
       ref={containerRef}
       className="monaco-editor-wrapper relative"
+      role="button"
+      tabIndex={0}
+      onKeyDown={() => {}}
       onClick={handleClick}
       onContextMenu={handleContextMenu}
       onPaste={handleMousePaste}
@@ -284,8 +287,14 @@ export function MonacoSQLEditorWrapper(props: MonacoSQLEditorProps) {
           onClick={(e) => {
             e.stopPropagation();
           }}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setShowPasteMenu(false);
+          }}
+          role="menu"
+          tabIndex={0}
         >
           <button
+            type="button"
             className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
             onClick={(e) => {
               e.stopPropagation();
@@ -296,6 +305,7 @@ export function MonacoSQLEditorWrapper(props: MonacoSQLEditorProps) {
             <span className="text-xs text-gray-500">(Cmd+V)</span>
           </button>
           <button
+            type="button"
             className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
             onClick={(e) => {
               e.stopPropagation();

@@ -4,17 +4,17 @@
  * Validates entity access against data source RBAC permissions.
  */
 
-import { Parser } from "node-sql-parser";
 import { CharStream } from "antlr4ng";
+import { Parser } from "node-sql-parser";
+import { checkEntityAccess } from "@/lib/permissions/ds-rbac";
 import type {
-  ParsedSqlEntity,
   AccessCheckDetail,
+  ParsedSqlEntity,
   SqlAstNode,
+  SqlExpression,
   SqlFromItem,
   SqlTableRef,
-  SqlExpression,
 } from "@/types/database";
-import { checkEntityAccess } from "@/lib/permissions/ds-rbac";
 
 const sqlParser = new Parser();
 
@@ -208,8 +208,7 @@ function extractEntitiesViaRegex(
   ];
 
   for (const pattern of patterns) {
-    let match;
-    while ((match = pattern.exec(sql)) !== null) {
+    for (let match = pattern.exec(sql); match !== null; match = pattern.exec(sql)) {
       let tableName = match[1].replace(/[`"']/g, "");
       let schema: string | undefined;
 

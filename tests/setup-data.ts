@@ -61,7 +61,7 @@ export async function setupTestUsers() {
 
     const passwordHash = await hashPassword(userData.password);
 
-    await db('users').insert({
+    await db.insertInto('users').values({
       id: userData.id,
       email: userData.email,
       display_name: userData.displayName,
@@ -69,7 +69,7 @@ export async function setupTestUsers() {
       is_active: true,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-    });
+    }).execute();
 
     console.log(`✅ Created test user: ${userData.email}`);
   }
@@ -82,18 +82,18 @@ export async function setupTestDataSources() {
     const ds = TEST_DATA_SOURCES[i];
     const id = `ds_test_${String(i + 1).padStart(3, '0')}`;
 
-    const exists = await db('data_sources').where('id', id).first();
+    const exists = await db.selectFrom('data_sources').where('id', id).selectAll().executeTakeFirst();
     if (exists) {
       console.log(`ℹ️  Data source "${ds.name}" already exists, skipping...`);
       continue;
     }
 
-    await db('data_sources').insert({
+    await db.insertInto('data_sources').values({
       id,
       ...ds,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-    });
+    }).execute();
 
     console.log(`✅ Created test data source: ${ds.name}`);
   }

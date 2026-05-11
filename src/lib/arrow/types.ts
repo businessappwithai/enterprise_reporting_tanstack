@@ -48,4 +48,4 @@ export function resolveArrowType(sqlType: string): Arrow.DataType {
   return SQL_TO_ARROW_TYPE[normalised] ?? new Arrow.Utf8();
 }
 
-export type { Table as ArrowTable, Schema as ArrowSchema, Field as ArrowField } from "apache-arrow";
+export type { Field as ArrowField, Schema as ArrowSchema, Table as ArrowTable } from "apache-arrow";

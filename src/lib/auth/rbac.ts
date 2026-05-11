@@ -1,6 +1,6 @@
-import { auth } from "./config";
 import { getDb } from "@/lib/db/config";
-import type { ResourcePermission, PermissionLevel, ResourceType } from "@/types/database";
+import type { PermissionLevel, ResourcePermission, ResourceType } from "@/types/database";
+import { auth } from "./config";
 
 export interface SecurityContext {
   userId: string;
@@ -27,7 +27,7 @@ export function hasPermission(context: SecurityContext, permission: string): boo
   if (context.permissions.includes(permission)) return true;
 
   // Check for wildcard permission (e.g., 'report:*' matches 'report:view')
-  const [resource, action] = permission.split(":");
+  const [resource, _action] = permission.split(":");
   if (context.permissions.includes(`${resource}:*`)) return true;
 
   return false;
@@ -65,15 +65,22 @@ export async function canAccessResource(
   // Check specific resource permissions
   const db = getDb();
 
-  const roleIds = await db("roles").whereIn("name", context.roles).pluck("id");
+  const roleIds = await db
+    .selectFrom("roles")
+    .where("name", "in", context.roles)
+    .select("id")
+    .execute()
+    .then((rows) => rows.map((r) => r.id));
 
   if (roleIds.length === 0) return false;
 
-  const permission = await db<ResourcePermission>("resource_permissions")
-    .where("resource_type", resourceType)
-    .where("resource_id", resourceId)
-    .whereIn("role_id", roleIds)
-    .first();
+  const permission = (await db
+    .selectFrom("resource_permissions")
+    .where("resource_type", "=", resourceType)
+    .where("resource_id", "=", resourceId)
+    .where("role_id", "in", roleIds)
+    .selectAll()
+    .executeTakeFirst()) as ResourcePermission | undefined;
 
   if (!permission) return false;
 
@@ -97,7 +104,12 @@ export async function getAccessibleResourceIds(
 
   const db = getDb();
 
-  const roleIds = await db("roles").whereIn("name", context.roles).pluck("id");
+  const roleIds = await db
+    .selectFrom("roles")
+    .where("name", "in", context.roles)
+    .select("id")
+    .execute()
+    .then((rows) => rows.map((r) => r.id));
 
   if (roleIds.length === 0) return [];
 
@@ -105,11 +117,13 @@ export async function getAccessibleResourceIds(
   const minimumIndex = levelHierarchy.indexOf(minimumLevel);
   const validLevels = levelHierarchy.slice(minimumIndex);
 
-  const permissions = await db<ResourcePermission>("resource_permissions")
-    .where("resource_type", resourceType)
-    .whereIn("role_id", roleIds)
-    .whereIn("permission_level", validLevels)
-    .select("resource_id");
+  const permissions = (await db
+    .selectFrom("resource_permissions")
+    .where("resource_type", "=", resourceType)
+    .where("role_id", "in", roleIds)
+    .where("permission_level", "in", validLevels)
+    .select("resource_id")
+    .execute()) as Pick<ResourcePermission, "resource_id">[];
 
   return Array.from(new Set(permissions.map((p) => p.resource_id)));
 }
@@ -122,16 +136,21 @@ export async function grantResourcePermission(
 ): Promise<void> {
   const db = getDb();
 
-  await db("resource_permissions")
-    .insert({
-      id: crypto.randomUUID(),
+  await db
+    .insertInto("resource_permissions")
+    .values({
+      id: crypto.randomUUID() as string,
       resource_type: resourceType,
       resource_id: resourceId,
       role_id: roleId,
       permission_level: permissionLevel,
+      created_at: new Date().toISOString(),
     })
-    .onConflict(["resource_type", "resource_id", "role_id"])
-    .merge({ permission_level: permissionLevel });
+    .onConflict((oc) =>
+      oc
+        .columns(["resource_type", "resource_id", "role_id"])
+        .doUpdateSet({ permission_level: permissionLevel })
+    );
 }
 
 export async function revokeResourcePermission(
@@ -141,11 +160,11 @@ export async function revokeResourcePermission(
 ): Promise<void> {
   const db = getDb();
 
-  await db("resource_permissions")
-    .where("resource_type", resourceType)
-    .where("resource_id", resourceId)
-    .where("role_id", roleId)
-    .delete();
+  await db
+    .deleteFrom("resource_permissions")
+    .where("resource_type", "=", resourceType)
+    .where("resource_id", "=", resourceId)
+    .where("role_id", "=", roleId);
 }
 
 export function requirePermission(permission: string) {

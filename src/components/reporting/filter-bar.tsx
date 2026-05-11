@@ -1,11 +1,11 @@
+import { useQueries } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
+import { Loader2, Play } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useNavigate, useSearch } from "@tanstack/react-router";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Loader2, Play, AlertTriangle } from "lucide-react";
+import { Label } from "@/components/ui/label";
 import { MultiSelect } from "@/components/ui/multi-select";
 import type { FilterFieldType, FilterOperator } from "@/types/database";
 
@@ -37,16 +37,17 @@ interface FilterBarProps {
   type: "report" | "chart";
 }
 
-export function FilterBar({ reportId, chartId, filters, type }: FilterBarProps) {
+function getTodayDate() {
+  return new Date().toISOString().split("T")[0];
+}
+
+export function FilterBar({ filters }: FilterBarProps) {
   const navigate = useNavigate();
   const searchParams = new URLSearchParams(
     typeof window !== "undefined" ? window.location.search : ""
   );
   const [selectedValues, setSelectedValues] = useState<Record<string, string | string[]>>({});
   const [appliedValues, setAppliedValues] = useState<Record<string, string | string[]>>({});
-
-  // Get today's date in YYYY-MM-DD format
-  const getTodayDate = () => new Date().toISOString().split("T")[0];
 
   // Initialize selected values from URL based on field type
   useEffect(() => {
@@ -95,19 +96,21 @@ export function FilterBar({ reportId, chartId, filters, type }: FilterBarProps) 
   }, [filters, searchParams]);
 
   // Fetch filter options for ID field types only
-  const filterOptionsQueries = filters
-    .filter((f) => !f.field_type || f.field_type === "id")
-    .map((filter) => ({
-      ...useQuery({
-        queryKey: ["filter-options", filter.filter_id],
-        queryFn: async (): Promise<FilterOption[]> => {
-          const res = await fetch(`/api/filters/${filter.filter_id}/options`);
-          if (!res.ok) throw new Error("Failed to fetch filter options");
-          return res.json();
-        },
-      }),
-      filter,
-    }));
+  const filterIdFilters = filters.filter((f) => !f.field_type || f.field_type === "id");
+  const filterOptionsResults = useQueries({
+    queries: filterIdFilters.map((filter) => ({
+      queryKey: ["filter-options", filter.filter_id],
+      queryFn: async (): Promise<FilterOption[]> => {
+        const res = await fetch(`/api/filters/${filter.filter_id}/options`);
+        if (!res.ok) throw new Error("Failed to fetch filter options");
+        return res.json();
+      },
+    })),
+  });
+  const filterOptionsQueries = filterIdFilters.map((filter, i) => ({
+    ...filterOptionsResults[i],
+    filter,
+  }));
 
   const handleFilterChange = (
     filterId: string,

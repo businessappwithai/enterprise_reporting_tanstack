@@ -17,12 +17,25 @@
  * - Reduced server load
  */
 
-import { useState, useCallback } from "react";
 import { useCopilotAction, useCopilotReadable } from "@copilotkit/react-core";
 import { CopilotSidebar } from "@copilotkit/react-ui";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import {
+  AlertCircle,
+  BarChart3,
+  CheckCircle2,
+  Database,
+  History,
+  Loader2,
+  RefreshCw,
+  Shield,
+  Table as TableIcon,
+  XCircle,
+} from "lucide-react";
+import { useCallback, useState } from "react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -32,21 +45,6 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Database,
-  RefreshCw,
-  Loader2,
-  Table as TableIcon,
-  BarChart3,
-  History,
-  Shield,
-  AlertCircle,
-  CheckCircle2,
-  XCircle,
-} from "lucide-react";
-import { toast } from "sonner";
-import { NlResultsTable } from "./nl-results-table";
-import { NlResultsChart } from "./nl-results-chart";
-import {
   useActiveDataSources,
   useDataSourceSchema,
   useExecuteNlQuery,
@@ -54,15 +52,17 @@ import {
   useRefreshSchema,
 } from "@/lib/hooks/use-nl-query";
 import type {
-  NlQueryPipelineResult,
   AccessCheckDetail,
   DataSourceListItem,
+  NlChartConfig,
+  NlQueryPipelineResult,
+  QueryHistoryEntry,
+  SchemaColumnSummary,
   SchemaOverviewResponse,
   SchemaTableSummary,
-  QueryHistoryEntry,
-  NlChartConfig,
-  SchemaColumnSummary,
 } from "@/types/database";
+import { NlResultsChart } from "./nl-results-chart";
+import { NlResultsTable } from "./nl-results-table";
 
 export function NlQueryWorkspace() {
   // Local state
@@ -87,7 +87,6 @@ export function NlQueryWorkspace() {
     data: schemaInfo,
     isLoading: schemaLoading,
     error: schemaError,
-    refetch: refetchSchema,
   } = useDataSourceSchema(selectedDataSourceId);
 
   // Query history with caching (30 sec stale time)
@@ -475,9 +474,9 @@ ${schemaInfo ? `It has ${schemaInfo.tableCount} tables and ${schemaInfo.viewCoun
                     <span className="text-sm font-medium">Access Check</span>
                   </div>
                   <div className="flex flex-wrap gap-1">
-                    {queryResult.accessCheckResults.map((check: AccessCheckDetail, idx: number) => (
+                    {queryResult.accessCheckResults.map((check: AccessCheckDetail) => (
                       <Badge
-                        key={idx}
+                        key={check.entity}
                         variant={check.hasAccess ? "default" : "destructive"}
                         className="text-xs"
                       >

@@ -1,13 +1,11 @@
 import { getDb } from "@/lib/db/config";
 import type {
-  DsRole,
-  DsUserRoleJoinRow,
+  AccessCheckDetail,
   DsEntityPermission,
   DsEntityPermissionLevel,
+  DsRole,
+  DsUserRoleJoinRow,
   ParsedSqlEntity,
-  AccessCheckDetail,
-  UserRolePermissionRow,
-  DsUserRoleWithRoleInfo,
 } from "@/types/database";
 
 /**

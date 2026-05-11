@@ -5,8 +5,8 @@
  */
 
 import Database from "bun:sqlite";
-import { readFileSync } from "fs";
-import { join } from "path";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 const db = new Database(join(__dirname, "reporting.sqlite"));
 db.exec("PRAGMA journal_mode = WAL");
@@ -33,7 +33,7 @@ console.log("Starting database seed...");
 
 // 1. Regions (10 records)
 console.log("Inserting regions...");
-const regions: any[] = [];
+const regions: { id: number; name: string; code: string; country: string }[] = [];
 const regionData = [
   { name: "North America", code: "NA", country: "United States" },
   { name: "Europe West", code: "EUW", country: "Germany" },
@@ -55,7 +55,7 @@ for (const region of regionData) {
 
 // 2. Departments (15 records)
 console.log("Inserting departments...");
-const departments: any[] = [];
+const departments: { id: number; name: string; code: string; description: string; budget: number; manager_id: null }[] = [];
 const departmentData = [
   { name: "Sales", code: "SAL", description: "Sales and Business Development", budget: 5000000 },
   { name: "Marketing", code: "MKT", description: "Marketing and Communications", budget: 3000000 },
@@ -84,7 +84,7 @@ for (const dept of departmentData) {
 
 // 3. Employees (10,000 records)
 console.log("Inserting 10,000 employees...");
-const employees: any[] = [];
+const employees: { id: number; department_id?: number }[] = [];
 const firstNames = [
   "James",
   "Mary",
@@ -297,8 +297,8 @@ for (let i = 0; i < 10000; i++) {
   const hireDate = randomDate(new Date(2015, 0, 1), new Date(2024, 11, 31));
   const salary = 45000 + Math.floor(Math.random() * 150000);
 
-  const email = firstName.toLowerCase() + "." + lastName.toLowerCase() + i + "@company.com";
-  const phone = "+1" + Math.floor(Math.random() * 9000000000 + 1000000000);
+  const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}${i}@company.com`;
+  const phone = `+1${Math.floor(Math.random() * 9000000000 + 1000000000)}`;
 
   const info = insertEmp.run(
     firstName,
@@ -332,7 +332,7 @@ for (let i = 100; i < employees.length; i++) {
 
 // Update department managers
 for (const dept of departments) {
-  const deptEmployees = employees.filter((e: any) => e.department_id === dept.id);
+  const deptEmployees = employees.filter((e) => e.department_id === dept.id);
   if (deptEmployees.length > 0) {
     const manager = deptEmployees[Math.floor(Math.random() * Math.min(10, deptEmployees.length))];
     db.query("UPDATE departments SET manager_id = ? WHERE id = ?").run(manager.id, dept.id);
@@ -341,7 +341,7 @@ for (const dept of departments) {
 
 // 4. Warehouses (20 records)
 console.log("Inserting warehouses...");
-const warehouses: any[] = [];
+const warehouses: { id: number; code: string }[] = [];
 const cities = [
   "New York",
   "Los Angeles",
@@ -369,14 +369,14 @@ const insertWh = db.query(
 );
 for (let i = 0; i < 20; i++) {
   const region = pickRandom(regions);
-  const warehousingDept = departments.find((d: any) => d.name === "Warehousing");
-  const deptEmployees = employees.filter((e: any) => e.department_id === warehousingDept?.id);
+  const warehousingDept = departments.find((d) => d.name === "Warehousing");
+  const deptEmployees = employees.filter((e) => e.department_id === warehousingDept?.id);
   const manager = deptEmployees.length > 0 ? pickRandom(deptEmployees) : null;
-  const code = "WH" + String(i + 1).padStart(3, "0");
+  const code = `WH${String(i + 1).padStart(3, "0")}`;
   const info = insertWh.run(
-    "Warehouse " + (i + 1),
+    `Warehouse ${i + 1}`,
     code,
-    String(Math.floor(Math.random() * 9999)) + " " + cities[i] + " St",
+    `${String(Math.floor(Math.random() * 9999))} ${cities[i]} St`,
     cities[i],
     region.id,
     manager ? manager.id : null,
@@ -387,7 +387,7 @@ for (let i = 0; i < 20; i++) {
 
 // 5. Categories (30 records)
 console.log("Inserting categories...");
-const categories: any[] = [];
+const categories: { id: number; name: string; code: string }[] = [];
 const categoryData = [
   { name: "Electronics", code: "ELEC", parent: null },
   { name: "Computers", code: "COMP", parent: "Electronics" },
@@ -424,11 +424,11 @@ const insertCat = db.query(
   "INSERT INTO categories (name, code, description, parent_id) VALUES (?, ?, ?, ?)"
 );
 for (const cat of categoryData) {
-  const parent = cat.parent ? categories.find((c: any) => c.name === cat.parent) : null;
+  const parent = cat.parent ? categories.find((c) => c.name === cat.parent) : null;
   const info = insertCat.run(
     cat.name,
     cat.code,
-    cat.name + " and related products",
+    `${cat.name} and related products`,
     parent ? parent.id : null
   );
   categories.push({ id: info.lastInsertRowid, name: cat.name, code: cat.code });

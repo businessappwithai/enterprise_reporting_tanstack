@@ -2,15 +2,15 @@
  * DuckDB-Wasm library — main exports.
  */
 
-export { initDuckDB, getDuckDB, createConnection, closeDuckDB } from "./instance";
+export { closeDuckDB, createConnection, getDuckDB, initDuckDB } from "./instance";
+export { getMemoryManager, MemoryManager } from "./memory";
 export {
+  dropTable,
   executeQuery,
   executeQueryArrow,
-  loadParquetFromUrl,
   loadParquetFromBuffer,
-  dropTable,
+  loadParquetFromUrl,
 } from "./query";
-export { listTables, getTableSchema, getAllTableSchemas } from "./schema";
-export { MemoryManager, getMemoryManager } from "./memory";
-export type { DuckDBQueryResult, DuckDBTableInfo, DuckDBInstanceOptions } from "./types";
+export { getAllTableSchemas, getTableSchema, listTables } from "./schema";
+export type { DuckDBInstanceOptions, DuckDBQueryResult, DuckDBTableInfo } from "./types";
 export { DEFAULT_DUCKDB_OPTIONS } from "./types";

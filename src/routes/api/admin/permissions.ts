@@ -1,9 +1,9 @@
+import { randomUUID } from "node:crypto";
 import { createFileRoute } from "@tanstack/react-router";
-import { json } from "@/lib/server/response";
-import { getDb } from "@/lib/db/config";
 import { verifySession } from "@/lib/auth/session";
+import { getDb } from "@/lib/db/config";
 import { isAdmin } from "@/lib/permissions/permissions";
-import { randomUUID } from "crypto";
+import { json } from "@/lib/server/response";
 
 async function requireAdmin(request: Request) {
   const cookie = request.headers.get("cookie") || "";
@@ -41,7 +41,10 @@ export const Route = createFileRoute("/api/admin/permissions")({
         } catch (error) {
           console.error("Error fetching permissions:", error);
           return json(
-            { success: false, error: { code: "SERVER_ERROR", message: "Failed to fetch permissions" } },
+            {
+              success: false,
+              error: { code: "SERVER_ERROR", message: "Failed to fetch permissions" },
+            },
             { status: 500 }
           );
         }
@@ -68,7 +71,10 @@ export const Route = createFileRoute("/api/admin/permissions")({
 
           if (!resource_type || !resource_id || !role_id || !permission_level) {
             return json(
-              { success: false, error: { code: "INVALID_INPUT", message: "All permission fields are required" } },
+              {
+                success: false,
+                error: { code: "INVALID_INPUT", message: "All permission fields are required" },
+              },
               { status: 400 }
             );
           }
@@ -93,7 +99,10 @@ export const Route = createFileRoute("/api/admin/permissions")({
         } catch (error) {
           console.error("Error creating permission:", error);
           return json(
-            { success: false, error: { code: "SERVER_ERROR", message: "Failed to create permission" } },
+            {
+              success: false,
+              error: { code: "SERVER_ERROR", message: "Failed to create permission" },
+            },
             { status: 500 }
           );
         }
@@ -114,7 +123,10 @@ export const Route = createFileRoute("/api/admin/permissions")({
 
           if (!id) {
             return json(
-              { success: false, error: { code: "INVALID_INPUT", message: "Permission ID is required" } },
+              {
+                success: false,
+                error: { code: "INVALID_INPUT", message: "Permission ID is required" },
+              },
               { status: 400 }
             );
           }
@@ -126,7 +138,10 @@ export const Route = createFileRoute("/api/admin/permissions")({
         } catch (error) {
           console.error("Error deleting permission:", error);
           return json(
-            { success: false, error: { code: "SERVER_ERROR", message: "Failed to delete permission" } },
+            {
+              success: false,
+              error: { code: "SERVER_ERROR", message: "Failed to delete permission" },
+            },
             { status: 500 }
           );
         }

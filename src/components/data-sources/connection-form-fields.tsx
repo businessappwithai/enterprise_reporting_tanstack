@@ -1,3 +1,4 @@
+import { Check, Loader2, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -7,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Check, Loader2, X } from "lucide-react";
 import type { DatabaseClientType } from "@/types/database";
 import { SqliteFileUpload } from "./sqlite-file-upload";
 

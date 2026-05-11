@@ -1,9 +1,9 @@
+import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Plus, X } from "lucide-react";
 import type { ChartConfig, ChartType } from "@/types/database";
 
 interface ChartAppearanceProps {
@@ -110,6 +110,7 @@ export function ChartAppearance({
           </p>
           <div className="flex flex-wrap gap-2">
             {chartConfig.colors.map((color, index) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: order matters for color palette
               <div key={index} className="flex items-center gap-1">
                 <input
                   type="color"

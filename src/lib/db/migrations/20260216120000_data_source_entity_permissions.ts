@@ -1,5 +1,3 @@
-
-
 export async function up(db: any): Promise<void> {
   // Data source roles - roles specific to data source entity access
   // These are separate from the application-level roles in the 'roles' table
@@ -109,9 +107,7 @@ export async function up(db: any): Promise<void> {
   await db.schema.raw("CREATE INDEX idx_ds_roles_data_source ON ds_roles(data_source_id)");
   await db.schema.raw("CREATE INDEX idx_ds_user_roles_user ON ds_user_roles(user_id)");
   await db.schema.raw("CREATE INDEX idx_ds_user_roles_ds ON ds_user_roles(data_source_id)");
-  await db.schema.raw(
-    "CREATE INDEX idx_ds_entity_perms_role ON ds_entity_permissions(ds_role_id)"
-  );
+  await db.schema.raw("CREATE INDEX idx_ds_entity_perms_role ON ds_entity_permissions(ds_role_id)");
   await db.schema.raw(
     "CREATE INDEX idx_ds_entity_perms_ds ON ds_entity_permissions(data_source_id)"
   );

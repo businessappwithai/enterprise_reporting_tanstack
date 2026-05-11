@@ -2,7 +2,7 @@
 
 import { EChartsRenderer } from "@/components/echarts/EChartsRenderer";
 import { convertRechartsToECharts } from "@/components/echarts/RechartsCompatAdapter";
-import type { ChartType, ChartConfig, DataMapping } from "@/types/database";
+import type { ChartConfig, ChartType, DataMapping } from "@/types/database";
 
 interface ChartRendererProps {
   data: Record<string, unknown>[];

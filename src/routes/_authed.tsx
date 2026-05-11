@@ -1,8 +1,8 @@
-import { createFileRoute, redirect, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
-import { verifySession } from "@/lib/auth/session";
 import { AppShell } from "@/components/layout/app-shell";
+import { verifySession } from "@/lib/auth/session";
 
 const getSessionFn = createServerFn({ method: "GET" }).handler(async () => {
   const cookie = getRequestHeader("cookie") || "";

@@ -1,15 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { getDb } from "@/lib/db/config";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, Clock, Database, FileText, LayoutDashboard, Play } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getDb } from "@/lib/db/config";
 
 const getDashboardStatsFn = createServerFn({ method: "GET" }).handler(async () => {
   const db = getDb();
 
-  const safeCount = async (tableName: string, column = "*") => {
+  const safeCount = async (tableName: string, _column = "*") => {
     try {
-      const result = await db(tableName).count(`${column} as count`).first();
+      // biome-ignore lint/suspicious/noExplicitAny: dynamic table name
+      const result = await (db as any)
+        .selectFrom(tableName)
+        .select(db.fn.countAll().as("count"))
+        .executeTakeFirst();
       return Number((result as Record<string, unknown>)?.count || 0);
     } catch (error: unknown) {
       if (error instanceof Error && error.message?.includes("no such table")) {
@@ -22,10 +26,11 @@ const getDashboardStatsFn = createServerFn({ method: "GET" }).handler(async () =
 
   const getJobsCount = async () => {
     try {
-      const result = await db("job_definitions")
-        .whereNotNull("schedule_cron")
-        .count("* as count")
-        .first();
+      const result = await db
+        .selectFrom("job_definitions")
+        .where("schedule_cron", "is not", null)
+        .select(db.fn.countAll().as("count"))
+        .executeTakeFirst();
       return Number((result as Record<string, unknown>)?.count || 0);
     } catch (error: unknown) {
       if (error instanceof Error && error.message?.includes("no such table")) {

@@ -3,8 +3,6 @@
  * Supports the WASM-centric Parquet export / dataset caching pipeline.
  */
 
-
-
 export async function up(db: any): Promise<void> {
   // Dataset registry
   await db.schema.createTable("dataset_cache", (table) => {

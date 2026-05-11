@@ -1,5 +1,3 @@
-
-
 export async function up(db: any): Promise<void> {
   // Add soft delete columns to data_sources
   await db.schema.alterTable("data_sources", (table) => {

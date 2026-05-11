@@ -5,12 +5,11 @@
  * Displays currently active cross-widget filters and allows removal.
  */
 
-import React from "react";
 import { X } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useDashboardState } from "./DashboardState";
+import { Button } from "@/components/ui/button";
 import { isFeatureEnabled } from "@/lib/feature-flags";
+import { useDashboardState } from "./DashboardState";
 
 export function ActiveFiltersBar() {
   const { activeFilters, removeFilter, clearFilters } = useDashboardState();

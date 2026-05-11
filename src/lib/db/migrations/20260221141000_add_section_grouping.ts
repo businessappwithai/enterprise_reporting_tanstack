@@ -1,5 +1,3 @@
-
-
 /**
  * Migration: Add section_name field for visual section grouping
  *

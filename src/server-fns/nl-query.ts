@@ -7,20 +7,18 @@
  */
 
 import { createServerFn } from "@tanstack/react-start";
+import { requireAuth } from "@/lib/auth/middleware";
 import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
-import { validateSQLWithAllowlist, extractTables } from "@/lib/sql/antlr-validator";
-import {
-  reverseTranslateSql,
-  assessTranslationConfidence,
-  type SchemaMetadata,
-} from "@/lib/validation/translation-validator";
+import { isSafeSelectQuery, translateNLToSQL } from "@/lib/nlquery/openai-translator";
+import { getSchemaMetadata } from "@/lib/nlquery/schema-metadata";
 import { validateQueryAccess } from "@/lib/permissions/query-access-validator";
 import { logAudit } from "@/lib/security/audit";
-import { requireAuth } from "@/lib/auth/middleware";
-import { translateNLToSQL, isSafeSelectQuery } from "@/lib/nlquery/openai-translator";
-import { getSchemaMetadata } from "@/lib/nlquery/schema-metadata";
-import type { DataSource } from "@/types/database";
+import { validateSQLWithAllowlist } from "@/lib/sql/antlr-validator";
+import {
+  assessTranslationConfidence,
+  reverseTranslateSql,
+} from "@/lib/validation/translation-validator";
 
 export interface ExecuteNLQueryInput {
   nlQuestion: string;

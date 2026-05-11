@@ -6,8 +6,11 @@
  */
 
 import { useForm } from "@tanstack/react-form";
+import { ForeignKeyIcon, Loader2 } from "lucide-react";
 import { z } from "zod";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,9 +22,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Loader2, ForeignKeyIcon } from "lucide-react";
 import type { MetadataEntityField } from "@/types/database";
 
 const fieldMetadataSchema = z.object({
@@ -182,7 +182,7 @@ export function FieldMetadataForm({
                   max={10000}
                   placeholder="0"
                   value={fieldApi.state.value}
-                  onChange={(e) => fieldApi.handleChange(parseInt(e.target.value) || 0)}
+                  onChange={(e) => fieldApi.handleChange(parseInt(e.target.value, 10) || 0)}
                   onBlur={fieldApi.handleBlur}
                 />
                 <p className="text-sm text-muted-foreground">

@@ -23,16 +23,22 @@ export const Route = createFileRoute("/api/nl-query/execute")({
           const body = await request.json();
 
           // Validate input
-          if (!body.nlQuestion || typeof body.nlQuestion !== 'string') {
+          if (!body.nlQuestion || typeof body.nlQuestion !== "string") {
             return json(
-              { success: false, error: { code: 'INVALID_INPUT', message: 'Natural language question is required' } },
+              {
+                success: false,
+                error: { code: "INVALID_INPUT", message: "Natural language question is required" },
+              },
               { status: 400 }
             );
           }
 
-          if (!body.dataSourceId || typeof body.dataSourceId !== 'string') {
+          if (!body.dataSourceId || typeof body.dataSourceId !== "string") {
             return json(
-              { success: false, error: { code: 'INVALID_INPUT', message: 'Data source ID is required' } },
+              {
+                success: false,
+                error: { code: "INVALID_INPUT", message: "Data source ID is required" },
+              },
               { status: 400 }
             );
           }
@@ -51,7 +57,7 @@ export const Route = createFileRoute("/api/nl-query/execute")({
             return json({
               success: result.success,
               data: result,
-              error: result.error ? { code: 'EXECUTION_ERROR', message: result.error } : undefined,
+              error: result.error ? { code: "EXECUTION_ERROR", message: result.error } : undefined,
             });
           }
 
@@ -65,12 +71,12 @@ export const Route = createFileRoute("/api/nl-query/execute")({
           return json({
             success: result.success,
             data: result,
-            error: result.error ? { code: 'EXECUTION_ERROR', message: result.error } : undefined,
+            error: result.error ? { code: "EXECUTION_ERROR", message: result.error } : undefined,
           });
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          const errorMessage = error instanceof Error ? error.message : "Unknown error";
           return json(
-            { success: false, error: { code: 'INTERNAL_ERROR', message: errorMessage } },
+            { success: false, error: { code: "INTERNAL_ERROR", message: errorMessage } },
             { status: 500 }
           );
         }

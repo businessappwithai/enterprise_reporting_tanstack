@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { verifySession } from "@/lib/auth/session";
+import { getDb } from "@/lib/db/config";
 import { json } from "@/lib/server/response";
 import { validateSQL } from "@/lib/sql/validator";
-import { getDb } from "@/lib/db/config";
-import { verifySession } from "@/lib/auth/session";
 
 async function getSession(request: Request) {
   const cookie = request.headers.get("cookie") || "";

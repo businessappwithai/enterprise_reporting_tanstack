@@ -108,15 +108,13 @@ export const Route = createFileRoute("/api/charts/$id")({
           if (body.description !== undefined) updates.description = body.description;
           if (body.savedQueryId !== undefined) updates.saved_query_id = body.savedQueryId;
           if (body.chartType !== undefined) updates.chart_type = body.chartType;
-          if (body.chartConfig !== undefined) updates.chart_config = JSON.stringify(body.chartConfig);
-          if (body.dataMapping !== undefined) updates.data_mapping = JSON.stringify(body.dataMapping);
+          if (body.chartConfig !== undefined)
+            updates.chart_config = JSON.stringify(body.chartConfig);
+          if (body.dataMapping !== undefined)
+            updates.data_mapping = JSON.stringify(body.dataMapping);
           if (body.refreshInterval !== undefined) updates.refresh_interval = body.refreshInterval;
 
-          await db
-            .updateTable("chart_definitions")
-            .set(updates)
-            .where("id", "=", id)
-            .execute();
+          await db.updateTable("chart_definitions").set(updates).where("id", "=", id).execute();
 
           await logAudit({
             userId: session.user.id,

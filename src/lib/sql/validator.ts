@@ -1,12 +1,5 @@
 import { format as formatSQL } from "sql-formatter";
-
-// TODO: Fix node-sql-parser import for ES modules
-// For now, we'll use a mock Parser to avoid blocking module load
-class Parser {
-  static parse(_sql: string) {
-    return {};
-  }
-}
+import { Parser } from "node-sql-parser";
 
 export interface SQLValidationResult {
   isValid: boolean;
@@ -52,7 +45,7 @@ export function validateSQL(sql: string, dialect: string = "pg"): SQLValidationR
 
   try {
     // Parse the SQL to check syntax
-    ast = parser.astify(sql, { database: parserDialect });
+    ast = parser.astify(sql, { database: parserDialect }) as unknown;
 
     // Try to format the SQL
     try {
@@ -143,7 +136,7 @@ function checkSecurityIssues(sql: string, warnings: SQLWarning[]): void {
   }
 }
 
-function checkPerformanceIssues(sql: string, ast: unknown, warnings: SQLWarning[]): void {
+function checkPerformanceIssues(sql: string, _ast: unknown, warnings: SQLWarning[]): void {
   // Check for SELECT *
   if (/\bSELECT\s+\*/i.test(sql)) {
     warnings.push({

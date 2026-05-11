@@ -2,23 +2,23 @@
 
 import { useMemo } from "react";
 import {
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  AreaChart,
   Area,
-  PieChart,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Line,
+  LineChart,
   Pie,
-  ScatterChart,
+  PieChart,
+  ResponsiveContainer,
   Scatter,
+  ScatterChart,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  Cell,
 } from "recharts";
 import type { NlChartConfig } from "@/types/database";
 
@@ -155,8 +155,11 @@ export function NlResultsChart({ data, config }: NlResultsChartProps) {
               outerRadius={150}
               label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
             >
-              {chartData.map((_, idx) => (
-                <Cell key={`cell-${idx}`} fill={colors[idx % colors.length]} />
+              {chartData.map((entry, idx) => (
+                <Cell
+                  key={String(entry[config.xAxis.field] ?? idx)}
+                  fill={colors[idx % colors.length]}
+                />
               ))}
             </Pie>
           </PieChart>

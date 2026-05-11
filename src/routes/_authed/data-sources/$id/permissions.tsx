@@ -1,17 +1,11 @@
-import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { ArrowLeft, Loader2, Plus, Shield, Table as TableIcon, Trash2, Users } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -29,18 +23,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, Shield, Users, ArrowLeft, Loader2, Table as TableIcon } from "lucide-react";
-import { toast } from "sonner";
 import type {
-  DsRole,
+  DataSource,
   DsEntityPermission,
   DsEntityPermissionLevel,
   DsEntityType,
+  DsRole,
   DsUserRoleJoinRow,
   SchemaApiResponse,
   UserListItem,
-  DataSource,
 } from "@/types/database";
 
 const PERMISSION_LEVELS: { value: DsEntityPermissionLevel; label: string }[] = [

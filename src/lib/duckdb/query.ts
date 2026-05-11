@@ -2,9 +2,8 @@
  * DuckDB query execution utilities.
  */
 
-import type { AsyncDuckDBConnection } from "./types";
-import type { DuckDBQueryResult } from "./types";
 import { createConnection } from "./instance";
+import type { AsyncDuckDBConnection, DuckDBQueryResult } from "./types";
 
 /**
  * Execute a SQL query against DuckDB-Wasm and return typed results.

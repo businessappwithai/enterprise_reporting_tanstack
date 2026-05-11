@@ -12,7 +12,7 @@ export function filtersToSQL(filters: TableFilterState[]): string {
   if (filters.length === 0) return "";
 
   const clauses = filters.map((f) => filterToClause(f));
-  return "WHERE " + clauses.join(" AND ");
+  return `WHERE ${clauses.join(" AND ")}`;
 }
 
 function filterToClause(f: TableFilterState): string {

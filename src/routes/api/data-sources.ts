@@ -1,6 +1,7 @@
+import { randomUUID } from "node:crypto";
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
-import { v4 as uuidv4 } from "uuid";
+import { createDataSourceSchema } from "@/lib/schemas/data-sources";
 
 async function getSession(request: Request) {
   const { auth } = await import("@/lib/auth/config");
@@ -60,23 +61,22 @@ export const Route = createFileRoute("/api/data-sources")({
           }
 
           const body = await request.json();
-          const { name, description, clientType, connectionConfig } = body;
+          const result = await createDataSourceSchema.safeParseAsync(body);
 
-          if (!name || !clientType || !connectionConfig) {
+          if (!result.success) {
             return json(
-              {
-                success: false,
-                error: { code: "INVALID_INPUT", message: "Missing required fields" },
-              },
-              { status: 400 }
+              { success: false, error: { code: "INVALID_INPUT", message: "Validation failed", details: result.error.flatten() } },
+              { status: 422 }
             );
           }
+
+          const { name, description, clientType, connectionConfig } = result.data;
 
           const { getDb } = await import("@/lib/db/config");
           const { encrypt } = await import("@/lib/security/encryption");
           const { logAudit } = await import("@/lib/security/audit");
           const db = getDb();
-          const id = uuidv4();
+          const id = randomUUID();
           const encryptedConfig = encrypt(JSON.stringify(connectionConfig));
           const now = new Date().toISOString();
 

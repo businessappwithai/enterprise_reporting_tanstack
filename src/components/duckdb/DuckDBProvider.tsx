@@ -15,8 +15,13 @@ import {
   useRef,
   useState,
 } from "react";
-import type { DuckDBConfig, MemoryUsage, QueryResult, TableSchema } from "@/types/wasm";
-import type { DuckDBStatus } from "@/types/wasm";
+import type {
+  DuckDBConfig,
+  DuckDBStatus,
+  MemoryUsage,
+  QueryResult,
+  TableSchema,
+} from "@/types/wasm";
 
 // ---------------------------------------------------------------------------
 // Context value

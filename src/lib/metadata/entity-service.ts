@@ -5,12 +5,12 @@
  * All operations are transaction-safe and include audit logging.
  */
 
+import { type Kysely, sql } from "kysely";
 import { getDb } from "@/lib/db/config";
-import { sql, type Kysely } from "kysely";
 import type {
   MetadataEntityHeader,
-  MetadataEntityWithFields,
   MetadataEntityListParams,
+  MetadataEntityWithFields,
 } from "@/types/database";
 
 // biome-ignore lint/suspicious/noExplicitAny: metadata tables not in main schema
@@ -80,10 +80,7 @@ export class EntityQueryBuilder {
       if (f.column === "__search__") {
         const term = `%${f.value}%`;
         query = query.where((eb) =>
-          eb.or([
-            eb("entity_name", "like", term),
-            eb("description", "like", term),
-          ])
+          eb.or([eb("entity_name", "like", term), eb("description", "like", term)])
         );
       } else {
         query = query.where(f.column as never, "=", f.value);
@@ -106,10 +103,7 @@ export class EntityQueryBuilder {
   async withCount(): Promise<{ entities: MetadataEntityHeader[]; total: number }> {
     const [entities, countRows] = await Promise.all([
       this.buildQuery().execute(),
-      this.buildQuery(true)
-        .clearSelect()
-        .select(sql`count(*)`.as("total"))
-        .execute(),
+      this.buildQuery(true).clearSelect().select(sql`count(*)`.as("total")).execute(),
     ]);
 
     return {
@@ -122,6 +116,7 @@ export class EntityQueryBuilder {
 /**
  * Entity Service
  */
+// biome-ignore lint/complexity/noStaticOnlyClass: service class pattern with cohesive static methods
 export class EntityService {
   static async list(
     params: MetadataEntityListParams = {}
@@ -224,17 +219,20 @@ export class EntityService {
     if (!entity) return null;
 
     if (userId) {
-      await db.insertInto("audit_log").values({
-        id: crypto.randomUUID(),
-        user_id: userId,
-        action: "update",
-        resource_type: "metadata_entity",
-        resource_id: id,
-        details: JSON.stringify({ updated_fields: Object.keys(data) }),
-        ip_address: null,
-        user_agent: null,
-        created_at: now,
-      }).execute();
+      await db
+        .insertInto("audit_log")
+        .values({
+          id: crypto.randomUUID(),
+          user_id: userId,
+          action: "update",
+          resource_type: "metadata_entity",
+          resource_id: id,
+          details: JSON.stringify({ updated_fields: Object.keys(data) }),
+          ip_address: null,
+          user_agent: null,
+          created_at: now,
+        })
+        .execute();
     }
 
     return entity as MetadataEntityHeader;
@@ -251,17 +249,20 @@ export class EntityService {
 
     if (deleted && userId) {
       const now = new Date().toISOString();
-      await db.insertInto("audit_log").values({
-        id: crypto.randomUUID(),
-        user_id: userId,
-        action: "delete",
-        resource_type: "metadata_entity",
-        resource_id: id,
-        details: JSON.stringify({ deleted: "entity_metadata" }),
-        ip_address: null,
-        user_agent: null,
-        created_at: now,
-      }).execute();
+      await db
+        .insertInto("audit_log")
+        .values({
+          id: crypto.randomUUID(),
+          user_id: userId,
+          action: "delete",
+          resource_type: "metadata_entity",
+          resource_id: id,
+          details: JSON.stringify({ deleted: "entity_metadata" }),
+          ip_address: null,
+          user_agent: null,
+          created_at: now,
+        })
+        .execute();
     }
 
     return deleted;

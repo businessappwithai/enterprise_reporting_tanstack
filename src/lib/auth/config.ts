@@ -1,4 +1,4 @@
-import { verifySession, type Session } from "./session";
+import { type Session, verifySession } from "./session";
 
 export type { Session };
 

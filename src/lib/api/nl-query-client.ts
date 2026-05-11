@@ -7,9 +7,9 @@
 
 import type {
   DataSourceListItem,
-  SchemaOverviewResponse,
   NlQueryPipelineResult,
   QueryHistoryEntry,
+  SchemaOverviewResponse,
 } from "@/types/database";
 
 // ============================================================================

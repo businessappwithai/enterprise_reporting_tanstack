@@ -1,5 +1,3 @@
-
-
 export async function up(db: any): Promise<void> {
   // Add field_type and operator columns to filter_definitions table
   await db.schema.alterTable("filter_definitions", (table) => {

@@ -3,10 +3,10 @@
  * Main queue management class for BullMQ operations
  */
 
-import { Queue, type Job, QueueEvents } from "bullmq";
+import { type Job, Queue, QueueEvents } from "bullmq";
 import Redis from "ioredis";
-import type { JobData, JobResult, QueueStatus, JobOptions, ScheduledJobOptions } from "./types";
 import { DEFAULT_QUEUE_CONFIG, QUEUE_NAME } from "./config";
+import type { JobData, JobOptions, JobResult, QueueStatus, ScheduledJobOptions } from "./types";
 
 let queueInstance: Queue<JobData, JobResult> | null = null;
 let queueEventsInstance: QueueEvents | null = null;

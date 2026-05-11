@@ -5,12 +5,12 @@
  * metadata_entity_header and metadata_entity_field records.
  */
 
+import type { Kysely } from "kysely";
 import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
 import { introspectSchema } from "@/lib/sql/schema-introspection";
-import type { MetadataEntityField } from "@/types/database";
 import type { TableInfo } from "@/types/api";
-import type { Kysely } from "kysely";
+import type { MetadataEntityField } from "@/types/database";
 
 // biome-ignore lint/suspicious/noExplicitAny: metadata tables not in main schema
 type AnyDB = Kysely<any>;
@@ -18,6 +18,7 @@ type AnyDB = Kysely<any>;
 /**
  * Sync Service
  */
+// biome-ignore lint/complexity/noStaticOnlyClass: service class pattern with cohesive static methods
 export class SyncService {
   /**
    * Sync a single datasource (create/update entity and field metadata)
@@ -188,7 +189,7 @@ export class SyncService {
     trx: AnyDB,
     entityHeaderId: string,
     tableInfo: TableInfo,
-    userId?: string,
+    _userId?: string,
     isNewEntity = false
   ): Promise<{ created: number; updated: number }> {
     let created = 0;
@@ -301,7 +302,12 @@ export class SyncService {
     processed: number;
     succeeded: number;
     failed: number;
-    details: Array<{ dataSourceId: string; dataSourceName: string; success: boolean; error?: string }>;
+    details: Array<{
+      dataSourceId: string;
+      dataSourceName: string;
+      success: boolean;
+      error?: string;
+    }>;
   }> {
     const staleSources = await SyncService.getStaleDataSources(staleThresholdHours);
     const details: Array<{
@@ -319,7 +325,12 @@ export class SyncService {
         details.push({ dataSourceId: ds.id, dataSourceName: ds.name, success: true });
         succeeded++;
       } catch (error) {
-        details.push({ dataSourceId: ds.id, dataSourceName: ds.name, success: false, error: String(error) });
+        details.push({
+          dataSourceId: ds.id,
+          dataSourceName: ds.name,
+          success: false,
+          error: String(error),
+        });
         failed++;
       }
     }

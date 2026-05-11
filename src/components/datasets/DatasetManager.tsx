@@ -5,11 +5,10 @@
  * Shows loaded datasets, memory usage, and actions.
  */
 
-import React from "react";
-import { DatasetCard } from "./DatasetCard";
 import { MemoryMonitor } from "@/components/duckdb/MemoryMonitor";
 import { Button } from "@/components/ui/button";
 import type { DatasetInfo } from "@/types/wasm";
+import { DatasetCard } from "./DatasetCard";
 
 interface DatasetManagerProps {
   datasets: DatasetInfo[];

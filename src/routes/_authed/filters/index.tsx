@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Pencil, Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { type FilterFormData, FilterFormFields } from "@/components/filters/filter-form-fields";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,9 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Pencil, Trash2 } from "lucide-react";
 import type { FilterDefinition } from "@/types/database";
-import { FilterFormFields, type FilterFormData } from "@/components/filters/filter-form-fields";
 
 export const Route = createFileRoute("/_authed/filters/")({
   component: FiltersPage,

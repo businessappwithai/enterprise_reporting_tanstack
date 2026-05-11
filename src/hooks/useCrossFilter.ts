@@ -4,9 +4,9 @@
  * Hook for managing cross-widget filtering on dashboards.
  */
 
+import { nanoid } from "nanoid";
 import { useCallback, useMemo, useState } from "react";
 import type { ActiveFilter, CrossFilterConfig, WidgetFilterConfig } from "@/types/wasm";
-import { nanoid } from "nanoid";
 
 interface UseCrossFilterReturn {
   activeFilters: ActiveFilter[];

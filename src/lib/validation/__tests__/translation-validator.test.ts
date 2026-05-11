@@ -1,5 +1,5 @@
-import { assessTranslationConfidence, reverseTranslateSql } from "../translation-validator";
-import { describe, it, expect } from "bun:test";
+import { describe, expect, it } from "bun:test";
+import { assessTranslationConfidence } from "../translation-validator";
 
 describe("Translation Validator", () => {
   describe("assessTranslationConfidence", () => {
@@ -47,7 +47,7 @@ describe("Translation Validator", () => {
     it("should return valid structure", async () => {
       // This would require mocking OpenAI in actual tests
       // For now, just verify the structure exists
-      const schema = {
+      const _schema = {
         tables: [
           {
             name: "users",

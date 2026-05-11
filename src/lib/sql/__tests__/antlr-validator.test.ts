@@ -1,10 +1,10 @@
+import { describe, expect, it } from "bun:test";
 import {
-  validateSQLWithAllowlist,
-  extractTables,
   extractColumns,
+  extractTables,
   isReadOnlyQuery,
+  validateSQLWithAllowlist,
 } from "../antlr-validator";
-import { describe, it, expect } from "bun:test";
 
 describe("ANTLR Validator", () => {
   describe("validateSQLWithAllowlist", () => {

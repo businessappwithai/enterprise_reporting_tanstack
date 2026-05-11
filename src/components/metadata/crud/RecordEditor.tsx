@@ -5,17 +5,16 @@
  * Uses TanStack Form with dynamic field rendering.
  */
 
-import { useEffect, useState } from "react";
 import { useForm } from "@tanstack/react-form";
-import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Loader2, Save } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useEntity, useEntityRecords } from "@/hooks/metadata/use-metadata-queries";
 import type { MetadataEntityWithFields } from "@/types/database";
 import { RelationshipPicker } from "../RelationshipPicker";

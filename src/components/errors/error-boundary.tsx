@@ -1,8 +1,8 @@
-import React, { Component, type ErrorInfo, type ReactNode } from "react";
+import { AlertTriangle, RefreshCw } from "lucide-react";
+import { Component, type ErrorInfo, type ReactNode } from "react";
+import { Button } from "@/components/ui/button";
 import { errorLogger } from "@/lib/errors/error-logger";
 import { ErrorReportDialog } from "./error-report-dialog";
-import { Button } from "@/components/ui/button";
-import { AlertTriangle, RefreshCw } from "lucide-react";
 
 interface Props {
   children: ReactNode;
@@ -37,7 +37,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log the error
-    const errorLog = errorLogger.logError(error, errorInfo);
+    const _errorLog = errorLogger.logError(error, errorInfo);
 
     // Update state with error info
     this.setState({

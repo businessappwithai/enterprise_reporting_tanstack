@@ -8,15 +8,16 @@ export async function createNotification(params: {
   metadata?: Record<string, any>;
 }) {
   const db = getDb();
-  const [notification] = await db("notifications")
-    .insert({
+  const [notification] = await (db as any)
+    .insertInto("notifications")
+    .values({
       user_id: params.userId,
       type: params.type,
       title: params.title,
       message: params.message,
       metadata: params.metadata ? JSON.stringify(params.metadata) : null,
     })
-    .returning("*");
+    .returningAll();
   return notification;
 }
 
@@ -27,11 +28,11 @@ export async function createNotificationForAllUsers(params: {
   metadata?: Record<string, any>;
 }) {
   const db = getDb();
-  const users = await db("users").where("is_active", true).select("id");
+  const users = await db.selectFrom("users").where("is_active", "=", true).select("id").execute();
 
   const notifications = await Promise.all(
     users.map((user) =>
-      db("notifications").insert({
+      (db as any).insertInto("notifications").values({
         user_id: user.id,
         type: params.type,
         title: params.title,

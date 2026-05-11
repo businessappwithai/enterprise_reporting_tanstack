@@ -1,27 +1,27 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import {
   BarChart3,
   ChevronLeft,
   ChevronRight,
   Database,
   FileText,
+  Filter,
   Home,
+  Layers,
   LayoutDashboard,
+  MessageSquare,
   Play,
   Settings,
-  Users,
   Shield,
   Terminal,
-  Layers,
-  Filter,
-  MessageSquare,
+  Users,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCanView, usePermissions } from "@/lib/hooks/usePermissions";
+import { cn } from "@/lib/utils";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -124,7 +124,7 @@ export function Sidebar({ collapsed, onCollapse }: SidebarProps) {
     label: string;
     icon: React.ElementType;
   }) => {
-    const isActive = pathname === href || pathname.startsWith(href + "/");
+    const isActive = pathname === href || pathname.startsWith(`${href}/`);
 
     const content = (
       <Link to={href}>

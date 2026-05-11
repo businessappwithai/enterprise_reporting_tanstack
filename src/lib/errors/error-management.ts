@@ -11,7 +11,7 @@ export interface ErrorMessage {
   documentation_url?: string;
   is_active: boolean;
   category?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
@@ -22,7 +22,7 @@ export interface WarningConfig {
   name: string;
   description?: string;
   trigger_type: string;
-  trigger_config?: Record<string, any>;
+  trigger_config?: Record<string, unknown>;
   severity: "info" | "warning" | "critical";
   message_template: string;
   suggestions_template?: string[];
@@ -31,7 +31,7 @@ export interface WarningConfig {
   require_dismissal: boolean;
   enable_auto_resolve: boolean;
   auto_resolve_after?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
@@ -45,7 +45,7 @@ export interface ErrorOccurrence {
   component_stack?: string;
   url?: string;
   user_agent?: string;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
   is_reported: boolean;
   is_resolved: boolean;
   resolved_at?: string;
@@ -58,16 +58,18 @@ class ErrorManagementService {
    */
   async getErrorMessage(errorCode: string): Promise<ErrorMessage | null> {
     const db = getDb();
-    const result = await db<ErrorMessage>("error_messages")
+    const result = await db
+      .selectFrom("error_messages")
       .where("error_code", errorCode)
       .where("is_active", true)
-      .first();
+      .selectAll()
+      .executeTakeFirst();
 
-    if (result && result.suggestions) {
-      result.suggestions = JSON.parse(result.suggestions as any);
+    if (result?.suggestions) {
+      result.suggestions = JSON.parse(result.suggestions as string);
     }
-    if (result && result.metadata) {
-      result.metadata = JSON.parse(result.metadata as any);
+    if (result?.metadata) {
+      result.metadata = JSON.parse(result.metadata as string);
     }
 
     return result;
@@ -78,15 +80,17 @@ class ErrorManagementService {
    */
   async getAllErrorMessages(): Promise<ErrorMessage[]> {
     const db = getDb();
-    const results = await db<ErrorMessage>("error_messages")
+    const results = await db
+      .selectFrom("error_messages")
       .where("is_active", true)
       .orderBy("category")
-      .orderBy("error_code");
-
+      .orderBy("error_code")
+      .selectAll()
+      .execute();
     return results.map((msg) => ({
       ...msg,
-      suggestions: msg.suggestions ? JSON.parse(msg.suggestions as any) : undefined,
-      metadata: msg.metadata ? JSON.parse(msg.metadata as any) : undefined,
+      suggestions: msg.suggestions ? JSON.parse(msg.suggestions as string) : undefined,
+      metadata: msg.metadata ? JSON.parse(msg.metadata as string) : undefined,
     }));
   }
 
@@ -95,15 +99,18 @@ class ErrorManagementService {
    */
   async getErrorMessagesByCategory(category: string): Promise<ErrorMessage[]> {
     const db = getDb();
-    const results = await db<ErrorMessage>("error_messages")
+    const results = await db
+      .selectFrom("error_messages")
       .where("category", category)
       .where("is_active", true)
-      .orderBy("error_code");
+      .orderBy("error_code")
+      .selectAll()
+      .execute();
 
     return results.map((msg) => ({
       ...msg,
-      suggestions: msg.suggestions ? JSON.parse(msg.suggestions as any) : undefined,
-      metadata: msg.metadata ? JSON.parse(msg.metadata as any) : undefined,
+      suggestions: msg.suggestions ? JSON.parse(msg.suggestions as string) : undefined,
+      metadata: msg.metadata ? JSON.parse(msg.metadata as string) : undefined,
     }));
   }
 
@@ -113,7 +120,7 @@ class ErrorManagementService {
   async updateErrorMessage(id: string, updates: Partial<ErrorMessage>): Promise<void> {
     const db = getDb();
 
-    const data: any = {
+    const data: Record<string, unknown> = {
       ...updates,
       updated_at: new Date().toISOString(),
     };
@@ -126,7 +133,7 @@ class ErrorManagementService {
       data.metadata = JSON.stringify(updates.metadata);
     }
 
-    await db<ErrorMessage>("error_messages").where("id", id).update(data);
+    await db.updateTable("error_messages").where("id", id).set(data).execute();
   }
 
   /**
@@ -137,7 +144,7 @@ class ErrorManagementService {
   ): Promise<ErrorMessage> {
     const db = getDb();
 
-    const data: any = {
+    const data: Record<string, unknown> = {
       ...message,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -151,7 +158,8 @@ class ErrorManagementService {
       data.metadata = JSON.stringify(message.metadata);
     }
 
-    const [id] = await db<ErrorMessage>("error_messages").insert(data);
+    const result = await db.insertInto("error_messages").values(data).executeTakeFirst();
+    const _id = result.insertId as string;
 
     return this.getErrorMessage(message.error_code) as Promise<ErrorMessage>;
   }
@@ -161,20 +169,22 @@ class ErrorManagementService {
    */
   async getWarningConfig(warningCode: string): Promise<WarningConfig | null> {
     const db = getDb();
-    const result = await db<WarningConfig>("warning_configs")
+    const result = await db
+      .selectFrom("warning_configs")
       .where("warning_code", warningCode)
       .where("is_active", true)
-      .first();
+      .selectAll()
+      .executeTakeFirst();
 
     if (result) {
       if (result.trigger_config) {
-        result.trigger_config = JSON.parse(result.trigger_config as any);
+        result.trigger_config = JSON.parse(result.trigger_config as string);
       }
       if (result.suggestions_template) {
-        result.suggestions_template = JSON.parse(result.suggestions_template as any);
+        result.suggestions_template = JSON.parse(result.suggestions_template as string);
       }
       if (result.metadata) {
-        result.metadata = JSON.parse(result.metadata as any);
+        result.metadata = JSON.parse(result.metadata as string);
       }
     }
 
@@ -186,25 +196,28 @@ class ErrorManagementService {
    */
   async getAllWarningConfigs(): Promise<WarningConfig[]> {
     const db = getDb();
-    const results = await db<WarningConfig>("warning_configs")
+    const results = await db
+      .selectFrom("warning_configs")
       .where("is_active", true)
       .orderBy("severity", "desc")
-      .orderBy("warning_code");
+      .orderBy("warning_code")
+      .selectAll()
+      .execute();
 
     return results.map((config) => ({
       ...config,
-      trigger_config: config.trigger_config ? JSON.parse(config.trigger_config as any) : undefined,
+      trigger_config: config.trigger_config ? JSON.parse(config.trigger_config as string) : undefined,
       suggestions_template: config.suggestions_template
-        ? JSON.parse(config.suggestions_template as any)
+        ? JSON.parse(config.suggestions_template as string)
         : undefined,
-      metadata: config.metadata ? JSON.parse(config.metadata as any) : undefined,
+      metadata: config.metadata ? JSON.parse(config.metadata as string) : undefined,
     }));
   }
 
   /**
    * Format error message with template variables
    */
-  formatMessage(template: string, variables: Record<string, any>): string {
+  formatMessage(template: string, variables: Record<string, unknown>): string {
     let message = template;
     for (const [key, value] of Object.entries(variables)) {
       const placeholder = `{${key}}`;
@@ -227,9 +240,9 @@ class ErrorManagementService {
       created_at: new Date().toISOString(),
     };
 
-    const [id] = await db<ErrorOccurrence>("error_occurrences").insert(data);
+    const result = await db.insertInto("error_occurrences").values(data).executeTakeFirst();
 
-    return id as string;
+    return String(result.insertId);
   }
 
   /**
@@ -237,7 +250,7 @@ class ErrorManagementService {
    */
   async markErrorAsReported(id: string): Promise<void> {
     const db = getDb();
-    await db<ErrorOccurrence>("error_occurrences").where("id", id).update({ is_reported: true });
+    await db.updateTable("error_occurrences").where("id", id).set({ is_reported: true }).execute();
   }
 
   /**
@@ -248,15 +261,16 @@ class ErrorManagementService {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
 
-    const stats = await db<ErrorOccurrence>("error_occurrences")
+    const stats = await db
+      .selectFrom("error_occurrences")
       .where("created_at", ">=", cutoffDate.toISOString())
-      .select("error_code")
-      .count("* as count")
+      .select(["error_code", db.fn.countAll().as("count")])
       .groupBy("error_code")
       .orderBy("count", "desc")
-      .limit(10);
+      .limit(10)
+      .execute();
 
-    return stats.map((stat: any) => ({
+    return stats.map((stat: { error_code: string; count: number }) => ({
       errorCode: stat.error_code,
       count: Number(stat.count),
     }));
@@ -267,10 +281,14 @@ class ErrorManagementService {
    */
   async resolveErrorOccurrence(id: string): Promise<void> {
     const db = getDb();
-    await db<ErrorOccurrence>("error_occurrences").where("id", id).update({
-      is_resolved: true,
-      resolved_at: new Date().toISOString(),
-    });
+    await db
+      .updateTable("error_occurrences")
+      .where("id", id)
+      .set({
+        is_resolved: true,
+        resolved_at: new Date().toISOString(),
+      })
+      .execute();
   }
 }
 

@@ -1,6 +1,10 @@
 "use client";
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Check, Copy, Globe, Lock, Share2 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -9,13 +13,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Copy, Check, Globe, Lock, Share2 } from "lucide-react";
-import { toast } from "sonner";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface ShareDialogProps {
   open: boolean;
@@ -48,13 +48,13 @@ export function ShareDialog({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
       toast.success("Share link copied to clipboard");
-    } catch (err) {
+    } catch (_err) {
       toast.error("Failed to copy link");
     }
   };
 
   const togglePublicMutation = useMutation({
-    mutationFn: async (newPublicState: boolean) => {
+    mutationFn: async (_newPublicState: boolean) => {
       const response = await fetch(`/api/${resourceType}s/${resourceId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },

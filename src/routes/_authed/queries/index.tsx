@@ -1,6 +1,10 @@
-import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Pencil, Plus, RefreshCw, Search, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -9,11 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2, RefreshCw, Search, Plus } from "lucide-react";
-import type { SavedQuery, DataSource } from "@/types/database";
+import type { DataSource, SavedQuery } from "@/types/database";
 
 export const Route = createFileRoute("/_authed/queries/")({
   component: QueriesPage,

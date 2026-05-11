@@ -9,21 +9,21 @@
  * - Pagination and infinite scroll support
  */
 
-import { useQuery, useMutation, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
+import { type UseQueryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
+  executeNlQuery,
   fetchActiveDataSources,
   fetchDataSourceSchema,
-  executeNlQuery,
   fetchQueryHistory,
   nlQueryKeys,
 } from "@/lib/api/nl-query-client";
 import type {
   DataSourceListItem,
-  SchemaOverviewResponse,
   NlQueryPipelineResult,
   QueryHistoryEntry,
+  SchemaOverviewResponse,
 } from "@/types/database";
 
 // ============================================================================
@@ -88,7 +88,7 @@ export function useDataSourceSchema(
 ) {
   return useQuery<SchemaOverviewResponse, Error>({
     queryKey: nlQueryKeys.schema(dataSourceId || ""),
-    queryFn: () => fetchDataSourceSchema(dataSourceId!, { refresh: options?.refresh }),
+    queryFn: () => fetchDataSourceSchema(dataSourceId as string, { refresh: options?.refresh }),
     enabled: !!dataSourceId && options?.enabled !== false,
     staleTime: 10 * 60 * 1000, // 10 minutes - schema doesn't change often
     gcTime: 30 * 60 * 1000, // 30 minutes

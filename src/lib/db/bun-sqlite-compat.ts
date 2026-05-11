@@ -63,9 +63,15 @@ class Statement {
   }
 
   // Stub methods present in better-sqlite3 but not needed with bun:sqlite
-  pluck(_toggle = true): this { return this; }
-  raw(_toggle = true): this { return this; }
-  columns(): unknown[] { return []; }
+  pluck(_toggle = true): this {
+    return this;
+  }
+  raw(_toggle = true): this {
+    return this;
+  }
+  columns(): unknown[] {
+    return [];
+  }
 }
 
 export class Database {

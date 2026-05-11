@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { DatasetManager } from "@/components/datasets/DatasetManager";
-import { Button } from "@/components/ui/button";
 import { useDuckDB } from "@/components/duckdb/DuckDBProvider";
+import { Button } from "@/components/ui/button";
 import { useDataset } from "@/hooks/useDataset";
-import type { DatasetInfo } from "@/types/wasm";
 import { isFeatureEnabled } from "@/lib/feature-flags";
+import type { DatasetInfo } from "@/types/wasm";
 
 export const Route = createFileRoute("/_authed/datasets/")({
   component: DatasetsPage,

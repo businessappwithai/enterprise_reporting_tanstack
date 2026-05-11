@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef, useCallback, memo, useEffect } from "react";
-import Editor, { type OnMount, type OnChange } from "@monaco-editor/react";
+import Editor, { type OnChange, type OnMount } from "@monaco-editor/react";
 import type { editor } from "monaco-editor";
 import { useTheme } from "next-themes";
+import { memo, useCallback, useEffect, useRef } from "react";
 import type { SchemaInfo } from "@/types/api";
 
 interface MonacoSQLEditorProps {
@@ -128,7 +128,7 @@ function MonacoSQLEditorComponent({
       }}
     >
       <Editor
-        height={typeof height === "number" ? height : parseInt(height as string)}
+        height={typeof height === "number" ? height : parseInt(height as string, 10)}
         language="sql"
         theme={theme === "dark" ? "vs-dark" : "light"}
         value={value}

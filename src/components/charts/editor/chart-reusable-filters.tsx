@@ -1,3 +1,4 @@
+import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -8,7 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, X } from "lucide-react";
 import type { FilterDefinition } from "@/types/database";
 
 interface ChartFilterLink {

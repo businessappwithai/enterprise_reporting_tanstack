@@ -2,9 +2,9 @@
  * Arrow / Parquet library — main exports.
  */
 
-export { objectsToArrow, arrowToObjects, getColumnNames, getColumnValues } from "./converter";
-export { readArrowIPC, readArrowFromUrl } from "./reader";
-export { writeArrowIPC, writeArrowFile } from "./writer";
+export { arrowToObjects, getColumnNames, getColumnValues, objectsToArrow } from "./converter";
 export { fetchParquetBuffer, getParquetFileSize } from "./parquet";
-export { SQL_TO_ARROW_TYPE, resolveArrowType } from "./types";
-export type { ArrowTable, ArrowSchema, ArrowField } from "./types";
+export { readArrowFromUrl, readArrowIPC } from "./reader";
+export type { ArrowField, ArrowSchema, ArrowTable } from "./types";
+export { resolveArrowType, SQL_TO_ARROW_TYPE } from "./types";
+export { writeArrowFile, writeArrowIPC } from "./writer";

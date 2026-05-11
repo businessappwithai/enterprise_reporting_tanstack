@@ -1,35 +1,40 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import {
-  useReactTable,
+  type ColumnDef,
+  type ColumnFiltersState,
+  flexRender,
   getCoreRowModel,
-  getSortedRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
-  flexRender,
-  type ColumnDef,
-  type SortingState,
-  type ColumnFiltersState,
-  type VisibilityState,
+  getSortedRowModel,
   type PaginationState,
+  type SortingState,
+  useReactTable,
+  type VisibilityState,
 } from "@tanstack/react-table";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Download,
+  Search,
+  Settings2,
+  X,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -38,18 +43,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  Settings2,
-  Download,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-  Search,
-  X,
-} from "lucide-react";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import type { ReportColorTheme } from "@/types/database";
 
@@ -317,6 +317,12 @@ export function DataTable<TData>({
                   >
                     {header.isPlaceholder ? null : (
                       <div
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ")
+                            header.column.getToggleSortingHandler()?.();
+                        }}
                         className={cn(
                           header.column.getCanSort() &&
                             "flex items-center gap-1 cursor-pointer select-none hover:text-foreground"
@@ -324,17 +330,14 @@ export function DataTable<TData>({
                         onClick={header.column.getToggleSortingHandler()}
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}
-                        {header.column.getCanSort() && (
-                          <>
-                            {header.column.getIsSorted() === "asc" ? (
-                              <ArrowUp className="h-3 w-3" />
-                            ) : header.column.getIsSorted() === "desc" ? (
-                              <ArrowDown className="h-3 w-3" />
-                            ) : (
-                              <ArrowUpDown className="h-3 w-3 opacity-50" />
-                            )}
-                          </>
-                        )}
+                        {header.column.getCanSort() &&
+                          (header.column.getIsSorted() === "asc" ? (
+                            <ArrowUp className="h-3 w-3" />
+                          ) : header.column.getIsSorted() === "desc" ? (
+                            <ArrowDown className="h-3 w-3" />
+                          ) : (
+                            <ArrowUpDown className="h-3 w-3 opacity-50" />
+                          ))}
                       </div>
                     )}
                   </TableHead>

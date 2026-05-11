@@ -1,6 +1,6 @@
+import { randomUUID } from "node:crypto";
 import { getDb } from "@/lib/db/config";
-import type { AuditAction, ResourceType, AuditLog } from "@/types/database";
-import { v4 as uuidv4 } from "uuid";
+import type { AuditAction, AuditLog, ResourceType } from "@/types/database";
 
 export interface AuditLogEntry {
   userId?: string;
@@ -18,7 +18,7 @@ export async function logAudit(entry: AuditLogEntry): Promise<void> {
   await db
     .insertInto("audit_log")
     .values({
-      id: uuidv4(),
+      id: randomUUID(),
       user_id: entry.userId ?? null,
       action: entry.action,
       resource_type: entry.resourceType,

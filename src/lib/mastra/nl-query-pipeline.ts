@@ -12,8 +12,8 @@
 
 import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
-import { validateSqlAccess, validateSqlTokens } from "./sql-parser";
 import type { DataSource, NlQueryPipelineResult } from "@/types/database";
+import { validateSqlAccess, validateSqlTokens } from "./sql-parser";
 
 const MAX_RESULT_ROWS = 1000;
 
@@ -124,7 +124,7 @@ export async function executeNlQueryPipeline(
   // Log the query attempt
   const db = getDb();
   const historyId = crypto.randomUUID();
-  await db("nl_query_history").insert({
+  await (db as any).insertInto("nl_query_history").values({
     id: historyId,
     data_source_id: dataSource.id,
     user_id: userId,
@@ -140,9 +140,10 @@ export async function executeNlQueryPipeline(
     const deniedList = deniedEntities.join(", ");
 
     // Update history with denial
-    await db("nl_query_history")
+    await (db as any)
+      .updateTable("nl_query_history")
       .where("id", historyId)
-      .update({
+      .set({
         error_message: `Access denied to entities: ${deniedList}`,
       });
 
@@ -185,9 +186,10 @@ export async function executeNlQueryPipeline(
     const columns = resultRows.length > 0 ? Object.keys(resultRows[0]) : [];
 
     // Update history with success
-    await db("nl_query_history")
+    await (db as any)
+      .updateTable("nl_query_history")
       .where("id", historyId)
-      .update({
+      .set({
         execution_result: JSON.stringify({ rowCount: resultRows.length, columns }),
         execution_time_ms: executionTimeMs,
       });
@@ -209,9 +211,10 @@ export async function executeNlQueryPipeline(
     const errorMessage = error instanceof Error ? error.message : String(error);
 
     // Update history with error
-    await db("nl_query_history")
+    await (db as any)
+      .updateTable("nl_query_history")
       .where("id", historyId)
-      .update({
+      .set({
         access_check_result: "error",
         error_message: errorMessage,
         execution_time_ms: Date.now() - startTime,

@@ -1,24 +1,24 @@
-import { useState, useEffect } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
 import { ArrowLeft, Eye, Save } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import type {
-  ChartDefinition,
-  SavedQuery,
-  ChartType,
-  ChartConfig,
-  DataMapping,
-  FilterDefinition,
-} from "@/types/database";
+import { ChartAppearance } from "@/components/charts/editor/chart-appearance";
+import { ChartAxisConfig } from "@/components/charts/editor/chart-axis-config";
 import { ChartBasicInfo } from "@/components/charts/editor/chart-basic-info";
 import { ChartDataSource } from "@/components/charts/editor/chart-data-source";
-import { ChartTypeSelector } from "@/components/charts/editor/chart-type-selector";
-import { ChartAxisConfig } from "@/components/charts/editor/chart-axis-config";
-import { ChartAppearance } from "@/components/charts/editor/chart-appearance";
-import { ChartReusableFilters } from "@/components/charts/editor/chart-reusable-filters";
 import { ChartPreviewPanel } from "@/components/charts/editor/chart-preview-panel";
+import { ChartReusableFilters } from "@/components/charts/editor/chart-reusable-filters";
+import { ChartTypeSelector } from "@/components/charts/editor/chart-type-selector";
+import { Button } from "@/components/ui/button";
+import type {
+  ChartConfig,
+  ChartDefinition,
+  ChartType,
+  DataMapping,
+  FilterDefinition,
+  SavedQuery,
+} from "@/types/database";
 
 export const Route = createFileRoute("/_authed/charts/editor/$id")({
   component: ChartEditorPage,
@@ -168,7 +168,7 @@ function ChartEditorPage() {
     if (selectedQueryId && chart) {
       setDataMapping({ xAxis: { field: "", label: "" }, yAxis: [], groupBy: "", colorBy: "" });
     }
-  }, [selectedQueryId, chartId]);
+  }, [selectedQueryId, chart]);
 
   const availableFields = previewData.length > 0 ? Object.keys(previewData[0]) : [];
 

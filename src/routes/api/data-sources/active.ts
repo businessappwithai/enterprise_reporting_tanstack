@@ -8,7 +8,10 @@ async function getSession(request: Request) {
 
 // In-memory active data source store (keyed by user id)
 // In production this could be a Redis or DB-backed session value
-const activeDataSourceByUser = new Map<string, { id: string; name: string; client_type: string; created_at: string } | null>();
+const activeDataSourceByUser = new Map<
+  string,
+  { id: string; name: string; client_type: string; created_at: string } | null
+>();
 
 export const Route = createFileRoute("/api/data-sources/active")({
   server: {
@@ -28,7 +31,10 @@ export const Route = createFileRoute("/api/data-sources/active")({
         } catch (error) {
           console.error("Error fetching active data source:", error);
           return json(
-            { success: false, error: { code: "SERVER_ERROR", message: "Failed to fetch active data source" } },
+            {
+              success: false,
+              error: { code: "SERVER_ERROR", message: "Failed to fetch active data source" },
+            },
             { status: 500 }
           );
         }
@@ -44,7 +50,7 @@ export const Route = createFileRoute("/api/data-sources/active")({
             );
           }
 
-          const body = await request.json() as { dataSourceId?: string };
+          const body = (await request.json()) as { dataSourceId?: string };
           const { dataSourceId } = body;
 
           if (!dataSourceId) {
@@ -74,7 +80,10 @@ export const Route = createFileRoute("/api/data-sources/active")({
         } catch (error) {
           console.error("Error setting active data source:", error);
           return json(
-            { success: false, error: { code: "SERVER_ERROR", message: "Failed to set active data source" } },
+            {
+              success: false,
+              error: { code: "SERVER_ERROR", message: "Failed to set active data source" },
+            },
             { status: 500 }
           );
         }
@@ -94,7 +103,10 @@ export const Route = createFileRoute("/api/data-sources/active")({
         } catch (error) {
           console.error("Error clearing active data source:", error);
           return json(
-            { success: false, error: { code: "SERVER_ERROR", message: "Failed to clear active data source" } },
+            {
+              success: false,
+              error: { code: "SERVER_ERROR", message: "Failed to clear active data source" },
+            },
             { status: 500 }
           );
         }

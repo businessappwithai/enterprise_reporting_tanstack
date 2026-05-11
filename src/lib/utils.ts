@@ -85,7 +85,7 @@ export function throttle<T extends (...args: unknown[]) => unknown>(
 
 export function truncate(str: string, length: number): string {
   if (str.length <= length) return str;
-  return str.slice(0, length) + "...";
+  return `${str.slice(0, length)}...`;
 }
 
 export function capitalize(str: string): string {

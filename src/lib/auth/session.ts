@@ -1,6 +1,6 @@
-import { SignJWT, jwtVerify } from "jose";
-import { getDb } from "@/lib/db/config";
 import bcrypt from "bcryptjs";
+import { jwtVerify, SignJWT } from "jose";
+import { getDb } from "@/lib/db/config";
 
 export interface SessionUser {
   id: string;
@@ -15,9 +15,14 @@ export interface Session {
   expires: string;
 }
 
-const SECRET = new TextEncoder().encode(
-  process.env.AUTH_SECRET || "enterprise-reporting-secret-key-min-32-chars!!"
-);
+const authSecret = process.env.AUTH_SECRET;
+if (!authSecret || authSecret.length < 32) {
+  throw new Error(
+    "[FATAL] AUTH_SECRET env var is missing or too short (minimum 32 characters). " +
+    "Set a secure random string: openssl rand -base64 32"
+  );
+}
+const SECRET = new TextEncoder().encode(authSecret);
 
 export async function createSession(user: SessionUser): Promise<string> {
   return new SignJWT({ user })
@@ -32,7 +37,7 @@ export async function verifySession(token: string): Promise<Session | null> {
     const { payload } = await jwtVerify(token, SECRET);
     return {
       user: payload.user as SessionUser,
-      expires: new Date(payload.exp! * 1000).toISOString(),
+      expires: new Date((payload.exp ?? 0) * 1000).toISOString(),
     };
   } catch {
     return null;
@@ -48,7 +53,7 @@ export async function authenticateUser(
   const user = await db
     .selectFrom("users")
     .where("email", "=", email)
-    .where("is_active", "=", 1 as unknown as boolean)
+    .where("is_active", "=", true)
     .selectAll()
     .executeTakeFirst();
 

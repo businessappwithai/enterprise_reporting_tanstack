@@ -4,7 +4,6 @@
  * Displays current DuckDB-Wasm memory usage with a progress bar.
  */
 
-import React from "react";
 import { useDuckDB } from "./DuckDBProvider";
 
 function formatBytes(bytes: number): string {

@@ -40,7 +40,7 @@ class ErrorLogger {
     // Store in sessionStorage for persistence across page reloads
     try {
       sessionStorage.setItem("errorLogs", JSON.stringify(this.logs));
-    } catch (e) {
+    } catch (_e) {
       // Ignore sessionStorage errors
     }
 
@@ -59,7 +59,7 @@ class ErrorLogger {
     this.logs = [];
     try {
       sessionStorage.removeItem("errorLogs");
-    } catch (e) {
+    } catch (_e) {
       // Ignore sessionStorage errors
     }
   }
@@ -123,7 +123,7 @@ class ErrorLogger {
         const session = JSON.parse(sessionData);
         return session.user?.id;
       }
-    } catch (e) {
+    } catch (_e) {
       // Ignore errors
     }
     return undefined;
@@ -135,7 +135,7 @@ class ErrorLogger {
       if (savedLogs) {
         this.logs = JSON.parse(savedLogs);
       }
-    } catch (e) {
+    } catch (_e) {
       // Ignore sessionStorage errors
     }
   }

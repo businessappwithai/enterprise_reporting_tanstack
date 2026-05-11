@@ -6,13 +6,13 @@
  */
 
 import { useForm } from "@tanstack/react-form";
+import { Loader2 } from "lucide-react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
 
 const entityMetadataSchema = z.object({
   description: z.string().max(5000, "Description must not exceed 5000 characters").optional(),

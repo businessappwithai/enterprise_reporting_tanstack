@@ -24,6 +24,7 @@ export interface PermissionCheckResult {
 /**
  * Metadata Permissions Helper
  */
+// biome-ignore lint/complexity/noStaticOnlyClass: permission check class with cohesive static methods
 export class MetadataPermissions {
   /**
    * Check if user can view entity metadata

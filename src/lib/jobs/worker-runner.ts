@@ -1,10 +1,10 @@
-import { Worker, type Job } from "bullmq";
+import { type Job, Worker } from "bullmq";
 import Redis from "ioredis";
-import { processReportJob } from "./workers/report-worker";
+import { RATE_LIMITER, WORKER_CONCURRENCY } from "@/lib/queue/config";
+import type { JobData, JobResult } from "./queue";
 import { processEmailBatchJob } from "./workers/email-batch-worker";
 import { processExportJob } from "./workers/export-worker";
-import type { JobData, JobResult } from "./queue";
-import { WORKER_CONCURRENCY, RATE_LIMITER } from "@/lib/queue/config";
+import { processReportJob } from "./workers/report-worker";
 
 const redisConnection = new Redis(process.env.REDIS_URL || "redis://localhost:6379", {
   maxRetriesPerRequest: null,

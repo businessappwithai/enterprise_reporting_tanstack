@@ -124,7 +124,7 @@ export class OpenKBClient {
           const storedEmbedding = JSON.parse(embeddingJson as string);
           const similarity = this.cosineSimilarity(queryEmbedding, storedEmbedding);
           similarities.push({ queryId, similarity });
-        } catch (err) {
+        } catch (_err) {
           console.warn(`[OpenKB] Failed to parse embedding for ${queryId}`);
         }
       }
@@ -146,7 +146,7 @@ export class OpenKBClient {
               roleId,
               similarity,
             });
-          } catch (err) {
+          } catch (_err) {
             console.warn(`[OpenKB] Failed to parse metadata for ${queryId}`);
           }
         }
@@ -181,7 +181,7 @@ export class OpenKBClient {
               ...metadata,
               roleId,
             });
-          } catch (err) {
+          } catch (_err) {
             console.warn(`[OpenKB] Failed to parse metadata for ${queryId}`);
           }
         }

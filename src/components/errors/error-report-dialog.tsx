@@ -1,7 +1,7 @@
 "use client";
 
+import { AlertTriangle, Check, Copy, Mail, X } from "lucide-react";
 import { useState } from "react";
-import { AlertTriangle, Mail, Copy, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,8 +12,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { errorLogger } from "@/lib/errors/error-logger";
 import type { ErrorLog } from "@/lib/errors/error-logger";
+import { errorLogger } from "@/lib/errors/error-logger";
 
 interface ErrorReportDialogProps {
   open: boolean;
@@ -77,8 +77,11 @@ export function ErrorReportDialog({ open, onOpenChange, errorLog }: ErrorReportD
 
           {/* Additional Information Input */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Additional Information (Optional)</label>
+            <label htmlFor="additional-info" className="text-sm font-medium">
+              Additional Information (Optional)
+            </label>
             <Textarea
+              id="additional-info"
               placeholder="Describe what you were doing when this error occurred..."
               value={additionalInfo}
               onChange={(e) => setAdditionalInfo(e.target.value)}
@@ -88,9 +91,12 @@ export function ErrorReportDialog({ open, onOpenChange, errorLog }: ErrorReportD
 
           {/* Email Body Preview */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Email Preview</label>
+            <label htmlFor="email-preview" className="text-sm font-medium">
+              Email Preview
+            </label>
             <div className="relative">
               <Textarea
+                id="email-preview"
                 value={fullEmailBody}
                 readOnly
                 rows={10}

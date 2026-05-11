@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { json } from "@/lib/server/response";
+import { verifySession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
-import { introspectSchema } from "@/lib/sql/schema-introspection";
 import { SyncService } from "@/lib/metadata/sync-service";
-import { verifySession } from "@/lib/auth/session";
+import { json } from "@/lib/server/response";
+import { introspectSchema } from "@/lib/sql/schema-introspection";
 import type { DataSource } from "@/types/database";
 
 async function getSession(request: Request) {
@@ -51,7 +51,7 @@ export const Route = createFileRoute("/api/sql/schema/$dataSourceId")({
           const connection = await getConnection(dataSource as unknown as DataSource);
           const { schema, logs } = await introspectSchema(connection, dataSource.client_type);
 
-          let syncResult;
+          let syncResult: { success: boolean; errors?: string[] } | undefined;
           try {
             syncResult = await SyncService.syncDataSource(dataSourceId, session.user.id);
           } catch (e) {

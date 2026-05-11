@@ -1,5 +1,3 @@
-
-
 export async function up(db: any): Promise<void> {
   // Create filter_definitions table
   await db.schema.createTable("filter_definitions", (table) => {

@@ -1,16 +1,20 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FileText, Home, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Lock, Home, FileText } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const getPublicReportFn = createServerFn({ method: "GET" })
   .inputValidator((id: string) => id)
   .handler(async ({ data: id }) => {
     const { getDb } = await import("@/lib/db/config");
     const db = getDb();
-    const report = await db("report_definitions").where("id", id).where("is_public", true).first();
+    const report = await db
+      .selectFrom("report_definitions")
+      .where("id", id)
+      .where("is_public", true)
+      .selectAll()
+      .executeTakeFirst();
     if (!report) return null;
     return report;
   });

@@ -1,8 +1,8 @@
+import { randomUUID } from "node:crypto";
 import { createFileRoute } from "@tanstack/react-router";
-import { json } from "@/lib/server/response";
-import { getDb } from "@/lib/db/config";
 import { verifySession } from "@/lib/auth/session";
-import { randomUUID } from "crypto";
+import { getDb } from "@/lib/db/config";
+import { json } from "@/lib/server/response";
 
 async function getSession(request: Request) {
   const cookie = request.headers.get("cookie") || "";

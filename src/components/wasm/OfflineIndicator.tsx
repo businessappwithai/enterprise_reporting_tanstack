@@ -5,8 +5,8 @@
  * Shows whether the app is offline/online and displays cached data status.
  */
 
-import React, { useEffect, useState } from "react";
-import { Wifi, WifiOff, Database } from "lucide-react";
+import { Database, Wifi, WifiOff } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useDataset } from "@/hooks/useDataset";
 import { isFeatureEnabled } from "@/lib/feature-flags";
@@ -45,7 +45,7 @@ export function OfflineIndicator() {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
-  }, [datasets]);
+  }, []);
 
   if (!isFeatureEnabled("offlineEnabled")) {
     return null;

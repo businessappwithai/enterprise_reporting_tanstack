@@ -3,17 +3,17 @@
  * Executes a query against a data source and writes the result as a Parquet file.
  */
 
-import { writeFileSync, existsSync, statSync } from "fs";
+import { existsSync, statSync, writeFileSync } from "node:fs";
 import { nanoid } from "nanoid";
-import { executeSourceQuery, estimateRowCount } from "./source-connector";
-import { rowsToArrowFile } from "./arrow-exporter";
-import { getExportPath, ensureExportDir } from "./storage";
 import type {
+  ColumnSchema,
+  ExportProgress,
   ParquetExportConfig,
   ParquetExportResult,
-  ExportProgress,
-  ColumnSchema,
 } from "@/types/wasm";
+import { rowsToArrowFile } from "./arrow-exporter";
+import { estimateRowCount, executeSourceQuery } from "./source-connector";
+import { ensureExportDir, getExportPath } from "./storage";
 
 // In-memory progress tracker
 const progressMap = new Map<string, ExportProgress>();

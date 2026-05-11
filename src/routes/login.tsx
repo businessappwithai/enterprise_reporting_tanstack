@@ -1,8 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { setResponseHeader } from "@tanstack/react-start/server";
-import { useState, useRef } from "react";
-import { authenticateUser, createSession } from "@/lib/auth/session";
+import { BarChart3, Loader2 } from "lucide-react";
+import { useRef, useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -13,9 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, BarChart3 } from "lucide-react";
+import { authenticateUser, createSession } from "@/lib/auth/session";
 
 export const loginFn = createServerFn({ method: "POST" })
   .inputValidator((data: { email: string; password: string }) => data)

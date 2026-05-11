@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { BarChart3, FileText, Plus } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -10,10 +13,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -22,8 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
-import { BarChart3, FileText, Plus } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import type { ChartDefinition, ReportDefinition } from "@/types/database";
 
 interface AddWidgetDialogProps {

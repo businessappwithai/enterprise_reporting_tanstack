@@ -1,6 +1,6 @@
+import { randomUUID } from "node:crypto";
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
-import { v4 as uuidv4 } from "uuid";
 
 async function getSession(request: Request) {
   const { auth } = await import("@/lib/auth/config");
@@ -103,7 +103,7 @@ export const Route = createFileRoute("/api/charts")({
           const { getDb } = await import("@/lib/db/config");
           const { logAudit } = await import("@/lib/security/audit");
           const db = getDb();
-          const id = uuidv4();
+          const id = randomUUID();
           const now = new Date().toISOString();
 
           await db

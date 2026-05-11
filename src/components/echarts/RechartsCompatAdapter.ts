@@ -3,12 +3,12 @@
  * This allows existing charts saved in the database to render with the new ECharts engine.
  */
 
+import type { ChartConfig, ChartType, DataMapping } from "@/types/database";
 import type {
   EChartsConfig,
   ChartType as WasmChartType,
   DataMapping as WasmDataMapping,
 } from "@/types/wasm";
-import type { ChartType, ChartConfig, DataMapping } from "@/types/database";
 
 const CHART_TYPE_MAP: Record<string, WasmChartType> = {
   bar: "bar",

@@ -1,5 +1,3 @@
-
-
 export async function up(db: any): Promise<void> {
   // Add color_theme column to report_definitions
   await db.schema.alterTable("report_definitions", (table) => {

@@ -6,14 +6,14 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ChartRenderer } from "@/components/charts/chart-renderer";
-import { DataTable } from "@/components/reporting/data-table";
-import { useDashboardState } from "./DashboardState";
 import { useDuckDB } from "@/components/duckdb/DuckDBProvider";
+import { DataTable } from "@/components/reporting/data-table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { isFeatureEnabled } from "@/lib/feature-flags";
-import type { DashboardWidget, ChartType, ChartConfig, DataMapping } from "@/types/database";
+import type { ChartConfig, ChartType, DashboardWidget, DataMapping } from "@/types/database";
 import type { ActiveFilter } from "@/types/wasm";
+import { useDashboardState } from "./DashboardState";
 
 interface WidgetCardProps {
   widget: DashboardWidget;
@@ -92,7 +92,7 @@ export function WidgetCard({ widget, onFilterApply }: WidgetCardProps) {
   });
 
   // Fetch chart data (server-side or WASM)
-  const { data: chartData, isLoading: isLoadingChartData } = useQuery({
+  const { data: chartData } = useQuery({
     queryKey: ["chart-data-for-widget", widget.chart_id, filteredQuery],
     queryFn: async () => {
       if (!widget.chart_id) return null;
@@ -190,7 +190,7 @@ export function WidgetCard({ widget, onFilterApply }: WidgetCardProps) {
           <div className="overflow-auto h-full">
             <DataTable
               data={rows}
-              columns={columns.map((col: any) => ({
+              columns={columns.map((col: Record<string, unknown>) => ({
                 accessorKey: col.field || col.accessorKey,
                 header: col.header || col.field,
                 cell: ({ getValue }) => {

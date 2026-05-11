@@ -1,39 +1,25 @@
 "use server";
 
 import { createServerFn } from "@tanstack/react-start";
+import { requireAuth } from "@/lib/auth/middleware";
+import { sqlEditorConfig, validatePageSize } from "@/lib/config/pagination";
 import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
-import { isReadOnlyQuery } from "@/lib/sql/validator";
-import { validateSQLWithAllowlist, extractTables, extractColumns } from "@/lib/sql/antlr-validator";
 import { logAudit } from "@/lib/security/audit";
-import { validatePageSize, sqlEditorConfig } from "@/lib/config/pagination";
-import { requireAuth } from "@/lib/auth/middleware";
-import type { DataSource } from "@/types/database";
-
-interface ExecuteQueryInput {
-  sql: string;
-  dataSourceId: string;
-  limit?: number;
-  offset?: number;
-  timeout?: number;
-}
-
-interface ValidateQueryInput {
-  sql: string;
-  dataSourceId?: string;
-}
-
-interface SchemaIntrospectionInput {
-  dataSourceId: string;
-}
+import { validateSQLWithAllowlist } from "@/lib/sql/antlr-validator";
+import { isReadOnlyQuery } from "@/lib/sql/validator";
+import { executeSqlSchema, validateSqlSchema, introspectSchemaSchema } from "@/lib/schemas/sql";
 
 const DEFAULT_TIMEOUT = 30000;
 
 export const executeSql = createServerFn({
   method: "POST",
-}).handler(async (input: ExecuteQueryInput) => {
+}).handler(async (input) => {
+  const validated = await executeSqlSchema.parseAsync(input).catch((err) => {
+    throw new Error(`Validation failed: ${err.message}`);
+  });
   const session = await requireAuth();
-  const { sql, dataSourceId, limit, offset = 0, timeout = DEFAULT_TIMEOUT } = input;
+  const { sql, dataSourceId, limit, offset = 0, timeout = DEFAULT_TIMEOUT } = validated;
 
   if (!sql) {
     throw new Error("SQL content is required");
@@ -200,9 +186,12 @@ export const executeSql = createServerFn({
 
 export const validateSql = createServerFn({
   method: "POST",
-}).handler(async (input: ValidateQueryInput) => {
-  const session = await requireAuth();
-  const { sql, dataSourceId } = input;
+}).handler(async (input) => {
+  const validated = await validateSqlSchema.parseAsync(input).catch((err) => {
+    throw new Error(`Validation failed: ${err.message}`);
+  });
+  const _session = await requireAuth();
+  const { sql, dataSourceId } = validated;
 
   if (!sql) {
     throw new Error("SQL content is required");
@@ -228,9 +217,12 @@ export const validateSql = createServerFn({
 
 export const introspectSchema = createServerFn({
   method: "GET",
-}).handler(async (input: SchemaIntrospectionInput) => {
+}).handler(async (input) => {
+  const validated = await introspectSchemaSchema.parseAsync(input).catch((err) => {
+    throw new Error(`Validation failed: ${err.message}`);
+  });
   const session = await requireAuth();
-  const { dataSourceId } = input;
+  const { dataSourceId } = validated;
 
   const db = getDb();
   const dataSource = await db
@@ -248,7 +240,7 @@ export const introspectSchema = createServerFn({
   const { introspectSchema: introspect } = await import("@/lib/sql/schema-introspection");
   const { schema, logs } = await introspect(connection, dataSource.client_type);
 
-  let syncResult;
+  let syncResult: { success: boolean; errors?: string[] } | undefined;
   try {
     const { SyncService } = await import("@/lib/metadata/sync-service");
     syncResult = await SyncService.syncDataSource(dataSourceId, session.user.id);

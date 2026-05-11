@@ -7,8 +7,8 @@
 import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
 import { introspectSchema } from "@/lib/sql/schema-introspection";
-import type { DataSource, DsSchemaCache } from "@/types/database";
 import type { SchemaInfo } from "@/types/api";
+import type { DataSource, DsSchemaCache } from "@/types/database";
 
 interface SchemaContext {
   schemaInfo: SchemaInfo;
@@ -29,7 +29,7 @@ export async function introspectAndCacheSchema(dataSource: DataSource): Promise<
 
   for (const table of schemaInfo.tables) {
     try {
-      const rows = await connection(table.name).select("*").limit(5);
+      const rows = await connection.selectFrom(table.name).selectAll().limit(5).execute();
       sampleData[table.name] = rows;
     } catch (error) {
       console.warn(`Failed to fetch sample data for table ${table.name}:`, error);
@@ -44,8 +44,9 @@ export async function introspectAndCacheSchema(dataSource: DataSource): Promise<
   const db = getDb();
   const now = new Date().toISOString();
 
-  await db("ds_schema_cache")
-    .insert({
+  await (db as any)
+    .insertInto("ds_schema_cache")
+    .values({
       id: crypto.randomUUID(),
       data_source_id: dataSource.id,
       schema_metadata: JSON.stringify(schemaInfo),
@@ -74,9 +75,11 @@ export async function introspectAndCacheSchema(dataSource: DataSource): Promise<
 export async function getSchemaContext(dataSource: DataSource): Promise<SchemaContext> {
   const db = getDb();
 
-  const cached = await db<DsSchemaCache>("ds_schema_cache")
+  const cached = (await (db as any)
+    .selectFrom("ds_schema_cache")
     .where("data_source_id", dataSource.id)
-    .first();
+    .selectAll()
+    .executeTakeFirst()) as DsSchemaCache | undefined;
 
   if (cached) {
     const schemaInfo: SchemaInfo = JSON.parse(cached.schema_metadata);
@@ -104,7 +107,7 @@ function buildSchemaText(
 
   // Tables
   for (const table of schemaInfo.tables) {
-    parts.push(`TABLE: ${table.schema ? table.schema + "." : ""}${table.name}`);
+    parts.push(`TABLE: ${table.schema ? `${table.schema}.` : ""}${table.name}`);
     parts.push("Columns:");
 
     for (const col of table.columns) {
@@ -152,7 +155,7 @@ function buildSchemaText(
   if (schemaInfo.views && schemaInfo.views.length > 0) {
     parts.push("=== VIEWS ===\n");
     for (const view of schemaInfo.views) {
-      parts.push(`VIEW: ${view.schema ? view.schema + "." : ""}${view.name}`);
+      parts.push(`VIEW: ${view.schema ? `${view.schema}.` : ""}${view.name}`);
       if (view.definition) {
         parts.push(`Definition: ${view.definition.substring(0, 500)}`);
       }
@@ -210,7 +213,7 @@ function extractRelationships(schemaInfo: SchemaInfo): Relationship[] {
  */
 export async function invalidateSchemaCache(dataSourceId: string): Promise<void> {
   const db = getDb();
-  await db("ds_schema_cache").where("data_source_id", dataSourceId).delete();
+  await (db as any).deleteFrom("ds_schema_cache").where("data_source_id", dataSourceId);
 }
 
 /**
@@ -218,9 +221,11 @@ export async function invalidateSchemaCache(dataSourceId: string): Promise<void>
  */
 export async function getCachedEntityNames(dataSourceId: string): Promise<string[]> {
   const db = getDb();
-  const cached = await db<DsSchemaCache>("ds_schema_cache")
+  const cached = (await (db as any)
+    .selectFrom("ds_schema_cache")
     .where("data_source_id", dataSourceId)
-    .first();
+    .selectAll()
+    .executeTakeFirst()) as DsSchemaCache | undefined;
 
   if (!cached) return [];
 

@@ -1,8 +1,8 @@
 "use client";
 
 import { AlertCircle, AlertTriangle, CheckCircle } from "lucide-react";
+import type { SQLError, SQLValidationResult, SQLWarning } from "@/lib/sql/validator";
 import { cn } from "@/lib/utils";
-import type { SQLValidationResult, SQLError, SQLWarning } from "@/lib/sql/validator";
 
 interface ValidationPanelProps {
   validation: SQLValidationResult | null;
@@ -47,8 +47,11 @@ export function ValidationPanel({ validation, className }: ValidationPanelProps)
       {/* Errors */}
       {hasErrors && (
         <div className="space-y-1">
-          {validation.errors.map((error, index) => (
-            <ErrorItem key={index} error={error} />
+          {validation.errors.map((error) => (
+            <ErrorItem
+              key={error.message + (error.line ?? "") + (error.column ?? "")}
+              error={error}
+            />
           ))}
         </div>
       )}
@@ -56,8 +59,8 @@ export function ValidationPanel({ validation, className }: ValidationPanelProps)
       {/* Warnings */}
       {hasWarnings && (
         <div className="space-y-1">
-          {validation.warnings.map((warning, index) => (
-            <WarningItem key={index} warning={warning} />
+          {validation.warnings.map((warning) => (
+            <WarningItem key={warning.message + (warning.type ?? "")} warning={warning} />
           ))}
         </div>
       )}

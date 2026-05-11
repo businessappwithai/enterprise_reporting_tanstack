@@ -1,24 +1,24 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { ArrowLeft, Edit, Eye, Globe, Lock, Plus, RefreshCw, Save, Share2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { Layout } from "react-grid-layout";
+import { toast } from "sonner";
+import { ActiveFiltersBar } from "@/components/dashboard/ActiveFiltersBar";
+import { AddWidgetDialog } from "@/components/dashboard/add-widget-dialog";
+import { CrossFilterProvider } from "@/components/dashboard/CrossFilterProvider";
+import { ConfigureWidgetDialog } from "@/components/dashboard/configure-widget-dialog";
+import { useDashboardState } from "@/components/dashboard/DashboardState";
+import { DashboardGrid } from "@/components/dashboard/dashboard-grid";
+import { ShareDialog } from "@/components/share/ShareDialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { DashboardGrid } from "@/components/dashboard/dashboard-grid";
-import { AddWidgetDialog } from "@/components/dashboard/add-widget-dialog";
-import { ConfigureWidgetDialog } from "@/components/dashboard/configure-widget-dialog";
-import { CrossFilterProvider } from "@/components/dashboard/CrossFilterProvider";
-import { ActiveFiltersBar } from "@/components/dashboard/ActiveFiltersBar";
-import { OfflineIndicator } from "@/components/wasm/OfflineIndicator";
-import { ShareDialog } from "@/components/share/ShareDialog";
-import { useDashboardState } from "@/components/dashboard/DashboardState";
-import type { ActiveFilter as ActiveFilterType } from "@/types/wasm";
-import { ArrowLeft, Edit, Eye, Save, Plus, Globe, Lock, RefreshCw, Share2 } from "lucide-react";
-import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { OfflineIndicator } from "@/components/wasm/OfflineIndicator";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import type { DashboardLayout, DashboardWidget } from "@/types/database";
-import type { Layout } from "react-grid-layout";
+import type { ActiveFilter as ActiveFilterType } from "@/types/wasm";
 
 interface WidgetWithData extends DashboardWidget {
   title?: string;
@@ -162,7 +162,7 @@ function DashboardViewerContent({ dashboardId }: { dashboardId: string }) {
       toast.success("Layout saved successfully");
       setHasChanges(false);
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to save layout");
     }
   };
@@ -177,7 +177,7 @@ function DashboardViewerContent({ dashboardId }: { dashboardId: string }) {
 
       toast.success("Widget removed successfully");
       queryClient.invalidateQueries({ queryKey: ["dashboard-widgets"] });
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to remove widget");
     }
   };

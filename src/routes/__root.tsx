@@ -1,5 +1,5 @@
-import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { type QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { ThemeProvider } from "next-themes";
 import { ErrorBoundary } from "@/components/errors/error-boundary";
 import { Toaster } from "@/components/ui/sonner";

@@ -1,4 +1,4 @@
-import { Queue, Worker, type Job, QueueEvents } from "bullmq";
+import { type Job, Queue, QueueEvents } from "bullmq";
 import Redis from "ioredis";
 
 let redisConnection: Redis | null = null;

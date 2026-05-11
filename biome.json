@@ -14,7 +14,8 @@
     "rules": {
       "recommended": true,
       "a11y": {
-        "recommended": true
+        "recommended": true,
+        "useSemanticElements": "warn"
       },
       "correctness": {
         "recommended": true
@@ -58,6 +59,29 @@
   "overrides": [
     {
       "includes": ["**/*.test.ts", "**/*.spec.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/routeTree.gen.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "off"
+          },
+          "correctness": {
+            "noUnusedImports": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/lib/db/migrations/*.ts"],
       "linter": {
         "rules": {
           "suspicious": {

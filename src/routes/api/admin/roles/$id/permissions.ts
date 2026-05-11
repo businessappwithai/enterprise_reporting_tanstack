@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { json } from "@/lib/server/response";
-import { getDb } from "@/lib/db/config";
 import { verifySession } from "@/lib/auth/session";
+import { getDb } from "@/lib/db/config";
 import { isAdmin } from "@/lib/permissions/permissions";
+import { json } from "@/lib/server/response";
 
 async function requireAdmin(request: Request) {
   const cookie = request.headers.get("cookie") || "";
@@ -50,7 +50,10 @@ export const Route = createFileRoute("/api/admin/roles/$id/permissions")({
         } catch (error) {
           console.error("Error fetching role permissions:", error);
           return json(
-            { success: false, error: { code: "SERVER_ERROR", message: "Failed to fetch permissions" } },
+            {
+              success: false,
+              error: { code: "SERVER_ERROR", message: "Failed to fetch permissions" },
+            },
             { status: 500 }
           );
         }
@@ -81,7 +84,10 @@ export const Route = createFileRoute("/api/admin/roles/$id/permissions")({
         } catch (error) {
           console.error("Error updating role permissions:", error);
           return json(
-            { success: false, error: { code: "SERVER_ERROR", message: "Failed to update permissions" } },
+            {
+              success: false,
+              error: { code: "SERVER_ERROR", message: "Failed to update permissions" },
+            },
             { status: 500 }
           );
         }

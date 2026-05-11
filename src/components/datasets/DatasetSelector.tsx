@@ -4,7 +4,6 @@
  * Dropdown selector for choosing a loaded dataset (DuckDB table).
  */
 
-import React from "react";
 import {
   Select,
   SelectContent,

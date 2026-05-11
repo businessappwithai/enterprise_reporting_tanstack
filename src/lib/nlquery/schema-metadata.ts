@@ -5,9 +5,9 @@
  * for use in NL→SQL generation and validation.
  */
 
-import type { DataSource } from "@/types/database";
-import type { SchemaMetadata } from "@/lib/validation/translation-validator";
 import { getConnection } from "@/lib/db/connection-manager";
+import type { SchemaMetadata } from "@/lib/validation/translation-validator";
+import type { DataSource } from "@/types/database";
 
 interface TableMetadata {
   name: string;
@@ -27,7 +27,7 @@ export async function getSchemaMetadata(dataSource: DataSource): Promise<SchemaM
   // Check cache first
   const cacheKey = dataSource.id;
   if (schemaCache.has(cacheKey)) {
-    return schemaCache.get(cacheKey)!;
+    return schemaCache.get(cacheKey) as SchemaMetadata;
   }
 
   try {

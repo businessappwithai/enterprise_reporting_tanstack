@@ -1,15 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { json } from "@/lib/server/response";
-import { getDb } from "@/lib/db/config";
-import { getConnection } from "@/lib/db/connection-manager";
-import { isReadOnlyQuery } from "@/lib/sql/validator";
-import { logAudit } from "@/lib/security/audit";
+import { sql as kyselySql } from "kysely";
 import { verifySession } from "@/lib/auth/session";
 import { sqlEditorConfig, validatePageSize } from "@/lib/config/pagination";
-import { sql as kyselySql } from "kysely";
+import { getDb } from "@/lib/db/config";
+import { getConnection } from "@/lib/db/connection-manager";
+import { logAudit } from "@/lib/security/audit";
+import { json } from "@/lib/server/response";
+import { isReadOnlyQuery } from "@/lib/sql/validator";
 import type { DataSource } from "@/types/database";
-
-const DEFAULT_TIMEOUT = 30000;
 
 async function getSession(request: Request) {
   const cookie = request.headers.get("cookie") || "";
@@ -41,7 +39,7 @@ export const Route = createFileRoute("/api/sql/execute")({
             timeout?: number;
           };
 
-          const { sql, dataSourceId, limit, offset, timeout = DEFAULT_TIMEOUT } = body;
+          const { sql, dataSourceId, limit, offset } = body;
 
           if (!sql) {
             return json(
@@ -101,7 +99,7 @@ export const Route = createFileRoute("/api/sql/execute")({
 
           try {
             const { rows: countRows } = await kyselySql.raw(countSQL).execute(connection);
-            totalRowCount = Number((countRows[0] as any)?.total) || 0;
+            totalRowCount = Number((countRows[0] as Record<string, unknown>)?.total) || 0;
           } catch (e) {
             console.error("Could not count total rows:", e);
           }

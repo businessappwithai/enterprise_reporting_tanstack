@@ -96,7 +96,9 @@ export const Route = createFileRoute("/api/reports/$id")({
               pagination_config: paginationConfig
                 ? JSON.stringify(paginationConfig)
                 : existing.pagination_config,
-              export_formats: exportFormats ? JSON.stringify(exportFormats) : existing.export_formats,
+              export_formats: exportFormats
+                ? JSON.stringify(exportFormats)
+                : existing.export_formats,
               updated_at: new Date().toISOString(),
             })
             .where("id", "=", id)
@@ -159,11 +161,7 @@ export const Route = createFileRoute("/api/reports/$id")({
             updateData.color_theme = JSON.stringify(colorTheme);
           }
 
-          await db
-            .updateTable("report_definitions")
-            .set(updateData)
-            .where("id", "=", id)
-            .execute();
+          await db.updateTable("report_definitions").set(updateData).where("id", "=", id).execute();
 
           await logAudit({
             userId: session.user.id,

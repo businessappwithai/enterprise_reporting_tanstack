@@ -5,7 +5,6 @@
  * Displays active cross-filters and lets users remove them.
  */
 
-import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { ActiveFilter } from "@/types/wasm";
@@ -35,6 +34,7 @@ export function CrossFilterManager({
               : `[${filter.values.join(", ")}]`}
           </span>
           <button
+            type="button"
             className="ml-1 text-muted-foreground hover:text-foreground"
             onClick={() => onRemoveFilter(filter.id)}
           >

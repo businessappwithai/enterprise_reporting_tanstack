@@ -37,7 +37,7 @@ export const Route = createFileRoute("/api/data-sources/$id")({
             );
           }
 
-          let connectionConfig;
+          let connectionConfig: Record<string, unknown>;
           try {
             const isEncrypted =
               dataSource.connection_config.length > 64 &&

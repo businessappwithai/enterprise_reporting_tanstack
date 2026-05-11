@@ -1,5 +1,3 @@
-
-
 export async function up(db: any): Promise<void> {
   // Error messages configuration table
   await db.schema.createTable("error_messages", (table) => {

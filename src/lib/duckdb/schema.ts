@@ -2,10 +2,9 @@
  * DuckDB schema introspection utilities.
  */
 
-import type { AsyncDuckDBConnection } from "./types";
-import type { DuckDBTableInfo } from "./types";
 import { createConnection } from "./instance";
 import { executeQuery } from "./query";
+import type { AsyncDuckDBConnection, DuckDBTableInfo } from "./types";
 
 /**
  * List all user tables currently loaded in DuckDB.

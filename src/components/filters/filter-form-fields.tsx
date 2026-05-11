@@ -1,6 +1,6 @@
+import { AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { MultiSelect } from "@/components/ui/multi-select";
 import {
   Select,
@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AlertTriangle } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import type { FilterFieldType, FilterOperator } from "@/types/database";
 
 interface SavedQuery {

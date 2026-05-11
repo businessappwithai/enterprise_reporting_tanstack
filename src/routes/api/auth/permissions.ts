@@ -52,9 +52,7 @@ export const Route = createFileRoute("/api/auth/permissions")({
 
         const isAdmin =
           rolePermissions.includes("*") ||
-          roles.some((r: { name: string }) =>
-            ["admin", "Admin", "Administrator"].includes(r.name)
-          );
+          roles.some((r: { name: string }) => ["admin", "Admin", "Administrator"].includes(r.name));
 
         const resourcePermissions = await db
           .selectFrom("resource_permissions")

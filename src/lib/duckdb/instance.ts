@@ -31,7 +31,7 @@ export async function initDuckDB(options: DuckDBInstanceOptions = {}): Promise<A
   initPromise = (async () => {
     const bundle = await selectBundle();
 
-    const worker = new Worker(bundle.mainWorker!);
+    const worker = new Worker(bundle.mainWorker ?? "");
     const logger = new duckdb.ConsoleLogger(
       opts.enableLogging ? duckdb.LogLevel.INFO : duckdb.LogLevel.WARNING
     );

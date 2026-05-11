@@ -5,8 +5,8 @@
  * Uses function calling for structured SQL output with explanations.
  */
 
-import { generateObject } from "ai";
 import { openai } from "@ai-sdk/openai";
+import { generateObject } from "ai";
 import { z } from "zod";
 import type { SchemaMetadata } from "@/lib/validation/translation-validator";
 
@@ -22,8 +22,6 @@ const TranslationResult = z.object({
     .optional()
     .describe("Any warnings or assumptions made during translation"),
 });
-
-type TranslationResultType = z.infer<typeof TranslationResult>;
 
 /**
  * Generate SQL from natural language question using OpenAI

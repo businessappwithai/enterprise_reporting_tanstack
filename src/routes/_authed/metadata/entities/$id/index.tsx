@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Save, Database, Settings, RefreshCw } from "lucide-react";
-import { EntityMetadataForm } from "@/components/metadata/forms/EntityMetadataForm";
+import { ArrowLeft, Database, Settings } from "lucide-react";
+import { useState } from "react";
 import { BatchFieldEditForm } from "@/components/metadata/forms/BatchFieldEditForm";
+import { EntityMetadataForm } from "@/components/metadata/forms/EntityMetadataForm";
 
 interface MetadataEntity {
   id: string;
@@ -106,7 +106,7 @@ function EntityDetailPage() {
       // Return context with the previous value
       return { previousEntity };
     },
-    onError: (err, newData, context) => {
+    onError: (_err, _newData, context) => {
       // Rollback to the previous value
       if (context?.previousEntity) {
         queryClient.setQueryData(["metadata-entity", entityId], context.previousEntity);
@@ -154,7 +154,7 @@ function EntityDetailPage() {
       // Return context with the previous value
       return { previousFields };
     },
-    onError: (err, newFields, context) => {
+    onError: (_err, _newFields, context) => {
       // Rollback to the previous value
       if (context?.previousFields) {
         queryClient.setQueryData(["metadata-entity-fields", entityId], context.previousFields);
@@ -210,6 +210,7 @@ function EntityDetailPage() {
       <div className="border-b">
         <div className="flex gap-4">
           <button
+            type="button"
             onClick={() => setActiveTab("entity")}
             className={`px-4 py-2 border-b-2 transition-colors ${
               activeTab === "entity"
@@ -220,6 +221,7 @@ function EntityDetailPage() {
             Entity Metadata
           </button>
           <button
+            type="button"
             onClick={() => setActiveTab("fields")}
             className={`px-4 py-2 border-b-2 transition-colors ${
               activeTab === "fields"

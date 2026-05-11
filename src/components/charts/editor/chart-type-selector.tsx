@@ -1,6 +1,6 @@
+import { AreaChart, BarChart3, LineChart, PieChart, ScatterChart } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { BarChart3, LineChart, PieChart, AreaChart, ScatterChart } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import type { ChartType } from "@/types/database";
 
 export const CHART_TYPES: {

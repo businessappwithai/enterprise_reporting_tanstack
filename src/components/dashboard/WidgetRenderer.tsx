@@ -5,10 +5,9 @@
  * Dispatches to ECharts (charts), DataTable (tables), or metric display.
  */
 
-import React from "react";
 import { EChartsRenderer } from "@/components/echarts/EChartsRenderer";
 import { DataTable } from "@/components/reporting/DataTable";
-import type { EChartsConfig, ColumnSchema } from "@/types/wasm";
+import type { ColumnSchema, EChartsConfig } from "@/types/wasm";
 
 interface WidgetRendererProps {
   type: "chart" | "table" | "metric";

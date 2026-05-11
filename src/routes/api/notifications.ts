@@ -24,7 +24,10 @@ export const Route = createFileRoute("/api/notifications")({
         } catch (error) {
           console.error("Error fetching notifications:", error);
           return json(
-            { success: false, error: { code: "SERVER_ERROR", message: "Failed to fetch notifications" } },
+            {
+              success: false,
+              error: { code: "SERVER_ERROR", message: "Failed to fetch notifications" },
+            },
             { status: 500 }
           );
         }

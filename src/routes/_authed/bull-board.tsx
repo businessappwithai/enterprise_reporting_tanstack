@@ -1,23 +1,11 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
+import { Activity, CheckCircle2, Clock, RefreshCw, Trash2, XCircle } from "lucide-react";
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import {
-  RefreshCw,
-  Play,
-  Pause,
-  Trash2,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
-  Activity,
-} from "lucide-react";
-import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authed/bull-board")({
   component: BullBoardPage,
@@ -25,7 +13,7 @@ export const Route = createFileRoute("/_authed/bull-board")({
 
 function BullBoardPage() {
   const queryClient = useQueryClient();
-  const [activeQueue, setActiveQueue] = useState("default");
+  const [activeQueue, _setActiveQueue] = useState("default");
 
   const {
     data: stats,

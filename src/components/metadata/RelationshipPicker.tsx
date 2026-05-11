@@ -8,15 +8,9 @@
 
 "use client";
 
+import { ExternalLink, Loader2, Search } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +21,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -34,9 +35,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2, Search, ExternalLink } from "lucide-react";
 import { useEntityRecords } from "@/hooks/metadata/use-metadata-queries";
-import type { MetadataEntityWithFields, MetadataEntityField } from "@/types/database";
+import type { MetadataEntityField, MetadataEntityWithFields } from "@/types/database";
 
 interface RelationshipPickerProps {
   dataSourceId: string;
@@ -94,11 +94,11 @@ export function RelationshipPicker({
       const val = record[displayFields[0]];
       return val !== null && val !== undefined ? String(val) : "(null)";
     }
-    return String(record["id"] || "");
+    return String(record.id || "");
   };
 
   const getPrimaryKeyValue = (record: Record<string, unknown>) => {
-    return record["id"] as string | number;
+    return record.id as string | number;
   };
 
   if (uiType === "dropdown") {

@@ -2,8 +2,8 @@
  * File storage management for exported Parquet/Arrow files.
  */
 
-import { existsSync, mkdirSync, unlinkSync, readdirSync, statSync } from "fs";
-import path from "path";
+import { existsSync, mkdirSync, readdirSync, statSync, unlinkSync } from "node:fs";
+import path from "node:path";
 
 const EXPORT_DIR = process.env.DATASET_EXPORT_PATH || "./data/exports";
 

@@ -3,14 +3,10 @@
  * Type-safe SQL query builder using Kysely (https://kysely.dev/)
  */
 
-import {
-  Kysely,
-  SqliteDialect,
-  PostgresDialect,
-} from "kysely";
+import { existsSync, mkdirSync } from "node:fs";
+import path from "node:path";
+import { Kysely, PostgresDialect, SqliteDialect } from "kysely";
 import { Pool } from "pg";
-import path from "path";
-import { existsSync, mkdirSync } from "fs";
 import BunDatabase from "./bun-sqlite-compat";
 
 // Database schema type definition
@@ -310,7 +306,6 @@ export interface DsEntityPermissionsTable {
 export type KyselyDB = Kysely<Database>;
 
 let db: KyselyDB | null = null;
-
 
 const DATABASE_URL = process.env.DATABASE_URL || "";
 const DATABASE_PATH = process.env.DATABASE_PATH || "./data/config.sqlite";

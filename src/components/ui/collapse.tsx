@@ -1,7 +1,7 @@
 "use client";
 
-import * as React from "react";
 import { ChevronDown } from "lucide-react";
+import * as React from "react";
 
 interface CollapseProps {
   children: React.ReactNode;
@@ -15,6 +15,11 @@ export function Collapse({ children, className = "", defaultOpen = false }: Coll
   return (
     <div className={`border rounded-lg overflow-hidden ${className}`}>
       <div
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") setIsOpen(!isOpen);
+        }}
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted/50 transition-colors"
       >

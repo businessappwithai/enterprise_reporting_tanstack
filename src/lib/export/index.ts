@@ -2,13 +2,13 @@
  * Server-side export library — main exports.
  */
 
-export { exportToParquet, getExportProgress, cancelExport } from "./parquet-exporter";
-export { rowsToArrowIPC, rowsToArrowFile } from "./arrow-exporter";
-export { executeSourceQuery, estimateRowCount } from "./source-connector";
+export { rowsToArrowFile, rowsToArrowIPC } from "./arrow-exporter";
+export { cancelExport, exportToParquet, getExportProgress } from "./parquet-exporter";
+export { estimateRowCount, executeSourceQuery } from "./source-connector";
 export {
+  cleanupExports,
+  deleteExportFile,
   ensureExportDir,
   getExportPath,
-  deleteExportFile,
   listExportFiles,
-  cleanupExports,
 } from "./storage";

@@ -228,8 +228,7 @@ export interface EChartsConfig {
   legend?: boolean | LegendConfig;
   tooltip?: boolean | TooltipConfig;
   dataMapping: DataMapping;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  customOptions?: Record<string, any>;
+  customOptions?: Record<string, unknown>;
   animation?: boolean | AnimationConfig;
 }
 
@@ -240,8 +239,7 @@ export interface EChartsConfig {
 export interface TableFilterState {
   columnId: string;
   operator: "eq" | "ne" | "gt" | "lt" | "gte" | "lte" | "contains" | "startsWith" | "in" | "notIn";
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  value: any;
+  value: unknown;
 }
 
 export interface TableSortState {
@@ -273,8 +271,7 @@ export interface ActiveFilter {
   id: string;
   sourceWidgetId: string;
   column: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  values: any[];
+  values: unknown[];
   operator: "eq" | "in" | "range";
   affectedWidgets: string[];
 }

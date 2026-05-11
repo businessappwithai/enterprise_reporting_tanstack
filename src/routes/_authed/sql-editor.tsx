@@ -1,12 +1,12 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useCallback, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { MonacoSQLEditorWrapper } from "@/components/sql-editor/monaco-editor-wrapper";
-import { SchemaBrowser } from "@/components/sql-editor/schema-browser";
-import { QueryResults } from "@/components/sql-editor/query-results";
 import { RefreshCw } from "lucide-react";
-import type { DataSource } from "@/types/database";
+import { useCallback, useEffect, useState } from "react";
+import { MonacoSQLEditorWrapper } from "@/components/sql-editor/monaco-editor-wrapper";
+import { QueryResults } from "@/components/sql-editor/query-results";
+import { SchemaBrowser } from "@/components/sql-editor/schema-browser";
 import type { SQLExecutionResponse } from "@/types/api";
+import type { DataSource } from "@/types/database";
 
 export const Route = createFileRoute("/_authed/sql-editor")({
   component: SQLEditorPage,
@@ -108,8 +108,8 @@ function SQLEditorPage() {
   });
 
   const { data: schema, isLoading: isLoadingSchema } = useQuery<{
-    tables: any[];
-    views: any[];
+    tables: Record<string, unknown>[];
+    views: Record<string, unknown>[];
     logs?: string[];
     warning?: string;
   }>({
@@ -236,7 +236,7 @@ function SQLEditorPage() {
     if (hasMore && !isLoadingMore && accumulatedRows.length < 5000) {
       loadMoreMutation.mutate();
     }
-  }, [hasMore, isLoadingMore, accumulatedRows.length, sqlContent, selectedDataSource]);
+  }, [hasMore, isLoadingMore, accumulatedRows.length, loadMoreMutation.mutate]);
 
   const handleExecute = useCallback(() => {
     if (!selectedDataSource) {
@@ -337,6 +337,7 @@ function SQLEditorPage() {
         </div>
         <div className="flex gap-2">
           <button
+            type="button"
             onClick={handleValidate}
             disabled={isValidating}
             className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -344,6 +345,7 @@ function SQLEditorPage() {
             {isValidating ? "Validating..." : "Validate"}
           </button>
           <button
+            type="button"
             onClick={handleExecute}
             disabled={executeMutation.isPending}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -351,6 +353,7 @@ function SQLEditorPage() {
             {executeMutation.isPending ? "Running..." : "Run Query"}
           </button>
           <button
+            type="button"
             onClick={() => setSaveQueryModal(true)}
             disabled={!selectedDataSource || !sqlContent.trim()}
             className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -375,8 +378,8 @@ function SQLEditorPage() {
                 <div className="mt-2">
                   <p className="font-medium">Warnings:</p>
                   <ul className="list-disc list-inside ml-2">
-                    {validationResult.warnings.map((warning, idx) => (
-                      <li key={idx} className="text-xs">
+                    {validationResult.warnings.map((warning) => (
+                      <li key={warning.message + (warning.type ?? "")} className="text-xs">
                         {warning.message} ({warning.type})
                       </li>
                     ))}
@@ -388,8 +391,8 @@ function SQLEditorPage() {
             <div className="text-sm text-red-700">
               <p className="font-medium">SQL has errors:</p>
               <ul className="list-disc list-inside ml-2">
-                {validationResult.errors.map((error, idx) => (
-                  <li key={idx}>
+                {validationResult.errors.map((error) => (
+                  <li key={error.message + (error.line ?? "")}>
                     {error.message}
                     {error.line !== undefined && ` (line ${error.line})`}
                   </li>
@@ -399,8 +402,8 @@ function SQLEditorPage() {
                 <div className="mt-2">
                   <p className="font-medium">Warnings:</p>
                   <ul className="list-disc list-inside ml-2">
-                    {validationResult.warnings.map((warning, idx) => (
-                      <li key={idx} className="text-xs">
+                    {validationResult.warnings.map((warning) => (
+                      <li key={warning.message + (warning.type ?? "")} className="text-xs">
                         {warning.message} ({warning.type})
                       </li>
                     ))}
@@ -410,6 +413,7 @@ function SQLEditorPage() {
             </div>
           )}
           <button
+            type="button"
             onClick={() => setValidationResult(null)}
             className="mt-2 text-xs underline text-gray-600 hover:text-gray-800"
           >
@@ -423,6 +427,7 @@ function SQLEditorPage() {
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-medium">Data Source:</p>
             <button
+              type="button"
               onClick={() => setDataSourceCollapsed(true)}
               className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400"
             >
@@ -431,25 +436,26 @@ function SQLEditorPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             {isLoadingDataSources && <p className="text-xs text-muted-foreground">Loading...</p>}
-            {dataSources &&
-              dataSources.map((ds) => (
-                <button
-                  key={ds.id}
-                  onClick={() => setSelectedDataSource(ds.id)}
-                  className={`px-3 py-1.5 text-sm rounded border transition-colors ${
-                    selectedDataSource === ds.id
-                      ? "bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700"
-                      : "bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
-                  }`}
-                >
-                  {ds.name}
-                </button>
-              ))}
+            {dataSources?.map((ds) => (
+              <button
+                type="button"
+                key={ds.id}
+                onClick={() => setSelectedDataSource(ds.id)}
+                className={`px-3 py-1.5 text-sm rounded border transition-colors ${
+                  selectedDataSource === ds.id
+                    ? "bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700"
+                    : "bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                }`}
+              >
+                {ds.name}
+              </button>
+            ))}
           </div>
         </div>
       ) : (
         <div className="border rounded p-2 mb-4">
           <button
+            type="button"
             onClick={() => setDataSourceCollapsed(false)}
             className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400"
           >
@@ -488,6 +494,7 @@ function SQLEditorPage() {
             <div className="flex items-center gap-2">
               {selectedDataSource && (
                 <button
+                  type="button"
                   onClick={handleRefreshSchema}
                   className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 flex items-center gap-1"
                 >
@@ -496,6 +503,7 @@ function SQLEditorPage() {
                 </button>
               )}
               <button
+                type="button"
                 onClick={() => setSchemaBrowserCollapsed(true)}
                 className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400"
               >
@@ -519,6 +527,7 @@ function SQLEditorPage() {
       ) : (
         <div className="mt-4 border rounded p-2">
           <button
+            type="button"
             onClick={() => setSchemaBrowserCollapsed(false)}
             className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400"
           >
@@ -539,6 +548,7 @@ function SQLEditorPage() {
       <div className="mt-4 border rounded">
         <div className="flex border-b">
           <button
+            type="button"
             onClick={() => setActiveTab("results")}
             className={`px-4 py-2 text-sm font-medium transition-colors ${
               activeTab === "results"
@@ -549,6 +559,7 @@ function SQLEditorPage() {
             Results
           </button>
           <button
+            type="button"
             onClick={() => setActiveTab("errors")}
             className={`px-4 py-2 text-sm font-medium transition-colors ${
               activeTab === "errors"
@@ -559,6 +570,7 @@ function SQLEditorPage() {
             Errors
           </button>
           <button
+            type="button"
             onClick={() => setActiveTab("logs")}
             className={`px-4 py-2 text-sm font-medium transition-colors ${
               activeTab === "logs"
@@ -635,8 +647,8 @@ function SQLEditorPage() {
               {queryLogs.length > 0 ? (
                 <div className="bg-gray-50 dark:bg-gray-900 rounded p-4 max-h-96 overflow-auto">
                   <pre className="text-xs font-mono space-y-1">
-                    {queryLogs.map((log, index) => (
-                      <div key={index} className="whitespace-pre-wrap">
+                    {queryLogs.map((log) => (
+                      <div key={log} className="whitespace-pre-wrap">
                         {log}
                       </div>
                     ))}
@@ -673,7 +685,6 @@ function SQLEditorPage() {
                   onChange={(e) => setQueryName(e.target.value)}
                   className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter query name"
-                  autoFocus
                 />
                 {queryName.trim().length === 0 && (
                   <p className="text-xs text-red-500 mt-1">Query name is required</p>
@@ -706,6 +717,7 @@ function SQLEditorPage() {
             </div>
             <div className="flex gap-2 mt-6">
               <button
+                type="button"
                 onClick={() => {
                   setSaveQueryModal(false);
                   setQueryName("");
@@ -716,6 +728,7 @@ function SQLEditorPage() {
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleSaveQuery}
                 disabled={saveQueryMutation.isPending || !queryName.trim()}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"

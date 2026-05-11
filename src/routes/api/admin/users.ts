@@ -1,10 +1,10 @@
+import { randomUUID } from "node:crypto";
 import { createFileRoute } from "@tanstack/react-router";
-import { json } from "@/lib/server/response";
-import { getDb } from "@/lib/db/config";
-import { verifySession } from "@/lib/auth/session";
-import { isAdmin } from "@/lib/permissions/permissions";
 import bcrypt from "bcrypt";
-import { randomUUID } from "crypto";
+import { verifySession } from "@/lib/auth/session";
+import { getDb } from "@/lib/db/config";
+import { isAdmin } from "@/lib/permissions/permissions";
+import { json } from "@/lib/server/response";
 
 async function requireAdmin(request: Request) {
   const cookie = request.headers.get("cookie") || "";
@@ -77,7 +77,10 @@ export const Route = createFileRoute("/api/admin/users")({
 
           if (!email || !password) {
             return json(
-              { success: false, error: { code: "INVALID_INPUT", message: "Email and password are required" } },
+              {
+                success: false,
+                error: { code: "INVALID_INPUT", message: "Email and password are required" },
+              },
               { status: 400 }
             );
           }
@@ -92,7 +95,10 @@ export const Route = createFileRoute("/api/admin/users")({
 
           if (existing) {
             return json(
-              { success: false, error: { code: "CONFLICT", message: "User with this email already exists" } },
+              {
+                success: false,
+                error: { code: "CONFLICT", message: "User with this email already exists" },
+              },
               { status: 409 }
             );
           }

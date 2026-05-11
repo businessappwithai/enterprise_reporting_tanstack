@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { json } from "@/lib/server/response";
-import { getDb } from "@/lib/db/config";
 import { verifySession } from "@/lib/auth/session";
+import { getDb } from "@/lib/db/config";
 import { isAdmin } from "@/lib/permissions/permissions";
+import { json } from "@/lib/server/response";
 
 async function requireAdmin(request: Request) {
   const cookie = request.headers.get("cookie") || "";
@@ -76,13 +76,10 @@ export const Route = createFileRoute("/api/admin/roles/$id")({
           const updates: Record<string, unknown> = {};
           if (body.name !== undefined) updates.name = body.name;
           if (body.description !== undefined) updates.description = body.description;
-          if (body.permissions !== undefined) updates.permissions = JSON.stringify(body.permissions);
+          if (body.permissions !== undefined)
+            updates.permissions = JSON.stringify(body.permissions);
 
-          await db
-            .updateTable("roles")
-            .set(updates)
-            .where("id", "=", id)
-            .execute();
+          await db.updateTable("roles").set(updates).where("id", "=", id).execute();
 
           return json({ success: true });
         } catch (error) {

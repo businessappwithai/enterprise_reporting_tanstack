@@ -1,8 +1,23 @@
-import { useState } from "react";
-import { useTheme } from "next-themes";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { logoutFn } from "@/server-fns/auth";
+import {
+  Bell,
+  Check,
+  CheckCheck,
+  Database,
+  Loader2,
+  LogOut,
+  Moon,
+  Settings,
+  Sun,
+  User,
+  X,
+} from "lucide-react";
+import { useTheme } from "next-themes";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,33 +27,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Bell,
-  LogOut,
-  Moon,
-  Settings,
-  Sun,
-  User,
-  Database,
-  Loader2,
-  Check,
-  X,
-  CheckCheck,
-} from "lucide-react";
 import { useActiveDataSource } from "@/lib/hooks/use-active-datasource";
-import { toast } from "sonner";
+import { logoutFn } from "@/server-fns/auth";
 
-interface User {
+interface AppUser {
   name?: string | null;
   email?: string | null;
   image?: string | null;
 }
 
 interface HeaderProps {
-  user: User;
+  user: AppUser;
 }
 
 export function Header({ user }: HeaderProps) {

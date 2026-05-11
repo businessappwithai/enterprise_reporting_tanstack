@@ -7,18 +7,19 @@
 
 "use client";
 
-import { useState } from "react";
 import {
   type ColumnDef,
   getCoreRowModel,
-  useReactTable,
   type PaginationState,
   type SortingState,
+  useReactTable,
 } from "@tanstack/react-table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Edit, Loader2, RefreshCw, Search } from "lucide-react";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -34,7 +35,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2, Search, Edit, RefreshCw } from "lucide-react";
 import type { MetadataEntityHeader } from "@/types/database";
 
 interface EntityBrowserProps {

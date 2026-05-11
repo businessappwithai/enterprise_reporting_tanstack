@@ -1,20 +1,19 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
 import {
-  useReactTable,
-  getCoreRowModel,
-  getSortedRowModel,
-  getFilteredRowModel,
-  flexRender,
   type ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getSortedRowModel,
   type SortingState,
+  useReactTable,
 } from "@tanstack/react-table";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { ArrowUpDown, Download, Loader2, Search } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { ArrowUpDown, Search, Download, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface NlResultsTableProps {
   columns: string[];
@@ -22,7 +21,7 @@ interface NlResultsTableProps {
   totalRows: number;
 }
 
-export function NlResultsTable({ columns, rows, totalRows }: NlResultsTableProps) {
+export function NlResultsTable({ columns, rows }: NlResultsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [displayedRowCount, setDisplayedRowCount] = useState(50);

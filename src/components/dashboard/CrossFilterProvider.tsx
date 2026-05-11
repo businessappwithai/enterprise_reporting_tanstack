@@ -6,8 +6,8 @@
  */
 
 import React from "react";
-import { DashboardStateProvider } from "./DashboardState";
 import type { CrossFilterConfig } from "@/types/wasm";
+import { DashboardStateProvider } from "./DashboardState";
 
 interface CrossFilterProviderProps {
   dashboardId: string;

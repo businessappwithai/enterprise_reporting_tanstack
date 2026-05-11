@@ -157,7 +157,7 @@ const INJECTION_PATTERNS = [
  */
 export function validateSQLWithAllowlist(
   sql: string,
-  dialect: "postgres" | "mysql" | "sqlite" | "mssql" = "postgres"
+  _dialect: "postgres" | "mysql" | "sqlite" | "mssql" = "postgres"
 ): SQLValidationResult {
   const errors: SQLValidationError[] = [];
   const warnings: SQLValidationWarning[] = [];
@@ -193,11 +193,14 @@ export function validateSQLWithAllowlist(
 
   // 3. Extract and validate keywords
   const keywordRegex = /\b([A-Z_]{2,})\b/gi;
-  let match;
   const foundKeywords = new Set<string>();
 
-  while ((match = keywordRegex.exec(sql)) !== null) {
-    const keyword = match[1].toUpperCase();
+  for (
+    let keywordMatch = keywordRegex.exec(sql);
+    keywordMatch !== null;
+    keywordMatch = keywordRegex.exec(sql)
+  ) {
+    const keyword = keywordMatch[1].toUpperCase();
 
     // Skip if already processed
     if (foundKeywords.has(keyword)) continue;
@@ -230,8 +233,12 @@ export function validateSQLWithAllowlist(
 
   // 6. Extract table names (basic regex, not perfect)
   const tableRegex = /FROM\s+([a-zA-Z_][a-zA-Z0-9_.]*)|JOIN\s+([a-zA-Z_][a-zA-Z0-9_.]*)/gi;
-  while ((match = tableRegex.exec(sql)) !== null) {
-    const table = (match[1] || match[2]).trim();
+  for (
+    let tableMatch = tableRegex.exec(sql);
+    tableMatch !== null;
+    tableMatch = tableRegex.exec(sql)
+  ) {
+    const table = (tableMatch[1] || tableMatch[2]).trim();
     if (table && !analysis.tables.includes(table)) {
       analysis.tables.push(table);
     }
@@ -320,9 +327,8 @@ export function extractTables(sql: string): string[] {
   const regex =
     /(?:FROM|JOIN)\s+([`"]?[a-zA-Z_][a-zA-Z0-9_.$]*[`"]?)(?:\s|$|,|JOIN|WHERE|GROUP|ORDER|LIMIT)/gi;
 
-  let match;
-  while ((match = regex.exec(sql)) !== null) {
-    const table = match[1].replace(/[`"]/g, "").trim();
+  for (let tableMatch = regex.exec(sql); tableMatch !== null; tableMatch = regex.exec(sql)) {
+    const table = tableMatch[1].replace(/[`"]/g, "").trim();
     if (table && !tables.includes(table)) {
       tables.push(table);
     }

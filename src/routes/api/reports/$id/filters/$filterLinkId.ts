@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
 
-async function getSession(request: Request) {
+async function getSession(_request: Request) {
   const { getAuthSession } = await import("@/lib/auth/config");
   return getAuthSession();
 }

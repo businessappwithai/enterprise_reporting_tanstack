@@ -5,8 +5,8 @@
  * to access all tables and columns in the query
  */
 
-import { extractTables, extractColumns } from "@/lib/sql/antlr-validator";
 import { checkEntityAccess } from "@/lib/permissions/ds-rbac";
+import { extractColumns, extractTables } from "@/lib/sql/antlr-validator";
 import type { User } from "@/types/database";
 
 export interface QueryAccessValidation {
@@ -76,7 +76,7 @@ export async function validateQueryAccess(
       if (result.columnRestrictions && result.columnRestrictions.length > 0) {
         const allowedCols = new Set(result.columnRestrictions);
         const queriedCols = columns.filter(
-          (col) => col.toLowerCase().startsWith(result.entity.toLowerCase() + ".") || col === "*" // Wildcard check
+          (col) => col.toLowerCase().startsWith(`${result.entity.toLowerCase()}.`) || col === "*" // Wildcard check
         );
 
         for (const col of queriedCols) {
@@ -168,7 +168,7 @@ export async function getColumnRestrictions(
       (e) => e.entity_name.toLowerCase() === tableName.toLowerCase()
     );
 
-    if (!tableEntity || !tableEntity.column_restrictions) {
+    if (!tableEntity?.column_restrictions) {
       return undefined; // No restrictions
     }
 

@@ -47,7 +47,7 @@ export function useUpdateEntityMetadata() {
 
       return response.json() as Promise<ApiResponse<any>>;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       toast.success("Entity metadata updated successfully");
 
       // Invalidate related queries
@@ -99,7 +99,7 @@ export function useUpdateFieldMetadata() {
 
       return response.json() as Promise<ApiResponse<any>>;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       toast.success("Field metadata updated successfully");
 
       // Invalidate related queries
@@ -152,7 +152,7 @@ export function useBatchUpdateFieldMetadata() {
 
       return response.json() as Promise<ApiResponse<any>>;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       toast.success(`${variables.updates.length} field(s) updated successfully`);
 
       // Invalidate related queries
@@ -238,7 +238,7 @@ export function useUpdateDatasourceConfig() {
 
       return response.json() as Promise<ApiResponse<any>>;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       toast.success(`Datasource is now ${variables.is_editable ? "editable" : "read-only"}`);
 
       // Invalidate related queries

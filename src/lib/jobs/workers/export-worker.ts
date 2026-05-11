@@ -1,13 +1,12 @@
+import fs from "node:fs/promises";
+import path from "node:path";
 import type { Job } from "bullmq";
-import { getDb } from "@/lib/db/config";
-import { getConnection } from "@/lib/db/connection-manager";
-import type { ExportJobData, JobResult } from "../queue";
-import type { SavedQuery, DataSource } from "@/types/database";
 import ExcelJS from "exceljs";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import fs from "fs/promises";
-import path from "path";
+import { getDb } from "@/lib/db/config";
+import { getConnection } from "@/lib/db/connection-manager";
+import type { ExportJobData, JobResult } from "../queue";
 
 const OUTPUT_DIR = process.env.JOB_OUTPUT_PATH || "./job-outputs";
 
@@ -20,7 +19,11 @@ export async function processExportJob(job: Job<ExportJobData>): Promise<JobResu
 
     // Get the saved query
     const db = getDb();
-    const query = await db<SavedQuery>("saved_queries").where("id", queryId).first();
+    const query = await db
+      .selectFrom("saved_queries")
+      .where("id", queryId)
+      .selectAll()
+      .executeTakeFirst();
 
     if (!query) {
       throw new Error(`Query not found: ${queryId}`);
@@ -29,9 +32,11 @@ export async function processExportJob(job: Job<ExportJobData>): Promise<JobResu
     await job.updateProgress(30);
 
     // Get the data source
-    const dataSource = await db<DataSource>("data_sources")
+    const dataSource = await db
+      .selectFrom("data_sources")
       .where("id", query.data_source_id)
-      .first();
+      .selectAll()
+      .executeTakeFirst();
 
     if (!dataSource) {
       throw new Error("Data source not found");

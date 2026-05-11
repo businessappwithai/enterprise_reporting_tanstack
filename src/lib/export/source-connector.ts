@@ -26,7 +26,11 @@ export async function executeSourceQuery(
   const db = getDb();
 
   // Resolve the data source connection info
-  const dataSource = await db("data_sources").where({ id: dataSourceId }).first();
+  const dataSource = await db
+    .selectFrom("data_sources")
+    .where("id", "=", dataSourceId)
+    .selectAll()
+    .executeTakeFirst();
 
   if (!dataSource) {
     throw new Error(`Data source not found: ${dataSourceId}`);
@@ -57,7 +61,7 @@ export async function executeSourceQuery(
 /**
  * Estimate the row count for a query (uses COUNT wrapper).
  */
-export async function estimateRowCount(dataSourceId: string, query: string): Promise<number> {
+export async function estimateRowCount(_dataSourceId: string, query: string): Promise<number> {
   const db = getDb();
   try {
     const result = await db.raw(`SELECT COUNT(*) as cnt FROM (${query}) AS _count_sub`);

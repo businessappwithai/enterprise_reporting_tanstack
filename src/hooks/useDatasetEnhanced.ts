@@ -7,8 +7,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useDuckDB } from "@/components/duckdb/DuckDBProvider";
-import type { DatasetInfo } from "@/types/wasm";
 import { isFeatureEnabled } from "@/lib/feature-flags";
+import type { DatasetInfo } from "@/types/wasm";
 
 interface UseDatasetEnhancedReturn {
   datasets: DatasetInfo[];
@@ -239,7 +239,7 @@ export function useDatasetEnhanced(): UseDatasetEnhancedReturn {
 
       if (parquetKeys.length > 0) {
         const allEntries = await entries();
-        for (const [key, buffer] of allEntries) {
+        for (const [key, _buffer] of allEntries) {
           if (typeof key === "string" && key.startsWith("parquet_")) {
             const datasetId = key.replace("parquet_", "");
             const existing = datasets.find((d) => d.id === datasetId);

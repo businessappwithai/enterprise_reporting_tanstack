@@ -1,17 +1,27 @@
-import { useState, useRef } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  AlertCircle,
+  AlertTriangle,
+  Check,
+  Database,
+  Edit,
+  Loader2,
+  Plus,
+  RefreshCw,
+  Settings,
+  Trash2,
+} from "lucide-react";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
+import {
+  ConnectionFormFields,
+  type ConnectionFormState,
+  isTestConnectionDisabled,
+} from "@/components/data-sources/connection-form-fields";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -22,25 +32,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  Plus,
-  Database,
-  Check,
-  Loader2,
-  Edit,
-  Trash2,
-  AlertCircle,
-  AlertTriangle,
-  RefreshCw,
-  Settings,
-} from "lucide-react";
-import { toast } from "sonner";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { formatDateTime } from "@/lib/utils";
-import type { DataSource, DatabaseClientType } from "@/types/database";
-import {
-  ConnectionFormFields,
-  isTestConnectionDisabled,
-  type ConnectionFormState,
-} from "@/components/data-sources/connection-form-fields";
+import type { DataSource } from "@/types/database";
 
 export const Route = createFileRoute("/_authed/data-sources/")({
   component: DataSourcesPage,

@@ -1,9 +1,9 @@
+import { randomUUID } from "node:crypto";
 import { createFileRoute } from "@tanstack/react-router";
-import { json } from "@/lib/server/response";
-import { getDb } from "@/lib/db/config";
 import { verifySession } from "@/lib/auth/session";
+import { getDb } from "@/lib/db/config";
 import { isAdmin } from "@/lib/permissions/permissions";
-import { randomUUID } from "crypto";
+import { json } from "@/lib/server/response";
 
 async function requireAdmin(request: Request) {
   const cookie = request.headers.get("cookie") || "";
@@ -31,11 +31,7 @@ export const Route = createFileRoute("/api/admin/roles")({
           }
 
           const db = getDb();
-          const roles = await db
-            .selectFrom("roles")
-            .selectAll()
-            .orderBy("name", "asc")
-            .execute();
+          const roles = await db.selectFrom("roles").selectAll().orderBy("name", "asc").execute();
 
           return json({ success: true, data: roles });
         } catch (error) {
@@ -67,7 +63,10 @@ export const Route = createFileRoute("/api/admin/roles")({
 
           if (!name) {
             return json(
-              { success: false, error: { code: "INVALID_INPUT", message: "Role name is required" } },
+              {
+                success: false,
+                error: { code: "INVALID_INPUT", message: "Role name is required" },
+              },
               { status: 400 }
             );
           }

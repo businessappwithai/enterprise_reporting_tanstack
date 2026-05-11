@@ -104,7 +104,7 @@ class Logger {
   }
 
   // API-specific logging methods
-  apiRequest(method: string, path: string, userId?: string, context?: LogContext): void {
+  apiRequest(method: string, path: string, _userId?: string, context?: LogContext): void {
     this.info(`${method} ${path}`, { ...context, type: "API_REQUEST" });
   }
 
@@ -203,7 +203,7 @@ export const log = {
     logger.dbQuery(operation, table, context),
   dbError: (operation: string, table: string, error?: Error, context?: LogContext) =>
     logger.dbError(operation, table, error, context),
-  authEvent: (event: string, userId?: string, context?: LogContext) =>
+  authEvent: (event: string, _userId?: string, context?: LogContext) =>
     logger.authEvent(event, undefined, context),
   authError: (event: string, error?: Error, context?: LogContext) =>
     logger.authError(event, error, context),

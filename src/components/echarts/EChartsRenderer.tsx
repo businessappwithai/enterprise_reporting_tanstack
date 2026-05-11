@@ -5,43 +5,42 @@
  * Replaces Recharts for canvas-based, high-performance charting.
  */
 
-import React, { useMemo } from "react";
-import ReactEChartsCore from "echarts-for-react/lib/core";
-import * as echarts from "echarts/core";
 import {
   BarChart,
-  LineChart,
-  PieChart,
-  ScatterChart,
-  HeatmapChart,
-  TreemapChart,
-  SunburstChart,
-  SankeyChart,
-  FunnelChart,
-  GaugeChart,
   BoxplotChart,
   CandlestickChart,
-  ParallelChart,
-  MapChart,
+  FunnelChart,
+  GaugeChart,
   GraphChart,
+  HeatmapChart,
+  LineChart,
+  MapChart,
+  ParallelChart,
+  PieChart,
+  SankeyChart,
+  ScatterChart,
+  SunburstChart,
+  TreemapChart,
 } from "echarts/charts";
 import {
-  GridComponent,
-  TooltipComponent,
-  LegendComponent,
   DataZoomComponent,
-  VisualMapComponent,
-  ToolboxComponent,
-  TitleComponent,
   GeoComponent,
+  GridComponent,
+  LegendComponent,
   ParallelComponent as ParallelComp,
+  TitleComponent,
+  ToolboxComponent,
+  TooltipComponent,
+  VisualMapComponent,
 } from "echarts/components";
+import * as echarts from "echarts/core";
 import { CanvasRenderer } from "echarts/renderers";
-
-import { ChartTypeFactory } from "./ChartTypeFactory";
-import { getBaseEChartsOption, getEChartsThemeColors } from "./ThemeAdapter";
-import type { EChartsConfig } from "@/types/wasm";
+import ReactEChartsCore from "echarts-for-react/lib/core";
 import { useTheme } from "next-themes";
+import { useMemo } from "react";
+import type { EChartsConfig } from "@/types/wasm";
+import { buildChart } from "./ChartTypeFactory";
+import { getBaseEChartsOption, getEChartsThemeColors } from "./ThemeAdapter";
 
 // Register ECharts components (tree-shakeable)
 echarts.use([
@@ -105,14 +104,14 @@ export function EChartsRenderer({
     if (data.length === 0) return {};
 
     const base = getBaseEChartsOption(isDark);
-    const chart = ChartTypeFactory.build(config, data);
+    const chart = buildChart(config, data);
 
     // Merge base theme, chart config, and user customOptions
     const merged = deepMerge(base, chart);
 
     console.log(
       "[EChartsRenderer] Merged option series:",
-      merged.series?.map((s: any) => ({
+      merged.series?.map((s: Record<string, unknown>) => ({
         name: s.name,
         type: s.type,
         hasStack: "stack" in s,
@@ -201,8 +200,10 @@ export function EChartsRenderer({
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function deepMerge(target: any, source: any): any {
+function deepMerge(
+  target: Record<string, unknown>,
+  source: Record<string, unknown>
+): Record<string, unknown> {
   const output = { ...target };
   for (const key of Object.keys(source)) {
     if (

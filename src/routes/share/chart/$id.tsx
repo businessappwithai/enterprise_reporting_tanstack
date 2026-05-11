@@ -1,19 +1,20 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { BarChart3, Home, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Lock, Home, AlertCircle, BarChart3 } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const getPublicChartFn = createServerFn({ method: "GET" })
   .inputValidator((id: string) => id)
   .handler(async ({ data: id }) => {
     const { getDb } = await import("@/lib/db/config");
     const db = getDb();
-    const chart = await db("chart_definitions").where("id", id).where("is_public", true).first();
+    const chart = await db
+      .selectFrom("chart_definitions")
+      .where("id", id)
+      .where("is_public", true)
+      .selectAll()
+      .executeTakeFirst();
     if (!chart) return null;
     return chart;
   });
@@ -25,7 +26,6 @@ export const Route = createFileRoute("/share/chart/$id")({
 
 function PublicChartPage() {
   const chart = Route.useLoaderData();
-  const { id } = Route.useParams();
 
   if (!chart) {
     return (

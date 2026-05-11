@@ -1,5 +1,5 @@
-import { Input } from "@/components/ui/input";
 import { Check, FolderOpen, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 interface SqliteFileUploadProps {
   fileName: string;
@@ -23,6 +23,11 @@ export function SqliteFileUpload({
   return (
     <div className="space-y-3">
       <div
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") !uploading && fileInputRef.current?.click();
+        }}
         onDragOver={onDragOver}
         onDrop={onDrop}
         className={`border-2 border-dashed rounded-lg text-center transition-colors ${

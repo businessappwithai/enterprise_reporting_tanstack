@@ -1,3 +1,4 @@
+import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,7 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2 } from "lucide-react";
 import type { ChartConfig, DataMapping, SeriesMapping } from "@/types/database";
 
 function hslToHex(h: number, s: number, l: number) {
@@ -151,7 +151,7 @@ export function ChartAxisConfig({
             <p className="mt-2 text-sm text-gray-500">Add at least one Y-axis series</p>
           )}
           {dataMapping.yAxis.map((series, index) => (
-            <div key={index} className="mt-2 space-y-2 rounded-lg border p-3">
+            <div key={series.field || index} className="mt-2 space-y-2 rounded-lg border p-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium">Series {index + 1}</span>

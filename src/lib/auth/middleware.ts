@@ -1,9 +1,8 @@
 "use server";
 
-import { getEventBus } from "@tanstack/react-start";
 import { verifySession as _verifySession } from "./session";
 
-const cachedSession: {
+const _cachedSession: {
   user: { id: string; email: string; name: string; roles: string[]; permissions: string[] };
   expires: string;
 } | null = null;

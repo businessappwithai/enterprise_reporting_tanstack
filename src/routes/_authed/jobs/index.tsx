@@ -1,9 +1,25 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  CheckCircle,
+  Clock,
+  Download,
+  MoreHorizontal,
+  Pause,
+  RefreshCw,
+  Trash,
+  XCircle,
+} from "lucide-react";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -12,23 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  RefreshCw,
-  Clock,
-  CheckCircle,
-  XCircle,
-  MoreHorizontal,
-  Download,
-  Trash,
-  Pause,
-} from "lucide-react";
-import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatDateTime } from "@/lib/utils";
 import type { JobDefinition, JobExecution } from "@/types/database";
 
@@ -200,7 +200,7 @@ function JobsPage() {
                         </TableCell>
                         <TableCell>
                           {execution.execution_metadata
-                            ? JSON.parse(execution.execution_metadata).duration + "ms"
+                            ? `${JSON.parse(execution.execution_metadata).duration}ms`
                             : "-"}
                         </TableCell>
                         <TableCell>

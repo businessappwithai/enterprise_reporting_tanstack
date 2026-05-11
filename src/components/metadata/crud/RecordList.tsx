@@ -7,17 +7,18 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
 import {
   type ColumnDef,
   getCoreRowModel,
-  useReactTable,
   type PaginationState,
   type SortingState,
+  useReactTable,
 } from "@tanstack/react-table";
+import { Edit, Loader2, Search, Trash2 } from "lucide-react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -33,7 +34,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2, Search, Edit, Trash2 } from "lucide-react";
 import { useEntityRecords } from "@/hooks/metadata/use-metadata-queries";
 import type { MetadataEntityWithFields } from "@/types/database";
 

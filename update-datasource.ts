@@ -4,10 +4,10 @@ async function updateDataSource() {
   const db = getDb();
 
   // Delete old data source
-  await db('data_sources').where('name', 'Sample SQLite Database').del();
+  await db.deleteFrom('data_sources').where('name', 'Sample SQLite Database').execute();
 
   // Create new one with correct path
-  await db('data_sources').insert({
+  await db.insertInto('data_sources').values({
     id: 'ds_test_001',
     name: 'Sample SQLite Database',
     description: 'Sample database with users, orders, and products',
@@ -18,7 +18,7 @@ async function updateDataSource() {
     is_active: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-  });
+  }).execute();
 
   console.log('✅ Data source updated with absolute path');
 }

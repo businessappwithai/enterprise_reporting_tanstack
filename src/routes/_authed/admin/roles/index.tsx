@@ -1,17 +1,13 @@
-import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Edit, Shield, ShieldPlus, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Collapse } from "@/components/ui/collapse";
 import {
   Dialog,
   DialogContent,
@@ -22,8 +18,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -31,10 +25,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ShieldPlus, Shield, Trash2, Edit, Plus, X } from "lucide-react";
-import { toast } from "sonner";
-import { Collapse } from "@/components/ui/collapse";
+import { Textarea } from "@/components/ui/textarea";
 import type { Role } from "@/types/database";
 
 interface ResourcePermission {
@@ -51,7 +51,7 @@ interface Resource {
   type: string;
 }
 
-const PERMISSION_OPTIONS = [
+const _PERMISSION_OPTIONS = [
   { value: "data_source:view", label: "Data Sources - View" },
   { value: "data_source:*", label: "Data Sources - Full Access" },
   { value: "query:view", label: "Queries - View" },
@@ -81,7 +81,7 @@ const PERMISSION_CATEGORIES = {
   Administration: ["user:*"],
 };
 
-const PERMISSION_LEVELS = [
+const _PERMISSION_LEVELS = [
   { value: "view", label: "View" },
   { value: "edit", label: "Edit" },
   { value: "admin", label: "Admin" },
@@ -269,7 +269,7 @@ function RolesManagementPage() {
       role_id: selectedRole?.id || "",
       resource_type: resourceType,
       resource_id: resourceId,
-      permission_level: permissionLevel as any,
+      permission_level: permissionLevel as ResourcePermission["permission_level"],
     };
     setResourcePermissions((prev) => [...prev, newPerm]);
   };
@@ -293,7 +293,9 @@ function RolesManagementPage() {
       // If permission exists at index, update it
       if (index >= 0 && index < prev.length) {
         return prev.map((perm, i) =>
-          i === index ? { ...perm, permission_level: level as any } : perm
+          i === index
+            ? { ...perm, permission_level: level as ResourcePermission["permission_level"] }
+            : perm
         );
       }
 
@@ -303,7 +305,7 @@ function RolesManagementPage() {
         role_id: selectedRole?.id || "",
         resource_type: resourceType,
         resource_id: resourceId,
-        permission_level: level as any,
+        permission_level: level as ResourcePermission["permission_level"],
       };
       return [...prev, newPerm];
     });

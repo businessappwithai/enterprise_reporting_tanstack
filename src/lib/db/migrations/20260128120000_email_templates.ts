@@ -1,5 +1,3 @@
-
-
 export async function up(db: any): Promise<void> {
   // Email templates table for dynamic email template system
   await db.schema.createTable("email_templates", (table) => {

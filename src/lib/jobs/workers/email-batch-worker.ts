@@ -1,15 +1,14 @@
+import fs from "node:fs/promises";
+import path from "node:path";
 import type { Job } from "bullmq";
-import { getDb } from "@/lib/db/config";
-import { getConnection } from "@/lib/db/connection-manager";
-import { logAudit } from "@/lib/security/audit";
-import { sendEmail } from "@/lib/email/email-service";
-import type { EmailBatchJobData, JobResult } from "../queue";
-import type { SavedQuery, DataSource, EmailTemplate } from "@/types/database";
 import ExcelJS from "exceljs";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import fs from "fs/promises";
-import path from "path";
+import { getDb } from "@/lib/db/config";
+import { getConnection } from "@/lib/db/connection-manager";
+import { sendEmail } from "@/lib/email/email-service";
+import { logAudit } from "@/lib/security/audit";
+import type { EmailBatchJobData, JobResult } from "../queue";
 
 const OUTPUT_DIR = process.env.JOB_OUTPUT_PATH || "./job-outputs";
 
@@ -38,7 +37,11 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
     const db = getDb();
 
     // Get the report query
-    const reportQuery = await db<SavedQuery>("saved_queries").where("id", queryId).first();
+    const reportQuery = await db
+      .selectFrom("saved_queries")
+      .where("id", queryId)
+      .selectAll()
+      .executeTakeFirst();
 
     if (!reportQuery) {
       throw new Error(`Report query not found: ${queryId}`);
@@ -47,9 +50,11 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
     await job.updateProgress(15);
 
     // Get data source for report query
-    const reportDataSource = await db<DataSource>("data_sources")
+    const reportDataSource = await db
+      .selectFrom("data_sources")
       .where("id", reportQuery.data_source_id)
-      .first();
+      .selectAll()
+      .executeTakeFirst();
 
     if (!reportDataSource) {
       throw new Error("Report data source not found");
@@ -99,9 +104,11 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
     // === STAGE 2: Fetch Email Template ===
     await job.log("Fetching email template...");
 
-    const template = await db<EmailTemplate>("email_templates")
+    const template = await db
+      .selectFrom("email_templates")
       .where("id", emailTemplateId)
-      .first();
+      .selectAll()
+      .executeTakeFirst();
 
     if (!template) {
       throw new Error(`Email template not found: ${emailTemplateId}`);
@@ -115,18 +122,22 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
     // === STAGE 3: Fetch Recipients ===
     await job.log("Fetching recipient list...");
 
-    const recipientQuery = await db<SavedQuery>("saved_queries")
+    const recipientQuery = await db
+      .selectFrom("saved_queries")
       .where("id", recipientQueryId)
-      .first();
+      .selectAll()
+      .executeTakeFirst();
 
     if (!recipientQuery) {
       throw new Error(`Recipient query not found: ${recipientQueryId}`);
     }
 
     // Get data source for recipient query
-    const recipientDataSource = await db<DataSource>("data_sources")
+    const recipientDataSource = await db
+      .selectFrom("data_sources")
       .where("id", recipientQuery.data_source_id)
-      .first();
+      .selectAll()
+      .executeTakeFirst();
 
     if (!recipientDataSource) {
       throw new Error("Recipient data source not found");
@@ -223,7 +234,7 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
       userId,
       action: "email_batch",
       resourceType: "job",
-      resourceId: job.id!,
+      resourceId: job.id ?? "unknown",
       details: {
         emailsSent,
         failedRecipients: failedRecipients.length,
@@ -254,7 +265,7 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
       userId,
       action: "email_batch",
       resourceType: "job",
-      resourceId: job.id!,
+      resourceId: job.id ?? "unknown",
       details: { error: errorMessage, emailsSent },
     });
 

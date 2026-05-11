@@ -1,14 +1,13 @@
+import fs from "node:fs/promises";
+import path from "node:path";
 import type { Job } from "bullmq";
-import { getDb } from "@/lib/db/config";
-import { getConnection } from "@/lib/db/connection-manager";
-import { logAudit } from "@/lib/security/audit";
-import type { ReportJobData, JobResult } from "../queue";
-import type { ReportDefinition, SavedQuery, DataSource } from "@/types/database";
 import ExcelJS from "exceljs";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import fs from "fs/promises";
-import path from "path";
+import { getDb } from "@/lib/db/config";
+import { getConnection } from "@/lib/db/connection-manager";
+import { logAudit } from "@/lib/security/audit";
+import type { JobResult, ReportJobData } from "../queue";
 
 const OUTPUT_DIR = process.env.JOB_OUTPUT_PATH || "./job-outputs";
 
@@ -21,7 +20,11 @@ export async function processReportJob(job: Job<ReportJobData>): Promise<JobResu
 
     // Get report definition
     const db = getDb();
-    const report = await db<ReportDefinition>("report_definitions").where("id", reportId).first();
+    const report = await db
+      .selectFrom("report_definitions")
+      .where("id", reportId)
+      .selectAll()
+      .executeTakeFirst();
 
     if (!report) {
       throw new Error(`Report not found: ${reportId}`);
@@ -34,7 +37,11 @@ export async function processReportJob(job: Job<ReportJobData>): Promise<JobResu
       throw new Error("Report has no associated query");
     }
 
-    const query = await db<SavedQuery>("saved_queries").where("id", report.saved_query_id).first();
+    const query = await db
+      .selectFrom("saved_queries")
+      .where("id", report.saved_query_id)
+      .selectAll()
+      .executeTakeFirst();
 
     if (!query) {
       throw new Error("Query not found");
@@ -43,9 +50,11 @@ export async function processReportJob(job: Job<ReportJobData>): Promise<JobResu
     await job.updateProgress(30);
 
     // Get the data source
-    const dataSource = await db<DataSource>("data_sources")
+    const dataSource = await db
+      .selectFrom("data_sources")
       .where("id", query.data_source_id)
-      .first();
+      .selectAll()
+      .executeTakeFirst();
 
     if (!dataSource) {
       throw new Error("Data source not found");

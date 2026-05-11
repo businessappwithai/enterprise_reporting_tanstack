@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Sidebar } from "./sidebar";
-import { Header } from "./header";
-import { cn } from "@/lib/utils";
 import { ActiveDataSourceProvider } from "@/lib/hooks/use-active-datasource";
+import { cn } from "@/lib/utils";
+import { Header } from "./header";
+import { Sidebar } from "./sidebar";
 
 interface User {
   name?: string | null;

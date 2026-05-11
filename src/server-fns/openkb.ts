@@ -7,9 +7,9 @@
  */
 
 import { createServerFn } from "@tanstack/react-start";
+import { requireAuth } from "@/lib/auth/middleware";
 import { getOpenKBClient } from "@/lib/openkb/openkb-client";
 import { logAudit } from "@/lib/security/audit";
-import { requireAuth } from "@/lib/auth/middleware";
 
 export interface LogQueryInput {
   nlQuestion: string;

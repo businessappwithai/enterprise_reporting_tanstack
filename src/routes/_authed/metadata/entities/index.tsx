@@ -1,32 +1,8 @@
-import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Search,
-  Database,
-  ArrowLeft,
-  RefreshCw,
-  Settings,
-  Eye,
-  EyeOff,
-  Power,
-  CheckCircle,
-} from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowLeft, Database, RefreshCw, Search, Settings } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-
-interface MetadataEntity {
-  id: string;
-  data_source_id: string;
-  entity_name: string;
-  entity_schema?: string;
-  entity_type: "table" | "view";
-  description?: string;
-  is_active: boolean;
-  is_hidden: boolean;
-  last_introspected_at: string;
-  data_source_name?: string;
-  field_count?: number;
-}
 
 export const Route = createFileRoute("/_authed/metadata/entities/")({
   validateSearch: (search: Record<string, unknown>) => ({

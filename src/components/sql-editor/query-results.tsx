@@ -1,16 +1,18 @@
 "use client";
 
-import { useMemo, useRef, useEffect, useCallback } from "react";
 import {
-  useReactTable,
+  type ColumnDef,
+  flexRender,
   getCoreRowModel,
   getSortedRowModel,
-  flexRender,
-  type ColumnDef,
   type SortingState,
+  useReactTable,
 } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useState } from "react";
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -19,11 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, Play } from "lucide-react";
-import { cn } from "@/lib/utils";
-import type { SQLExecutionResponse, ColumnInfo, QueryPagination } from "@/types/api";
+import type { ColumnInfo, SQLExecutionResponse } from "@/types/api";
 
 interface QueryResultsProps {
   result: SQLExecutionResponse | null;
@@ -62,6 +60,7 @@ export function QueryResults({ result, isLoading, error, onPageChange }: QueryRe
       accessorKey: col.name,
       header: ({ column }) => (
         <button
+          type="button"
           className="flex items-center gap-1 hover:text-foreground"
           onClick={() => column.toggleSorting()}
         >

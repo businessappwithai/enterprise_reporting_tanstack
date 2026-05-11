@@ -1,9 +1,9 @@
 "use client";
 
-import { AlertTriangle, Info, X, Lightbulb } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { AlertTriangle, Info, Lightbulb, X } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
 export interface WarningMessage {
   id: string;
@@ -25,6 +25,13 @@ interface WarningBannerProps {
 export function WarningBanner({ warning, onDismiss, onAction, actionLabel }: WarningBannerProps) {
   const [isVisible, setIsVisible] = useState(true);
 
+  const handleDismiss = useCallback(() => {
+    setIsVisible(false);
+    setTimeout(() => {
+      onDismiss?.(warning.id);
+    }, 200);
+  }, [onDismiss, warning.id]);
+
   useEffect(() => {
     if (warning.duration && !warning.requireDismissal) {
       const timer = setTimeout(() => {
@@ -33,14 +40,7 @@ export function WarningBanner({ warning, onDismiss, onAction, actionLabel }: War
 
       return () => clearTimeout(timer);
     }
-  }, [warning.duration, warning.requireDismissal]);
-
-  const handleDismiss = () => {
-    setIsVisible(false);
-    setTimeout(() => {
-      onDismiss?.(warning.id);
-    }, 200); // Wait for animation
-  };
+  }, [warning.duration, warning.requireDismissal, handleDismiss]);
 
   if (!isVisible) return null;
 
@@ -101,8 +101,8 @@ export function WarningBanner({ warning, onDismiss, onAction, actionLabel }: War
               SUGGESTIONS:
             </div>
             <ul className="space-y-1 ml-5">
-              {warning.suggestions.map((suggestion, index) => (
-                <li key={index} className="text-sm list-disc marker:text-muted-foreground">
+              {warning.suggestions.map((suggestion) => (
+                <li key={suggestion} className="text-sm list-disc marker:text-muted-foreground">
                   {suggestion}
                 </li>
               ))}

@@ -1,15 +1,15 @@
-import { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { Bell, CheckCircle, Mail, RefreshCw, Send, Settings, XCircle } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
-import { Mail, CheckCircle, XCircle, RefreshCw, Send, Settings, Bell } from "lucide-react";
 
 export const Route = createFileRoute("/_authed/settings/email/")({
   component: EmailSettingsPage,

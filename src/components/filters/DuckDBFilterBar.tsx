@@ -5,7 +5,7 @@
  * Allows building WHERE clauses that execute against DuckDB-Wasm.
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { TableFilterState, ColumnSchema } from "@/types/wasm";
+import type { ColumnSchema, TableFilterState } from "@/types/wasm";
 
 interface DuckDBFilterBarProps {
   columns: ColumnSchema[];
@@ -114,13 +114,14 @@ export function DuckDBFilterBar({ columns, onApply, onClear }: DuckDBFilterBarPr
 
       {filters.length > 0 && (
         <div className="flex flex-wrap gap-1">
-          {filters.map((f, i) => (
+          {filters.map((f) => (
             <span
-              key={i}
+              key={f.columnId + f.operator + String(f.value)}
               className="inline-flex items-center gap-1 rounded bg-muted px-2 py-1 text-xs"
             >
               {f.columnId} {f.operator} {String(f.value)}
               <button
+                type="button"
                 className="text-muted-foreground hover:text-foreground"
                 onClick={() => removeFilter(i)}
               >

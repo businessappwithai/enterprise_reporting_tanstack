@@ -34,6 +34,7 @@ export interface EntityDataQueryParams {
 /**
  * Data Service
  */
+// biome-ignore lint/complexity/noStaticOnlyClass: service class pattern with cohesive static methods
 export class DataService {
   /**
    * List records from an entity with server-side pagination
@@ -45,9 +46,11 @@ export class DataService {
     _userId?: string
   ): Promise<PaginatedResult<Record<string, unknown>>> {
     // Check if datasource is editable
-    const dataSource = (await getDb()("data_sources").where("id", dataSourceId).first()) as
-      | DataSource
-      | undefined;
+    const dataSource = (await getDb()
+      .selectFrom("data_sources")
+      .where("id", dataSourceId)
+      .selectAll()
+      .executeTakeFirst()) as DataSource | undefined;
 
     if (!dataSource) {
       throw new Error("Data source not found");
@@ -68,7 +71,7 @@ export class DataService {
     let query = connection(entityMetadata.entity_name).select("*");
 
     // Apply search filter
-    if (params.search && params.search.trim()) {
+    if (params.search?.trim()) {
       const displayFields = entityMetadata.fields.filter((f) => f.is_searchable);
       if (displayFields.length > 0) {
         const searchConditions = displayFields.map((f) =>
@@ -81,7 +84,7 @@ export class DataService {
     // Get total count before pagination
     let countQuery = connection(entityMetadata.entity_name).clearSelect().count("* as total");
 
-    if (params.search && params.search.trim()) {
+    if (params.search?.trim()) {
       const displayFields = entityMetadata.fields.filter((f) => f.is_searchable);
       if (displayFields.length > 0) {
         const searchConditions = displayFields.map((f) =>
@@ -132,11 +135,13 @@ export class DataService {
     recordId: string | number,
     _userId?: string
   ): Promise<Record<string, unknown> | null> {
-    const dataSource = (await getDb()("data_sources").where("id", dataSourceId).first()) as
-      | DataSource
-      | undefined;
+    const dataSource = (await getDb()
+      .selectFrom("data_sources")
+      .where("id", dataSourceId)
+      .selectAll()
+      .executeTakeFirst()) as DataSource | undefined;
 
-    if (!dataSource || !dataSource.is_editable) {
+    if (!dataSource?.is_editable) {
       throw new Error("Data source not editable");
     }
 
@@ -173,11 +178,13 @@ export class DataService {
     data: Record<string, unknown>,
     _userId?: string
   ): Promise<Record<string, unknown>> {
-    const dataSource = (await getDb()("data_sources").where("id", dataSourceId).first()) as
-      | DataSource
-      | undefined;
+    const dataSource = (await getDb()
+      .selectFrom("data_sources")
+      .where("id", dataSourceId)
+      .selectAll()
+      .executeTakeFirst()) as DataSource | undefined;
 
-    if (!dataSource || !dataSource.is_editable) {
+    if (!dataSource?.is_editable) {
       throw new Error("Data source not editable");
     }
 
@@ -204,17 +211,20 @@ export class DataService {
 
     // Audit log
     if (userId) {
-      await getDb()("audit_log").insert({
-        user_id: userId,
-        action: "create",
-        resource_type: "metadata_entity",
-        resource_id: entityMetadata.id,
-        details: JSON.stringify({
-          entity_name: entityMetadata.entity_name,
-          record_id: record[pkField.field_name],
-        }),
-        created_at: getDb().fn.now(),
-      });
+      await getDb()
+        .insertInto("audit_log")
+        .values({
+          user_id: userId,
+          action: "create",
+          resource_type: "metadata_entity",
+          resource_id: entityMetadata.id,
+          details: JSON.stringify({
+            entity_name: entityMetadata.entity_name,
+            record_id: record[pkField.field_name],
+          }),
+          created_at: getDb().fn.now(),
+        })
+        .execute();
     }
 
     return record as Record<string, unknown>;
@@ -230,11 +240,13 @@ export class DataService {
     data: Record<string, unknown>,
     _userId?: string
   ): Promise<Record<string, unknown> | null> {
-    const dataSource = (await getDb()("data_sources").where("id", dataSourceId).first()) as
-      | DataSource
-      | undefined;
+    const dataSource = (await getDb()
+      .selectFrom("data_sources")
+      .where("id", dataSourceId)
+      .selectAll()
+      .executeTakeFirst()) as DataSource | undefined;
 
-    if (!dataSource || !dataSource.is_editable) {
+    if (!dataSource?.is_editable) {
       throw new Error("Data source not editable");
     }
 
@@ -268,18 +280,21 @@ export class DataService {
       .limit(1);
 
     if (userId) {
-      await getDb()("audit_log").insert({
-        user_id: userId,
-        action: "update",
-        resource_type: "metadata_entity",
-        resource_id: entityMetadata.id,
-        details: JSON.stringify({
-          entity_name: entityMetadata.entity_name,
-          record_id: recordId,
-          updated_fields: Object.keys(data),
-        }),
-        created_at: getDb().fn.now(),
-      });
+      await getDb()
+        .insertInto("audit_log")
+        .values({
+          user_id: userId,
+          action: "update",
+          resource_type: "metadata_entity",
+          resource_id: entityMetadata.id,
+          details: JSON.stringify({
+            entity_name: entityMetadata.entity_name,
+            record_id: recordId,
+            updated_fields: Object.keys(data),
+          }),
+          created_at: getDb().fn.now(),
+        })
+        .execute();
     }
 
     return record as Record<string, unknown> | null;
@@ -294,11 +309,13 @@ export class DataService {
     recordId: string | number,
     _userId?: string
   ): Promise<boolean> {
-    const dataSource = (await getDb()("data_sources").where("id", dataSourceId).first()) as
-      | DataSource
-      | undefined;
+    const dataSource = (await getDb()
+      .selectFrom("data_sources")
+      .where("id", dataSourceId)
+      .selectAll()
+      .executeTakeFirst()) as DataSource | undefined;
 
-    if (!dataSource || !dataSource.is_editable) {
+    if (!dataSource?.is_editable) {
       throw new Error("Data source not editable");
     }
 
@@ -323,17 +340,20 @@ export class DataService {
       .del();
 
     if (userId && deleted > 0) {
-      await getDb()("audit_log").insert({
-        user_id: userId,
-        action: "delete",
-        resource_type: "metadata_entity",
-        resource_id: entityMetadata.id,
-        details: JSON.stringify({
-          entity_name: entityMetadata.entity_name,
-          record_id: recordId,
-        }),
-        created_at: getDb().fn.now(),
-      });
+      await getDb()
+        .insertInto("audit_log")
+        .values({
+          user_id: userId,
+          action: "delete",
+          resource_type: "metadata_entity",
+          resource_id: entityMetadata.id,
+          details: JSON.stringify({
+            entity_name: entityMetadata.entity_name,
+            record_id: recordId,
+          }),
+          created_at: getDb().fn.now(),
+        })
+        .execute();
     }
 
     return deleted > 0;

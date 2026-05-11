@@ -3,8 +3,8 @@
  * client-side (DuckDB-Wasm) or server-side.
  */
 
-import type { BrowserCapabilities, ExecutionMode } from "@/types/wasm";
 import { isFeatureEnabled } from "@/lib/feature-flags";
+import type { BrowserCapabilities, ExecutionMode } from "@/types/wasm";
 
 /** Size thresholds (bytes). */
 const CLIENT_MAX = 100 * 1024 * 1024; // 100 MB
@@ -28,7 +28,7 @@ export function detectCapabilities(): BrowserCapabilities {
     sharedArrayBuffer: typeof SharedArrayBuffer !== "undefined",
     indexedDB: typeof indexedDB !== "undefined",
     sufficientMemory: (navigator as Navigator & { deviceMemory?: number }).deviceMemory
-      ? (navigator as Navigator & { deviceMemory?: number }).deviceMemory! >= 4
+      ? ((navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 0) >= 4
       : true, // Assume sufficient if API not available
   };
 }

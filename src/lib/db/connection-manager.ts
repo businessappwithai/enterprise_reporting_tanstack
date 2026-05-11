@@ -1,9 +1,9 @@
-import { Kysely, PostgresDialect, MysqlDialect, SqliteDialect, MssqlDialect, sql } from "kysely";
+import { join } from "node:path";
+import { Kysely, MssqlDialect, MysqlDialect, PostgresDialect, SqliteDialect, sql } from "kysely";
 import { Pool } from "pg";
-import { join } from "path";
-import type { DataSource, DatabaseClientType } from "@/types/database";
-import { decrypt } from "@/lib/security/encryption";
 import { getDb } from "@/lib/db/config";
+import { decrypt } from "@/lib/security/encryption";
+import type { DatabaseClientType, DataSource } from "@/types/database";
 import BunDatabase from "./bun-sqlite-compat";
 
 // biome-ignore lint/suspicious/noExplicitAny: external DB schema is unknown at compile time
@@ -94,7 +94,12 @@ function buildKyselyConnection(
           trustServerCertificate: true,
         },
       });
-      return new Kysely({ dialect: new MssqlDialect({ tarn: { min: 0, max: 10 }, tedious: { connectionFactory: () => pool } } as any) });
+      return new Kysely({
+        dialect: new MssqlDialect({
+          tarn: { min: 0, max: 10 },
+          tedious: { connectionFactory: () => pool },
+        } as any),
+      });
     }
 
     default:
@@ -144,7 +149,9 @@ export async function getConnection(dataSource: DataSource): Promise<AnyKysely> 
         .set({ connection_config: encryptedConfig })
         .where("id", "=", dataSource.id)
         .execute()
-        .catch((err) => console.error("[CONNECTION MANAGER] Failed to save re-encrypted config:", err));
+        .catch((err) =>
+          console.error("[CONNECTION MANAGER] Failed to save re-encrypted config:", err)
+        );
     } catch (error) {
       console.error("[CONNECTION MANAGER] Failed to re-encrypt config:", error);
     }
@@ -176,7 +183,7 @@ export async function testConnection(
 
   try {
     if (clientType === "sqlite3" && connectionConfig.filename) {
-      const fs = await import("fs");
+      const fs = await import("node:fs");
       const filename = connectionConfig.filename;
       const dbPath =
         filename.startsWith("/") || filename === ":memory:"
@@ -204,9 +211,10 @@ export async function testConnection(
       `.execute(connection);
       return {
         success: true,
-        message: tables.rows.length > 0
-          ? "Connection successful. Database contains tables."
-          : "Connected, but database appears to be empty (no tables found)",
+        message:
+          tables.rows.length > 0
+            ? "Connection successful. Database contains tables."
+            : "Connected, but database appears to be empty (no tables found)",
         latency,
       };
     }

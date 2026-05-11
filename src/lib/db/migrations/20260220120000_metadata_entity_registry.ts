@@ -1,5 +1,3 @@
-
-
 /**
  * Migration: Metadata Entity Registry
  *
