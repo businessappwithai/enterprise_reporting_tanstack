@@ -30,46 +30,27 @@ export const Route = createFileRoute('/api/data-sources/upload')({
             )
           }
 
-          // Parse the JSON file
-          const fileContent = await file.text()
-          let dataSourceConfig: any
+          // Validate file type (SQLite database files)
+          const validExtensions = ['.db', '.sqlite', '.sqlite3']
+          const fileName = file.name
+          const isValidFile = validExtensions.some(ext => fileName.toLowerCase().endsWith(ext))
 
-          try {
-            dataSourceConfig = JSON.parse(fileContent)
-          } catch {
+          if (!isValidFile) {
             return json(
-              { success: false, error: { message: 'Invalid JSON file' } },
+              { success: false, error: { message: 'Invalid file type. Please upload a SQLite database file (.db, .sqlite, .sqlite3)' } },
               { status: 400 }
             )
           }
 
-          if (!dataSourceConfig.name || !dataSourceConfig.client_type || !dataSourceConfig.connection_config) {
-            return json(
-              { success: false, error: { message: 'Missing required fields: name, client_type, connection_config' } },
-              { status: 400 }
-            )
-          }
-
-          const db = getDb()
-          const { lastInsertRowid } = await db
-            .insertInto('data_sources')
-            .values({
-              name: dataSourceConfig.name,
-              description: dataSourceConfig.description || null,
-              client_type: dataSourceConfig.client_type,
-              connection_config: JSON.stringify(dataSourceConfig.connection_config),
-              is_active: dataSourceConfig.is_active !== false,
-              is_editable: dataSourceConfig.is_editable !== false,
-              created_by: session.user.id,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            })
-            .executeTakeFirstOrThrow()
-
+          // For now, just return the filename - the file is stored client-side in a File object
+          // In a production system, you would store the file on the server and return a path
           return json(
             {
               success: true,
-              data: { id: lastInsertRowid, name: dataSourceConfig.name },
+              data: {
+                filename: fileName,
+                message: 'File accepted. The database will be referenced by this name.',
+              },
             },
             { status: 201 }
           )
