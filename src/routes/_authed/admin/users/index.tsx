@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/table";
 import { formatDateTime } from "@/lib/utils";
 import type { Role, User } from "@/types/database";
+import { listUsers, listRoles, createUser, updateUser, deleteUser } from "@/server-fns/admin";
 
 export const Route = createFileRoute("/_authed/admin/users/")({
   component: UsersManagementPage,
@@ -50,57 +51,40 @@ function UsersManagementPage() {
   const [isUserActive, setIsUserActive] = useState(true);
 
   // Fetch users
-  const { data: users, isLoading: isLoadingUsers } = useQuery<User[]>({
+  const { data: usersData, isLoading: isLoadingUsers } = useQuery({
     queryKey: ["admin-users"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/users");
-      const data = await res.json();
-      return data.data || [];
+      const result = await listUsers({ page: 0, pageSize: 100 });
+      return result.items || [];
     },
   });
+
+  const users = usersData as User[] | undefined;
 
   // Fetch roles for dropdown
   const { data: roles = [] } = useQuery<Role[]>({
     queryKey: ["roles"],
     queryFn: async () => {
-      const res = await fetch("/api/admin/roles");
-      const data = await res.json();
-      return data.data || [];
+      const result = await listRoles();
+      return result || [];
     },
   });
 
-  // Fetch user roles for selected user
-  const { data: userRoles = [], refetch: refetchUserRoles } = useQuery<
-    { role_id: string; role_name: string }[]
-  >({
-    queryKey: ["user-roles", selectedUser?.id],
-    queryFn: async () => {
-      if (!selectedUser) return [];
-      const res = await fetch(`/api/admin/users/${selectedUser.id}/roles`);
-      const data = await res.json();
-      return data.data || [];
-    },
-    enabled: !!selectedUser?.id,
-  });
+  // Map user roles to expected format
+  const userRoles = selectedUser?.roles?.map((r: any) => ({ role_id: r.id, role_name: r.name })) || [];
+  const refetchUserRoles = () => {
+    queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+  };
 
   // Create user mutation
   const createMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch("/api/admin/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: newUserName,
-          email: newUserEmail,
-          password: newUserPassword,
-          isActive: isUserActive,
-        }),
+      return await createUser({
+        email: newUserEmail,
+        password: newUserPassword,
+        displayName: newUserName,
+        isActive: isUserActive,
       });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error?.message || "Failed to create user");
-      }
-      return res.json();
     },
     onSuccess: () => {
       toast.success("User created successfully");
@@ -120,16 +104,11 @@ function UsersManagementPage() {
   const assignRoleMutation = useMutation({
     mutationFn: async ({ roleId }: { roleId: string }) => {
       if (!selectedUser) return;
-      const res = await fetch(`/api/admin/users/${selectedUser.id}/roles`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ roleId }),
+      const currentRoleIds = selectedUser.roles?.map((r: any) => r.id) || [];
+      return await updateUser({
+        id: selectedUser.id,
+        roleIds: [...currentRoleIds, roleId],
       });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error?.message || "Failed to assign role");
-      }
-      return res.json();
     },
     onSuccess: () => {
       toast.success("Role assigned successfully");
@@ -144,16 +123,12 @@ function UsersManagementPage() {
   const removeRoleMutation = useMutation({
     mutationFn: async ({ roleId }: { roleId: string }) => {
       if (!selectedUser) return;
-      const res = await fetch(`/api/admin/users/${selectedUser.id}/roles`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ roleId }),
+      const currentRoleIds = selectedUser.roles?.map((r: any) => r.id) || [];
+      const updatedRoleIds = currentRoleIds.filter((id: string) => id !== roleId);
+      return await updateUser({
+        id: selectedUser.id,
+        roleIds: updatedRoleIds,
       });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error?.message || "Failed to remove role");
-      }
-      return res.json();
     },
     onSuccess: () => {
       toast.success("Role removed successfully");
@@ -167,16 +142,10 @@ function UsersManagementPage() {
   // Toggle user active status
   const toggleActiveMutation = useMutation({
     mutationFn: async (user: User) => {
-      const res = await fetch(`/api/admin/users/${user.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isActive: !user.is_active }),
+      return await updateUser({
+        id: user.id,
+        isActive: !user.is_active,
       });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error?.message || "Failed to update user");
-      }
-      return res.json();
     },
     onSuccess: () => {
       toast.success("User updated successfully");

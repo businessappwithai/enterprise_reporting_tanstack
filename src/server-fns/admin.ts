@@ -55,6 +55,19 @@ export const listUsers = createServerFn({ method: "GET" })
           .limit(pageSize)
           .execute();
 
+        // Fetch roles for each user
+        const usersWithRoles = await Promise.all(
+          users.map(async (user) => {
+            const roles = await db
+              .selectFrom("user_roles as ur")
+              .innerJoin("roles as r", "r.id", "ur.role_id")
+              .select(["r.id", "r.name"])
+              .where("ur.user_id", "=", user.id)
+              .execute();
+            return { ...user, roles };
+          })
+        );
+
         const countResult = await db
           .selectFrom("users")
           .select(db.fn.count<number>("id").as("count"))
@@ -62,7 +75,7 @@ export const listUsers = createServerFn({ method: "GET" })
         const total = Number(countResult?.count ?? 0);
 
         return {
-          items: users,
+          items: usersWithRoles,
           meta: { total, page, pageSize, totalPages: Math.ceil(total / pageSize) },
         };
       },
