@@ -20,8 +20,8 @@ export const Route = createFileRoute("/api/charts/$id/filters/$filterLinkId")({
           if (target_column !== undefined) updateData.target_column = target_column;
           if (filter_order !== undefined) updateData.filter_order = filter_order;
 
-          const { getConfigDB } = await import("@/lib/db/config");
-          const db = getConfigDB();
+          const { getKnexDb } = await import("@/lib/db/config");
+          const db = getKnexDb();
           const filterLink = await db("chart_filters")
             .where("id", params.filterLinkId)
             .where("chart_id", params.id)
@@ -40,8 +40,8 @@ export const Route = createFileRoute("/api/charts/$id/filters/$filterLinkId")({
           const session = await getSession(request);
           if (!session) return json({ error: "Unauthorized" }, { status: 401 });
 
-          const { getConfigDB } = await import("@/lib/db/config");
-          const db = getConfigDB();
+          const { getKnexDb } = await import("@/lib/db/config");
+          const db = getKnexDb();
           const filterLink = await db("chart_filters")
             .where("id", params.filterLinkId)
             .where("chart_id", params.id)

@@ -36,7 +36,7 @@ export const Route = createFileRoute("/api/charts/$id")({
             );
           }
 
-          const { getDb } = await import("@/lib/db/config");
+          const { getKnexDb: getDb } = await import("@/lib/db/config");
           const db = getDb();
           const chart = await db<ChartDefinition>("chart_definitions").where("id", id).first();
           if (!chart) {
@@ -83,7 +83,7 @@ export const Route = createFileRoute("/api/charts/$id")({
             );
           }
 
-          const { getDb } = await import("@/lib/db/config");
+          const { getKnexDb: getDb } = await import("@/lib/db/config");
           const { logAudit } = await import("@/lib/security/audit");
           const db = getDb();
           const existing = await db<ChartDefinition>("chart_definitions").where("id", id).first();
@@ -150,7 +150,7 @@ export const Route = createFileRoute("/api/charts/$id")({
             );
           }
 
-          const { getDb } = await import("@/lib/db/config");
+          const { getKnexDb: getDb } = await import("@/lib/db/config");
           const { logAudit } = await import("@/lib/security/audit");
           const db = getDb();
           await db<ChartDefinition>("chart_definitions").where("id", id).delete();

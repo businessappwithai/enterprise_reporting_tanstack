@@ -21,7 +21,7 @@ export const Route = createFileRoute("/api/data-sources/$id")({
           }
 
           const { id } = params;
-          const { getDb } = await import("@/lib/db/config");
+          const { getKnexDb: getDb } = await import("@/lib/db/config");
           const db = getDb();
           const dataSource = await db<DataSource>("data_sources")
             .where("id", id)
@@ -99,7 +99,7 @@ export const Route = createFileRoute("/api/data-sources/$id")({
             );
           }
 
-          const { getDb } = await import("@/lib/db/config");
+          const { getKnexDb: getDb } = await import("@/lib/db/config");
           const { decrypt } = await import("@/lib/security/encryption");
           const { encrypt } = await import("@/lib/security/encryption");
           const { closeConnection } = await import("@/lib/db/connection-manager");
@@ -172,7 +172,7 @@ export const Route = createFileRoute("/api/data-sources/$id")({
             );
           }
 
-          const { getDb } = await import("@/lib/db/config");
+          const { getKnexDb: getDb } = await import("@/lib/db/config");
           const { decrypt } = await import("@/lib/security/encryption");
           const { encrypt } = await import("@/lib/security/encryption");
           const { closeConnection } = await import("@/lib/db/connection-manager");
@@ -232,7 +232,7 @@ export const Route = createFileRoute("/api/data-sources/$id")({
           }
 
           const { id } = params;
-          const { getDb } = await import("@/lib/db/config");
+          const { getKnexDb: getDb } = await import("@/lib/db/config");
           const { closeConnection } = await import("@/lib/db/connection-manager");
           const db = getDb();
 

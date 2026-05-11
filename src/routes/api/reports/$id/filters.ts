@@ -18,8 +18,8 @@ export const Route = createFileRoute("/api/reports/$id/filters")({
           }
 
           const { id: reportId } = params;
-          const { getConfigDB } = await import("@/lib/db/config");
-          const db = getConfigDB();
+          const { getKnexDb } = await import("@/lib/db/config");
+          const db = getKnexDb();
           const filters = await db("report_filters as rf")
             .join("filter_definitions as fd", "rf.filter_id", "fd.id")
             .select(
@@ -60,8 +60,8 @@ export const Route = createFileRoute("/api/reports/$id/filters")({
           }
 
           const { id: reportId } = params;
-          const { getConfigDB } = await import("@/lib/db/config");
-          const db = getConfigDB();
+          const { getKnexDb } = await import("@/lib/db/config");
+          const db = getKnexDb();
           const report = await db("report_definitions").where("id", reportId).first();
 
           if (!report) {
@@ -99,8 +99,8 @@ export const Route = createFileRoute("/api/reports/$id/filters")({
           }
 
           const { id: reportId } = params;
-          const { getConfigDB } = await import("@/lib/db/config");
-          const db = getConfigDB();
+          const { getKnexDb } = await import("@/lib/db/config");
+          const db = getKnexDb();
           await db("report_filters").where("report_id", reportId).del();
           return json({ success: true });
         } catch (error) {

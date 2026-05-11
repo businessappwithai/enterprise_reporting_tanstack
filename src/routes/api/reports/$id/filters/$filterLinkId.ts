@@ -24,8 +24,8 @@ export const Route = createFileRoute("/api/reports/$id/filters/$filterLinkId")({
           if (filter_order !== undefined) updateData.filter_order = filter_order;
 
           const { id: reportId, filterLinkId } = params;
-          const { getConfigDB } = await import("@/lib/db/config");
-          const db = getConfigDB();
+          const { getKnexDb } = await import("@/lib/db/config");
+          const db = getKnexDb();
           const filterLink = await db("report_filters")
             .where("id", filterLinkId)
             .where("report_id", reportId)
@@ -50,8 +50,8 @@ export const Route = createFileRoute("/api/reports/$id/filters/$filterLinkId")({
           }
 
           const { id: reportId, filterLinkId } = params;
-          const { getConfigDB } = await import("@/lib/db/config");
-          const db = getConfigDB();
+          const { getKnexDb } = await import("@/lib/db/config");
+          const db = getKnexDb();
           const filterLink = await db("report_filters")
             .where("id", filterLinkId)
             .where("report_id", reportId)

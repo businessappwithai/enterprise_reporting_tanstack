@@ -25,9 +25,9 @@ export const Route = createFileRoute("/api/dashboards")({
           const page = parseInt(searchParams.get("page") || "0", 10);
           const pageSize = parseInt(searchParams.get("pageSize") || "20", 10);
 
-          const { getDb } = await import("@/lib/db/config");
+          const { getKnexDb } = await import("@/lib/db/config");
           const { filterAccessibleResources } = await import("@/lib/permissions/permissions");
-          const db = getDb();
+          const db = getKnexDb();
           let dashboards = await db<DashboardLayout>("dashboard_layouts").orderBy(
             "created_at",
             "desc"
@@ -96,9 +96,9 @@ export const Route = createFileRoute("/api/dashboards")({
             );
           }
 
-          const { getDb } = await import("@/lib/db/config");
+          const { getKnexDb } = await import("@/lib/db/config");
           const { logAudit } = await import("@/lib/security/audit");
-          const db = getDb();
+          const db = getKnexDb();
           const id = uuidv4();
 
           await db<DashboardLayout>("dashboard_layouts").insert({
@@ -126,7 +126,7 @@ export const Route = createFileRoute("/api/dashboards")({
             details: { name },
           });
 
-          const dashboard = await db<DashboardLayout>("dashboard_layouts").where("id", id).first();
+          const dashboard = await db("dashboard_layouts").where("id", id).first();
           return json({ success: true, data: dashboard }, { status: 201 });
         } catch (error) {
           console.error("Error creating dashboard:", error);

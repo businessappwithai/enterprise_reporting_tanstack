@@ -1,0 +1,156 @@
+# Page snapshot
+
+```yaml
+- generic [active]:
+  - generic:
+    - complementary:
+      - generic:
+        - link:
+          - /url: /
+          - img
+          - generic: Enterprise Reports
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - heading [level=2]: Main
+                - navigation:
+                  - link:
+                    - /url: /
+                    - button:
+                      - img
+                      - generic: Dashboard
+                  - link:
+                    - /url: /sql-editor
+                    - button:
+                      - img
+                      - generic: SQL Editor
+                  - link:
+                    - /url: /queries
+                    - button:
+                      - img
+                      - generic: Saved Queries
+                  - link:
+                    - /url: /reports
+                    - button:
+                      - img
+                      - generic: Reports
+                  - link:
+                    - /url: /charts
+                    - button:
+                      - img
+                      - generic: Charts
+                  - link:
+                    - /url: /dashboards
+                    - button:
+                      - img
+                      - generic: Dashboards
+                  - link:
+                    - /url: /filters
+                    - button:
+                      - img
+                      - generic: Filters
+                  - link:
+                    - /url: /jobs
+                    - button:
+                      - img
+                      - generic: Jobs
+                  - link:
+                    - /url: /nl-query
+                    - button:
+                      - img
+                      - generic: NL Query
+              - generic:
+                - heading [level=2]: Administration
+                - navigation:
+                  - link:
+                    - /url: /data-sources
+                    - button:
+                      - img
+                      - generic: Data Sources
+                  - link:
+                    - /url: /bull-board
+                    - button:
+                      - img
+                      - generic: Queue Management
+                  - link:
+                    - /url: /admin/users
+                    - button:
+                      - img
+                      - generic: Users
+                  - link:
+                    - /url: /admin/roles
+                    - button:
+                      - img
+                      - generic: Roles
+                  - link:
+                    - /url: /admin/permissions
+                    - button:
+                      - img
+                      - generic: Permissions
+                  - link:
+                    - /url: /settings
+                    - button:
+                      - img
+                      - generic: Settings
+      - button:
+        - img
+    - generic:
+      - banner:
+        - generic:
+          - button:
+            - img
+            - generic: No connection
+        - generic:
+          - button:
+            - img
+            - generic: Toggle theme
+          - button:
+            - img
+            - generic: Notifications
+          - button:
+            - generic:
+              - generic: A
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - heading [level=1]: Dashboards
+              - paragraph: Create and manage interactive dashboards
+            - button [expanded]:
+              - img
+              - text: New Dashboard
+          - generic:
+            - generic:
+              - heading [level=3]:
+                - img
+                - text: All Dashboards
+            - generic:
+              - generic: No dashboards created yet. Create your first dashboard to get started.
+  - region "Notifications alt+T"
+  - dialog "Create Dashboard" [ref=e2]:
+    - generic [ref=e3]:
+      - heading "Create Dashboard" [level=2] [ref=e4]
+      - paragraph [ref=e5]: Create a new dashboard to organize your reports and charts.
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - text: Name
+        - textbox "Name" [ref=e8]:
+          - /placeholder: My Dashboard
+          - text: E2E Test Dashboard
+      - generic [ref=e9]:
+        - text: Description
+        - textbox "Description" [ref=e10]:
+          - /placeholder: Optional description
+          - text: This is a test dashboard from E2E tests
+      - generic [ref=e11]:
+        - switch "Make dashboard public" [ref=e12] [cursor=pointer]
+        - generic [ref=e13]: Make dashboard public
+    - generic [ref=e14]:
+      - button "Cancel" [ref=e15] [cursor=pointer]
+      - button "Create Dashboard" [ref=e16] [cursor=pointer]
+    - button "Close" [ref=e17] [cursor=pointer]:
+      - img [ref=e18]
+      - generic [ref=e21]: Close
+```

@@ -23,7 +23,7 @@ export const Route = createFileRoute("/api/dashboards/$id/widgets/$widgetId")({
           const { widgetId } = params;
           const body = await request.json();
 
-          const { getDb } = await import("@/lib/db/config");
+          const { getKnexDb: getDb } = await import("@/lib/db/config");
           const { logAudit } = await import("@/lib/security/audit");
           const db = getDb();
           const existing = await db<DashboardWidget>("dashboard_widgets")
@@ -77,7 +77,7 @@ export const Route = createFileRoute("/api/dashboards/$id/widgets/$widgetId")({
           }
 
           const { widgetId } = params;
-          const { getDb } = await import("@/lib/db/config");
+          const { getKnexDb: getDb } = await import("@/lib/db/config");
           const { logAudit } = await import("@/lib/security/audit");
           const db = getDb();
           await db<DashboardWidget>("dashboard_widgets").where("id", widgetId).delete();

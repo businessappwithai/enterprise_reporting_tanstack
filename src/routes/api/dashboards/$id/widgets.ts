@@ -22,7 +22,7 @@ export const Route = createFileRoute("/api/dashboards/$id/widgets")({
           }
 
           const { id: dashboardId } = params;
-          const { getDb } = await import("@/lib/db/config");
+          const { getKnexDb: getDb } = await import("@/lib/db/config");
           const db = getDb();
           const widgets = await db<DashboardWidget>("dashboard_widgets")
             .where("dashboard_id", dashboardId)
@@ -64,7 +64,7 @@ export const Route = createFileRoute("/api/dashboards/$id/widgets")({
             );
           }
 
-          const { getDb } = await import("@/lib/db/config");
+          const { getKnexDb: getDb } = await import("@/lib/db/config");
           const { logAudit } = await import("@/lib/security/audit");
           const db = getDb();
           const id = uuidv4();

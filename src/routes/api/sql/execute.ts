@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
-import { getDb } from "@/lib/db/config";
+import { getKnexDb as getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
 import { isReadOnlyQuery } from "@/lib/sql/validator";
 import { logAudit } from "@/lib/security/audit";

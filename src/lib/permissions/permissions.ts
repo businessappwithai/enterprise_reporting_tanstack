@@ -1,4 +1,4 @@
-import { getDb } from "@/lib/db/config";
+import { getKnexDb as getDb } from "@/lib/db/config";
 import type { PermissionLevel, ResourceType } from "@/types/database";
 
 export interface PermissionCheck {

@@ -6,11 +6,17 @@
 import {
   Kysely,
   SqliteDialect,
+  PostgresDialect,
   type MigrationProvider,
 } from "kysely";
+import { createRequire } from "node:module";
 import { Pool } from "pg";
 import path from "path";
+import { existsSync, mkdirSync } from "fs";
 import { promises as fs } from "fs";
+
+// createRequire enables CJS modules (better-sqlite3, knex) in ESM context
+const require = createRequire(import.meta.url);
 
 // Database schema type definition
 // This is the most important part - defines all tables and their columns
@@ -286,20 +292,16 @@ export function getDb(): KyselyDB {
       // PostgreSQL
       const pool = new Pool({ connectionString: DATABASE_URL });
       db = new Kysely<Database>({
-        dialect: new (require("kysely").PostgresDialect)({
-          pool,
-        }),
+        dialect: new PostgresDialect({ pool }),
       });
     } else {
       // SQLite
-      const { existsSync, mkdirSync } = require("fs");
-      const dirPath = require("path").dirname(DATABASE_PATH);
+      const dirPath = path.dirname(DATABASE_PATH);
 
       if (!existsSync(dirPath)) {
         mkdirSync(dirPath, { recursive: true });
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const BetterSqlite3 = require("better-sqlite3");
 
       db = new Kysely<Database>({
@@ -317,6 +319,40 @@ export function getDb(): KyselyDB {
  */
 export function getConfigDB(): KyselyDB {
   return getDb();
+}
+
+// Knex instance cache
+let knexDb: ReturnType<typeof import("knex").default> | null = null;
+
+/**
+ * Get or create a Knex database instance (for legacy Knex-style queries)
+ * Uses the same SQLite file or PostgreSQL connection as Kysely.
+ */
+export function getKnexDb() {
+  if (!knexDb) {
+    const knex = require("knex");
+
+    if (DATABASE_URL) {
+      // PostgreSQL
+      knexDb = knex({
+        client: "pg",
+        connection: DATABASE_URL,
+      });
+    } else {
+      // SQLite
+      const dirPath = path.dirname(DATABASE_PATH);
+      if (!existsSync(dirPath)) {
+        mkdirSync(dirPath, { recursive: true });
+      }
+
+      knexDb = knex({
+        client: "better-sqlite3",
+        connection: { filename: DATABASE_PATH },
+        useNullAsDefault: true,
+      });
+    }
+  }
+  return knexDb;
 }
 
 /**

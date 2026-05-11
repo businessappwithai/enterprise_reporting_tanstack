@@ -1,8 +1,7 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { setResponseHeader } from "@tanstack/react-start/server";
-import { useForm } from "@tanstack/react-form";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { authenticateUser, createSession } from "@/lib/auth/session";
 import {
   Card,
@@ -28,7 +27,7 @@ export const loginFn = createServerFn({ method: "POST" })
       "Set-Cookie",
       `session_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${30 * 24 * 3600}`
     );
-    throw redirect({ to: "/dashboard" });
+    return { ok: true };
   });
 
 export const Route = createFileRoute("/login")({
@@ -37,29 +36,28 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const [serverError, setServerError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
 
-  const form = useForm({
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-    onSubmit: async ({ value }) => {
-      setServerError("");
-      try {
-        await loginFn({ data: value });
-      } catch (err: unknown) {
-        // redirect throws are expected — re-throw them so the router can handle them
-        if (err instanceof Error && err.message.includes("REDIRECT")) {
-          throw err;
-        }
-        // Check if it's a TanStack router redirect object
-        if (err !== null && typeof err === "object" && "_isRedirect" in (err as object)) {
-          throw err;
-        }
-        setServerError(err instanceof Error ? err.message : "An error occurred. Please try again.");
-      }
-    },
-  });
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const email = emailRef.current?.value ?? "";
+    const password = passwordRef.current?.value ?? "";
+    if (!email || !password) return;
+
+    setServerError("");
+    setIsSubmitting(true);
+    try {
+      await loginFn({ data: { email, password } });
+      await navigate({ to: "/dashboard" });
+    } catch (err: unknown) {
+      setServerError(err instanceof Error ? err.message : "An error occurred. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
@@ -74,12 +72,7 @@ function LoginPage() {
           <CardDescription>Sign in to your Enterprise Reporting account</CardDescription>
         </CardHeader>
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            form.handleSubmit();
-          }}
-        >
+        <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             {serverError && (
               <Alert variant="destructive">
@@ -87,45 +80,35 @@ function LoginPage() {
               </Alert>
             )}
 
-            <form.Field name="email">
-              {(field) => (
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="name@example.com"
-                    required
-                    disabled={form.state.isSubmitting}
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    onBlur={field.handleBlur}
-                  />
-                </div>
-              )}
-            </form.Field>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                ref={emailRef}
+                type="email"
+                placeholder="name@example.com"
+                required
+                disabled={isSubmitting}
+                defaultValue=""
+              />
+            </div>
 
-            <form.Field name="password">
-              {(field) => (
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    required
-                    disabled={form.state.isSubmitting}
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    onBlur={field.handleBlur}
-                  />
-                </div>
-              )}
-            </form.Field>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                ref={passwordRef}
+                type="password"
+                required
+                disabled={isSubmitting}
+                defaultValue=""
+              />
+            </div>
           </CardContent>
 
           <CardFooter>
-            <Button type="submit" className="w-full" disabled={form.state.isSubmitting}>
-              {form.state.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign In
             </Button>
           </CardFooter>

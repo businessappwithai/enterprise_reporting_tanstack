@@ -21,7 +21,7 @@ export const Route = createFileRoute("/api/reports/$id")({
           }
 
           const { id } = params;
-          const { getDb } = await import("@/lib/db/config");
+          const { getKnexDb: getDb } = await import("@/lib/db/config");
           const db = getDb();
           const report = await db<ReportDefinition>("report_definitions").where("id", id).first();
 
@@ -65,7 +65,7 @@ export const Route = createFileRoute("/api/reports/$id")({
             exportFormats,
           } = body;
 
-          const { getDb } = await import("@/lib/db/config");
+          const { getKnexDb: getDb } = await import("@/lib/db/config");
           const { logAudit } = await import("@/lib/security/audit");
           const db = getDb();
           const existing = await db<ReportDefinition>("report_definitions").where("id", id).first();
@@ -127,7 +127,7 @@ export const Route = createFileRoute("/api/reports/$id")({
           const body = await request.json();
           const { colorTheme } = body;
 
-          const { getDb } = await import("@/lib/db/config");
+          const { getKnexDb: getDb } = await import("@/lib/db/config");
           const { logAudit } = await import("@/lib/security/audit");
           const db = getDb();
           const existing = await db<ReportDefinition>("report_definitions").where("id", id).first();
@@ -174,7 +174,7 @@ export const Route = createFileRoute("/api/reports/$id")({
           }
 
           const { id } = params;
-          const { getDb } = await import("@/lib/db/config");
+          const { getKnexDb: getDb } = await import("@/lib/db/config");
           const { logAudit } = await import("@/lib/security/audit");
           const db = getDb();
 

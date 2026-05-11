@@ -1,4 +1,4 @@
-import { getDb } from "@/lib/db/config";
+import { getKnexDb as getDb } from "@/lib/db/config";
 import type { AuditAction, ResourceType, AuditLog } from "@/types/database";
 import { v4 as uuidv4 } from "uuid";
 

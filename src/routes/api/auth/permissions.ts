@@ -35,10 +35,12 @@ export const Route = createFileRoute("/api/auth/permissions")({
         const { getDb } = await import("@/lib/db/config");
         const db = getDb();
 
-        const roles = await db("roles")
-          .join("user_roles", "roles.id", "user_roles.role_id")
-          .where("user_roles.user_id", session.user.id)
-          .select("roles.*");
+        const roles = await db
+          .selectFrom("roles")
+          .innerJoin("user_roles", "roles.id", "user_roles.role_id")
+          .where("user_roles.user_id", "=", session.user.id)
+          .selectAll("roles")
+          .execute();
 
         const rolePermissions: string[] = roles.flatMap((role: { permissions: string }) => {
           try {
@@ -48,13 +50,16 @@ export const Route = createFileRoute("/api/auth/permissions")({
           }
         });
 
-        const isAdmin = roles.some(
-          (r: { name: string }) => r.name === "admin" || r.name === "Admin"
-        );
+        const isAdmin =
+          rolePermissions.includes("*") ||
+          roles.some((r: { name: string }) =>
+            ["admin", "Admin", "Administrator"].includes(r.name)
+          );
 
-        const resourcePermissions = await db("data_source_entity_permissions")
-          .where("user_id", session.user.id)
-          .select("*")
+        const resourcePermissions = await db
+          .selectFrom("resource_permissions")
+          .selectAll()
+          .execute()
           .catch(() => []);
 
         return json({

@@ -15,8 +15,8 @@ export const Route = createFileRoute("/api/charts/$id/filters")({
           const session = await getSession(request);
           if (!session) return json({ error: "Unauthorized" }, { status: 401 });
 
-          const { getConfigDB } = await import("@/lib/db/config");
-          const db = getConfigDB();
+          const { getKnexDb } = await import("@/lib/db/config");
+          const db = getKnexDb();
           const filters = await db("chart_filters as cf")
             .join("filter_definitions as fd", "cf.filter_id", "fd.id")
             .select(
@@ -54,8 +54,8 @@ export const Route = createFileRoute("/api/charts/$id/filters")({
             return json({ error: "Missing required fields" }, { status: 400 });
           }
 
-          const { getConfigDB } = await import("@/lib/db/config");
-          const db = getConfigDB();
+          const { getKnexDb } = await import("@/lib/db/config");
+          const db = getKnexDb();
           const chart = await db("chart_definitions").where("id", params.id).first();
           if (!chart) return json({ error: "Chart not found" }, { status: 404 });
 
@@ -87,8 +87,8 @@ export const Route = createFileRoute("/api/charts/$id/filters")({
           const session = await getSession(request);
           if (!session) return json({ error: "Unauthorized" }, { status: 401 });
 
-          const { getConfigDB } = await import("@/lib/db/config");
-          const db = getConfigDB();
+          const { getKnexDb } = await import("@/lib/db/config");
+          const db = getKnexDb();
           await db("chart_filters").where("chart_id", params.id).del();
           return json({ success: true });
         } catch (error) {

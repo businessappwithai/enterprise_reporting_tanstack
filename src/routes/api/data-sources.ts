@@ -21,8 +21,8 @@ export const Route = createFileRoute("/api/data-sources")({
             );
           }
 
-          const { getDb } = await import("@/lib/db/config");
-          const db = getDb();
+          const { getKnexDb } = await import("@/lib/db/config");
+          const db = getKnexDb();
           const dataSources = await db<DataSource>("data_sources")
             .where("is_deleted", false)
             .orderBy("name");
@@ -67,10 +67,10 @@ export const Route = createFileRoute("/api/data-sources")({
             );
           }
 
-          const { getDb } = await import("@/lib/db/config");
+          const { getKnexDb } = await import("@/lib/db/config");
           const { encrypt } = await import("@/lib/security/encryption");
           const { logAudit } = await import("@/lib/security/audit");
-          const db = getDb();
+          const db = getKnexDb();
           const id = uuidv4();
           const encryptedConfig = encrypt(JSON.stringify(connectionConfig));
 
@@ -91,7 +91,7 @@ export const Route = createFileRoute("/api/data-sources")({
             details: { name, clientType },
           });
 
-          const dataSource = await db<DataSource>("data_sources").where("id", id).first();
+          const dataSource = await db("data_sources").where("id", id).first();
           return json({ success: true, data: dataSource }, { status: 201 });
         } catch (error) {
           console.error("Error creating data source:", error);

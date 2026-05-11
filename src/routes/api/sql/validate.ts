@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
 import { validateSQL } from "@/lib/sql/validator";
-import { getDb } from "@/lib/db/config";
+import { getKnexDb as getDb } from "@/lib/db/config";
 import { verifySession } from "@/lib/auth/session";
 import type { DataSource } from "@/types/database";
 

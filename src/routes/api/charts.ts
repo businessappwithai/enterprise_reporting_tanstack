@@ -25,9 +25,9 @@ export const Route = createFileRoute("/api/charts")({
           const page = parseInt(searchParams.get("page") || "0", 10);
           const pageSize = parseInt(searchParams.get("pageSize") || "20", 10);
 
-          const { getDb } = await import("@/lib/db/config");
+          const { getKnexDb } = await import("@/lib/db/config");
           const { filterAccessibleResources } = await import("@/lib/permissions/permissions");
-          const db = getDb();
+          const db = getKnexDb();
           let charts = await db<ChartDefinition>("chart_definitions").orderBy("created_at", "desc");
 
           charts = await filterAccessibleResources(session.user.id, charts, "chart", "view");
@@ -96,9 +96,9 @@ export const Route = createFileRoute("/api/charts")({
             );
           }
 
-          const { getDb } = await import("@/lib/db/config");
+          const { getKnexDb } = await import("@/lib/db/config");
           const { logAudit } = await import("@/lib/security/audit");
-          const db = getDb();
+          const db = getKnexDb();
           const id = uuidv4();
 
           await db<ChartDefinition>("chart_definitions").insert({
@@ -121,7 +121,7 @@ export const Route = createFileRoute("/api/charts")({
             details: { name, chartType },
           });
 
-          const chart = await db<ChartDefinition>("chart_definitions").where("id", id).first();
+          const chart = await db("chart_definitions").where("id", id).first();
           return json({ success: true, data: chart });
         } catch (error) {
           console.error("Error creating chart:", error);

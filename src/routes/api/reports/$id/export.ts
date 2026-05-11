@@ -78,7 +78,7 @@ export const Route = createFileRoute("/api/reports/$id/export")({
           const body = await request.json();
           const { format = "csv" } = body;
 
-          const { getDb } = await import("@/lib/db/config");
+          const { getKnexDb: getDb } = await import("@/lib/db/config");
           const { getConnection } = await import("@/lib/db/connection-manager");
           const { isReadOnlyQuery } = await import("@/lib/sql/validator");
           const db = getDb();

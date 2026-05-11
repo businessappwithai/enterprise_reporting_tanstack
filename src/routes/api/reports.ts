@@ -25,14 +25,14 @@ export const Route = createFileRoute("/api/reports")({
           const page = parseInt(searchParams.get("page") || "0", 10);
           const pageSize = parseInt(searchParams.get("pageSize") || "20", 10);
 
-          const { getDb } = await import("@/lib/db/config");
-          const db = getDb();
+          const { getKnexDb } = await import("@/lib/db/config");
+          const db = getKnexDb();
           const reports = await db<ReportDefinition>("report_definitions")
             .orderBy("created_at", "desc")
             .limit(pageSize)
             .offset(page * pageSize);
 
-          const countResult = await db<ReportDefinition>("report_definitions")
+          const countResult = await db("report_definitions")
             .count("* as count")
             .first();
           const total = Number((countResult as { count?: string })?.count || 0);
@@ -82,9 +82,9 @@ export const Route = createFileRoute("/api/reports")({
             );
           }
 
-          const { getDb } = await import("@/lib/db/config");
+          const { getKnexDb } = await import("@/lib/db/config");
           const { logAudit } = await import("@/lib/security/audit");
-          const db = getDb();
+          const db = getKnexDb();
           const id = uuidv4();
 
           await db<ReportDefinition>("report_definitions").insert({
@@ -108,7 +108,7 @@ export const Route = createFileRoute("/api/reports")({
             details: { name },
           });
 
-          const report = await db<ReportDefinition>("report_definitions").where("id", id).first();
+          const report = await db("report_definitions").where("id", id).first();
 
           return json({ success: true, data: report }, { status: 201 });
         } catch (error) {

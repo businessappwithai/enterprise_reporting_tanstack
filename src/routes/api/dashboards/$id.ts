@@ -36,7 +36,7 @@ export const Route = createFileRoute("/api/dashboards/$id")({
             );
           }
 
-          const { getDb } = await import("@/lib/db/config");
+          const { getKnexDb: getDb } = await import("@/lib/db/config");
           const db = getDb();
           const dashboard = await db<DashboardLayout>("dashboard_layouts").where("id", id).first();
           if (!dashboard) {
@@ -90,7 +90,7 @@ export const Route = createFileRoute("/api/dashboards/$id")({
             );
           }
 
-          const { getDb } = await import("@/lib/db/config");
+          const { getKnexDb: getDb } = await import("@/lib/db/config");
           const { logAudit } = await import("@/lib/security/audit");
           const db = getDb();
           const existing = await db<DashboardLayout>("dashboard_layouts").where("id", id).first();
@@ -161,7 +161,7 @@ export const Route = createFileRoute("/api/dashboards/$id")({
             );
           }
 
-          const { getDb } = await import("@/lib/db/config");
+          const { getKnexDb: getDb } = await import("@/lib/db/config");
           const { logAudit } = await import("@/lib/security/audit");
           const db = getDb();
           await db<DashboardLayout>("dashboard_layouts").where("id", id).delete();

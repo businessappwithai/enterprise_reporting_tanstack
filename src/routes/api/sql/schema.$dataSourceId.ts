@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
-import { getDb } from "@/lib/db/config";
+import { getKnexDb as getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
 import { introspectSchema } from "@/lib/sql/schema-introspection";
 import { SyncService } from "@/lib/metadata/sync-service";
