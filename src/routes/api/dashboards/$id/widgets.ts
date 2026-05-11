@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
 import { v4 as uuidv4 } from "uuid";
-import type { DashboardWidget } from "@/types/database";
 
 async function getSession(request: Request) {
   const { auth } = await import("@/lib/auth/config");
@@ -22,11 +21,16 @@ export const Route = createFileRoute("/api/dashboards/$id/widgets")({
           }
 
           const { id: dashboardId } = params;
-          const { getKnexDb: getDb } = await import("@/lib/db/config");
+          const { getDb } = await import("@/lib/db/config");
           const db = getDb();
-          const widgets = await db<DashboardWidget>("dashboard_widgets")
-            .where("dashboard_id", dashboardId)
-            .orderBy("created_at");
+
+          const widgets = await db
+            .selectFrom("dashboard_widgets")
+            .selectAll()
+            .where("dashboard_id", "=", dashboardId)
+            .orderBy("created_at", "asc")
+            .execute();
+
           return json({ success: true, data: { items: widgets } });
         } catch (error) {
           console.error("Error fetching widgets:", error);
@@ -64,20 +68,26 @@ export const Route = createFileRoute("/api/dashboards/$id/widgets")({
             );
           }
 
-          const { getKnexDb: getDb } = await import("@/lib/db/config");
+          const { getDb } = await import("@/lib/db/config");
           const { logAudit } = await import("@/lib/security/audit");
           const db = getDb();
           const id = uuidv4();
+          const now = new Date().toISOString();
 
-          await db<DashboardWidget>("dashboard_widgets").insert({
-            id,
-            dashboard_id: dashboardId,
-            widget_type: widgetType,
-            report_id: reportId || undefined,
-            chart_id: chartId || undefined,
-            position_config: JSON.stringify(positionConfig),
-            widget_config: widgetConfig ? JSON.stringify(widgetConfig) : undefined,
-          });
+          await db
+            .insertInto("dashboard_widgets")
+            .values({
+              id,
+              dashboard_id: dashboardId,
+              widget_type: widgetType,
+              report_id: reportId ?? null,
+              chart_id: chartId ?? null,
+              position_config: JSON.stringify(positionConfig),
+              widget_config: widgetConfig ? JSON.stringify(widgetConfig) : null,
+              created_at: now,
+              updated_at: now,
+            })
+            .execute();
 
           await logAudit({
             userId: session.user.id,
@@ -87,7 +97,12 @@ export const Route = createFileRoute("/api/dashboards/$id/widgets")({
             details: { dashboardId, widgetType },
           });
 
-          const widget = await db<DashboardWidget>("dashboard_widgets").where("id", id).first();
+          const widget = await db
+            .selectFrom("dashboard_widgets")
+            .selectAll()
+            .where("id", "=", id)
+            .executeTakeFirst();
+
           return json({ success: true, data: widget });
         } catch (error) {
           console.error("Error creating widget:", error);

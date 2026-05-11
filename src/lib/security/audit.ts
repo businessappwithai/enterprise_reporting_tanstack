@@ -1,4 +1,4 @@
-import { getKnexDb as getDb } from "@/lib/db/config";
+import { getDb } from "@/lib/db/config";
 import type { AuditAction, ResourceType, AuditLog } from "@/types/database";
 import { v4 as uuidv4 } from "uuid";
 
@@ -15,16 +15,20 @@ export interface AuditLogEntry {
 export async function logAudit(entry: AuditLogEntry): Promise<void> {
   const db = getDb();
 
-  await db<AuditLog>("audit_log").insert({
-    id: uuidv4(),
-    user_id: entry.userId,
-    action: entry.action,
-    resource_type: entry.resourceType,
-    resource_id: entry.resourceId,
-    details: entry.details ? JSON.stringify(entry.details) : undefined,
-    ip_address: entry.ipAddress,
-    user_agent: entry.userAgent,
-  });
+  await db
+    .insertInto("audit_log")
+    .values({
+      id: uuidv4(),
+      user_id: entry.userId ?? null,
+      action: entry.action,
+      resource_type: entry.resourceType,
+      resource_id: entry.resourceId ?? null,
+      details: entry.details ? JSON.stringify(entry.details) : null,
+      ip_address: entry.ipAddress ?? null,
+      user_agent: entry.userAgent ?? null,
+      created_at: new Date().toISOString(),
+    })
+    .execute();
 }
 
 export async function getAuditLogs(options: {
@@ -39,19 +43,19 @@ export async function getAuditLogs(options: {
 }): Promise<{ logs: AuditLog[]; total: number }> {
   const db = getDb();
 
-  let query = db<AuditLog>("audit_log");
+  let query = db.selectFrom("audit_log").selectAll();
 
   if (options.userId) {
-    query = query.where("user_id", options.userId);
+    query = query.where("user_id", "=", options.userId);
   }
   if (options.resourceType) {
-    query = query.where("resource_type", options.resourceType);
+    query = query.where("resource_type", "=", options.resourceType);
   }
   if (options.resourceId) {
-    query = query.where("resource_id", options.resourceId);
+    query = query.where("resource_id", "=", options.resourceId);
   }
   if (options.action) {
-    query = query.where("action", options.action);
+    query = query.where("action", "=", options.action);
   }
   if (options.startDate) {
     query = query.where("created_at", ">=", options.startDate.toISOString());
@@ -60,15 +64,37 @@ export async function getAuditLogs(options: {
     query = query.where("created_at", "<=", options.endDate.toISOString());
   }
 
-  const countResult = await query.clone().count("* as count").first();
-  const total = Number((countResult as { count?: string })?.count || 0);
+  // Count query with the same filters
+  let countQuery = db.selectFrom("audit_log").select(db.fn.count<number>("id").as("count"));
+  if (options.userId) {
+    countQuery = countQuery.where("user_id", "=", options.userId);
+  }
+  if (options.resourceType) {
+    countQuery = countQuery.where("resource_type", "=", options.resourceType);
+  }
+  if (options.resourceId) {
+    countQuery = countQuery.where("resource_id", "=", options.resourceId);
+  }
+  if (options.action) {
+    countQuery = countQuery.where("action", "=", options.action);
+  }
+  if (options.startDate) {
+    countQuery = countQuery.where("created_at", ">=", options.startDate.toISOString());
+  }
+  if (options.endDate) {
+    countQuery = countQuery.where("created_at", "<=", options.endDate.toISOString());
+  }
+
+  const countResult = await countQuery.executeTakeFirstOrThrow();
+  const total = Number(countResult.count);
 
   const logs = await query
     .orderBy("created_at", "desc")
-    .limit(options.limit || 50)
-    .offset(options.offset || 0);
+    .limit(options.limit ?? 50)
+    .offset(options.offset ?? 0)
+    .execute();
 
-  return { logs, total };
+  return { logs: logs as unknown as AuditLog[], total };
 }
 
 export async function getResourceHistory(
@@ -77,19 +103,29 @@ export async function getResourceHistory(
 ): Promise<AuditLog[]> {
   const db = getDb();
 
-  return db<AuditLog>("audit_log")
-    .where("resource_type", resourceType)
-    .where("resource_id", resourceId)
-    .orderBy("created_at", "desc");
+  const rows = await db
+    .selectFrom("audit_log")
+    .selectAll()
+    .where("resource_type", "=", resourceType)
+    .where("resource_id", "=", resourceId)
+    .orderBy("created_at", "desc")
+    .execute();
+
+  return rows as unknown as AuditLog[];
 }
 
-export async function getUserActivity(userId: string, limit: number = 50): Promise<AuditLog[]> {
+export async function getUserActivity(userId: string, limit = 50): Promise<AuditLog[]> {
   const db = getDb();
 
-  return db<AuditLog>("audit_log")
-    .where("user_id", userId)
+  const rows = await db
+    .selectFrom("audit_log")
+    .selectAll()
+    .where("user_id", "=", userId)
     .orderBy("created_at", "desc")
-    .limit(limit);
+    .limit(limit)
+    .execute();
+
+  return rows as unknown as AuditLog[];
 }
 
 export function createAuditMiddleware(resourceType: ResourceType) {

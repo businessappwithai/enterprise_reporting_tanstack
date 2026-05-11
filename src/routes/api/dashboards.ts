@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
 import { v4 as uuidv4 } from "uuid";
-import type { DashboardLayout } from "@/types/database";
 
 async function getSession(request: Request) {
   const { auth } = await import("@/lib/auth/config");
@@ -25,13 +24,16 @@ export const Route = createFileRoute("/api/dashboards")({
           const page = parseInt(searchParams.get("page") || "0", 10);
           const pageSize = parseInt(searchParams.get("pageSize") || "20", 10);
 
-          const { getKnexDb } = await import("@/lib/db/config");
+          const { getDb } = await import("@/lib/db/config");
           const { filterAccessibleResources } = await import("@/lib/permissions/permissions");
-          const db = getKnexDb();
-          let dashboards = await db<DashboardLayout>("dashboard_layouts").orderBy(
-            "created_at",
-            "desc"
-          );
+          const db = getDb();
+
+          let dashboards = await db
+            .selectFrom("dashboard_layouts")
+            .selectAll()
+            .orderBy("created_at", "desc")
+            .execute();
+
           dashboards = await filterAccessibleResources(
             session.user.id,
             dashboards,
@@ -96,27 +98,36 @@ export const Route = createFileRoute("/api/dashboards")({
             );
           }
 
-          const { getKnexDb } = await import("@/lib/db/config");
+          const { getDb } = await import("@/lib/db/config");
           const { logAudit } = await import("@/lib/security/audit");
-          const db = getKnexDb();
+          const db = getDb();
           const id = uuidv4();
+          const now = new Date().toISOString();
 
-          await db<DashboardLayout>("dashboard_layouts").insert({
-            id,
-            name,
-            description,
-            layout_config: JSON.stringify(
-              layoutConfig || {
-                cols: { lg: 12, md: 10, sm: 6, xs: 4 },
-                rowHeight: 100,
-                layouts: {},
-              }
-            ),
-            theme_config: themeConfig ? JSON.stringify(themeConfig) : undefined,
-            refresh_config: refreshConfig ? JSON.stringify(refreshConfig) : undefined,
-            is_public: isPublic || false,
-            created_by: session.user.id,
-          });
+          await db
+            .insertInto("dashboard_layouts")
+            .values({
+              id,
+              name,
+              description: description ?? null,
+              layout_config: JSON.stringify(
+                layoutConfig || {
+                  cols: { lg: 12, md: 10, sm: 6, xs: 4 },
+                  rowHeight: 100,
+                  layouts: {},
+                }
+              ),
+              theme_config: themeConfig ? JSON.stringify(themeConfig) : null,
+              refresh_config: refreshConfig ? JSON.stringify(refreshConfig) : null,
+              is_public: isPublic ?? false,
+              is_deleted: false,
+              deleted_at: null,
+              deleted_by: null,
+              created_by: session.user.id,
+              created_at: now,
+              updated_at: now,
+            })
+            .execute();
 
           await logAudit({
             userId: session.user.id,
@@ -126,7 +137,12 @@ export const Route = createFileRoute("/api/dashboards")({
             details: { name },
           });
 
-          const dashboard = await db("dashboard_layouts").where("id", id).first();
+          const dashboard = await db
+            .selectFrom("dashboard_layouts")
+            .selectAll()
+            .where("id", "=", id)
+            .executeTakeFirst();
+
           return json({ success: true, data: dashboard }, { status: 201 });
         } catch (error) {
           console.error("Error creating dashboard:", error);

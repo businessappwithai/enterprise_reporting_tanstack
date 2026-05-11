@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
 import { v4 as uuidv4 } from "uuid";
-import type { DataSource } from "@/types/database";
 
 async function getSession(request: Request) {
   const { auth } = await import("@/lib/auth/config");
@@ -21,12 +20,18 @@ export const Route = createFileRoute("/api/data-sources")({
             );
           }
 
-          const { getKnexDb } = await import("@/lib/db/config");
-          const db = getKnexDb();
-          const dataSources = await db<DataSource>("data_sources")
-            .where("is_deleted", false)
-            .orderBy("name");
-          const sanitizedSources = dataSources.map(({ connection_config, ...rest }) => rest);
+          const { getDb } = await import("@/lib/db/config");
+          const db = getDb();
+
+          const dataSources = await db
+            .selectFrom("data_sources")
+            .selectAll()
+            .where("is_deleted", "=", false)
+            .orderBy("name", "asc")
+            .execute();
+
+          // Strip sensitive connection_config from the list response
+          const sanitizedSources = dataSources.map(({ connection_config: _cc, ...rest }) => rest);
 
           return json({
             success: true,
@@ -67,21 +72,32 @@ export const Route = createFileRoute("/api/data-sources")({
             );
           }
 
-          const { getKnexDb } = await import("@/lib/db/config");
+          const { getDb } = await import("@/lib/db/config");
           const { encrypt } = await import("@/lib/security/encryption");
           const { logAudit } = await import("@/lib/security/audit");
-          const db = getKnexDb();
+          const db = getDb();
           const id = uuidv4();
           const encryptedConfig = encrypt(JSON.stringify(connectionConfig));
+          const now = new Date().toISOString();
 
-          await db<DataSource>("data_sources").insert({
-            id,
-            name,
-            description,
-            client_type: clientType as any,
-            connection_config: encryptedConfig,
-            created_by: session.user.id,
-          });
+          await db
+            .insertInto("data_sources")
+            .values({
+              id,
+              name,
+              description: description ?? null,
+              client_type: clientType,
+              connection_config: encryptedConfig,
+              is_active: true,
+              is_editable: false,
+              is_deleted: false,
+              deleted_at: null,
+              deleted_by: null,
+              created_by: session.user.id,
+              created_at: now,
+              updated_at: now,
+            })
+            .execute();
 
           await logAudit({
             userId: session.user.id,
@@ -91,7 +107,12 @@ export const Route = createFileRoute("/api/data-sources")({
             details: { name, clientType },
           });
 
-          const dataSource = await db("data_sources").where("id", id).first();
+          const dataSource = await db
+            .selectFrom("data_sources")
+            .selectAll()
+            .where("id", "=", id)
+            .executeTakeFirst();
+
           return json({ success: true, data: dataSource }, { status: 201 });
         } catch (error) {
           console.error("Error creating data source:", error);

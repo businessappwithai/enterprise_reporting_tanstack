@@ -24,8 +24,9 @@ export default defineConfig({
   },
   ssr: {
     noExternal: ['@tanstack/react-router', '@tanstack/react-start'],
+    external: ['bun:sqlite'],
   },
   optimizeDeps: {
-    exclude: ['better-sqlite3', 'knex'],
+    exclude: ['bun:sqlite', 'knex'],
   },
 })

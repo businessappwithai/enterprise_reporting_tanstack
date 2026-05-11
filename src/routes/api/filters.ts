@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
-import { getKnexDb as getDb } from "@/lib/db/config";
+import { getDb } from "@/lib/db/config";
 import { verifySession } from "@/lib/auth/session";
-import type { FilterDefinition } from "@/types/database";
 import { randomUUID } from "crypto";
 
 async function getSession(request: Request) {
@@ -24,7 +23,11 @@ export const Route = createFileRoute("/api/filters")({
           }
 
           const db = getDb();
-          const filters = await db("filter_definitions").select("*").orderBy("name");
+          const filters = await db
+            .selectFrom("filter_definitions")
+            .selectAll()
+            .orderBy("name", "asc")
+            .execute();
 
           return json(filters);
         } catch (error) {
@@ -75,24 +78,36 @@ export const Route = createFileRoute("/api/filters")({
             return json({ error: "Missing required fields", missingFields }, { status: 400 });
           }
 
-          const newFilter: FilterDefinition = {
-            id: randomUUID(),
-            name,
-            description: description || null,
-            data_source_id,
-            filter_query,
-            display_field,
-            value_field,
-            field_type: field_type || null,
-            operator: operator || null,
-            date_validation_config: date_validation_config || null,
-            created_by: session.user.id,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          } as FilterDefinition;
-
           const db = getDb();
-          await db("filter_definitions").insert(newFilter);
+          const now = new Date().toISOString();
+          const id = randomUUID();
+
+          await db
+            .insertInto("filter_definitions")
+            .values({
+              id,
+              name,
+              description: description ?? null,
+              data_source_id,
+              filter_query,
+              display_field,
+              value_field,
+              field_type: field_type ?? null,
+              operator: operator ?? null,
+              date_validation_config: date_validation_config
+                ? JSON.stringify(date_validation_config)
+                : null,
+              created_by: session.user.id,
+              created_at: now,
+              updated_at: now,
+            })
+            .execute();
+
+          const newFilter = await db
+            .selectFrom("filter_definitions")
+            .selectAll()
+            .where("id", "=", id)
+            .executeTakeFirst();
 
           return json(newFilter, { status: 201 });
         } catch (error) {

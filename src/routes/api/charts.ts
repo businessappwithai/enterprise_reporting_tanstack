@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
 import { v4 as uuidv4 } from "uuid";
-import type { ChartDefinition } from "@/types/database";
 
 async function getSession(request: Request) {
   const { auth } = await import("@/lib/auth/config");
@@ -25,10 +24,15 @@ export const Route = createFileRoute("/api/charts")({
           const page = parseInt(searchParams.get("page") || "0", 10);
           const pageSize = parseInt(searchParams.get("pageSize") || "20", 10);
 
-          const { getKnexDb } = await import("@/lib/db/config");
+          const { getDb } = await import("@/lib/db/config");
           const { filterAccessibleResources } = await import("@/lib/permissions/permissions");
-          const db = getKnexDb();
-          let charts = await db<ChartDefinition>("chart_definitions").orderBy("created_at", "desc");
+          const db = getDb();
+
+          let charts = await db
+            .selectFrom("chart_definitions")
+            .selectAll()
+            .orderBy("created_at", "desc")
+            .execute();
 
           charts = await filterAccessibleResources(session.user.id, charts, "chart", "view");
           const paginatedCharts = charts.slice(page * pageSize, (page + 1) * pageSize);
@@ -96,22 +100,33 @@ export const Route = createFileRoute("/api/charts")({
             );
           }
 
-          const { getKnexDb } = await import("@/lib/db/config");
+          const { getDb } = await import("@/lib/db/config");
           const { logAudit } = await import("@/lib/security/audit");
-          const db = getKnexDb();
+          const db = getDb();
           const id = uuidv4();
+          const now = new Date().toISOString();
 
-          await db<ChartDefinition>("chart_definitions").insert({
-            id,
-            name,
-            description,
-            saved_query_id: savedQueryId,
-            chart_type: chartType,
-            chart_config: JSON.stringify(chartConfig || {}),
-            data_mapping: JSON.stringify(dataMapping || { xAxis: { field: "" }, yAxis: [] }),
-            refresh_interval: refreshInterval,
-            created_by: session.user.id,
-          });
+          await db
+            .insertInto("chart_definitions")
+            .values({
+              id,
+              name,
+              description: description ?? null,
+              saved_query_id: savedQueryId ?? null,
+              chart_type: chartType,
+              chart_config: JSON.stringify(chartConfig || {}),
+              data_mapping: JSON.stringify(dataMapping || { xAxis: { field: "" }, yAxis: [] }),
+              refresh_interval: refreshInterval ?? null,
+              color_theme: null,
+              is_public: false,
+              is_deleted: false,
+              deleted_at: null,
+              deleted_by: null,
+              created_by: session.user.id,
+              created_at: now,
+              updated_at: now,
+            })
+            .execute();
 
           await logAudit({
             userId: session.user.id,
@@ -121,7 +136,12 @@ export const Route = createFileRoute("/api/charts")({
             details: { name, chartType },
           });
 
-          const chart = await db("chart_definitions").where("id", id).first();
+          const chart = await db
+            .selectFrom("chart_definitions")
+            .selectAll()
+            .where("id", "=", id)
+            .executeTakeFirst();
+
           return json({ success: true, data: chart });
         } catch (error) {
           console.error("Error creating chart:", error);

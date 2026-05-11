@@ -14,12 +14,14 @@ import { Pool } from "pg";
 import path from "path";
 import { existsSync, mkdirSync } from "fs";
 import { promises as fs } from "fs";
+import BunDatabase from "./bun-sqlite-compat";
 
-// createRequire enables CJS modules (better-sqlite3, knex) in ESM context
+// createRequire enables CJS modules (knex) in ESM context
 const require = createRequire(import.meta.url);
 
 // Database schema type definition
 // This is the most important part - defines all tables and their columns
+// Column names match the actual SQLite schema created by migrations.
 export interface Database {
   users: UsersTable;
   roles: RolesTable;
@@ -35,22 +37,24 @@ export interface Database {
   audit_log: AuditLogTable;
   email_templates: EmailTemplatesTable;
   resource_permissions: ResourcePermissionsTable;
+  filter_definitions: FilterDefinitionsTable;
+  report_filters: ReportFiltersTable;
+  chart_filters: ChartFiltersTable;
   ds_roles: DsRolesTable;
   ds_user_roles: DsUserRolesTable;
   ds_entity_permissions: DsEntityPermissionsTable;
-  metadata_entities: MetadataEntitiesTable;
-  metadata_fields: MetadataFieldsTable;
-  dataset_cache: DatasetCacheTable;
-  role_rag_context: RoleRagContextTable;
-  openkb_queries: OpenKBQueriesTable;
+  // Legacy/alias - route code references 'jobs' table directly
+  jobs: JobsTable;
 }
 
-// Table type definitions
+// Table type definitions — column names match actual DB schema from migrations
+
 export interface UsersTable {
   id: string;
   email: string;
   password_hash: string;
-  display_name: string | null;
+  display_name: string;
+  avatar_url: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -59,9 +63,9 @@ export interface UsersTable {
 export interface RolesTable {
   id: string;
   name: string;
+  description: string | null;
   permissions: string; // JSON array
   created_at: string;
-  updated_at: string;
 }
 
 export interface UserRolesTable {
@@ -75,8 +79,13 @@ export interface DataSourcesTable {
   name: string;
   description: string | null;
   client_type: string;
-  connection_string: string; // Encrypted
+  connection_config: string; // Encrypted JSON
   is_active: boolean;
+  is_editable: boolean | null;
+  is_deleted: boolean | null;
+  deleted_at: string | null;
+  deleted_by: string | null;
+  created_by: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -85,9 +94,15 @@ export interface SavedQueriesTable {
   id: string;
   name: string;
   description: string | null;
-  sql: string;
   data_source_id: string;
-  created_by: string;
+  sql_content: string;
+  parameters_schema: string | null; // JSON Schema
+  is_validated: boolean;
+  validation_result: string | null; // JSON
+  is_deleted: boolean | null;
+  deleted_at: string | null;
+  deleted_by: string | null;
+  created_by: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -96,9 +111,18 @@ export interface ReportDefinitionsTable {
   id: string;
   name: string;
   description: string | null;
-  query_id: string;
-  config: string; // JSON
-  created_by: string;
+  saved_query_id: string | null;
+  column_config: string; // JSON
+  filter_config: string | null; // JSON
+  sort_config: string | null; // JSON
+  pagination_config: string | null; // JSON
+  export_formats: string; // JSON array, default '["csv","xlsx","pdf"]'
+  color_theme: string | null; // JSON
+  is_public: boolean | null;
+  is_deleted: boolean | null;
+  deleted_at: string | null;
+  deleted_by: string | null;
+  created_by: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -107,8 +131,17 @@ export interface ChartDefinitionsTable {
   id: string;
   name: string;
   description: string | null;
-  config: string; // JSON
-  created_by: string;
+  saved_query_id: string | null;
+  chart_type: string; // 'bar', 'line', 'area', 'pie', 'scatter', 'composed'
+  chart_config: string; // JSON
+  data_mapping: string; // JSON
+  refresh_interval: number | null; // seconds
+  color_theme: string | null; // JSON
+  is_public: boolean | null;
+  is_deleted: boolean | null;
+  deleted_at: string | null;
+  deleted_by: string | null;
+  created_by: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -116,8 +149,15 @@ export interface ChartDefinitionsTable {
 export interface DashboardLayoutsTable {
   id: string;
   name: string;
+  description: string | null;
   layout_config: string; // JSON
-  created_by: string;
+  theme_config: string | null; // JSON
+  refresh_config: string | null; // JSON
+  is_public: boolean;
+  is_deleted: boolean | null;
+  deleted_at: string | null;
+  deleted_by: string | null;
+  created_by: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -125,9 +165,11 @@ export interface DashboardLayoutsTable {
 export interface DashboardWidgetsTable {
   id: string;
   dashboard_id: string;
-  widget_type: string;
-  config: string; // JSON
-  position: string; // JSON
+  widget_type: string; // 'report', 'chart', 'metric', 'text'
+  report_id: string | null;
+  chart_id: string | null;
+  position_config: string; // JSON
+  widget_config: string | null; // JSON
   created_at: string;
   updated_at: string;
 }
@@ -135,35 +177,56 @@ export interface DashboardWidgetsTable {
 export interface JobDefinitionsTable {
   id: string;
   name: string;
-  type: string;
-  config: string; // JSON
+  job_type: string; // 'report', 'chart', 'export'
+  target_id: string;
+  schedule_cron: string | null;
+  parameters: string | null; // JSON
+  notification_config: string | null; // JSON
+  is_active: boolean;
+  is_deleted: boolean | null;
+  deleted_at: string | null;
+  deleted_by: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// Alias used by legacy routes/code that reference 'jobs' table directly
+export interface JobsTable {
+  id: string;
+  name: string;
+  description: string | null;
+  query_id: string | null;
+  report_id: string | null;
   schedule: string | null;
-  created_by: string;
+  is_active: boolean;
+  created_by: string | null;
   created_at: string;
   updated_at: string;
 }
 
 export interface JobExecutionsTable {
   id: string;
-  job_id: string;
-  status: string;
-  result: string | null;
-  error: string | null;
-  started_at: string;
+  job_definition_id: string;
+  status: string; // 'pending', 'running', 'completed', 'failed', 'cancelled'
+  started_at: string | null;
   completed_at: string | null;
+  result_location: string | null;
+  error_message: string | null;
+  execution_metadata: string | null; // JSON
+  created_at: string;
 }
 
 export interface AuditLogTable {
   id: string;
-  timestamp: string;
-  actor_id: string;
+  user_id: string | null;
   action: string;
   resource_type: string;
-  resource_id: string;
-  outcome: string;
+  resource_id: string | null;
   details: string | null; // JSON
   ip_address: string | null;
   user_agent: string | null;
+  created_at: string;
 }
 
 export interface EmailTemplatesTable {
@@ -184,13 +247,47 @@ export interface ResourcePermissionsTable {
   created_at: string;
 }
 
+export interface FilterDefinitionsTable {
+  id: string;
+  name: string;
+  description: string | null;
+  data_source_id: string;
+  filter_query: string;
+  display_field: string;
+  value_field: string;
+  field_type: string | null;
+  operator: string | null;
+  date_validation_config: string | null; // JSON
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ReportFiltersTable {
+  id: string;
+  report_id: string;
+  filter_id: string;
+  target_column: string;
+  filter_order: number;
+  created_at: string;
+}
+
+export interface ChartFiltersTable {
+  id: string;
+  chart_id: string;
+  filter_id: string;
+  target_column: string;
+  filter_order: number;
+  created_at: string;
+}
+
 export interface DsRolesTable {
   id: string;
   data_source_id: string;
   name: string;
   description: string | null;
   is_active: boolean;
-  created_by: string;
+  created_by: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -212,67 +309,9 @@ export interface DsEntityPermissionsTable {
   permission_level: string;
   column_restrictions: string | null; // JSON
   row_filter: string | null;
-  created_by: string;
+  created_by: string | null;
   created_at: string;
   updated_at: string;
-}
-
-export interface MetadataEntitiesTable {
-  id: string;
-  entity_name: string;
-  entity_type: string;
-  data_source_id: string;
-  business_name: string | null;
-  description: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface MetadataFieldsTable {
-  id: string;
-  entity_id: string;
-  field_name: string;
-  field_type: string;
-  business_name: string | null;
-  description: string | null;
-  is_nullable: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface DatasetCacheTable {
-  id: string;
-  name: string;
-  file_path: string;
-  file_size: number;
-  row_count: number;
-  created_at: string;
-  expires_at: string;
-}
-
-export interface RoleRagContextTable {
-  id: string;
-  role_id: string;
-  context_type: string;
-  entity_name: string;
-  definition: string;
-  proposed_by: string;
-  approved_by: string | null;
-  status: string;
-  version: number;
-  created_at: string;
-  approved_at: string | null;
-}
-
-export interface OpenKBQueriesTable {
-  id: string;
-  role_id: string;
-  nl_question: string;
-  generated_sql: string;
-  execution_time_ms: number;
-  result_row_count: number;
-  embedding_status: string;
-  created_at: string;
 }
 
 // Database instance type
@@ -295,18 +334,17 @@ export function getDb(): KyselyDB {
         dialect: new PostgresDialect({ pool }),
       });
     } else {
-      // SQLite
+      // SQLite via bun:sqlite (Bun) or better-sqlite3 (Node/Vite SSR)
       const dirPath = path.dirname(DATABASE_PATH);
 
       if (!existsSync(dirPath)) {
         mkdirSync(dirPath, { recursive: true });
       }
 
-      const BetterSqlite3 = require("better-sqlite3");
-
       db = new Kysely<Database>({
         dialect: new SqliteDialect({
-          database: new BetterSqlite3(DATABASE_PATH),
+          // biome-ignore lint/suspicious/noExplicitAny: compat shim satisfies SqliteDialect's interface
+          database: new BunDatabase(DATABASE_PATH) as any,
         }),
       });
     }
@@ -339,14 +377,20 @@ export function getKnexDb() {
         connection: DATABASE_URL,
       });
     } else {
-      // SQLite
+      // SQLite — extend Knex's better-sqlite3 client, swap driver to compat shim
       const dirPath = path.dirname(DATABASE_PATH);
       if (!existsSync(dirPath)) {
         mkdirSync(dirPath, { recursive: true });
       }
 
+      // biome-ignore lint/suspicious/noExplicitAny: Knex internals loaded via CJS
+      const Client_BetterSQLite3: any = require("knex/lib/dialects/better-sqlite3");
+      class BunSQLiteKnexClient extends Client_BetterSQLite3 {
+        _driver() { return BunDatabase; }
+      }
+
       knexDb = knex({
-        client: "better-sqlite3",
+        client: BunSQLiteKnexClient,
         connection: { filename: DATABASE_PATH },
         useNullAsDefault: true,
       });

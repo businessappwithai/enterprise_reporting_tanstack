@@ -1,4 +1,4 @@
-import { getKnexDb as getDb } from "@/lib/db/config";
+import { getDb } from "@/lib/db/config";
 import type { PermissionLevel, ResourceType } from "@/types/database";
 
 export interface PermissionCheck {
@@ -13,11 +13,13 @@ export interface PermissionCheck {
 export async function getUserPermissions(userId: string) {
   const db = getDb();
 
-  // Get user's roles
-  const userRoles = await db("user_roles")
-    .join("roles", "user_roles.role_id", "roles.id")
-    .where("user_roles.user_id", userId)
-    .select("roles.*");
+  // Get user's roles via inner join
+  const userRoles = await db
+    .selectFrom("user_roles as ur")
+    .innerJoin("roles as r", "ur.role_id", "r.id")
+    .where("ur.user_id", "=", userId)
+    .selectAll("r")
+    .execute();
 
   // Parse role permissions
   const rolePermissions: string[] = [];
@@ -32,13 +34,16 @@ export async function getUserPermissions(userId: string) {
     }
   }
 
-  // Get resource-level permissions
-  const resourcePermissions = await db("resource_permissions")
-    .whereIn(
-      "role_id",
-      userRoles.map((r: any) => r.id)
-    )
-    .select("*");
+  // Get resource-level permissions for these roles
+  const roleIds = userRoles.map((r) => r.id);
+  const resourcePermissions =
+    roleIds.length > 0
+      ? await db
+          .selectFrom("resource_permissions")
+          .selectAll()
+          .where("role_id", "in", roleIds)
+          .execute()
+      : [];
 
   return {
     userId,
@@ -54,13 +59,15 @@ export async function getUserPermissions(userId: string) {
 export async function isAdmin(userId: string): Promise<boolean> {
   const db = getDb();
 
-  const hasAdminRole = await db("user_roles")
-    .join("roles", "user_roles.role_id", "roles.id")
-    .where("user_roles.user_id", userId)
-    .where("roles.name", "Administrator")
-    .first();
+  const row = await db
+    .selectFrom("user_roles as ur")
+    .innerJoin("roles as r", "ur.role_id", "r.id")
+    .where("ur.user_id", "=", userId)
+    .where("r.name", "=", "Administrator")
+    .selectAll("r")
+    .executeTakeFirst();
 
-  return !!hasAdminRole;
+  return !!row;
 }
 
 /**
@@ -133,8 +140,8 @@ export async function hasResourceAccess(
       admin: 4,
     };
 
-    const requiredStrength = permissionStrength[requiredAction] || 0;
-    const grantedStrength = permissionStrength[permissionLevel] || 0;
+    const requiredStrength = permissionStrength[requiredAction as PermissionLevel] ?? 0;
+    const grantedStrength = permissionStrength[permissionLevel as PermissionLevel] ?? 0;
 
     return grantedStrength >= requiredStrength;
   }
@@ -173,8 +180,8 @@ export async function filterAccessibleResources<T extends { id: string }>(
         edit: 3,
         admin: 4,
       };
-      const requiredStrength = permissionStrength[action] || 0;
-      const grantedStrength = permissionStrength[permissionLevel] || 0;
+      const requiredStrength = permissionStrength[action] ?? 0;
+      const grantedStrength = permissionStrength[permissionLevel] ?? 0;
       return grantedStrength >= requiredStrength;
     })
     .map((p) => p.resource_id);

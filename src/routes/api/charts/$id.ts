@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
-import type { ChartDefinition } from "@/types/database";
 
 async function getSession(request: Request) {
   const { auth } = await import("@/lib/auth/config");
@@ -36,9 +35,14 @@ export const Route = createFileRoute("/api/charts/$id")({
             );
           }
 
-          const { getKnexDb: getDb } = await import("@/lib/db/config");
+          const { getDb } = await import("@/lib/db/config");
           const db = getDb();
-          const chart = await db<ChartDefinition>("chart_definitions").where("id", id).first();
+          const chart = await db
+            .selectFrom("chart_definitions")
+            .selectAll()
+            .where("id", "=", id)
+            .executeTakeFirst();
+
           if (!chart) {
             return json(
               { success: false, error: { code: "NOT_FOUND", message: "Chart not found" } },
@@ -83,10 +87,15 @@ export const Route = createFileRoute("/api/charts/$id")({
             );
           }
 
-          const { getKnexDb: getDb } = await import("@/lib/db/config");
+          const { getDb } = await import("@/lib/db/config");
           const { logAudit } = await import("@/lib/security/audit");
           const db = getDb();
-          const existing = await db<ChartDefinition>("chart_definitions").where("id", id).first();
+          const existing = await db
+            .selectFrom("chart_definitions")
+            .selectAll()
+            .where("id", "=", id)
+            .executeTakeFirst();
+
           if (!existing) {
             return json(
               { success: false, error: { code: "NOT_FOUND", message: "Chart not found" } },
@@ -94,18 +103,21 @@ export const Route = createFileRoute("/api/charts/$id")({
             );
           }
 
-          const updates: Partial<ChartDefinition> = { updated_at: new Date().toISOString() };
+          const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
           if (body.name !== undefined) updates.name = body.name;
           if (body.description !== undefined) updates.description = body.description;
           if (body.savedQueryId !== undefined) updates.saved_query_id = body.savedQueryId;
           if (body.chartType !== undefined) updates.chart_type = body.chartType;
-          if (body.chartConfig !== undefined)
-            updates.chart_config = JSON.stringify(body.chartConfig);
-          if (body.dataMapping !== undefined)
-            updates.data_mapping = JSON.stringify(body.dataMapping);
+          if (body.chartConfig !== undefined) updates.chart_config = JSON.stringify(body.chartConfig);
+          if (body.dataMapping !== undefined) updates.data_mapping = JSON.stringify(body.dataMapping);
           if (body.refreshInterval !== undefined) updates.refresh_interval = body.refreshInterval;
 
-          await db<ChartDefinition>("chart_definitions").where("id", id).update(updates);
+          await db
+            .updateTable("chart_definitions")
+            .set(updates)
+            .where("id", "=", id)
+            .execute();
+
           await logAudit({
             userId: session.user.id,
             action: "update",
@@ -113,7 +125,11 @@ export const Route = createFileRoute("/api/charts/$id")({
             resourceId: id,
           });
 
-          const chart = await db<ChartDefinition>("chart_definitions").where("id", id).first();
+          const chart = await db
+            .selectFrom("chart_definitions")
+            .selectAll()
+            .where("id", "=", id)
+            .executeTakeFirst();
           return json({ success: true, data: chart });
         } catch (error) {
           console.error("Error updating chart:", error);
@@ -150,10 +166,12 @@ export const Route = createFileRoute("/api/charts/$id")({
             );
           }
 
-          const { getKnexDb: getDb } = await import("@/lib/db/config");
+          const { getDb } = await import("@/lib/db/config");
           const { logAudit } = await import("@/lib/security/audit");
           const db = getDb();
-          await db<ChartDefinition>("chart_definitions").where("id", id).delete();
+
+          await db.deleteFrom("chart_definitions").where("id", "=", id).execute();
+
           await logAudit({
             userId: session.user.id,
             action: "delete",

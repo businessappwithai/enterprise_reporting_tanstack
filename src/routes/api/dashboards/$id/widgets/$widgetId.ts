@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
-import type { DashboardWidget } from "@/types/database";
 
 async function getSession(request: Request) {
   const { auth } = await import("@/lib/auth/config");
@@ -23,12 +22,16 @@ export const Route = createFileRoute("/api/dashboards/$id/widgets/$widgetId")({
           const { widgetId } = params;
           const body = await request.json();
 
-          const { getKnexDb: getDb } = await import("@/lib/db/config");
+          const { getDb } = await import("@/lib/db/config");
           const { logAudit } = await import("@/lib/security/audit");
           const db = getDb();
-          const existing = await db<DashboardWidget>("dashboard_widgets")
-            .where("id", widgetId)
-            .first();
+
+          const existing = await db
+            .selectFrom("dashboard_widgets")
+            .selectAll()
+            .where("id", "=", widgetId)
+            .executeTakeFirst();
+
           if (!existing) {
             return json(
               { success: false, error: { code: "NOT_FOUND", message: "Widget not found" } },
@@ -36,7 +39,7 @@ export const Route = createFileRoute("/api/dashboards/$id/widgets/$widgetId")({
             );
           }
 
-          const updates: Partial<DashboardWidget> = { updated_at: new Date().toISOString() };
+          const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
           if (body.positionConfig !== undefined)
             updates.position_config = JSON.stringify(body.positionConfig);
           if (body.widgetConfig !== undefined)
@@ -45,7 +48,12 @@ export const Route = createFileRoute("/api/dashboards/$id/widgets/$widgetId")({
           if (body.chartId !== undefined) updates.chart_id = body.chartId;
           if (body.widgetType !== undefined) updates.widget_type = body.widgetType;
 
-          await db<DashboardWidget>("dashboard_widgets").where("id", widgetId).update(updates);
+          await db
+            .updateTable("dashboard_widgets")
+            .set(updates)
+            .where("id", "=", widgetId)
+            .execute();
+
           await logAudit({
             userId: session.user.id,
             action: "update",
@@ -53,9 +61,12 @@ export const Route = createFileRoute("/api/dashboards/$id/widgets/$widgetId")({
             resourceId: widgetId,
           });
 
-          const widget = await db<DashboardWidget>("dashboard_widgets")
-            .where("id", widgetId)
-            .first();
+          const widget = await db
+            .selectFrom("dashboard_widgets")
+            .selectAll()
+            .where("id", "=", widgetId)
+            .executeTakeFirst();
+
           return json({ success: true, data: widget });
         } catch (error) {
           console.error("Error updating widget:", error);
@@ -77,10 +88,12 @@ export const Route = createFileRoute("/api/dashboards/$id/widgets/$widgetId")({
           }
 
           const { widgetId } = params;
-          const { getKnexDb: getDb } = await import("@/lib/db/config");
+          const { getDb } = await import("@/lib/db/config");
           const { logAudit } = await import("@/lib/security/audit");
           const db = getDb();
-          await db<DashboardWidget>("dashboard_widgets").where("id", widgetId).delete();
+
+          await db.deleteFrom("dashboard_widgets").where("id", "=", widgetId).execute();
+
           await logAudit({
             userId: session.user.id,
             action: "delete",

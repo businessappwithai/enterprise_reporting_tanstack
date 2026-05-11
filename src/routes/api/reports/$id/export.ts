@@ -1,11 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
 import type {
-  ReportDefinition,
-  SavedQuery,
-  DataSource,
   ColumnDefinition,
   ReportColorTheme,
+  DataSource,
 } from "@/types/database";
 
 async function getSession(request: Request) {
@@ -52,10 +50,10 @@ function hexToRGB(hex: string | undefined): { r: number; g: number; b: number } 
   return { r: 240, g: 240, b: 240 };
 }
 
-function parseColorTheme(report: ReportDefinition): ReportColorTheme | null {
-  if (!report.color_theme) return null;
+function parseColorTheme(colorThemeStr: string | null): ReportColorTheme | null {
+  if (!colorThemeStr) return null;
   try {
-    return JSON.parse(report.color_theme) as ReportColorTheme;
+    return JSON.parse(colorThemeStr) as ReportColorTheme;
   } catch {
     return null;
   }
@@ -78,12 +76,17 @@ export const Route = createFileRoute("/api/reports/$id/export")({
           const body = await request.json();
           const { format = "csv" } = body;
 
-          const { getKnexDb: getDb } = await import("@/lib/db/config");
+          const { getDb } = await import("@/lib/db/config");
           const { getConnection } = await import("@/lib/db/connection-manager");
           const { isReadOnlyQuery } = await import("@/lib/sql/validator");
           const db = getDb();
 
-          const report = await db<ReportDefinition>("report_definitions").where("id", id).first();
+          const report = await db
+            .selectFrom("report_definitions")
+            .selectAll()
+            .where("id", "=", id)
+            .executeTakeFirst();
+
           if (!report) {
             return json(
               { success: false, error: { code: "NOT_FOUND", message: "Report not found" } },
@@ -130,9 +133,12 @@ export const Route = createFileRoute("/api/reports/$id/export")({
             );
           }
 
-          const query = await db<SavedQuery>("saved_queries")
-            .where("id", report.saved_query_id)
-            .first();
+          const query = await db
+            .selectFrom("saved_queries")
+            .selectAll()
+            .where("id", "=", report.saved_query_id)
+            .executeTakeFirst();
+
           if (!query) {
             return json(
               {
@@ -143,10 +149,13 @@ export const Route = createFileRoute("/api/reports/$id/export")({
             );
           }
 
-          const dataSource = await db<DataSource>("data_sources")
-            .where("id", query.data_source_id)
-            .where("is_active", true)
-            .first();
+          const dataSource = await db
+            .selectFrom("data_sources")
+            .selectAll()
+            .where("id", "=", query.data_source_id)
+            .where("is_active", "=", true)
+            .executeTakeFirst();
+
           if (!dataSource) {
             return json(
               {
@@ -167,16 +176,7 @@ export const Route = createFileRoute("/api/reports/$id/export")({
             );
           }
 
-          const connection = await getConnection(dataSource);
-
-          let filterConfig: any = null;
-          if (report.filter_config) {
-            try {
-              filterConfig = JSON.parse(report.filter_config);
-            } catch {
-              /* ignore */
-            }
-          }
+          const connection = await getConnection(dataSource as unknown as DataSource);
 
           const maxExportRows = parseInt(process.env.EXPORT_PAGE_SIZE || "1000");
           const sqlToRun = query.sql_content.replace(/;$/, "").trim();
@@ -244,7 +244,7 @@ export const Route = createFileRoute("/api/reports/$id/export")({
           }
 
           if (format === "excel" || format === "xlsx") {
-            const colorTheme = parseColorTheme(report);
+            const colorTheme = parseColorTheme(report.color_theme ?? null);
             const ExcelJS = await import("exceljs");
             const workbook = new ExcelJS.Workbook();
             const worksheet = workbook.addWorksheet("Report Data");
@@ -325,7 +325,7 @@ export const Route = createFileRoute("/api/reports/$id/export")({
           }
 
           if (format === "pdf") {
-            const colorTheme = parseColorTheme(report);
+            const colorTheme = parseColorTheme(report.color_theme ?? null);
             const { jsPDF } = await import("jspdf");
             const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
             const pageWidth = doc.internal.pageSize.getWidth();

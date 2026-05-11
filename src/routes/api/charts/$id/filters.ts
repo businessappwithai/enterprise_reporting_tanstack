@@ -15,11 +15,13 @@ export const Route = createFileRoute("/api/charts/$id/filters")({
           const session = await getSession(request);
           if (!session) return json({ error: "Unauthorized" }, { status: 401 });
 
-          const { getKnexDb } = await import("@/lib/db/config");
-          const db = getKnexDb();
-          const filters = await db("chart_filters as cf")
-            .join("filter_definitions as fd", "cf.filter_id", "fd.id")
-            .select(
+          const { getDb } = await import("@/lib/db/config");
+          const db = getDb();
+
+          const filters = await db
+            .selectFrom("chart_filters as cf")
+            .innerJoin("filter_definitions as fd", "cf.filter_id", "fd.id")
+            .select([
               "cf.id",
               "cf.chart_id",
               "cf.filter_id",
@@ -30,10 +32,11 @@ export const Route = createFileRoute("/api/charts/$id/filters")({
               "fd.data_source_id",
               "fd.filter_query",
               "fd.display_field",
-              "fd.value_field"
-            )
-            .where("cf.chart_id", params.id)
-            .orderBy("cf.filter_order");
+              "fd.value_field",
+            ])
+            .where("cf.chart_id", "=", params.id)
+            .orderBy("cf.filter_order", "asc")
+            .execute();
 
           return json(filters);
         } catch (error) {
@@ -54,27 +57,35 @@ export const Route = createFileRoute("/api/charts/$id/filters")({
             return json({ error: "Missing required fields" }, { status: 400 });
           }
 
-          const { getKnexDb } = await import("@/lib/db/config");
-          const db = getKnexDb();
-          const chart = await db("chart_definitions").where("id", params.id).first();
+          const { getDb } = await import("@/lib/db/config");
+          const db = getDb();
+
+          const chart = await db
+            .selectFrom("chart_definitions")
+            .select("id")
+            .where("id", "=", params.id)
+            .executeTakeFirst();
+
           if (!chart) return json({ error: "Chart not found" }, { status: 404 });
 
-          const maxOrderResult = await db("chart_filters")
-            .where("chart_id", params.id)
-            .max("filter_order as max_order")
-            .first();
-          const nextOrder = (maxOrderResult?.max_order ?? -1) + 1;
+          const maxOrderResult = await db
+            .selectFrom("chart_filters")
+            .select(db.fn.max<number>("filter_order").as("max_order"))
+            .where("chart_id", "=", params.id)
+            .executeTakeFirst();
+          const nextOrder = ((maxOrderResult?.max_order as number | null) ?? -1) + 1;
 
+          const now = new Date().toISOString();
           const newChartFilter = {
             id: randomUUID(),
             chart_id: params.id,
             filter_id,
             target_column,
             filter_order: nextOrder,
-            created_at: new Date().toISOString(),
+            created_at: now,
           };
-          await db("chart_filters").insert(newChartFilter);
 
+          await db.insertInto("chart_filters").values(newChartFilter).execute();
           return json(newChartFilter, { status: 201 });
         } catch (error) {
           console.error("Error adding chart filter:", error);
@@ -87,9 +98,10 @@ export const Route = createFileRoute("/api/charts/$id/filters")({
           const session = await getSession(request);
           if (!session) return json({ error: "Unauthorized" }, { status: 401 });
 
-          const { getKnexDb } = await import("@/lib/db/config");
-          const db = getKnexDb();
-          await db("chart_filters").where("chart_id", params.id).del();
+          const { getDb } = await import("@/lib/db/config");
+          const db = getDb();
+
+          await db.deleteFrom("chart_filters").where("chart_id", "=", params.id).execute();
           return json({ success: true });
         } catch (error) {
           console.error("Error deleting chart filters:", error);

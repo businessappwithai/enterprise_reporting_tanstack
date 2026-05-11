@@ -149,8 +149,8 @@ enterprise-reporting-system/
 │   │   │   ├── migrations/           # Knex migrations (timestamped .ts files)
 │   │   │   ├── seeds/                # Seed data (001_initial_data.ts)
 │   │   │   └── sample-data/          # Sample schema and seed scripts
-│   │   ├── auth/                     # Authentication (NextAuth config, RBAC)
-│   │   │   ├── config.ts             # NextAuth configuration
+│   │   ├── auth/                     # Authentication (JWT session, RBAC)
+│   │   │   ├── session.ts            # JWT session management
 │   │   │   └── rbac.ts               # Role-based access control
 │   │   ├── permissions/              # Permission system
 │   │   │   ├── permissions.ts        # Permission definitions and checks
@@ -222,7 +222,7 @@ enterprise-reporting-system/
 │   ├── settings.json                 # Plugin settings
 │   └── skills/                       # Claude skills documentation
 ├── playwright.config.ts              # Playwright configuration
-├── next.config.js                    # Next.js configuration
+├── vite.config.ts                    # Vite + TanStack Start configuration
 ├── tailwind.config.ts                # Tailwind CSS configuration
 ├── tsconfig.json                     # TypeScript configuration
 ├── package.json                      # Dependencies and scripts
@@ -367,9 +367,9 @@ import { requireAuth } from '@/lib/auth/middleware'
 - Types defined in `src/types/api.ts` and `src/types/database.ts`
 - Path alias `@/*` maps to `./src/*`
 
-### ESLint
+### Linting
 
-Config extends `next/core-web-vitals` and `next/typescript`. Run with:
+Biome linter (replaces ESLint + Prettier). Run with:
 ```bash
 bun run lint       # Check
 bun run lint:fix   # Auto-fix
@@ -377,7 +377,7 @@ bun run lint:fix   # Auto-fix
 
 ### Formatting
 
-Prettier configured for `src/**/*.{ts,tsx,js,jsx,json,css,md}`:
+Biome formatter for `src/**/*.{ts,tsx,js,jsx,json,css,md}`:
 ```bash
 bun run format        # Write
 bun run format:check  # Check only
@@ -441,8 +441,8 @@ Migrations live in `src/lib/db/migrations/` and follow the pattern:
 ### Docker Build
 
 Multi-stage build using `oven/bun:1.3-alpine`:
-1. **Builder stage**: Install deps, compile migrations/seeds, init DB, build Next.js
-2. **Runner stage**: Copy standalone output + node_modules + migrations + DB
+1. **Builder stage**: Install deps, compile migrations/seeds, init DB, build with Vite
+2. **Runner stage**: Copy `.output/` + node_modules + migrations + DB
 
 ### Services (docker-compose.yml)
 
@@ -455,7 +455,7 @@ Multi-stage build using `oven/bun:1.3-alpine`:
 | Variable | Purpose |
 |----------|---------|
 | `DATABASE_PATH` | SQLite database file path |
-| `AUTH_SECRET` | NextAuth secret (min 32 chars) |
+| `AUTH_SECRET` | JWT session secret (min 32 chars) |
 | `REDIS_URL` | Redis connection for BullMQ |
 | `ENCRYPTION_KEY` | AES-256 key for credential encryption |
 | `OPENAI_API_KEY` | OpenAI API key for NL query feature |
@@ -466,16 +466,16 @@ Multi-stage build using `oven/bun:1.3-alpine`:
 
 ### Adding a New Page
 
-1. Create directory under `src/app/(dashboard)/your-feature/`
-2. Add `page.tsx` (server component by default)
-3. For client interactivity, create components in `src/components/your-feature/` with `'use client'`
+1. Create file under `src/routes/_authed/your-feature/index.tsx`
+2. Export a `Route` using `createFileRoute("/_authed/your-feature/")({})`
+3. Place interactive components in `src/components/your-feature/`
 
 ### Adding a New API Route
 
-1. Create `src/app/api/your-route/route.ts`
-2. Export named handlers: `GET`, `POST`, `PUT`, `DELETE`
-3. Use `getDb()` for database access
-4. Validate input with Zod schemas
+1. Create `src/routes/api/your-route.ts`
+2. Export a `Route` using `createAPIFileRoute("/api/your-route")({...})`
+3. Define `GET`, `POST`, `PUT`, `DELETE` handlers as needed
+4. Use `getDb()` for database access
 5. Check permissions via RBAC utilities
 
 ### Adding a UI Component

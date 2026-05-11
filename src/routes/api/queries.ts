@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
-import { getKnexDb as getDb } from "@/lib/db/config";
+import { getDb } from "@/lib/db/config";
 import { verifySession } from "@/lib/auth/session";
-import type { SavedQuery } from "@/types/database";
 import { randomUUID } from "crypto";
 
 async function getSession(request: Request) {
@@ -32,13 +31,19 @@ export const Route = createFileRoute("/api/queries")({
 
           const db = getDb();
 
-          const queries = await db<SavedQuery>("saved_queries")
+          const queries = await db
+            .selectFrom("saved_queries")
+            .selectAll()
             .orderBy("created_at", "desc")
             .limit(pageSize)
-            .offset(page * pageSize);
+            .offset(page * pageSize)
+            .execute();
 
-          const countResult = await db<SavedQuery>("saved_queries").count("* as count").first();
-          const total = Number((countResult as { count?: string })?.count || 0);
+          const countResult = await db
+            .selectFrom("saved_queries")
+            .select(db.fn.count<number>("id").as("count"))
+            .executeTakeFirstOrThrow();
+          const total = Number(countResult.count);
 
           return json({
             success: true,
@@ -89,20 +94,29 @@ export const Route = createFileRoute("/api/queries")({
             );
           }
 
-          const queryId = randomUUID();
           const db = getDb();
+          const queryId = randomUUID();
+          const now = new Date().toISOString();
 
-          await db("saved_queries").insert({
-            id: queryId,
-            name,
-            description: description || null,
-            data_source_id: dataSourceId,
-            sql_content: sqlContent,
-            parameters_schema: parametersSchema || null,
-            created_by: session.user.id,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          });
+          await db
+            .insertInto("saved_queries")
+            .values({
+              id: queryId,
+              name,
+              description: description ?? null,
+              data_source_id: dataSourceId,
+              sql_content: sqlContent,
+              parameters_schema: parametersSchema ? JSON.stringify(parametersSchema) : null,
+              is_validated: false,
+              validation_result: null,
+              is_deleted: false,
+              deleted_at: null,
+              deleted_by: null,
+              created_by: session.user.id,
+              created_at: now,
+              updated_at: now,
+            })
+            .execute();
 
           return json({ success: true, data: { id: queryId } }, { status: 201 });
         } catch (error) {

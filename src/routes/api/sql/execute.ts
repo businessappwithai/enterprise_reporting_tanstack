@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
-import { getKnexDb as getDb } from "@/lib/db/config";
+import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
 import { isReadOnlyQuery } from "@/lib/sql/validator";
 import { logAudit } from "@/lib/security/audit";
@@ -76,10 +76,12 @@ export const Route = createFileRoute("/api/sql/execute")({
           }
 
           const db = getDb();
-          const dataSource = await db<DataSource>("data_sources")
-            .where("id", dataSourceId)
-            .where("is_active", true)
-            .first();
+          const dataSource = await db
+            .selectFrom("data_sources")
+            .selectAll()
+            .where("id", "=", dataSourceId)
+            .where("is_active", "=", true)
+            .executeTakeFirst();
 
           if (!dataSource) {
             return json(
@@ -88,7 +90,7 @@ export const Route = createFileRoute("/api/sql/execute")({
             );
           }
 
-          const connection = await getConnection(dataSource);
+          const connection = await getConnection(dataSource as unknown as DataSource);
 
           const PAGE_SIZE = sqlEditorConfig.serverPageSize;
           const MAX_CLIENT_ROWS = sqlEditorConfig.maxClientRows;

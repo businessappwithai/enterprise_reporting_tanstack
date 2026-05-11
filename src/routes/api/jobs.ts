@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
-import { getKnexDb as getDb } from "@/lib/db/config";
+import { getDb } from "@/lib/db/config";
 import { verifySession } from "@/lib/auth/session";
-import type { JobDefinition } from "@/types/database";
 import { randomUUID } from "crypto";
 
 async function getSession(request: Request) {
@@ -27,7 +26,11 @@ export const Route = createFileRoute("/api/jobs")({
           }
 
           const db = getDb();
-          const jobs = await db<JobDefinition>("jobs").orderBy("created_at", "desc");
+          const jobs = await db
+            .selectFrom("jobs")
+            .selectAll()
+            .orderBy("created_at", "desc")
+            .execute();
 
           return json({ success: true, data: { items: jobs, meta: { total: jobs.length } } });
         } catch (error) {
@@ -84,19 +87,23 @@ export const Route = createFileRoute("/api/jobs")({
 
           const db = getDb();
           const jobId = randomUUID();
+          const now = new Date().toISOString();
 
-          await db("jobs").insert({
-            id: jobId,
-            name,
-            description: description || null,
-            query_id: target_id || query_id || null,
-            report_id: report_id || null,
-            schedule: schedule_cron,
-            is_active,
-            created_by: session.user.id,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          });
+          await db
+            .insertInto("jobs")
+            .values({
+              id: jobId,
+              name,
+              description: description ?? null,
+              query_id: target_id || query_id || null,
+              report_id: report_id ?? null,
+              schedule: schedule_cron,
+              is_active,
+              created_by: session.user.id,
+              created_at: now,
+              updated_at: now,
+            })
+            .execute();
 
           return json({ success: true, data: { id: jobId } }, { status: 201 });
         } catch (error) {

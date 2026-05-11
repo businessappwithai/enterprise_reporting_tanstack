@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
-import type { ReportDefinition } from "@/types/database";
 
 async function getSession(request: Request) {
   const { auth } = await import("@/lib/auth/config");
@@ -21,9 +20,13 @@ export const Route = createFileRoute("/api/reports/$id")({
           }
 
           const { id } = params;
-          const { getKnexDb: getDb } = await import("@/lib/db/config");
+          const { getDb } = await import("@/lib/db/config");
           const db = getDb();
-          const report = await db<ReportDefinition>("report_definitions").where("id", id).first();
+          const report = await db
+            .selectFrom("report_definitions")
+            .selectAll()
+            .where("id", "=", id)
+            .executeTakeFirst();
 
           if (!report) {
             return json(
@@ -65,10 +68,14 @@ export const Route = createFileRoute("/api/reports/$id")({
             exportFormats,
           } = body;
 
-          const { getKnexDb: getDb } = await import("@/lib/db/config");
+          const { getDb } = await import("@/lib/db/config");
           const { logAudit } = await import("@/lib/security/audit");
           const db = getDb();
-          const existing = await db<ReportDefinition>("report_definitions").where("id", id).first();
+          const existing = await db
+            .selectFrom("report_definitions")
+            .selectAll()
+            .where("id", "=", id)
+            .executeTakeFirst();
 
           if (!existing) {
             return json(
@@ -77,10 +84,10 @@ export const Route = createFileRoute("/api/reports/$id")({
             );
           }
 
-          await db<ReportDefinition>("report_definitions")
-            .where("id", id)
-            .update({
-              name: name || existing.name,
+          await db
+            .updateTable("report_definitions")
+            .set({
+              name: name ?? existing.name,
               description: description !== undefined ? description : existing.description,
               saved_query_id: savedQueryId !== undefined ? savedQueryId : existing.saved_query_id,
               column_config: columnConfig ? JSON.stringify(columnConfig) : existing.column_config,
@@ -89,11 +96,11 @@ export const Route = createFileRoute("/api/reports/$id")({
               pagination_config: paginationConfig
                 ? JSON.stringify(paginationConfig)
                 : existing.pagination_config,
-              export_formats: exportFormats
-                ? JSON.stringify(exportFormats)
-                : existing.export_formats,
+              export_formats: exportFormats ? JSON.stringify(exportFormats) : existing.export_formats,
               updated_at: new Date().toISOString(),
-            });
+            })
+            .where("id", "=", id)
+            .execute();
 
           await logAudit({
             userId: session.user.id,
@@ -102,7 +109,11 @@ export const Route = createFileRoute("/api/reports/$id")({
             resourceId: id,
           });
 
-          const report = await db<ReportDefinition>("report_definitions").where("id", id).first();
+          const report = await db
+            .selectFrom("report_definitions")
+            .selectAll()
+            .where("id", "=", id)
+            .executeTakeFirst();
           return json({ success: true, data: report });
         } catch (error) {
           console.error("Error updating report:", error);
@@ -127,10 +138,14 @@ export const Route = createFileRoute("/api/reports/$id")({
           const body = await request.json();
           const { colorTheme } = body;
 
-          const { getKnexDb: getDb } = await import("@/lib/db/config");
+          const { getDb } = await import("@/lib/db/config");
           const { logAudit } = await import("@/lib/security/audit");
           const db = getDb();
-          const existing = await db<ReportDefinition>("report_definitions").where("id", id).first();
+          const existing = await db
+            .selectFrom("report_definitions")
+            .selectAll()
+            .where("id", "=", id)
+            .executeTakeFirst();
 
           if (!existing) {
             return json(
@@ -144,7 +159,12 @@ export const Route = createFileRoute("/api/reports/$id")({
             updateData.color_theme = JSON.stringify(colorTheme);
           }
 
-          await db<ReportDefinition>("report_definitions").where("id", id).update(updateData);
+          await db
+            .updateTable("report_definitions")
+            .set(updateData)
+            .where("id", "=", id)
+            .execute();
+
           await logAudit({
             userId: session.user.id,
             action: "update",
@@ -152,7 +172,11 @@ export const Route = createFileRoute("/api/reports/$id")({
             resourceId: id,
           });
 
-          const report = await db<ReportDefinition>("report_definitions").where("id", id).first();
+          const report = await db
+            .selectFrom("report_definitions")
+            .selectAll()
+            .where("id", "=", id)
+            .executeTakeFirst();
           return json({ success: true, data: report });
         } catch (error) {
           console.error("Error patching report:", error);
@@ -174,11 +198,12 @@ export const Route = createFileRoute("/api/reports/$id")({
           }
 
           const { id } = params;
-          const { getKnexDb: getDb } = await import("@/lib/db/config");
+          const { getDb } = await import("@/lib/db/config");
           const { logAudit } = await import("@/lib/security/audit");
           const db = getDb();
 
-          await db<ReportDefinition>("report_definitions").where("id", id).delete();
+          await db.deleteFrom("report_definitions").where("id", "=", id).execute();
+
           await logAudit({
             userId: session.user.id,
             action: "delete",

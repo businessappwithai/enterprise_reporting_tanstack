@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
-import { getKnexDb as getDb } from "@/lib/db/config";
+import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
 import { introspectSchema } from "@/lib/sql/schema-introspection";
 import { SyncService } from "@/lib/metadata/sync-service";
@@ -31,10 +31,12 @@ export const Route = createFileRoute("/api/sql/schema/$dataSourceId")({
           const { dataSourceId } = params;
 
           const db = getDb();
-          const dataSource = await db<DataSource>("data_sources")
-            .where("id", dataSourceId)
-            .where("is_active", true)
-            .first();
+          const dataSource = await db
+            .selectFrom("data_sources")
+            .selectAll()
+            .where("id", "=", dataSourceId)
+            .where("is_active", "=", true)
+            .executeTakeFirst();
 
           if (!dataSource) {
             return json(
@@ -46,7 +48,7 @@ export const Route = createFileRoute("/api/sql/schema/$dataSourceId")({
             );
           }
 
-          const connection = await getConnection(dataSource);
+          const connection = await getConnection(dataSource as unknown as DataSource);
           const { schema, logs } = await introspectSchema(connection, dataSource.client_type);
 
           let syncResult;

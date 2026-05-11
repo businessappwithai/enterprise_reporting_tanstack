@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
-import type { DataSource } from "@/types/database";
 
 async function getSession(request: Request) {
   const { auth } = await import("@/lib/auth/config");
@@ -21,12 +20,15 @@ export const Route = createFileRoute("/api/data-sources/$id")({
           }
 
           const { id } = params;
-          const { getKnexDb: getDb } = await import("@/lib/db/config");
+          const { getDb } = await import("@/lib/db/config");
           const db = getDb();
-          const dataSource = await db<DataSource>("data_sources")
-            .where("id", id)
-            .where("is_deleted", false)
-            .first();
+
+          const dataSource = await db
+            .selectFrom("data_sources")
+            .selectAll()
+            .where("id", "=", id)
+            .where("is_deleted", "=", false)
+            .executeTakeFirst();
 
           if (!dataSource) {
             return json(
@@ -48,9 +50,10 @@ export const Route = createFileRoute("/api/data-sources/$id")({
               // Re-encrypt in background
               const { encrypt } = await import("@/lib/security/encryption");
               const encryptedConfig = encrypt(JSON.stringify(connectionConfig));
-              db("data_sources")
-                .where("id", id)
-                .update({ connection_config: encryptedConfig })
+              db.updateTable("data_sources")
+                .set({ connection_config: encryptedConfig })
+                .where("id", "=", id)
+                .execute()
                 .catch(console.error);
             }
           } catch (decryptError) {
@@ -99,16 +102,19 @@ export const Route = createFileRoute("/api/data-sources/$id")({
             );
           }
 
-          const { getKnexDb: getDb } = await import("@/lib/db/config");
+          const { getDb } = await import("@/lib/db/config");
           const { decrypt } = await import("@/lib/security/encryption");
           const { encrypt } = await import("@/lib/security/encryption");
           const { closeConnection } = await import("@/lib/db/connection-manager");
           const db = getDb();
 
-          const existing = await db<DataSource>("data_sources")
-            .where("id", id)
-            .where("is_deleted", false)
-            .first();
+          const existing = await db
+            .selectFrom("data_sources")
+            .selectAll()
+            .where("id", "=", id)
+            .where("is_deleted", "=", false)
+            .executeTakeFirst();
+
           if (!existing) {
             return json(
               { success: false, error: { code: "NOT_FOUND", message: "Data source not found" } },
@@ -122,19 +128,26 @@ export const Route = createFileRoute("/api/data-sources/$id")({
             finalConnectionConfig = { ...connectionConfig, password: existingConfig.password };
           }
 
-          await db<DataSource>("data_sources")
-            .where("id", id)
-            .update({
+          await db
+            .updateTable("data_sources")
+            .set({
               name,
-              description,
+              description: description ?? null,
               client_type: clientType,
               connection_config: encrypt(JSON.stringify(finalConnectionConfig)),
               updated_at: new Date().toISOString(),
-            });
+            })
+            .where("id", "=", id)
+            .execute();
 
           await closeConnection(id);
 
-          const updatedDataSource = await db<DataSource>("data_sources").where("id", id).first();
+          const updatedDataSource = await db
+            .selectFrom("data_sources")
+            .selectAll()
+            .where("id", "=", id)
+            .executeTakeFirst();
+
           return json({ success: true, data: updatedDataSource });
         } catch (error) {
           console.error("Error updating data source:", error);
@@ -172,16 +185,19 @@ export const Route = createFileRoute("/api/data-sources/$id")({
             );
           }
 
-          const { getKnexDb: getDb } = await import("@/lib/db/config");
+          const { getDb } = await import("@/lib/db/config");
           const { decrypt } = await import("@/lib/security/encryption");
           const { encrypt } = await import("@/lib/security/encryption");
           const { closeConnection } = await import("@/lib/db/connection-manager");
           const db = getDb();
 
-          const existing = await db<DataSource>("data_sources")
-            .where("id", id)
-            .where("is_deleted", false)
-            .first();
+          const existing = await db
+            .selectFrom("data_sources")
+            .selectAll()
+            .where("id", "=", id)
+            .where("is_deleted", "=", false)
+            .executeTakeFirst();
+
           if (!existing) {
             return json(
               { success: false, error: { code: "NOT_FOUND", message: "Data source not found" } },
@@ -195,19 +211,26 @@ export const Route = createFileRoute("/api/data-sources/$id")({
             finalConnectionConfig = { ...connectionConfig, password: existingConfig.password };
           }
 
-          await db<DataSource>("data_sources")
-            .where("id", id)
-            .update({
+          await db
+            .updateTable("data_sources")
+            .set({
               name,
-              description,
+              description: description ?? null,
               client_type: clientType,
               connection_config: encrypt(JSON.stringify(finalConnectionConfig)),
               updated_at: new Date().toISOString(),
-            });
+            })
+            .where("id", "=", id)
+            .execute();
 
           await closeConnection(id);
 
-          const updatedDataSource = await db<DataSource>("data_sources").where("id", id).first();
+          const updatedDataSource = await db
+            .selectFrom("data_sources")
+            .selectAll()
+            .where("id", "=", id)
+            .executeTakeFirst();
+
           return json({ success: true, data: updatedDataSource });
         } catch (error) {
           console.error("Error updating data source:", error);
@@ -232,14 +255,17 @@ export const Route = createFileRoute("/api/data-sources/$id")({
           }
 
           const { id } = params;
-          const { getKnexDb: getDb } = await import("@/lib/db/config");
+          const { getDb } = await import("@/lib/db/config");
           const { closeConnection } = await import("@/lib/db/connection-manager");
           const db = getDb();
 
-          const dataSource = await db<DataSource>("data_sources")
-            .where("id", id)
-            .where("is_deleted", false)
-            .first();
+          const dataSource = await db
+            .selectFrom("data_sources")
+            .selectAll()
+            .where("id", "=", id)
+            .where("is_deleted", "=", false)
+            .executeTakeFirst();
+
           if (!dataSource) {
             return json(
               { success: false, error: { code: "NOT_FOUND", message: "Data source not found" } },
@@ -247,29 +273,46 @@ export const Route = createFileRoute("/api/data-sources/$id")({
             );
           }
 
-          const queryCount = await db("saved_queries")
-            .where("data_source_id", id)
-            .where("is_deleted", false)
-            .count("id as count")
-            .first();
-          const reportCount = await db("report_definitions")
-            .join("saved_queries", "report_definitions.saved_query_id", "saved_queries.id")
-            .where("saved_queries.data_source_id", id)
-            .where("report_definitions.is_deleted", false)
-            .where("saved_queries.is_deleted", false)
-            .count("report_definitions.id as count")
-            .first();
-          const chartCount = await db("chart_definitions")
-            .join("saved_queries", "chart_definitions.saved_query_id", "saved_queries.id")
-            .where("saved_queries.data_source_id", id)
-            .where("chart_definitions.is_deleted", false)
-            .where("saved_queries.is_deleted", false)
-            .count("chart_definitions.id as count")
-            .first();
+          // Count queries, reports, charts that depend on this data source
+          const queryCountResult = await db
+            .selectFrom("saved_queries")
+            .select(db.fn.count<number>("id").as("count"))
+            .where("data_source_id", "=", id)
+            .where("is_deleted", "=", false)
+            .executeTakeFirst();
+          const queries = Number(queryCountResult?.count ?? 0);
 
-          const queries = Number(queryCount?.count || 0);
-          const reports = Number(reportCount?.count || 0);
-          const charts = Number(chartCount?.count || 0);
+          // For reports/charts, we check via a subquery using sql
+          // Using a simpler approach: fetch query ids, then count dependent resources
+          let reports = 0;
+          let charts = 0;
+          if (queries > 0) {
+            const queryIds = await db
+              .selectFrom("saved_queries")
+              .select("id")
+              .where("data_source_id", "=", id)
+              .where("is_deleted", "=", false)
+              .execute();
+            const qIds = queryIds.map((q) => q.id);
+
+            if (qIds.length > 0) {
+              const reportCountResult = await db
+                .selectFrom("report_definitions")
+                .select(db.fn.count<number>("id").as("count"))
+                .where("saved_query_id", "in", qIds)
+                .where("is_deleted", "=", false)
+                .executeTakeFirst();
+              reports = Number(reportCountResult?.count ?? 0);
+
+              const chartCountResult = await db
+                .selectFrom("chart_definitions")
+                .select(db.fn.count<number>("id").as("count"))
+                .where("saved_query_id", "in", qIds)
+                .where("is_deleted", "=", false)
+                .executeTakeFirst();
+              charts = Number(chartCountResult?.count ?? 0);
+            }
+          }
 
           if (queries > 0 || reports > 0 || charts > 0) {
             return json(
@@ -285,15 +328,18 @@ export const Route = createFileRoute("/api/data-sources/$id")({
             );
           }
 
-          await db<DataSource>("data_sources")
-            .where("id", id)
-            .update({
+          // Soft delete
+          await db
+            .updateTable("data_sources")
+            .set({
               is_deleted: true,
               is_active: false,
               deleted_at: new Date().toISOString(),
               deleted_by: session.user.id,
               updated_at: new Date().toISOString(),
-            } as any);
+            })
+            .where("id", "=", id)
+            .execute();
 
           await closeConnection(id);
 

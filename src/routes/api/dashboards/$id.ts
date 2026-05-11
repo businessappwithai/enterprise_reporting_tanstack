@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
-import type { DashboardLayout, DashboardWidget } from "@/types/database";
 
 async function getSession(request: Request) {
   const { auth } = await import("@/lib/auth/config");
@@ -36,9 +35,14 @@ export const Route = createFileRoute("/api/dashboards/$id")({
             );
           }
 
-          const { getKnexDb: getDb } = await import("@/lib/db/config");
+          const { getDb } = await import("@/lib/db/config");
           const db = getDb();
-          const dashboard = await db<DashboardLayout>("dashboard_layouts").where("id", id).first();
+          const dashboard = await db
+            .selectFrom("dashboard_layouts")
+            .selectAll()
+            .where("id", "=", id)
+            .executeTakeFirst();
+
           if (!dashboard) {
             return json(
               { success: false, error: { code: "NOT_FOUND", message: "Dashboard not found" } },
@@ -46,9 +50,13 @@ export const Route = createFileRoute("/api/dashboards/$id")({
             );
           }
 
-          const widgets = await db<DashboardWidget>("dashboard_widgets")
-            .where("dashboard_id", id)
-            .orderBy("created_at");
+          const widgets = await db
+            .selectFrom("dashboard_widgets")
+            .selectAll()
+            .where("dashboard_id", "=", id)
+            .orderBy("created_at", "asc")
+            .execute();
+
           return json({ success: true, data: { ...dashboard, widgets } });
         } catch (error) {
           console.error("Error fetching dashboard:", error);
@@ -90,10 +98,15 @@ export const Route = createFileRoute("/api/dashboards/$id")({
             );
           }
 
-          const { getKnexDb: getDb } = await import("@/lib/db/config");
+          const { getDb } = await import("@/lib/db/config");
           const { logAudit } = await import("@/lib/security/audit");
           const db = getDb();
-          const existing = await db<DashboardLayout>("dashboard_layouts").where("id", id).first();
+          const existing = await db
+            .selectFrom("dashboard_layouts")
+            .selectAll()
+            .where("id", "=", id)
+            .executeTakeFirst();
+
           if (!existing) {
             return json(
               { success: false, error: { code: "NOT_FOUND", message: "Dashboard not found" } },
@@ -101,7 +114,7 @@ export const Route = createFileRoute("/api/dashboards/$id")({
             );
           }
 
-          const updates: Partial<DashboardLayout> = { updated_at: new Date().toISOString() };
+          const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
           if (body.name !== undefined) updates.name = body.name;
           if (body.description !== undefined) updates.description = body.description;
           if (body.layoutConfig !== undefined)
@@ -112,7 +125,12 @@ export const Route = createFileRoute("/api/dashboards/$id")({
             updates.refresh_config = JSON.stringify(body.refreshConfig);
           if (body.isPublic !== undefined) updates.is_public = body.isPublic;
 
-          await db<DashboardLayout>("dashboard_layouts").where("id", id).update(updates);
+          await db
+            .updateTable("dashboard_layouts")
+            .set(updates)
+            .where("id", "=", id)
+            .execute();
+
           await logAudit({
             userId: session.user.id,
             action: "update",
@@ -120,8 +138,18 @@ export const Route = createFileRoute("/api/dashboards/$id")({
             resourceId: id,
           });
 
-          const dashboard = await db<DashboardLayout>("dashboard_layouts").where("id", id).first();
-          const widgets = await db<DashboardWidget>("dashboard_widgets").where("dashboard_id", id);
+          const dashboard = await db
+            .selectFrom("dashboard_layouts")
+            .selectAll()
+            .where("id", "=", id)
+            .executeTakeFirst();
+
+          const widgets = await db
+            .selectFrom("dashboard_widgets")
+            .selectAll()
+            .where("dashboard_id", "=", id)
+            .execute();
+
           return json({ success: true, data: { ...dashboard, widgets } });
         } catch (error) {
           console.error("Error updating dashboard:", error);
@@ -161,10 +189,12 @@ export const Route = createFileRoute("/api/dashboards/$id")({
             );
           }
 
-          const { getKnexDb: getDb } = await import("@/lib/db/config");
+          const { getDb } = await import("@/lib/db/config");
           const { logAudit } = await import("@/lib/security/audit");
           const db = getDb();
-          await db<DashboardLayout>("dashboard_layouts").where("id", id).delete();
+
+          await db.deleteFrom("dashboard_layouts").where("id", "=", id).execute();
+
           await logAudit({
             userId: session.user.id,
             action: "delete",

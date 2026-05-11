@@ -1,12 +1,20 @@
 /**
- * Bun SQLite wrapper - Provides database access using bun:sqlite
- * This module provides a simpler interface that can be used instead of Knex
- * in production environments running on Bun.
+ * SQLite wrapper - Provides database access using bun:sqlite (Bun) or better-sqlite3 (Node)
  */
 
-import Database from "bun:sqlite";
 import fs from "fs";
 import path from "path";
+
+const isBun = typeof (globalThis as any).Bun !== "undefined";
+// biome-ignore lint/suspicious/noExplicitAny: dynamic import for runtime compat
+let Database: any;
+if (isBun) {
+  const mod = await import("bun:sqlite");
+  Database = mod.default || mod.Database;
+} else {
+  const mod = await import("better-sqlite3");
+  Database = mod.default;
+}
 
 class BunSQLiteWrapper {
   private db: Database.Database;
