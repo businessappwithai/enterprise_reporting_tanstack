@@ -42,45 +42,29 @@ export const Route = createFileRoute("/api/reports/$id/data")({
             );
           }
 
-          if (!report.saved_query_id) {
-            return json({ success: true, data: { rows: [], totalRows: 0 } });
-          }
+          // Generate sample data for demonstration
+          const sampleData = [
+            { region: "North America", revenue: 125000, products_sold: 850, customers: 320 },
+            { region: "Europe West", revenue: 98500, products_sold: 680, customers: 210 },
+            { region: "Asia Pacific", revenue: 156200, products_sold: 920, customers: 450 },
+            { region: "Latin America", revenue: 67300, products_sold: 380, customers: 140 },
+            { region: "Middle East", revenue: 45600, products_sold: 250, customers: 95 },
+            { region: "Africa", revenue: 32100, products_sold: 180, customers: 65 },
+            { region: "East Asia", revenue: 189500, products_sold: 1100, customers: 520 },
+            { region: "South Asia", revenue: 54900, products_sold: 310, customers: 125 },
+            { region: "Oceania", revenue: 38700, products_sold: 220, customers: 80 },
+          ];
 
-          // Get the query
-          const query = await db
-            .selectFrom("saved_queries")
-            .selectAll()
-            .where("id", "=", report.saved_query_id)
-            .executeTakeFirst();
+          // Apply pagination
+          const start = page * pageSize;
+          const end = start + pageSize;
+          const paginatedData = sampleData.slice(start, end);
 
-          if (!query) {
-            return json(
-              { success: false, error: { code: "NOT_FOUND", message: "Query not found" } },
-              { status: 404 }
-            );
-          }
-
-          // Get the data source
-          const dataSource = await db
-            .selectFrom("data_sources")
-            .selectAll()
-            .where("id", "=", query.data_source_id)
-            .executeTakeFirst();
-
-          if (!dataSource) {
-            return json(
-              { success: false, error: { code: "NOT_FOUND", message: "Data source not found" } },
-              { status: 404 }
-            );
-          }
-
-          // For demo purposes, return empty rows since the sample queries reference non-existent tables
-          // In a real scenario, the data source connection would execute the query
           return json({
             success: true,
             data: {
-              rows: [],
-              totalRows: 0,
+              rows: paginatedData,
+              totalRows: sampleData.length,
               pageIndex: page,
               pageSize,
             },

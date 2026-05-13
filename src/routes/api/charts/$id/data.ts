@@ -40,13 +40,32 @@ export const Route = createFileRoute("/api/charts/$id/data")({
           const page = parseInt(url.searchParams.get("page") || "0");
           const pageSize = parseInt(url.searchParams.get("pageSize") || "50");
 
-          // For demo purposes, return empty rows since sample queries reference non-existent tables
-          // In a real scenario, the data source connection would execute the query
+          // Generate sample chart data
+          const sampleData = [
+            { month: "January", sales: 4000, expenses: 2400, profit: 1600 },
+            { month: "February", sales: 3000, expenses: 1398, profit: 1602 },
+            { month: "March", sales: 2000, expenses: 9800, profit: -7800 },
+            { month: "April", sales: 2780, expenses: 3908, profit: -1128 },
+            { month: "May", sales: 1890, expenses: 4800, profit: -2910 },
+            { month: "June", sales: 2390, expenses: 3800, profit: -1410 },
+            { month: "July", sales: 3490, expenses: 4300, profit: -810 },
+            { month: "August", sales: 4200, expenses: 3000, profit: 1200 },
+            { month: "September", sales: 3800, expenses: 2700, profit: 1100 },
+            { month: "October", sales: 4500, expenses: 3200, profit: 1300 },
+            { month: "November", sales: 5100, expenses: 3800, profit: 1300 },
+            { month: "December", sales: 6200, expenses: 4200, profit: 2000 },
+          ];
+
+          // Apply pagination
+          const start = page * pageSize;
+          const end = start + pageSize;
+          const paginatedData = sampleData.slice(start, end);
+
           return json({
             success: true,
             data: {
-              rows: [],
-              totalRows: 0,
+              rows: paginatedData,
+              totalRows: sampleData.length,
               pageIndex: page,
               pageSize,
             },
