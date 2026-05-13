@@ -30,8 +30,15 @@ function buildKyselyConnection(
 ): AnyKysely {
   switch (clientType) {
     case "sqlite3": {
-      // biome-ignore lint/suspicious/noExplicitAny: dynamic require
-      const BunDatabase = require("bun:sqlite").Database;
+      // Access bun:sqlite from Bun runtime
+      // biome-ignore lint/suspicious/noExplicitAny: bun internals
+      const BunDatabase = (globalThis as any).Bun?.sqlite?.Database;
+
+      if (!BunDatabase) {
+        throw new Error(
+          "SQLite database requires Bun runtime. Run: bun run dev"
+        );
+      }
 
       const filename = connectionConfig.filename || ":memory:";
       let fullPath: string;

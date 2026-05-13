@@ -323,9 +323,16 @@ export function getDb(): KyselyDB {
         dialect: new PostgresDialect({ pool }),
       });
     } else {
-      // SQLite via bun:sqlite - dynamically import to avoid Node.js ESM issues in Vite SSR
-      // biome-ignore lint/suspicious/noExplicitAny: dynamic require
-      const BunDatabase = require("bun:sqlite").Database;
+      // SQLite via bun:sqlite
+      // Access bun:sqlite from Bun runtime
+      // biome-ignore lint/suspicious/noExplicitAny: bun internals
+      const BunDatabase = (globalThis as any).Bun?.sqlite?.Database;
+
+      if (!BunDatabase) {
+        throw new Error(
+          "SQLite database requires Bun runtime. Run: bun run dev"
+        );
+      }
 
       const dirPath = path.dirname(DATABASE_PATH);
       if (!existsSync(dirPath)) {
