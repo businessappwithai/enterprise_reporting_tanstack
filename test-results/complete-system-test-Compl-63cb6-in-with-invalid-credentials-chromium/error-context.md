@@ -12,10 +12,32 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/login
+TimeoutError: page.fill: Timeout 15000ms exceeded.
 Call log:
-  - navigating to "http://localhost:4050/login", waiting until "load"
+  - waiting for locator('input[name="email"]')
 
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e7]
+      - heading "Welcome back" [level=3] [ref=e9]
+      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - text: Email
+          - textbox "Email" [ref=e14]:
+            - /placeholder: name@example.com
+        - generic [ref=e15]:
+          - text: Password
+          - textbox "Password" [ref=e16]
+      - button "Sign In" [ref=e18] [cursor=pointer]
+  - region "Notifications alt+T"
 ```
 
 # Test source
@@ -81,10 +103,10 @@ Call log:
   58  |     });
   59  | 
   60  |     test('1.2 User cannot login with invalid credentials', async ({ page }) => {
-> 61  |       await page.goto(`${BASE_URL}/login`);
-      |                  ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/login
+  61  |       await page.goto(`${BASE_URL}/login`);
   62  | 
-  63  |       await page.fill('input[name="email"]', 'invalid@test.com');
+> 63  |       await page.fill('input[name="email"]', 'invalid@test.com');
+      |                  ^ TimeoutError: page.fill: Timeout 15000ms exceeded.
   64  |       await page.fill('input[name="password"]', 'wrongpassword');
   65  |       await page.click('button[type="submit"]');
   66  | 
@@ -183,4 +205,6 @@ Call log:
   159 |       // Look for tables or schema info
   160 |       const hasTables = await page.locator('text=table, text=Tables').count() > 0;
   161 |       const hasSchema = await page.locator('.schema, [data-testid="schema"]').count() > 0;
+  162 | 
+  163 |       expect(hasTables || hasSchema).toBeTruthy();
 ```

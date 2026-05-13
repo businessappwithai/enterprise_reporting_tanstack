@@ -12,130 +12,166 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-Call log:
-  - navigating to "http://localhost:4050/", waiting until "load"
+Error: expect(locator).toBeVisible() failed
 
+Locator: locator('h1').filter({ hasText: /datasets/i })
+Expected: visible
+Timeout: 10000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toBeVisible" with timeout 10000ms
+  - waiting for locator('h1').filter({ hasText: /datasets/i })
+
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e7]
+      - heading "Welcome back" [level=3] [ref=e9]
+      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - text: Email
+          - textbox "Email" [ref=e14]:
+            - /placeholder: name@example.com
+        - generic [ref=e15]:
+          - text: Password
+          - textbox "Password" [ref=e16]
+      - button "Sign In" [ref=e18] [cursor=pointer]
+  - region "Notifications alt+T"
 ```
 
 # Test source
 
 ```ts
-  11  |   // Return cached cookie if available
-  12  |   if (cachedAuthCookie) {
-  13  |     console.log('Using cached auth cookie');
-  14  |     return cachedAuthCookie;
-  15  |   }
-  16  | 
-  17  |   console.log('Getting fresh auth cookie...');
+  1   | /**
+  2   |  * Complete WASM Features E2E Test Suite
+  3   |  *
+  4   |  * Tests for DuckDB-Wasm integration, Datasets, Offline Mode, and Progressive Loading
+  5   |  *
+  6   |  * Run: bun run test:e2e -- e2e/wasm-features-complete.spec.ts
+  7   |  */
+  8   | 
+  9   | import { test, expect } from '@playwright/test';
+  10  | import { login } from './test-auth';
+  11  | 
+  12  | const BASE_URL = process.env.BASE_URL || 'http://localhost:4050';
+  13  | 
+  14  | test.describe('WASM Features - Datasets', () => {
+  15  |   test.beforeEach(async ({ page }) => {
+  16  |     await login(page);
+  17  |   });
   18  | 
-  19  |   // Try API-based authentication first
-  20  |   try {
-  21  |     const signInResponse = await request.post('/api/auth/callback/credentials', {
-  22  |       headers: {
-  23  |         'Content-Type': 'application/json',
-  24  |       },
-  25  |       data: JSON.stringify({
-  26  |         email: 'admin@admin.com',
-  27  |         password: 'admin',
-  28  |         csrfToken: 'test-csrf-token',
-  29  |         json: true,
-  30  |       }),
-  31  |     });
+  19  |   test('WASM-001: Datasets page loads correctly', async ({ page }) => {
+  20  |     await page.goto(`${BASE_URL}/datasets`);
+  21  | 
+  22  |     // Should show datasets header
+> 23  |     await expect(page.locator('h1').filter({ hasText: /datasets/i })).toBeVisible({ timeout: 10000 });
+      |                                                                       ^ Error: expect(locator).toBeVisible() failed
+  24  | 
+  25  |     // Page should be stable
+  26  |     await page.waitForTimeout(2000);
+  27  | 
+  28  |     // Should have main content area
+  29  |     const hasContent = await page.locator('main, .datasets-page, [data-testid="datasets"]').count() > 0;
+  30  |     expect(hasContent).toBeTruthy();
+  31  |   });
   32  | 
-  33  |     console.log('Sign-in response status:', signInResponse.status());
-  34  | 
-  35  |     // Get cookies from the response headers
-  36  |     const setCookieHeaders = signInResponse.headers()['set-cookie'];
-  37  |     if (setCookieHeaders) {
-  38  |       const cookieArray = Array.isArray(setCookieHeaders) ? setCookieHeaders : [setCookieHeaders];
-  39  |       for (const cookieHeader of cookieArray) {
-  40  |         const match = cookieHeader.match(/authjs\.session-token=([^;]+)/);
-  41  |         if (match) {
-  42  |           cachedAuthCookie = `authjs.session-token=${match[1]}`;
-  43  |           console.log('Got auth cookie from API sign-in');
-  44  |           return cachedAuthCookie;
-  45  |         }
-  46  |       }
-  47  |     }
+  33  |   test('WASM-002: Can view dataset list', async ({ page }) => {
+  34  |     await page.goto(`${BASE_URL}/datasets`);
+  35  | 
+  36  |     // Wait for data to load
+  37  |     await page.waitForTimeout(3000);
+  38  | 
+  39  |     // Check for table or empty state
+  40  |     const hasTable = await page.locator('table, [role="table"]').count() > 0;
+  41  |     const hasEmptyState = await page.locator('text=No datasets, text=empty, .empty-state').count() > 0;
+  42  | 
+  43  |     expect(hasTable || hasEmptyState).toBeTruthy();
+  44  |   });
+  45  | 
+  46  |   test('WASM-003: Dataset creation dialog opens', async ({ page }) => {
+  47  |     await page.goto(`${BASE_URL}/datasets`);
   48  | 
-  49  |     console.log('No session cookie in API response, trying browser fallback...');
-  50  |   } catch (error) {
-  51  |     console.log('API sign-in failed, trying browser fallback:', error);
-  52  |   }
-  53  | 
-  54  |   // Fallback: use browser-based login
-  55  |   if (!browser) {
-  56  |     throw new Error('Browser is required for fallback authentication');
-  57  |   }
-  58  | 
-  59  |   const page = await browser.newPage();
-  60  |   const testHelpers = new TestHelpers(page);
-  61  | 
-  62  |   try {
-  63  |     await page.goto('/');
-  64  |     const currentUrl = page.url();
-  65  | 
-  66  |     if (currentUrl.includes('/login')) {
-  67  |       console.log('Logging in via browser...');
-  68  |       await testHelpers.login();
-  69  |     }
-  70  | 
-  71  |     // Wait for session to be established
-  72  |     await page.waitForTimeout(5000);
-  73  |     await page.goto('/');
-  74  |     await page.waitForLoadState('domcontentloaded');
-  75  |     await page.waitForTimeout(3000);
-  76  | 
-  77  |     const cookies = await page.context().cookies();
-  78  |     console.log('Cookies after login:', cookies.map(c => c.name));
+  49  |     // Look for "Generate Dataset" or "New Dataset" button
+  50  |     const createButton = page.locator('button:has-text("Generate Dataset"), button:has-text("New Dataset"), button:has-text("Create")').first();
+  51  | 
+  52  |     if (await createButton.isVisible()) {
+  53  |       await createButton.click();
+  54  |       await page.waitForTimeout(2000);
+  55  | 
+  56  |       // Should show dialog or form
+  57  |       const hasDialog = await page.locator('[role="dialog"], dialog, .modal').count() > 0;
+  58  |       const hasForm = await page.locator('form, input[name="name"]').count() > 0;
+  59  | 
+  60  |       expect(hasDialog || hasForm).toBeTruthy();
+  61  |     }
+  62  |   });
+  63  | 
+  64  |   test('WASM-004: Can select data source for dataset', async ({ page }) => {
+  65  |     await page.goto(`${BASE_URL}/datasets`);
+  66  | 
+  67  |     const createButton = page.locator('button:has-text("Generate Dataset"), button:has-text("Create")').first();
+  68  | 
+  69  |     if (await createButton.isVisible()) {
+  70  |       await createButton.click();
+  71  |       await page.waitForTimeout(2000);
+  72  | 
+  73  |       // Look for data source selector
+  74  |       const dataSourceSelect = page.locator('select[name="dataSource"], [role="combobox"]').first();
+  75  | 
+  76  |       if (await dataSourceSelect.isVisible()) {
+  77  |         await dataSourceSelect.click();
+  78  |         await page.waitForTimeout(500);
   79  | 
-  80  |     const authCookieObj = cookies.find(c => c.name.includes('session-token'));
-  81  | 
-  82  |     if (!authCookieObj) {
-  83  |       throw new Error('No auth cookie found after login. Available cookies: ' + cookies.map(c => c.name).join(', '));
+  80  |         // Should show options
+  81  |         const hasOptions = await page.locator('[role="option"], option').count() > 0;
+  82  |         expect(hasOptions).toBeTruthy();
+  83  |       }
   84  |     }
-  85  | 
-  86  |     cachedAuthCookie = `${authCookieObj.name}=${authCookieObj.value}`;
-  87  |     console.log('Got auth cookie from browser login');
-  88  | 
-  89  |     return cachedAuthCookie;
-  90  |   } finally {
-  91  |     await page.close();
-  92  |   }
-  93  | }
-  94  | 
-  95  | /**
-  96  |  * Clear cached auth cookie (useful for testing logout scenarios)
-  97  |  */
-  98  | export function clearAuthCache(): void {
-  99  |   cachedAuthCookie = null;
-  100 | }
-  101 | 
-  102 | /**
-  103 |  * Simple login function for E2E tests
-  104 |  * Performs login via UI and returns when authenticated
-  105 |  */
-  106 | export async function login(page: Page, email: string = 'admin@admin.com', password: string = 'admin'): Promise<void> {
-  107 |   const BASE_URL = process.env.BASE_URL || 'http://localhost:4050';
-  108 |   const testHelpers = new TestHelpers(page);
-  109 | 
-  110 |   // Navigate to login page if not already there
-> 111 |   await page.goto(BASE_URL);
-      |              ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-  112 |   const currentUrl = page.url();
-  113 | 
-  114 |   if (!currentUrl.includes('/login')) {
-  115 |     // Already logged in or on another page
-  116 |     return;
-  117 |   }
-  118 | 
-  119 |   // Perform login
-  120 |   await testHelpers.login();
-  121 | 
-  122 |   // Wait for navigation to dashboard
-  123 |   await page.waitForURL(/\/(dashboard|)/, { timeout: 10000 });
-  124 |   await page.waitForLoadState('domcontentloaded');
-  125 | }
-  126 | 
+  85  |   });
+  86  | 
+  87  |   test('WASM-005: Can enter SQL query for dataset', async ({ page }) => {
+  88  |     await page.goto(`${BASE_URL}/datasets`);
+  89  | 
+  90  |     const createButton = page.locator('button:has-text("Generate Dataset")').first();
+  91  | 
+  92  |     if (await createButton.isVisible()) {
+  93  |       await createButton.click();
+  94  |       await page.waitForTimeout(2000);
+  95  | 
+  96  |       // Look for query input (might be Monaco editor or textarea)
+  97  |       const queryInput = page.locator('textarea[name="query"], .monaco-editor, [contenteditable="true"]').first();
+  98  | 
+  99  |       if (await queryInput.isVisible()) {
+  100 |         await queryInput.click();
+  101 |         await page.keyboard.type('SELECT * FROM users LIMIT 100');
+  102 | 
+  103 |         await page.waitForTimeout(500);
+  104 | 
+  105 |         // Query should be entered
+  106 |         const hasQuery = await page.locator('text=SELECT * FROM users').count() > 0;
+  107 |         expect(hasQuery).toBeTruthy();
+  108 |       }
+  109 |     }
+  110 |   });
+  111 | 
+  112 |   test('WASM-006: Dataset card shows metadata', async ({ page }) => {
+  113 |     await page.goto(`${BASE_URL}/datasets`);
+  114 | 
+  115 |     // Wait for datasets to load
+  116 |     await page.waitForTimeout(3000);
+  117 | 
+  118 |     // Look for dataset cards or table rows
+  119 |     const datasetCard = page.locator('.dataset-card, table tbody tr').first();
+  120 | 
+  121 |     if (await datasetCard.isVisible()) {
+  122 |       // Should show dataset info
+  123 |       const hasName = await datasetCard.locator('text=/./').count() > 0;
 ```

@@ -12,126 +12,237 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
+TimeoutError: locator.waitFor: Timeout 10000ms exceeded.
 Call log:
-  - navigating to "http://localhost:4050/", waiting until "load"
+  - waiting for locator('button').filter({ hasText: /Select data source/i }).first() to be visible
 
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e7]
+      - heading "Welcome back" [level=3] [ref=e9]
+      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - text: Email
+          - textbox "Email" [ref=e14]:
+            - /placeholder: name@example.com
+        - generic [ref=e15]:
+          - text: Password
+          - textbox "Password" [ref=e16]
+      - button "Sign In" [ref=e18] [cursor=pointer]
+  - region "Notifications alt+T"
 ```
 
 # Test source
 
 ```ts
-  1   | import { Page, Locator } from '@playwright/test';
-  2   | 
-  3   | export class TestHelpers {
-  4   |   constructor(private page: Page) {}
-  5   | 
-  6   |   /**
-  7   |    * Login to the application with default credentials
-  8   |    * Goes to home page first, then logs in if needed
-  9   |    */
-  10  |   async login(email = 'admin@admin.com', password = 'admin') {
-  11  |     // Start at home page - this will redirect to login if not authenticated
-> 12  |     await this.page.goto('/');
-      |                     ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-  13  | 
-  14  |     // Wait for page load
-  15  |     await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
-  16  | 
-  17  |     // Check if we're on login page
-  18  |     const currentUrl = this.page.url();
-  19  |     if (currentUrl.includes('/login')) {
-  20  |       // Need to log in
-  21  |       await this.page.getByPlaceholder('name@example.com').fill(email);
-  22  |       await this.page.getByLabel('Password').fill(password);
-  23  |       await this.page.getByRole('button', { name: 'Sign In' }).click();
-  24  | 
-  25  |       // Wait for ONE of multiple indicators of successful login (more robust)
-  26  |       await Promise.race([
-  27  |         // Option 1: Dashboard heading (case-insensitive)
-  28  |         this.page.getByRole('heading', { name: /dashboard/i }).waitFor({ state: 'visible', timeout: 15000 }),
-  29  |         // Option 2: Navigation menu
-  30  |         this.page.getByRole('navigation').waitFor({ state: 'visible', timeout: 15000 }),
-  31  |         // Option 3: URL change to home (not login)
-  32  |         this.page.waitForURL(url => !url.includes('/login'), { timeout: 15000 }),
-  33  |       ]).catch(() => {
-  34  |         // If none of the above work, just wait for the hard redirect timeout
-  35  |         return this.page.waitForTimeout(5000);
-  36  |       });
-  37  |     } else {
-  38  |       // Already at home page, wait for it to be fully loaded
-  39  |       await this.page.waitForTimeout(2000);
-  40  |     }
-  41  | 
-  42  |     // Wait for page to be fully loaded
-  43  |     await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
-  44  | 
-  45  |     // Additional wait for session to be established
-  46  |     await this.page.waitForTimeout(1500);
-  47  |   }
-  48  | 
-  49  |   /**
-  50  |    * Navigate to a specific page by name
-  51  |    * Uses direct URL navigation for reliability
-  52  |    */
-  53  |   async navigateToPage(pageName: 'Dashboard' | 'SQL Editor' | 'Reports' | 'Charts' | 'Dashboards') {
-  54  |     // Map page names to their routes
-  55  |     const routes: Record<string, string> = {
-  56  |       'Dashboard': '/',
-  57  |       'SQL Editor': '/sql-editor',
-  58  |       'Reports': '/reports',
-  59  |       'Charts': '/charts',
-  60  |       'Dashboards': '/dashboards',
-  61  |     };
-  62  | 
-  63  |     const route = routes[pageName];
-  64  |     if (!route) {
-  65  |       throw new Error(`Unknown page: ${pageName}`);
-  66  |     }
-  67  | 
-  68  |     // Use direct URL navigation - most reliable
-  69  |     await this.page.goto(route, { waitUntil: 'domcontentloaded' });
-  70  | 
-  71  |     // Wait for page to be fully loaded
-  72  |     await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
-  73  |     await this.page.waitForTimeout(1000);
-  74  |   }
-  75  | 
-  76  |   /**
-  77  |    * Wait for and verify toast notification
-  78  |    */
-  79  |   async verifyToast(message: string, type: 'success' | 'error' = 'success') {
-  80  |     const toast = this.page.getByText(message).first();
-  81  |     await toast.waitFor({ state: 'visible', timeout: 5000 });
-  82  |     return toast;
-  83  |   }
-  84  | 
-  85  |   /**
-  86  |    * Select from a dropdown by trigger and option text
-  87  |    * Improved to handle Radix UI dropdowns with better waiting
-  88  |    */
-  89  |   async selectDropdown(triggerText: string, optionText: string, timeout = 10000) {
-  90  |     // Click the dropdown trigger
-  91  |     const trigger = this.page.getByText(triggerText).first();
-  92  |     await trigger.waitFor({ state: 'visible', timeout });
-  93  |     await trigger.click();
-  94  | 
-  95  |     // Wait for dropdown content to appear - Radix UI uses portals
-  96  |     await this.page.waitForTimeout(500);
-  97  | 
-  98  |     // Try to find the option with multiple selectors for robustness
-  99  |     const option = this.page.getByRole('option', { name: optionText }).first();
-  100 | 
-  101 |     try {
-  102 |       await option.waitFor({ state: 'visible', timeout: 5000 });
-  103 |       await option.click();
-  104 |     } catch (error) {
-  105 |       // Fallback: try clicking by text if role='option' didn't work
-  106 |       const textOption = this.page.getByText(optionText).first();
-  107 |       await textOption.waitFor({ state: 'visible', timeout: 5000 });
-  108 |       await textOption.click();
-  109 |     }
-  110 | 
-  111 |     // Wait for selection to complete
-  112 |     await this.page.waitForTimeout(300);
+  189 |    */
+  190 |   async waitForMonacoEditor() {
+  191 |     const editor = this.page.locator('.monaco-editor').first();
+  192 |     await editor.waitFor({ state: 'visible', timeout: 5000 });
+  193 |   }
+  194 | 
+  195 |   /**
+  196 |    * Type in Monaco Editor
+  197 |    */
+  198 |   async typeInMonacoEditor(text: string, append = false) {
+  199 |     await this.waitForMonacoEditor();
+  200 | 
+  201 |     // Click in the editor to focus it
+  202 |     const editor = this.page.locator('.monaco-editor').first();
+  203 |     await editor.click();
+  204 | 
+  205 |     if (!append) {
+  206 |       // Select all and delete existing content
+  207 |       await this.page.keyboard.press('ControlOrMeta+A');
+  208 |       await this.page.keyboard.press('Delete');
+  209 |     }
+  210 | 
+  211 |     // Type the new content
+  212 |     await this.page.keyboard.type(text);
+  213 |   }
+  214 | 
+  215 |   /**
+  216 |    * Get Monaco Editor content
+  217 |    */
+  218 |   async getMonacoEditorContent(): Promise<string> {
+  219 |     await this.waitForMonacoEditor();
+  220 | 
+  221 |     // Select all content
+  222 |     await this.page.keyboard.press('ControlOrMeta+A');
+  223 | 
+  224 |     // Copy to clipboard
+  225 |     await this.page.keyboard.press('ControlOrMeta+C');
+  226 | 
+  227 |     // Get from clipboard
+  228 |     return await this.page.evaluate(() => navigator.clipboard.readText());
+  229 |   }
+  230 | 
+  231 |   /**
+  232 |    * Switch to a specific tab by text
+  233 |    */
+  234 |   async switchTab(tabText: string) {
+  235 |     const tab = this.page.getByRole('tab', { name: tabText });
+  236 |     await tab.click();
+  237 |     await this.page.waitForTimeout(200);
+  238 |   }
+  239 | 
+  240 |   /**
+  241 |    * Verify no console errors
+  242 |    */
+  243 |   async verifyNoConsoleErrors() {
+  244 |     const errors: string[] = [];
+  245 | 
+  246 |     this.page.on('console', msg => {
+  247 |       if (msg.type() === 'error') {
+  248 |         errors.push(msg.text());
+  249 |       }
+  250 |     });
+  251 | 
+  252 |     // Wait a bit for any async errors
+  253 |     await this.page.waitForTimeout(1000);
+  254 | 
+  255 |     return errors;
+  256 |   }
+  257 | 
+  258 |   /**
+  259 |    * Handle a dialog (confirm/alert)
+  260 |    */
+  261 |   async handleDialog(accept: boolean, promptText?: string) {
+  262 |     this.page.once('dialog', async dialog => {
+  263 |       if (promptText) {
+  264 |         await dialog.accept(promptText);
+  265 |       } else if (accept) {
+  266 |         await dialog.accept();
+  267 |       } else {
+  268 |         await dialog.dismiss();
+  269 |       }
+  270 |     });
+  271 |   }
+  272 | 
+  273 |   /**
+  274 |    * Verify element visibility with timeout
+  275 |    */
+  276 |   async verifyVisible(selector: string, timeout = 5000) {
+  277 |     await this.page.locator(selector).first().waitFor({ state: 'visible', timeout });
+  278 |   }
+  279 | 
+  280 |   /**
+  281 |    * Select a data source in SQL Editor
+  282 |    * Uses JavaScript clicks to avoid Playwright timeout issues with Radix UI components
+  283 |    */
+  284 |   async selectDataSource(dataSourceName?: string) {
+  285 |     // Wait for data source dropdown to be available
+  286 |     const selectTrigger = this.page.locator('button').filter({ hasText: /Select data source/i }).first();
+  287 | 
+  288 |     // Wait for trigger to be visible
+> 289 |     await selectTrigger.waitFor({ state: 'visible', timeout: 10000 });
+      |                         ^ TimeoutError: locator.waitFor: Timeout 10000ms exceeded.
+  290 | 
+  291 |     // Wait for React state to settle
+  292 |     await this.page.waitForTimeout(1000);
+  293 | 
+  294 |     // Check if data sources are available - retry check
+  295 |     let isDisabled = true;
+  296 |     for (let i = 0; i < 5; i++) {
+  297 |       isDisabled = await selectTrigger.isDisabled();
+  298 |       if (!isDisabled) break;
+  299 |       await this.page.waitForTimeout(500);
+  300 |     }
+  301 | 
+  302 |     if (isDisabled) {
+  303 |       throw new Error('No data sources available - button is disabled');
+  304 |     }
+  305 | 
+  306 |     // Click using JavaScript (more reliable for Radix UI)
+  307 |     await this.page.evaluate((element) => element.click(), await selectTrigger.elementHandle());
+  308 | 
+  309 |     // Wait for options to appear with a longer timeout
+  310 |     await this.page.waitForSelector('[role="option"]', { state: 'visible', timeout: 5000 });
+  311 |     await this.page.waitForTimeout(300);
+  312 | 
+  313 |     // Select first option or specific data source by name using JavaScript
+  314 |     if (dataSourceName) {
+  315 |       const option = this.page.locator('[role="option"]').filter({ hasText: dataSourceName }).first();
+  316 |       await option.waitFor({ state: 'visible', timeout: 5000 });
+  317 |       await this.page.evaluate((el) => el.click(), await option.elementHandle());
+  318 |     } else {
+  319 |       const firstOption = this.page.locator('[role="option"]').first();
+  320 |       await firstOption.waitFor({ state: 'visible', timeout: 5000 });
+  321 |       await this.page.evaluate((el) => el.click(), await firstOption.elementHandle());
+  322 |     }
+  323 | 
+  324 |     // Wait for selection to complete and schema to start loading
+  325 |     await this.page.waitForTimeout(1000);
+  326 | 
+  327 |     // Wait for the dropdown to close
+  328 |     await this.page.waitForSelector('[role="option"]', { state: 'hidden', timeout: 5000 }).catch(() => {
+  329 |       // Dropdown might close immediately, which is fine
+  330 |     });
+  331 | 
+  332 |     // Additional wait for schema loading to start
+  333 |     await this.page.waitForTimeout(500);
+  334 |   }
+  335 | 
+  336 |   /**
+  337 |    * Retry a function with delay
+  338 |    */
+  339 |   async retry<T>(
+  340 |     fn: () => Promise<T>,
+  341 |     retries = 3,
+  342 |     delay = 1000
+  343 |   ): Promise<T> {
+  344 |     let lastError: Error | undefined;
+  345 | 
+  346 |     for (let i = 0; i < retries; i++) {
+  347 |       try {
+  348 |         return await fn();
+  349 |       } catch (error) {
+  350 |         lastError = error as Error;
+  351 |         if (i < retries - 1) {
+  352 |           await this.page.waitForTimeout(delay);
+  353 |         }
+  354 |       }
+  355 |     }
+  356 | 
+  357 |     throw lastError;
+  358 |   }
+  359 | }
+  360 | 
+  361 | /**
+  362 |  * SQL queries for testing
+  363 |  */
+  364 | export const TEST_QUERIES = {
+  365 |   simple: 'SELECT * FROM users LIMIT 10;',
+  366 |   join: `
+  367 |     SELECT
+  368 |       u.name,
+  369 |       u.email,
+  370 |       o.id as order_id,
+  371 |       o.total_amount,
+  372 |       o.status
+  373 |     FROM users u
+  374 |     LEFT JOIN orders o ON u.id = o.user_id
+  375 |     LIMIT 20;
+  376 |   `,
+  377 |   complexJoin: `
+  378 |     SELECT
+  379 |       u.name,
+  380 |       u.email,
+  381 |       COUNT(o.id) as order_count,
+  382 |       SUM(o.total_amount) as total_spent,
+  383 |       AVG(o.total_amount) as avg_order_value
+  384 |     FROM users u
+  385 |     LEFT JOIN orders o ON u.id = o.user_id
+  386 |     GROUP BY u.id, u.name, u.email
+  387 |     HAVING COUNT(o.id) > 0
+  388 |     ORDER BY total_spent DESC
+  389 |     LIMIT 10;
 ```

@@ -12,126 +12,190 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-Call log:
-  - navigating to "http://localhost:4050/", waiting until "load"
+Error: expect(locator).toBeVisible() failed
 
+Locator: getByRole('columnheader', { name: 'Name' })
+Expected: visible
+Timeout: 5000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toBeVisible" with timeout 5000ms
+  - waiting for getByRole('columnheader', { name: 'Name' })
+
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e7]
+      - heading "Welcome back" [level=3] [ref=e9]
+      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - text: Email
+          - textbox "Email" [ref=e14]:
+            - /placeholder: name@example.com
+        - generic [ref=e15]:
+          - text: Password
+          - textbox "Password" [ref=e16]
+      - button "Sign In" [ref=e18] [cursor=pointer]
+  - region "Notifications alt+T"
 ```
 
 # Test source
 
 ```ts
-  1   | import { Page, Locator } from '@playwright/test';
-  2   | 
-  3   | export class TestHelpers {
-  4   |   constructor(private page: Page) {}
-  5   | 
-  6   |   /**
-  7   |    * Login to the application with default credentials
-  8   |    * Goes to home page first, then logs in if needed
-  9   |    */
-  10  |   async login(email = 'admin@admin.com', password = 'admin') {
-  11  |     // Start at home page - this will redirect to login if not authenticated
-> 12  |     await this.page.goto('/');
-      |                     ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-  13  | 
-  14  |     // Wait for page load
-  15  |     await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
+  1   | import { test, expect } from '@playwright/test';
+  2   | import { TestHelpers } from './helpers/test-helpers';
+  3   | 
+  4   | // Helper function to check if create report button is available
+  5   | async function checkCreateReportButton(page: any) {
+  6   |   const button = page.getByRole('button', { name: 'New Report' }).first();
+  7   |   return await button.isVisible({ timeout: 3000 }).catch(() => false);
+  8   | }
+  9   | 
+  10  | test.describe('Reports Management', () => {
+  11  |   test.beforeEach(async ({ page }) => {
+  12  |     const helpers = new TestHelpers(page);
+  13  |     await helpers.login();
+  14  |     await helpers.navigateToPage('Reports');
+  15  |   });
   16  | 
-  17  |     // Check if we're on login page
-  18  |     const currentUrl = this.page.url();
-  19  |     if (currentUrl.includes('/login')) {
-  20  |       // Need to log in
-  21  |       await this.page.getByPlaceholder('name@example.com').fill(email);
-  22  |       await this.page.getByLabel('Password').fill(password);
-  23  |       await this.page.getByRole('button', { name: 'Sign In' }).click();
-  24  | 
-  25  |       // Wait for ONE of multiple indicators of successful login (more robust)
-  26  |       await Promise.race([
-  27  |         // Option 1: Dashboard heading (case-insensitive)
-  28  |         this.page.getByRole('heading', { name: /dashboard/i }).waitFor({ state: 'visible', timeout: 15000 }),
-  29  |         // Option 2: Navigation menu
-  30  |         this.page.getByRole('navigation').waitFor({ state: 'visible', timeout: 15000 }),
-  31  |         // Option 3: URL change to home (not login)
-  32  |         this.page.waitForURL(url => !url.includes('/login'), { timeout: 15000 }),
-  33  |       ]).catch(() => {
-  34  |         // If none of the above work, just wait for the hard redirect timeout
-  35  |         return this.page.waitForTimeout(5000);
-  36  |       });
-  37  |     } else {
-  38  |       // Already at home page, wait for it to be fully loaded
-  39  |       await this.page.waitForTimeout(2000);
-  40  |     }
-  41  | 
-  42  |     // Wait for page to be fully loaded
-  43  |     await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
-  44  | 
-  45  |     // Additional wait for session to be established
-  46  |     await this.page.waitForTimeout(1500);
-  47  |   }
-  48  | 
-  49  |   /**
-  50  |    * Navigate to a specific page by name
-  51  |    * Uses direct URL navigation for reliability
-  52  |    */
-  53  |   async navigateToPage(pageName: 'Dashboard' | 'SQL Editor' | 'Reports' | 'Charts' | 'Dashboards') {
-  54  |     // Map page names to their routes
-  55  |     const routes: Record<string, string> = {
-  56  |       'Dashboard': '/',
-  57  |       'SQL Editor': '/sql-editor',
-  58  |       'Reports': '/reports',
-  59  |       'Charts': '/charts',
-  60  |       'Dashboards': '/dashboards',
-  61  |     };
-  62  | 
-  63  |     const route = routes[pageName];
-  64  |     if (!route) {
-  65  |       throw new Error(`Unknown page: ${pageName}`);
-  66  |     }
+  17  |   test('Reports page loads correctly', async ({ page }) => {
+  18  |     const helpers = new TestHelpers(page);
+  19  | 
+  20  |     // Wait for page to fully load after navigation
+  21  |     // First test needs more time for initial authentication to settle
+  22  |     await page.waitForTimeout(5000);
+  23  | 
+  24  |     // Check for main page elements - use exact match to avoid ambiguity with "All Reports"
+  25  |     await expect(page.getByRole('heading', { name: 'Reports', exact: true })).toBeVisible();
+  26  |     await expect(page.getByText('Create and manage tabular reports')).toBeVisible();
+  27  | 
+  28  |     // Check for All Reports table header
+  29  |     await expect(page.getByText('All Reports')).toBeVisible();
+  30  | 
+  31  |     // New Report button
+  32  |     await expect(page.getByRole('button', { name: 'New Report' })).toBeVisible();
+  33  | 
+  34  |     await helpers.screenshot('reports-page-loaded');
+  35  |   });
+  36  | 
+  37  |   test('displays reports list table', async ({ page }) => {
+  38  |     const helpers = new TestHelpers(page);
+  39  | 
+  40  |     // Wait for page to fully load after navigation
+  41  |     await page.waitForTimeout(2000);
+  42  | 
+  43  |     // Wait for loading to complete
+  44  |     await helpers.waitForLoading();
+  45  | 
+  46  |     // Check for table headers - use role to avoid strict mode violations
+> 47  |     await expect(page.getByRole('columnheader', { name: 'Name' })).toBeVisible();
+      |                                                                    ^ Error: expect(locator).toBeVisible() failed
+  48  |     await expect(page.getByRole('columnheader', { name: 'Description' })).toBeVisible();
+  49  |     await expect(page.getByRole('columnheader', { name: 'Query' })).toBeVisible();
+  50  |     await expect(page.getByRole('columnheader', { name: 'Created' })).toBeVisible();
+  51  | 
+  52  |     await helpers.screenshot('reports-list-table');
+  53  |   });
+  54  | 
+  55  |   test('create new report with query', async ({ page }) => {
+  56  |     const helpers = new TestHelpers(page);
+  57  | 
+  58  |     // Click New Report button
+  59  |     await helpers.clickButton('New Report');
+  60  | 
+  61  |     // Wait for dialog to appear - use role to avoid strict mode violation
+  62  |     await expect(page.getByRole('heading', { name: 'Create Report' })).toBeVisible();
+  63  |     await expect(page.getByText('Create a new report from a saved query.')).toBeVisible();
+  64  | 
+  65  |     // Fill in report name
+  66  |     await helpers.fillByLabel('Name', 'E2E Test Report');
   67  | 
-  68  |     // Use direct URL navigation - most reliable
-  69  |     await this.page.goto(route, { waitUntil: 'domcontentloaded' });
+  68  |     // Fill in description
+  69  |     await helpers.fillByLabel('Description', 'This is a test report from E2E tests');
   70  | 
-  71  |     // Wait for page to be fully loaded
-  72  |     await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
-  73  |     await this.page.waitForTimeout(1000);
-  74  |   }
-  75  | 
-  76  |   /**
-  77  |    * Wait for and verify toast notification
-  78  |    */
-  79  |   async verifyToast(message: string, type: 'success' | 'error' = 'success') {
-  80  |     const toast = this.page.getByText(message).first();
-  81  |     await toast.waitFor({ state: 'visible', timeout: 5000 });
-  82  |     return toast;
-  83  |   }
-  84  | 
-  85  |   /**
-  86  |    * Select from a dropdown by trigger and option text
-  87  |    * Improved to handle Radix UI dropdowns with better waiting
-  88  |    */
-  89  |   async selectDropdown(triggerText: string, optionText: string, timeout = 10000) {
-  90  |     // Click the dropdown trigger
-  91  |     const trigger = this.page.getByText(triggerText).first();
-  92  |     await trigger.waitFor({ state: 'visible', timeout });
-  93  |     await trigger.click();
-  94  | 
-  95  |     // Wait for dropdown content to appear - Radix UI uses portals
-  96  |     await this.page.waitForTimeout(500);
-  97  | 
-  98  |     // Try to find the option with multiple selectors for robustness
-  99  |     const option = this.page.getByRole('option', { name: optionText }).first();
-  100 | 
-  101 |     try {
-  102 |       await option.waitFor({ state: 'visible', timeout: 5000 });
-  103 |       await option.click();
-  104 |     } catch (error) {
-  105 |       // Fallback: try clicking by text if role='option' didn't work
-  106 |       const textOption = this.page.getByText(optionText).first();
-  107 |       await textOption.waitFor({ state: 'visible', timeout: 5000 });
-  108 |       await textOption.click();
-  109 |     }
+  71  |     // Try to select a query if available
+  72  |     const querySelect = page.locator('[role="combobox"]').filter({ hasText: 'Select a query' });
+  73  |     if (await querySelect.isVisible()) {
+  74  |       await querySelect.click();
+  75  |       await page.waitForTimeout(500);
+  76  | 
+  77  |       // Check if there are any queries available
+  78  |       const firstOption = page.locator('[role="option"]').first();
+  79  |       if (await firstOption.isVisible()) {
+  80  |         await firstOption.click();
+  81  |       }
+  82  |     }
+  83  | 
+  84  |     // Click Create Report button
+  85  |     await helpers.clickButton('Create Report');
+  86  | 
+  87  |     // Verify success toast
+  88  |     await helpers.verifyToast('Report created successfully');
+  89  | 
+  90  |     await helpers.screenshot('report-created');
+  91  |   });
+  92  | 
+  93  |   test('create new report without query', async ({ page }) => {
+  94  |     const helpers = new TestHelpers(page);
+  95  | 
+  96  |     // Click New Report button
+  97  |     await helpers.clickButton('New Report');
+  98  | 
+  99  |     // Fill in report name only
+  100 |     await helpers.fillByLabel('Name', 'E2E Test Report No Query');
+  101 | 
+  102 |     // Create report
+  103 |     await helpers.clickButton('Create Report');
+  104 | 
+  105 |     // Verify success
+  106 |     await helpers.verifyToast('Report created successfully');
+  107 | 
+  108 |     await helpers.screenshot('report-created-no-query');
+  109 |   });
   110 | 
-  111 |     // Wait for selection to complete
-  112 |     await this.page.waitForTimeout(300);
+  111 |   test('validation prevents creating report without name', async ({ page }) => {
+  112 |     const helpers = new TestHelpers(page);
+  113 | 
+  114 |     // Click New Report button
+  115 |     await helpers.clickButton('New Report');
+  116 | 
+  117 |     // Don't fill in name, try to create
+  118 |     const createButton = page.getByRole('button', { name: 'Create Report' });
+  119 |     await expect(createButton).toBeDisabled();
+  120 | 
+  121 |     await helpers.screenshot('report-validation-no-name');
+  122 |   });
+  123 | 
+  124 |   test('cancel report creation', async ({ page }) => {
+  125 |     const helpers = new TestHelpers(page);
+  126 | 
+  127 |     // Click New Report button
+  128 |     await helpers.clickButton('New Report');
+  129 | 
+  130 |     // Fill in some data
+  131 |     await helpers.fillByLabel('Name', 'Test Report');
+  132 |     await helpers.fillByLabel('Description', 'Test description');
+  133 | 
+  134 |     // Click Cancel
+  135 |     await helpers.clickButton('Cancel');
+  136 | 
+  137 |     // Verify dialog is closed - use role to avoid strict mode violation
+  138 |     await expect(page.getByRole('heading', { name: 'Create Report' })).not.toBeVisible();
+  139 | 
+  140 |     await helpers.screenshot('report-creation-cancelled');
+  141 |   });
+  142 | 
+  143 |   test('view report details', async ({ page }) => {
+  144 |     const helpers = new TestHelpers(page);
+  145 | 
+  146 |     // Wait for reports to load
+  147 |     await helpers.waitForLoading();
 ```

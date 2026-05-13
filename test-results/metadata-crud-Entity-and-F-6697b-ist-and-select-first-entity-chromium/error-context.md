@@ -12,10 +12,7 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-Call log:
-  - navigating to "http://localhost:4050/", waiting until "load"
-
+Error: Could not find Sakila datasource
 ```
 
 # Test source
@@ -47,8 +44,7 @@ Call log:
   24  | 
   25  |     // Login
   26  |     console.log('[Test Setup] Navigating to login page...');
-> 27  |     await page.goto('/', { timeout: 10000 });
-      |                ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
+  27  |     await page.goto('/', { timeout: 10000 });
   28  |     await page.waitForLoadState('networkidle');
   29  |     console.log('[Test Setup] Current URL:', page.url());
   30  | 
@@ -104,7 +100,8 @@ Call log:
   80  |     await context.close();
   81  | 
   82  |     if (!testDataSourceId) {
-  83  |       throw new Error('Could not find Sakila datasource');
+> 83  |       throw new Error('Could not find Sakila datasource');
+      |             ^ Error: Could not find Sakila datasource
   84  |     }
   85  |   });
   86  | 
@@ -149,4 +146,60 @@ Call log:
   125 | 
   126 |     await page.close();
   127 |   });
+  128 | 
+  129 |   test('should view entity metadata details', async ({ browser }) => {
+  130 |     const page = await browser.newPage();
+  131 |     await setupAuthenticatedPage(page);
+  132 | 
+  133 |     // Capture console messages
+  134 |     page.on('console', msg => {
+  135 |       if (msg.type() === 'error') {
+  136 |         console.log('[Browser Console Error]', msg.text());
+  137 |       }
+  138 |     });
+  139 | 
+  140 |     console.log('[Test] Navigating to:', `/metadata/entities/${testEntityId}`);
+  141 |     await page.goto(`/metadata/entities/${testEntityId}`);
+  142 | 
+  143 |     // Wait for page to load fully
+  144 |     await page.waitForLoadState('domcontentloaded');
+  145 |     await page.waitForTimeout(3000);
+  146 | 
+  147 |     // Debug: check URL and page content
+  148 |     const url = page.url();
+  149 |     console.log('[Test] Current URL after navigation:', url);
+  150 | 
+  151 |     const bodyContent = await page.locator('body').textContent();
+  152 |     console.log('[Test] Body content length:', bodyContent?.length || 0);
+  153 |     console.log('[Test] Body preview:', bodyContent?.substring(0, 200));
+  154 | 
+  155 |     // Check if main element has content
+  156 |     const mainExists = await page.locator('main').count();
+  157 |     console.log('[Test] Main element count:', mainExists);
+  158 | 
+  159 |     const mainContent = await page.locator('main').textContent();
+  160 |     console.log('[Test] Main content length:', mainContent?.length || 0);
+  161 | 
+  162 |     // Should show tabs (more reliable indicator that page loaded)
+  163 |     const entityTab = page.locator('button:has-text("Entity Metadata")');
+  164 |     const fieldsTab = page.locator('button:has-text("Fields (")');
+  165 |     await expect(entityTab).toBeVisible({ timeout: 10000 });
+  166 |     await expect(fieldsTab).toBeVisible();
+  167 | 
+  168 |     // Entity tab should be active by default
+  169 |     await expect(entityTab).toHaveClass(/border-primary/);
+  170 | 
+  171 |     // Check page has content
+  172 |     const bodyText = await page.locator('body').textContent();
+  173 |     expect((bodyText?.length || 0) > 100).toBeTruthy();
+  174 | 
+  175 |     console.log('[Test] Entity detail page loaded successfully');
+  176 | 
+  177 |     await page.close();
+  178 |   });
+  179 | 
+  180 |   test('should update entity description', async ({ browser }) => {
+  181 |     const page = await browser.newPage();
+  182 |     await setupAuthenticatedPage(page);
+  183 | 
 ```

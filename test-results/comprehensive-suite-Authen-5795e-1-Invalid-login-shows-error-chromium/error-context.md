@@ -12,21 +12,44 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/login
-Call log:
-  - navigating to "http://localhost:4050/login", waiting until "load"
+Error: expect(locator).toBeVisible() failed
 
+Locator: locator('text=Invalid email or password, text=Invalid').or(locator('.error'))
+Expected: visible
+Timeout: 5000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toBeVisible" with timeout 5000ms
+  - waiting for locator('text=Invalid email or password, text=Invalid').or(locator('.error'))
+
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e7]
+      - heading "Welcome back" [level=3] [ref=e9]
+      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - text: Email
+          - textbox "Email" [ref=e14]:
+            - /placeholder: name@example.com
+        - generic [ref=e15]:
+          - text: Password
+          - textbox "Password" [ref=e16]
+      - button "Sign In" [ref=e18] [cursor=pointer]
+  - region "Notifications alt+T"
 ```
 
 # Test source
 
 ```ts
-  780 | 
-  781 |     console.log(`300K orders aggregation executed in ${queryTime}ms`);
-  782 |     expect(queryTime).toBeLessThan(45000);
-  783 |   });
-  784 | 
-  785 |   test('L3. Complex 3-table JOIN with large datasets', async ({ page }) => {
   786 |     await page.goto(`${BASE_URL}/sql-editor`);
   787 | 
   788 |     const editor = page.locator('.monaco-editor, [contenteditable="true"], textarea').first();
@@ -121,14 +144,14 @@ Call log:
   877 | 
   878 | test.describe('Authentication & Security', () => {
   879 |   test('A1. Invalid login shows error', async ({ page }) => {
-> 880 |     await page.goto(`${BASE_URL}/login`);
-      |                ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/login
+  880 |     await page.goto(`${BASE_URL}/login`);
   881 | 
   882 |     await page.fill('input[name="email"], input[type="email"]', 'invalid@test.com');
   883 |     await page.fill('input[name="password"], input[type="password"]', 'wrongpassword');
   884 |     await page.click('button[type="submit"], button:has-text("Sign In")');
   885 | 
-  886 |     await expect(page.locator('text=Invalid email or password, text=Invalid').or(page.locator('.error'))).toBeVisible({ timeout: 5000 });
+> 886 |     await expect(page.locator('text=Invalid email or password, text=Invalid').or(page.locator('.error'))).toBeVisible({ timeout: 5000 });
+      |                                                                                                           ^ Error: expect(locator).toBeVisible() failed
   887 |   });
   888 | 
   889 |   test('A2. Protected routes redirect to login', async ({ page }) => {

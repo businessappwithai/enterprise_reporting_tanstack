@@ -12,10 +12,32 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
+TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
 Call log:
-  - navigating to "http://localhost:4050/", waiting until "load"
+  - waiting for getByRole('heading', { name: 'Dashboard', exact: true }) to be visible
 
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e7]
+      - heading "Welcome back" [level=3] [ref=e9]
+      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - text: Email
+          - textbox "Email" [ref=e14]:
+            - /placeholder: name@example.com
+        - generic [ref=e15]:
+          - text: Password
+          - textbox "Password" [ref=e16]
+      - button "Sign In" [ref=e18] [cursor=pointer]
+  - region "Notifications alt+T"
 ```
 
 # Test source
@@ -42,15 +64,15 @@ Call log:
   19  | test.describe('RBAC - Admin Access Verification', () => {
   20  |   test.beforeEach(async ({ page }) => {
   21  |     // Login as admin before each test
-> 22  |     await page.goto('/');
-      |                ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
+  22  |     await page.goto('/');
   23  |     await page.getByPlaceholder('name@example.com').fill(ADMIN_USER.email);
   24  |     await page.getByLabel('Password').fill(ADMIN_USER.password);
   25  |     await page.getByRole('button', { name: 'Sign In' }).click();
   26  | 
   27  |     // Wait for dashboard using multiple indicators
   28  |     await Promise.race([
-  29  |       page.getByRole('heading', { name: 'Dashboard', exact: true }).waitFor({ state: 'visible', timeout: 15000 }),
+> 29  |       page.getByRole('heading', { name: 'Dashboard', exact: true }).waitFor({ state: 'visible', timeout: 15000 }),
+      |                                                                     ^ TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
   30  |       page.getByText('Welcome to the Enterprise Reporting System').waitFor({ state: 'visible', timeout: 15000 }),
   31  |       page.getByRole('navigation').first().waitFor({ state: 'visible', timeout: 15000 }),
   32  |     ]);
@@ -144,4 +166,11 @@ Call log:
   120 |     await Promise.race([
   121 |       page.getByRole('heading', { name: 'Dashboard', exact: true }).waitFor({ state: 'visible', timeout: 15000 }),
   122 |       page.getByText('Welcome to the Enterprise Reporting System').waitFor({ state: 'visible', timeout: 15000 }),
+  123 |       page.getByRole('navigation').first().waitFor({ state: 'visible', timeout: 15000 }),
+  124 |     ]);
+  125 | 
+  126 |     await page.waitForTimeout(1000);
+  127 |   });
+  128 | 
+  129 |   test('roles page displays default roles', async ({ page }) => {
 ```

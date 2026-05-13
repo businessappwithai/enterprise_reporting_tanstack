@@ -12,41 +12,36 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/login
-Call log:
-  - navigating to "http://localhost:4050/login", waiting until "load"
+Error: expect(received).toBeTruthy()
 
+Received: false
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e7]
+      - heading "Welcome back" [level=3] [ref=e9]
+      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - text: Email
+          - textbox "Email" [ref=e14]:
+            - /placeholder: name@example.com
+        - generic [ref=e15]:
+          - text: Password
+          - textbox "Password" [ref=e16]
+      - button "Sign In" [ref=e18] [cursor=pointer]
+  - region "Notifications alt+T"
 ```
 
 # Test source
 
 ```ts
-  72  | LIMIT 100`;
-  73  | 
-  74  |     await page.keyboard.type(complexQuery);
-  75  | 
-  76  |     // Execute and measure time
-  77  |     const startTime = Date.now();
-  78  |     await page.click('button:has-text("Execute"), button:has-text("Run"), button:has-text("▶")');
-  79  | 
-  80  |     // Wait for results
-  81  |     await page.waitForTimeout(10000);
-  82  |     const queryTime = Date.now() - startTime;
-  83  | 
-  84  |     console.log(`Complex JOIN query completed in ${queryTime}ms`);
-  85  | 
-  86  |     // Query should complete within 30 seconds
-  87  |     expect(queryTime).toBeLessThan(30000);
-  88  |   });
-  89  | 
-  90  |   test('L4. Large result set handling (1000 rows)', async ({ page }) => {
-  91  |     await page.goto('/sql-editor');
-  92  | 
-  93  |     await expect(page.locator('text=SQL Editor').or(page.locator('h1'))).toBeVisible();
-  94  | 
-  95  |     const editor = page.locator('.monaco-editor, .view-line').first();
-  96  |     await editor.click();
-  97  | 
   98  |     await page.keyboard.type('SELECT * FROM orders ORDER BY id DESC LIMIT 1000');
   99  | 
   100 |     const startTime = Date.now();
@@ -121,8 +116,7 @@ Call log:
   169 | test.describe('Comprehensive Application Testing', () => {
   170 |   test.beforeEach(async ({ page }) => {
   171 |     // Login before each test
-> 172 |     await page.goto('/login');
-      |                ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/login
+  172 |     await page.goto('/login');
   173 |     await page.fill('input[name="email"], input[type="email"]', 'admin@admin.com');
   174 |     await page.fill('input[name="password"], input[type="password"]', 'admin');
   175 |     await page.click('button[type="submit"]');
@@ -148,7 +142,8 @@ Call log:
   195 |     for (const pageData of pages) {
   196 |       await page.goto(pageData.path);
   197 |       const visible = await page.locator('h1').or(page.locator(`text=${pageData.name}`)).or(page.locator('text=Dashboard')).or(page.locator('text=SQL')).or(page.locator('text=Reports')).first().isVisible({ timeout: 10000 });
-  198 |       expect(visible).toBeTruthy();
+> 198 |       expect(visible).toBeTruthy();
+      |                       ^ Error: expect(received).toBeTruthy()
   199 |       console.log(`✓ ${pageData.name} page loaded`);
   200 |     }
   201 |   });
@@ -223,4 +218,30 @@ Call log:
   270 |   test('A2. Invalid login shows error', async ({ page }) => {
   271 |     await page.goto('/login');
   272 | 
+  273 |     await page.fill('input[name="email"], input[type="email"]', 'invalid@test.com');
+  274 |     await page.fill('input[name="password"], input[type="password"]', 'wrongpass');
+  275 |     await page.click('button[type="submit"]');
+  276 | 
+  277 |     // Should show error
+  278 |     await expect(page.locator('text=Invalid').or(page.locator('.error')).or(page.locator('text=Email or password'))).toBeVisible({ timeout: 5000 });
+  279 |   });
+  280 | 
+  281 |   test('A3. Protected routes redirect to login', async ({ page, context }) => {
+  282 |     // Clear all cookies
+  283 |     await context.clearCookies();
+  284 | 
+  285 |     await page.goto('/reports');
+  286 | 
+  287 |     // Should redirect to login
+  288 |     await expect(page).toHaveURL(/login/);
+  289 |   });
+  290 | });
+  291 | 
+  292 | test.describe('Data Source Testing', () => {
+  293 |   test.beforeEach(async ({ page }) => {
+  294 |     // Login before each test
+  295 |     await page.goto('/login');
+  296 |     await page.fill('input[name="email"], input[type="email"]', 'admin@admin.com');
+  297 |     await page.fill('input[name="password"], input[type="password"]', 'admin');
+  298 |     await page.click('button[type="submit"]');
 ```

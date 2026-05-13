@@ -12,130 +12,237 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
+TimeoutError: locator.click: Timeout 15000ms exceeded.
 Call log:
-  - navigating to "http://localhost:4050/", waiting until "load"
+  - waiting for locator('table tbody tr, [role="row"]').first()
 
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e7]
+      - heading "Welcome back" [level=3] [ref=e9]
+      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - text: Email
+          - textbox "Email" [ref=e14]:
+            - /placeholder: name@example.com
+        - generic [ref=e15]:
+          - text: Password
+          - textbox "Password" [ref=e16]
+      - button "Sign In" [ref=e18] [cursor=pointer]
+  - region "Notifications alt+T"
 ```
 
 # Test source
 
 ```ts
-  11  |   // Return cached cookie if available
-  12  |   if (cachedAuthCookie) {
-  13  |     console.log('Using cached auth cookie');
-  14  |     return cachedAuthCookie;
-  15  |   }
-  16  | 
-  17  |   console.log('Getting fresh auth cookie...');
-  18  | 
-  19  |   // Try API-based authentication first
-  20  |   try {
-  21  |     const signInResponse = await request.post('/api/auth/callback/credentials', {
-  22  |       headers: {
-  23  |         'Content-Type': 'application/json',
-  24  |       },
-  25  |       data: JSON.stringify({
-  26  |         email: 'admin@admin.com',
-  27  |         password: 'admin',
-  28  |         csrfToken: 'test-csrf-token',
-  29  |         json: true,
-  30  |       }),
-  31  |     });
-  32  | 
-  33  |     console.log('Sign-in response status:', signInResponse.status());
-  34  | 
-  35  |     // Get cookies from the response headers
-  36  |     const setCookieHeaders = signInResponse.headers()['set-cookie'];
-  37  |     if (setCookieHeaders) {
-  38  |       const cookieArray = Array.isArray(setCookieHeaders) ? setCookieHeaders : [setCookieHeaders];
-  39  |       for (const cookieHeader of cookieArray) {
-  40  |         const match = cookieHeader.match(/authjs\.session-token=([^;]+)/);
-  41  |         if (match) {
-  42  |           cachedAuthCookie = `authjs.session-token=${match[1]}`;
-  43  |           console.log('Got auth cookie from API sign-in');
-  44  |           return cachedAuthCookie;
-  45  |         }
-  46  |       }
-  47  |     }
-  48  | 
-  49  |     console.log('No session cookie in API response, trying browser fallback...');
-  50  |   } catch (error) {
-  51  |     console.log('API sign-in failed, trying browser fallback:', error);
-  52  |   }
-  53  | 
-  54  |   // Fallback: use browser-based login
-  55  |   if (!browser) {
-  56  |     throw new Error('Browser is required for fallback authentication');
-  57  |   }
-  58  | 
-  59  |   const page = await browser.newPage();
-  60  |   const testHelpers = new TestHelpers(page);
-  61  | 
-  62  |   try {
-  63  |     await page.goto('/');
-  64  |     const currentUrl = page.url();
-  65  | 
-  66  |     if (currentUrl.includes('/login')) {
-  67  |       console.log('Logging in via browser...');
-  68  |       await testHelpers.login();
-  69  |     }
+  54  | 
+  55  |       // Should redirect to dashboard
+  56  |       await page.waitForURL(/\/(dashboard|)$/, { timeout: 10000 });
+  57  |       expect(page.url()).toMatch(/\/(dashboard|)$/);
+  58  |     });
+  59  | 
+  60  |     test('1.2 User cannot login with invalid credentials', async ({ page }) => {
+  61  |       await page.goto(`${BASE_URL}/login`);
+  62  | 
+  63  |       await page.fill('input[name="email"]', 'invalid@test.com');
+  64  |       await page.fill('input[name="password"]', 'wrongpassword');
+  65  |       await page.click('button[type="submit"]');
+  66  | 
+  67  |       // Should show error message
+  68  |       await expect(page.locator('text=Invalid credentials')).toBeVisible({ timeout: 5000 });
+  69  |     });
   70  | 
-  71  |     // Wait for session to be established
-  72  |     await page.waitForTimeout(5000);
-  73  |     await page.goto('/');
-  74  |     await page.waitForLoadState('domcontentloaded');
-  75  |     await page.waitForTimeout(3000);
-  76  | 
-  77  |     const cookies = await page.context().cookies();
-  78  |     console.log('Cookies after login:', cookies.map(c => c.name));
-  79  | 
-  80  |     const authCookieObj = cookies.find(c => c.name.includes('session-token'));
-  81  | 
-  82  |     if (!authCookieObj) {
-  83  |       throw new Error('No auth cookie found after login. Available cookies: ' + cookies.map(c => c.name).join(', '));
-  84  |     }
+  71  |     test('1.3 User can logout', async ({ page }) => {
+  72  |       await login(page);
+  73  | 
+  74  |       // Click user menu and logout
+  75  |       await page.click('[data-testid="user-menu-button"]');
+  76  |       await page.click('text=Logout');
+  77  | 
+  78  |       // Should redirect to login
+  79  |       await page.waitForURL('/login', { timeout: 10000 });
+  80  |       expect(page.url()).toContain('/login');
+  81  |     });
+  82  | 
+  83  |     test('1.4 Unauthenticated user is redirected to login', async ({ page }) => {
+  84  |       await page.goto(`${BASE_URL}/reports`);
   85  | 
-  86  |     cachedAuthCookie = `${authCookieObj.name}=${authCookieObj.value}`;
-  87  |     console.log('Got auth cookie from browser login');
-  88  | 
-  89  |     return cachedAuthCookie;
-  90  |   } finally {
-  91  |     await page.close();
-  92  |   }
-  93  | }
-  94  | 
-  95  | /**
-  96  |  * Clear cached auth cookie (useful for testing logout scenarios)
-  97  |  */
-  98  | export function clearAuthCache(): void {
-  99  |   cachedAuthCookie = null;
-  100 | }
-  101 | 
-  102 | /**
-  103 |  * Simple login function for E2E tests
-  104 |  * Performs login via UI and returns when authenticated
-  105 |  */
-  106 | export async function login(page: Page, email: string = 'admin@admin.com', password: string = 'admin'): Promise<void> {
-  107 |   const BASE_URL = process.env.BASE_URL || 'http://localhost:4050';
-  108 |   const testHelpers = new TestHelpers(page);
-  109 | 
-  110 |   // Navigate to login page if not already there
-> 111 |   await page.goto(BASE_URL);
-      |              ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-  112 |   const currentUrl = page.url();
+  86  |       // Should redirect to login
+  87  |       await page.waitForURL('/login', { timeout: 5000 });
+  88  |       expect(page.url()).toContain('/login');
+  89  |     });
+  90  |   });
+  91  | 
+  92  |   // ========================================================================
+  93  |   // PART 2: DATA SOURCE MANAGEMENT
+  94  |   // ========================================================================
+  95  | 
+  96  |   test.describe('Data Source Management', () => {
+  97  |     test.beforeEach(async ({ page }) => {
+  98  |       await login(page);
+  99  |     });
+  100 | 
+  101 |     test('2.1 Can view data sources list', async ({ page }) => {
+  102 |       await page.goto(`${BASE_URL}/data-sources`);
+  103 | 
+  104 |       // Page should load
+  105 |       await expect(page.locator('h1').filter({ hasText: /data sources/i })).toBeVisible();
+  106 | 
+  107 |       // Should have a table of data sources
+  108 |       await expect(page.locator('table, [role="table"]')).toBeVisible();
+  109 |     });
+  110 | 
+  111 |     test('2.2 Can create a new data source', async ({ page }) => {
+  112 |       await page.goto(`${BASE_URL}/data-sources`);
   113 | 
-  114 |   if (!currentUrl.includes('/login')) {
-  115 |     // Already logged in or on another page
-  116 |     return;
-  117 |   }
-  118 | 
-  119 |   // Perform login
-  120 |   await testHelpers.login();
-  121 | 
-  122 |   // Wait for navigation to dashboard
-  123 |   await page.waitForURL(/\/(dashboard|)/, { timeout: 10000 });
-  124 |   await page.waitForLoadState('domcontentloaded');
-  125 | }
-  126 | 
+  114 |       // Click "New Data Source" button
+  115 |       await page.click('button:has-text("New Data Source"), button:has-text("Add Data Source")');
+  116 | 
+  117 |       // Wait for dialog/modal
+  118 |       await expect(page.locator('[role="dialog"], .dialog, dialog')).toBeVisible();
+  119 | 
+  120 |       // Fill form
+  121 |       await page.fill('input[name="name"]', `E2E Test ${Date.now()}`);
+  122 |       await page.selectOption('select[name="type"]', 'postgres');
+  123 |       await page.fill('input[name="host"]', 'localhost');
+  124 |       await page.fill('input[name="port"]', '5432');
+  125 |       await page.fill('input[name="database"]', 'test_db');
+  126 |       await page.fill('input[name="username"]', 'test_user');
+  127 |       await page.fill('input[name="password"]', 'test_pass');
+  128 | 
+  129 |       // Submit
+  130 |       await page.click('button:has-text("Save"), button:has-text("Create"), button[type="submit"]');
+  131 | 
+  132 |       // Should show success message
+  133 |       await expect(page.locator('text=success, text=created, text=saved').first()).toBeVisible({ timeout: 5000 });
+  134 |     });
+  135 | 
+  136 |     test('2.3 Can test data source connection', async ({ page }) => {
+  137 |       await page.goto(`${BASE_URL}/data-sources`);
+  138 | 
+  139 |       // Find first data source with test button
+  140 |       const testButton = page.locator('button:has-text("Test Connection")').first();
+  141 |       if (await testButton.isVisible()) {
+  142 |         await testButton.click();
+  143 | 
+  144 |         // Should show connection result
+  145 |         await expect(page.locator('text=success, text=connected, text=failed').first()).toBeVisible({ timeout: 5000 });
+  146 |       }
+  147 |     });
+  148 | 
+  149 |     test('2.4 Can view data source schema', async ({ page }) => {
+  150 |       await page.goto(`${BASE_URL}/data-sources`);
+  151 | 
+  152 |       // Click on a data source
+  153 |       const firstRow = page.locator('table tbody tr, [role="row"]').first();
+> 154 |       await firstRow.click();
+      |                      ^ TimeoutError: locator.click: Timeout 15000ms exceeded.
+  155 | 
+  156 |       // Should show schema or navigate to detail page
+  157 |       await page.waitForTimeout(2000);
+  158 | 
+  159 |       // Look for tables or schema info
+  160 |       const hasTables = await page.locator('text=table, text=Tables').count() > 0;
+  161 |       const hasSchema = await page.locator('.schema, [data-testid="schema"]').count() > 0;
+  162 | 
+  163 |       expect(hasTables || hasSchema).toBeTruthy();
+  164 |     });
+  165 |   });
+  166 | 
+  167 |   // ========================================================================
+  168 |   // PART 3: SQL EDITOR
+  169 |   // ========================================================================
+  170 | 
+  171 |   test.describe('SQL Editor', () => {
+  172 |     test.beforeEach(async ({ page }) => {
+  173 |       await login(page);
+  174 |     });
+  175 | 
+  176 |     test('3.1 SQL editor page loads', async ({ page }) => {
+  177 |       await page.goto(`${BASE_URL}/sql-editor`);
+  178 | 
+  179 |       // Should have Monaco editor
+  180 |       await expect(page.locator('.monaco-editor, .editor-container')).toBeVisible({ timeout: 10000 });
+  181 | 
+  182 |       // Should have execute button
+  183 |       await expect(page.locator('button:has-text("Run"), button:has-text("Execute")')).toBeVisible();
+  184 |     });
+  185 | 
+  186 |     test('3.2 Can execute a simple query', async ({ page }) => {
+  187 |       await page.goto(`${BASE_URL}/sql-editor`);
+  188 | 
+  189 |       // Wait for editor to load
+  190 |       await expect(page.locator('.monaco-editor')).toBeVisible({ timeout: 10000 });
+  191 | 
+  192 |       // Type a query
+  193 |       await page.keyboard.type('SELECT 1 as test_column');
+  194 | 
+  195 |       // Click execute
+  196 |       await page.click('button:has-text("Run"), button:has-text("Execute")');
+  197 | 
+  198 |       // Wait for results
+  199 |       await page.waitForTimeout(3000);
+  200 | 
+  201 |       // Should show results table or no error
+  202 |       const hasResults = await page.locator('table, [role="table"], .results').count() > 0;
+  203 |       const hasNoError = await page.locator('text=error, text=Error').count() === 0;
+  204 | 
+  205 |       expect(hasResults || hasNoError).toBeTruthy();
+  206 |     });
+  207 | 
+  208 |     test('3.3 Can save a query', async ({ page }) => {
+  209 |       await page.goto(`${BASE_URL}/sql-editor`);
+  210 | 
+  211 |       await expect(page.locator('.monaco-editor')).toBeVisible({ timeout: 10000 });
+  212 | 
+  213 |       // Type query
+  214 |       const queryName = `E2E Test Query ${Date.now()}`;
+  215 |       await page.keyboard.type(`SELECT * FROM users LIMIT 10`);
+  216 | 
+  217 |       // Click save button
+  218 |       await page.click('button:has-text("Save")');
+  219 | 
+  220 |       // Fill name in dialog
+  221 |       await page.fill('input[name="name"], input[placeholder*="name"]', queryName);
+  222 |       await page.click('button:has-text("Save"), button:has-text("Create")');
+  223 | 
+  224 |       // Should show success
+  225 |       await expect(page.locator('text=saved, text=success').first()).toBeVisible({ timeout: 5000 });
+  226 |     });
+  227 | 
+  228 |     test('3.4 Can view schema browser', async ({ page }) => {
+  229 |       await page.goto(`${BASE_URL}/sql-editor`);
+  230 | 
+  231 |       // Look for schema browser panel
+  232 |       const schemaBrowser = page.locator('.schema-browser, [data-testid="schema-browser"], .sidebar').first();
+  233 | 
+  234 |       if (await schemaBrowser.isVisible()) {
+  235 |         // Should expand to show tables
+  236 |         await expect(schemaBrowser).toBeVisible();
+  237 |       }
+  238 |     });
+  239 |   });
+  240 | 
+  241 |   // ========================================================================
+  242 |   // PART 4: REPORTS
+  243 |   // ========================================================================
+  244 | 
+  245 |   test.describe('Reports', () => {
+  246 |     test.beforeEach(async ({ page }) => {
+  247 |       await login(page);
+  248 |     });
+  249 | 
+  250 |     test('4.1 Can view reports list', async ({ page }) => {
+  251 |       await page.goto(`${BASE_URL}/reports`);
+  252 | 
+  253 |       await expect(page.locator('h1').filter({ hasText: /reports/i })).toBeVisible();
+  254 |       await expect(page.locator('table, [role="table"], .grid')).toBeVisible();
 ```

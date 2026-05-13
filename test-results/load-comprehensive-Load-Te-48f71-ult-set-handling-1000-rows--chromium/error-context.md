@@ -12,10 +12,39 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/login
-Call log:
-  - navigating to "http://localhost:4050/login", waiting until "load"
+Error: expect(locator).toBeVisible() failed
 
+Locator: locator('text=SQL Editor').or(locator('h1'))
+Expected: visible
+Timeout: 5000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toBeVisible" with timeout 5000ms
+  - waiting for locator('text=SQL Editor').or(locator('h1'))
+
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e7]
+      - heading "Welcome back" [level=3] [ref=e9]
+      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - text: Email
+          - textbox "Email" [ref=e14]:
+            - /placeholder: name@example.com
+        - generic [ref=e15]:
+          - text: Password
+          - textbox "Password" [ref=e16]
+      - button "Sign In" [ref=e18] [cursor=pointer]
+  - region "Notifications alt+T"
 ```
 
 # Test source
@@ -31,8 +60,7 @@ Call log:
   8   | test.describe('Load Testing - Large Dataset', () => {
   9   |   test.beforeEach(async ({ page }) => {
   10  |     // Login before each test
-> 11  |     await page.goto('/login');
-      |                ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/login
+  11  |     await page.goto('/login');
   12  |     await page.fill('input[name="email"], input[type="email"]', 'admin@admin.com');
   13  |     await page.fill('input[name="password"], input[type="password"]', 'admin');
   14  |     await page.click('button[type="submit"]');
@@ -114,7 +142,8 @@ Call log:
   90  |   test('L4. Large result set handling (1000 rows)', async ({ page }) => {
   91  |     await page.goto('/sql-editor');
   92  | 
-  93  |     await expect(page.locator('text=SQL Editor').or(page.locator('h1'))).toBeVisible();
+> 93  |     await expect(page.locator('text=SQL Editor').or(page.locator('h1'))).toBeVisible();
+      |                                                                          ^ Error: expect(locator).toBeVisible() failed
   94  | 
   95  |     const editor = page.locator('.monaco-editor, .view-line').first();
   96  |     await editor.click();
@@ -133,4 +162,86 @@ Call log:
   109 |   test('L5. Aggregation query performance', async ({ page }) => {
   110 |     await page.goto('/sql-editor');
   111 | 
+  112 |     await expect(page.locator('text=SQL Editor').or(page.locator('h1'))).toBeVisible();
+  113 | 
+  114 |     const editor = page.locator('.monaco-editor, .view-line').first();
+  115 |     await editor.click();
+  116 | 
+  117 |     const aggQuery = `SELECT
+  118 |   status,
+  119 |   COUNT(*) as count,
+  120 |   SUM(total_amount) as total,
+  121 |   AVG(total_amount) as average
+  122 | FROM orders
+  123 | GROUP BY status`;
+  124 | 
+  125 |     await page.keyboard.type(aggQuery);
+  126 | 
+  127 |     const startTime = Date.now();
+  128 |     await page.click('button:has-text("Execute"), button:has-text("Run"), button:has-text("▶")');
+  129 | 
+  130 |     await page.waitForTimeout(10000);
+  131 |     const queryTime = Date.now() - startTime;
+  132 | 
+  133 |     console.log(`Aggregation query completed in ${queryTime}ms`);
+  134 |     expect(queryTime).toBeLessThan(20000);
+  135 |   });
+  136 | 
+  137 |   test('L6. Multiple sequential queries (stress test)', async ({ page }) => {
+  138 |     await page.goto('/sql-editor');
+  139 | 
+  140 |     await expect(page.locator('text=SQL Editor').or(page.locator('h1'))).toBeVisible();
+  141 | 
+  142 |     const queries = [
+  143 |       'SELECT COUNT(*) FROM customers',
+  144 |       'SELECT COUNT(*) FROM orders',
+  145 |       'SELECT COUNT(*) FROM order_items',
+  146 |       'SELECT status, COUNT(*) FROM orders GROUP BY status'
+  147 |     ];
+  148 | 
+  149 |     const editor = page.locator('.monaco-editor, .view-line').first();
+  150 |     const totalTime = Date.now();
+  151 | 
+  152 |     for (const query of queries) {
+  153 |       await editor.click();
+  154 |       // Clear editor
+  155 |       await page.keyboard.press('Control+A');
+  156 |       await page.keyboard.press('Delete');
+  157 |       await page.keyboard.type(query);
+  158 | 
+  159 |       await page.click('button:has-text("Execute"), button:has-text("Run"), button:has-text("▶")');
+  160 |       await page.waitForTimeout(5000);
+  161 |     }
+  162 | 
+  163 |     const totalTimeMs = Date.now() - totalTime;
+  164 |     console.log(`All queries completed in ${totalTimeMs}ms`);
+  165 |     expect(totalTimeMs).toBeLessThan(60000);
+  166 |   });
+  167 | });
+  168 | 
+  169 | test.describe('Comprehensive Application Testing', () => {
+  170 |   test.beforeEach(async ({ page }) => {
+  171 |     // Login before each test
+  172 |     await page.goto('/login');
+  173 |     await page.fill('input[name="email"], input[type="email"]', 'admin@admin.com');
+  174 |     await page.fill('input[name="password"], input[type="password"]', 'admin');
+  175 |     await page.click('button[type="submit"]');
+  176 |     await page.waitForURL(/\//);
+  177 |   });
+  178 | 
+  179 |   test('C1. Navigate all main pages', async ({ page }) => {
+  180 |     const pages = [
+  181 |       { path: '/', name: 'Dashboard' },
+  182 |       { path: '/sql-editor', name: 'SQL Editor' },
+  183 |       { path: '/queries', name: 'Saved Queries' },
+  184 |       { path: '/reports', name: 'Reports' },
+  185 |       { path: '/charts', name: 'Charts' },
+  186 |       { path: '/dashboards', name: 'Dashboards' },
+  187 |       { path: '/filters', name: 'Filters' },
+  188 |       { path: '/jobs', name: 'Jobs' },
+  189 |       { path: '/data-sources', name: 'Data Sources' },
+  190 |       { path: '/admin/users', name: 'Users' },
+  191 |       { path: '/admin/roles', name: 'Roles' },
+  192 |       { path: '/settings', name: 'Settings' }
+  193 |     ];
 ```

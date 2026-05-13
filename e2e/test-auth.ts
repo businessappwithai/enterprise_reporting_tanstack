@@ -6,6 +6,7 @@ let cachedAuthCookie: string | null = null;
 /**
  * Get authentication cookie for API requests
  * Uses caching to avoid re-authenticating for every test suite
+ * TanStack Start JWT-based authentication
  */
 export async function getAuthCookie(request: APIRequestContext, browser?: Browser): Promise<string> {
   // Return cached cookie if available
@@ -14,73 +15,38 @@ export async function getAuthCookie(request: APIRequestContext, browser?: Browse
     return cachedAuthCookie;
   }
 
-  console.log('Getting fresh auth cookie...');
+  console.log('Getting fresh auth cookie via browser...');
 
-  // Try API-based authentication first
-  try {
-    const signInResponse = await request.post('/api/auth/callback/credentials', {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      data: JSON.stringify({
-        email: 'admin@admin.com',
-        password: 'admin',
-        csrfToken: 'test-csrf-token',
-        json: true,
-      }),
-    });
-
-    console.log('Sign-in response status:', signInResponse.status());
-
-    // Get cookies from the response headers
-    const setCookieHeaders = signInResponse.headers()['set-cookie'];
-    if (setCookieHeaders) {
-      const cookieArray = Array.isArray(setCookieHeaders) ? setCookieHeaders : [setCookieHeaders];
-      for (const cookieHeader of cookieArray) {
-        const match = cookieHeader.match(/authjs\.session-token=([^;]+)/);
-        if (match) {
-          cachedAuthCookie = `authjs.session-token=${match[1]}`;
-          console.log('Got auth cookie from API sign-in');
-          return cachedAuthCookie;
-        }
-      }
-    }
-
-    console.log('No session cookie in API response, trying browser fallback...');
-  } catch (error) {
-    console.log('API sign-in failed, trying browser fallback:', error);
-  }
-
-  // Fallback: use browser-based login
+  // Use browser-based login for TanStack Start JWT authentication
   if (!browser) {
-    throw new Error('Browser is required for fallback authentication');
+    throw new Error('Browser is required for TanStack Start authentication');
   }
 
   const page = await browser.newPage();
   const testHelpers = new TestHelpers(page);
 
   try {
-    await page.goto('/');
+    const BASE_URL = process.env.BASE_URL || 'http://localhost:4050';
+    await page.goto(BASE_URL);
     const currentUrl = page.url();
 
     if (currentUrl.includes('/login')) {
       console.log('Logging in via browser...');
-      await testHelpers.login();
+      await testHelpers.login('admin@admin.com', 'admin');
     }
 
     // Wait for session to be established
-    await page.waitForTimeout(5000);
-    await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(3000);
+    await page.waitForTimeout(2000);
+    await page.goto(`${BASE_URL}/dashboard`, { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(2000);
 
     const cookies = await page.context().cookies();
     console.log('Cookies after login:', cookies.map(c => c.name));
 
-    const authCookieObj = cookies.find(c => c.name.includes('session-token'));
+    const authCookieObj = cookies.find(c => c.name === 'session_token');
 
     if (!authCookieObj) {
-      throw new Error('No auth cookie found after login. Available cookies: ' + cookies.map(c => c.name).join(', '));
+      throw new Error('No session_token cookie found after login. Available cookies: ' + cookies.map(c => c.name).join(', '));
     }
 
     cachedAuthCookie = `${authCookieObj.name}=${authCookieObj.value}`;

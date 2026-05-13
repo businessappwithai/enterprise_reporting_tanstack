@@ -12,10 +12,32 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
+TimeoutError: locator.click: Timeout 15000ms exceeded.
 Call log:
-  - navigating to "http://localhost:4050/", waiting until "load"
+  - waiting for getByRole('button', { name: /create role/i })
 
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e7]
+      - heading "Welcome back" [level=3] [ref=e9]
+      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - text: Email
+          - textbox "Email" [ref=e14]:
+            - /placeholder: name@example.com
+        - generic [ref=e15]:
+          - text: Password
+          - textbox "Password" [ref=e16]
+      - button "Sign In" [ref=e18] [cursor=pointer]
+  - region "Notifications alt+T"
 ```
 
 # Test source
@@ -36,8 +58,7 @@ Call log:
   13  | test.describe('Granular Permissions - Resource-Level Access', () => {
   14  |   test.beforeEach(async ({ page }) => {
   15  |     // Login as admin before each test
-> 16  |     await page.goto('/');
-      |                ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
+  16  |     await page.goto('/');
   17  |     await page.getByPlaceholder('name@example.com').fill('admin@admin.com');
   18  |     await page.getByLabel('Password').fill('admin');
   19  |     await page.getByRole('button', { name: 'Sign In' }).click();
@@ -52,7 +73,8 @@ Call log:
   28  |     await page.waitForTimeout(2000);
   29  | 
   30  |     // Click Create Role button
-  31  |     await page.getByRole('button', { name: /create role/i }).click();
+> 31  |     await page.getByRole('button', { name: /create role/i }).click();
+      |                                                              ^ TimeoutError: locator.click: Timeout 15000ms exceeded.
   32  | 
   33  |     // Wait for dialog to open
   34  |     await expect(page.getByRole('heading', { name: 'Create Role' })).toBeVisible({ timeout: 5000 });
@@ -138,4 +160,19 @@ Call log:
   114 | 
   115 |       // Verify role was created
   116 |       const roleCreated = await page.getByText(roleName).isVisible({ timeout: 5000 }).catch(() => false);
+  117 |       expect(roleCreated).toBeTruthy();
+  118 |     } else {
+  119 |       // No resources available - this is okay, just verify tabs are present
+  120 |       await expect(page.getByRole('tab', { name: 'Resource Permissions' })).toBeVisible();
+  121 |     }
+  122 | 
+  123 |     await page.screenshot({ path: 'screenshots/granular-permissions-create.png' });
+  124 |   });
+  125 | 
+  126 |   test('should edit role and update resource permissions', async ({ page }) => {
+  127 |     await page.goto('/admin/roles');
+  128 |     await page.waitForTimeout(2000);
+  129 | 
+  130 |     // Find an existing edit button (skip complex creation step)
+  131 |     const editButtons = await page.getByRole('button', { name: /edit/i }).all();
 ```

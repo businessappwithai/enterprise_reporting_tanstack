@@ -12,130 +12,325 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-Call log:
-  - navigating to "http://localhost:4050/", waiting until "load"
+Error: expect(locator).toBeVisible() failed
 
+Locator: locator('.monaco-editor, [contenteditable="true"], textarea, .CodeMirror')
+Expected: visible
+Timeout: 5000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toBeVisible" with timeout 5000ms
+  - waiting for locator('.monaco-editor, [contenteditable="true"], textarea, .CodeMirror')
+
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - link "Enterprise Reports" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img [ref=e6]
+        - generic [ref=e8]: Enterprise Reports
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - heading "Main" [level=2] [ref=e14]
+          - navigation [ref=e15]:
+            - link "Dashboard" [ref=e16] [cursor=pointer]:
+              - /url: /
+              - button "Dashboard" [ref=e17]:
+                - img [ref=e18]
+                - generic [ref=e21]: Dashboard
+            - link "SQL Editor" [ref=e22] [cursor=pointer]:
+              - /url: /sql-editor
+              - button "SQL Editor" [ref=e23]:
+                - img [ref=e24]
+                - generic [ref=e26]: SQL Editor
+            - link "Saved Queries" [ref=e27] [cursor=pointer]:
+              - /url: /queries
+              - button "Saved Queries" [ref=e28]:
+                - img [ref=e29]
+                - generic [ref=e33]: Saved Queries
+            - link "Reports" [ref=e34] [cursor=pointer]:
+              - /url: /reports
+              - button "Reports" [ref=e35]:
+                - img [ref=e36]
+                - generic [ref=e39]: Reports
+            - link "Charts" [ref=e40] [cursor=pointer]:
+              - /url: /charts
+              - button "Charts" [ref=e41]:
+                - img [ref=e42]
+                - generic [ref=e44]: Charts
+            - link "Dashboards" [ref=e45] [cursor=pointer]:
+              - /url: /dashboards
+              - button "Dashboards" [ref=e46]:
+                - img [ref=e47]
+                - generic [ref=e52]: Dashboards
+            - link "Filters" [ref=e53] [cursor=pointer]:
+              - /url: /filters
+              - button "Filters" [ref=e54]:
+                - img [ref=e55]
+                - generic [ref=e57]: Filters
+            - link "Jobs" [ref=e58] [cursor=pointer]:
+              - /url: /jobs
+              - button "Jobs" [ref=e59]:
+                - img [ref=e60]
+                - generic [ref=e62]: Jobs
+            - link "NL Query" [ref=e63] [cursor=pointer]:
+              - /url: /nl-query
+              - button "NL Query" [ref=e64]:
+                - img [ref=e65]
+                - generic [ref=e67]: NL Query
+        - generic [ref=e68]:
+          - heading "Administration" [level=2] [ref=e69]
+          - navigation [ref=e70]:
+            - link "Data Sources" [ref=e71] [cursor=pointer]:
+              - /url: /data-sources
+              - button "Data Sources" [ref=e72]:
+                - img [ref=e73]
+                - generic [ref=e77]: Data Sources
+            - link "Queue Management" [ref=e78] [cursor=pointer]:
+              - /url: /bull-board
+              - button "Queue Management" [ref=e79]:
+                - img [ref=e80]
+                - generic [ref=e84]: Queue Management
+            - link "Users" [ref=e85] [cursor=pointer]:
+              - /url: /admin/users
+              - button "Users" [ref=e86]:
+                - img [ref=e87]
+                - generic [ref=e92]: Users
+            - link "Roles" [ref=e93] [cursor=pointer]:
+              - /url: /admin/roles
+              - button "Roles" [ref=e94]:
+                - img [ref=e95]
+                - generic [ref=e97]: Roles
+            - link "Permissions" [ref=e98] [cursor=pointer]:
+              - /url: /admin/permissions
+              - button "Permissions" [ref=e99]:
+                - img [ref=e100]
+                - generic [ref=e102]: Permissions
+            - link "Settings" [ref=e103] [cursor=pointer]:
+              - /url: /settings
+              - button "Settings" [ref=e104]:
+                - img [ref=e105]
+                - generic [ref=e108]: Settings
+      - button [ref=e109] [cursor=pointer]:
+        - img [ref=e110]
+    - generic [ref=e112]:
+      - banner [ref=e113]:
+        - button "Sakila Demo DB sqlite3" [ref=e115] [cursor=pointer]:
+          - img [ref=e116]
+          - generic [ref=e120]: Sakila Demo DB
+          - generic [ref=e121]: sqlite3
+        - generic [ref=e122]:
+          - button "Toggle theme" [ref=e123] [cursor=pointer]:
+            - img [ref=e124]
+            - img
+            - generic [ref=e130]: Toggle theme
+          - button "Notifications" [ref=e131] [cursor=pointer]:
+            - img [ref=e132]
+            - generic [ref=e135]: Notifications
+          - button "SA" [ref=e136] [cursor=pointer]:
+            - generic [ref=e138]: SA
+      - main [ref=e139]:
+        - generic [ref=e140]:
+          - generic [ref=e141]:
+            - generic [ref=e142]:
+              - heading "SQL Editor" [level=1] [ref=e143]
+              - paragraph [ref=e144]: Write and execute SQL queries
+            - generic [ref=e145]:
+              - button "Validate" [ref=e146] [cursor=pointer]
+              - button "Run Query" [ref=e147] [cursor=pointer]
+              - button "Save Query" [disabled] [ref=e148]
+          - generic [ref=e150]:
+            - paragraph [ref=e151]: "Data Source:"
+            - button "▲" [ref=e152] [cursor=pointer]
+          - button "Loading SQL Editor..." [ref=e153]:
+            - generic [ref=e157]:
+              - img [ref=e158]
+              - generic [ref=e160]: Loading SQL Editor...
+          - generic [ref=e161]:
+            - generic [ref=e162]:
+              - paragraph [ref=e163]: Schema Browser (Select a data source)
+              - button "▼" [ref=e165] [cursor=pointer]
+            - paragraph [ref=e167]: Select a data source to view schema
+          - generic [ref=e168]:
+            - generic [ref=e169]:
+              - button "Results" [ref=e170] [cursor=pointer]
+              - button "Errors" [ref=e171] [cursor=pointer]
+              - button "Logs" [ref=e172] [cursor=pointer]
+            - paragraph [ref=e176]: No results yet. Run a query to see results here.
+  - region "Notifications alt+T"
 ```
 
 # Test source
 
 ```ts
-  11  |   // Return cached cookie if available
-  12  |   if (cachedAuthCookie) {
-  13  |     console.log('Using cached auth cookie');
-  14  |     return cachedAuthCookie;
-  15  |   }
+  1   | /**
+  2   |  * Hospital Management System - WASM Architecture E2E Test
+  3   |  *
+  4   |  * This test:
+  5   |  * 1. Creates a PostgreSQL data source for hospital_management_system
+  6   |  * 2. Writes queries against bus_patient table (100,000 records)
+  7   |  * 3. Creates a report
+  8   |  * 4. Creates a chart
+  9   |  * 5. Tests WASM/DuckDB performance with large datasets
+  10  |  */
+  11  | 
+  12  | import { test, expect } from '@playwright/test';
+  13  | import { login } from './test-auth';
+  14  | 
+  15  | const BASE_URL = process.env.BASE_URL || 'http://localhost:4050';
   16  | 
-  17  |   console.log('Getting fresh auth cookie...');
-  18  | 
-  19  |   // Try API-based authentication first
-  20  |   try {
-  21  |     const signInResponse = await request.post('/api/auth/callback/credentials', {
-  22  |       headers: {
-  23  |         'Content-Type': 'application/json',
-  24  |       },
-  25  |       data: JSON.stringify({
-  26  |         email: 'admin@admin.com',
-  27  |         password: 'admin',
-  28  |         csrfToken: 'test-csrf-token',
-  29  |         json: true,
-  30  |       }),
-  31  |     });
-  32  | 
-  33  |     console.log('Sign-in response status:', signInResponse.status());
-  34  | 
-  35  |     // Get cookies from the response headers
-  36  |     const setCookieHeaders = signInResponse.headers()['set-cookie'];
-  37  |     if (setCookieHeaders) {
-  38  |       const cookieArray = Array.isArray(setCookieHeaders) ? setCookieHeaders : [setCookieHeaders];
-  39  |       for (const cookieHeader of cookieArray) {
-  40  |         const match = cookieHeader.match(/authjs\.session-token=([^;]+)/);
-  41  |         if (match) {
-  42  |           cachedAuthCookie = `authjs.session-token=${match[1]}`;
-  43  |           console.log('Got auth cookie from API sign-in');
-  44  |           return cachedAuthCookie;
-  45  |         }
-  46  |       }
-  47  |     }
+  17  | test.describe('Hospital Management System - WASM Architecture', () => {
+  18  |   test.beforeEach(async ({ page }) => {
+  19  |     await login(page);
+  20  |     await page.goto(`${BASE_URL}/`);
+  21  |   });
+  22  | 
+  23  |   test('1. Create PostgreSQL data source for hospital management', async ({ page }) => {
+  24  |     await page.goto(`${BASE_URL}/data-sources`);
+  25  | 
+  26  |     // Click "Add New Data Source" button
+  27  |     await page.click('button:has-text("Add"), button:has-text("New"), a:has-text("Add")');
+  28  | 
+  29  |     // Wait for form to load
+  30  |     await expect(page.locator('input[name="name"]')).toBeVisible({ timeout: 5000 });
+  31  | 
+  32  |     // Fill in data source details
+  33  |     await page.fill('input[name="name"]', 'Hospital Management System');
+  34  |     await page.fill('textarea[name="description"]', 'PostgreSQL database with 100K patient records for WASM testing');
+  35  | 
+  36  |     // Select PostgreSQL as client type
+  37  |     await page.selectOption('select[name="clientType"]', 'pg');
+  38  | 
+  39  |     // Fill connection details
+  40  |     await page.fill('input[name="host"]', 'localhost');
+  41  |     await page.fill('input[name="port"]', '5432');
+  42  |     await page.fill('input[name="database"]', 'hospital_management_system');
+  43  |     await page.fill('input[name="user"]', 'postgres');
+  44  |     await page.fill('input[name="password"]', '');
+  45  | 
+  46  |     // Test connection
+  47  |     await page.click('button:has-text("Test Connection")');
   48  | 
-  49  |     console.log('No session cookie in API response, trying browser fallback...');
-  50  |   } catch (error) {
-  51  |     console.log('API sign-in failed, trying browser fallback:', error);
-  52  |   }
-  53  | 
-  54  |   // Fallback: use browser-based login
-  55  |   if (!browser) {
-  56  |     throw new Error('Browser is required for fallback authentication');
-  57  |   }
+  49  |     // Wait for test result (should show success)
+  50  |     await expect(page.locator('text=Connection successful, text=Connected')).toBeVisible({ timeout: 10000 });
+  51  | 
+  52  |     // Save the data source
+  53  |     await page.click('button:has-text("Save"), button:has-text("Create")');
+  54  | 
+  55  |     // Verify data source was created
+  56  |     await expect(page.locator('text=Hospital Management System')).toBeVisible();
+  57  |   });
   58  | 
-  59  |   const page = await browser.newPage();
-  60  |   const testHelpers = new TestHelpers(page);
+  59  |   test('2. Execute queries against 100K patient records', async ({ page }) => {
+  60  |     await page.goto(`${BASE_URL}/sql-editor`);
   61  | 
-  62  |   try {
-  63  |     await page.goto('/');
-  64  |     const currentUrl = page.url();
-  65  | 
-  66  |     if (currentUrl.includes('/login')) {
-  67  |       console.log('Logging in via browser...');
-  68  |       await testHelpers.login();
-  69  |     }
-  70  | 
-  71  |     // Wait for session to be established
-  72  |     await page.waitForTimeout(5000);
-  73  |     await page.goto('/');
-  74  |     await page.waitForLoadState('domcontentloaded');
-  75  |     await page.waitForTimeout(3000);
-  76  | 
-  77  |     const cookies = await page.context().cookies();
-  78  |     console.log('Cookies after login:', cookies.map(c => c.name));
-  79  | 
-  80  |     const authCookieObj = cookies.find(c => c.name.includes('session-token'));
-  81  | 
-  82  |     if (!authCookieObj) {
-  83  |       throw new Error('No auth cookie found after login. Available cookies: ' + cookies.map(c => c.name).join(', '));
-  84  |     }
+  62  |     // Wait for SQL editor to load
+> 63  |     await expect(page.locator('.monaco-editor, [contenteditable="true"], textarea, .CodeMirror')).toBeVisible();
+      |                                                                                                   ^ Error: expect(locator).toBeVisible() failed
+  64  | 
+  65  |     // Query 1: Simple patient count
+  66  |     const countQuery = 'SELECT COUNT(*) as total_patients FROM bus_patient';
+  67  |     await page.locator('.monaco-editor textarea, .CodeMirror-code textarea, [contenteditable="true"]').first().fill(countQuery);
+  68  |     await page.click('button:has-text("Execute"), button:has-text("Run")');
+  69  | 
+  70  |     // Wait for results - should show 100,000
+  71  |     await expect(page.locator('table, .results, text=100000')).toBeVisible({ timeout: 15000 });
+  72  | 
+  73  |     // Query 2: Patient demographics aggregation
+  74  |     const demographicsQuery = `SELECT
+  75  |       gender,
+  76  |       blood_group,
+  77  |       COUNT(*) as patient_count,
+  78  |       ROUND(AVG(EXTRACT(YEAR FROM AGE(CURRENT_DATE, date_of_birth))), 2) as avg_age
+  79  |     FROM bus_patient
+  80  |     GROUP BY gender, blood_group
+  81  |     ORDER BY patient_count DESC`;
+  82  | 
+  83  |     await page.locator('.monaco-editor textarea, .CodeMirror-code textarea, [contenteditable="true"]').first().fill(demographicsQuery);
+  84  |     await page.click('button:has-text("Execute"), button:has-text("Run")');
   85  | 
-  86  |     cachedAuthCookie = `${authCookieObj.name}=${authCookieObj.value}`;
-  87  |     console.log('Got auth cookie from browser login');
-  88  | 
-  89  |     return cachedAuthCookie;
-  90  |   } finally {
-  91  |     await page.close();
-  92  |   }
-  93  | }
-  94  | 
-  95  | /**
-  96  |  * Clear cached auth cookie (useful for testing logout scenarios)
-  97  |  */
-  98  | export function clearAuthCache(): void {
-  99  |   cachedAuthCookie = null;
-  100 | }
-  101 | 
-  102 | /**
-  103 |  * Simple login function for E2E tests
-  104 |  * Performs login via UI and returns when authenticated
-  105 |  */
-  106 | export async function login(page: Page, email: string = 'admin@admin.com', password: string = 'admin'): Promise<void> {
-  107 |   const BASE_URL = process.env.BASE_URL || 'http://localhost:4050';
-  108 |   const testHelpers = new TestHelpers(page);
-  109 | 
-  110 |   // Navigate to login page if not already there
-> 111 |   await page.goto(BASE_URL);
-      |              ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-  112 |   const currentUrl = page.url();
-  113 | 
-  114 |   if (!currentUrl.includes('/login')) {
-  115 |     // Already logged in or on another page
-  116 |     return;
-  117 |   }
-  118 | 
-  119 |   // Perform login
-  120 |   await testHelpers.login();
-  121 | 
-  122 |   // Wait for navigation to dashboard
-  123 |   await page.waitForURL(/\/(dashboard|)/, { timeout: 10000 });
-  124 |   await page.waitForLoadState('domcontentloaded');
-  125 | }
-  126 | 
+  86  |     // Wait for results - should show demographic breakdown
+  87  |     await expect(page.locator('table, .results')).toBeVisible({ timeout: 15000 });
+  88  |     await expect(page.locator('text=gender, text=blood_group, text=patient_count')).toBeVisible();
+  89  | 
+  90  |     // Query 3: Age distribution with CASE statement
+  91  |     const ageDistributionQuery = `SELECT
+  92  |       CASE
+  93  |         WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, date_of_birth)) < 18 THEN 'Under 18'
+  94  |         WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, date_of_birth)) < 40 THEN '18-39'
+  95  |         WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, date_of_birth)) < 60 THEN '40-59'
+  96  |         ELSE '60+'
+  97  |       END as age_group,
+  98  |       COUNT(*) as patient_count
+  99  |     FROM bus_patient
+  100 |     GROUP BY age_group
+  101 |     ORDER BY age_group`;
+  102 | 
+  103 |     await page.locator('.monaco-editor textarea, .CodeMirror-code textarea, [contenteditable="true"]').first().fill(ageDistributionQuery);
+  104 |     await page.click('button:has-text("Execute"), button:has-text("Run")');
+  105 | 
+  106 |     // Wait for results
+  107 |     await expect(page.locator('table, .results')).toBeVisible({ timeout: 15000 });
+  108 | 
+  109 |     // Query 4: Large dataset query with pagination (1000 rows)
+  110 |     const largeDatasetQuery = `SELECT
+  111 |       id,
+  112 |       uhid,
+  113 |       mrn,
+  114 |       first_name,
+  115 |       last_name,
+  116 |       date_of_birth,
+  117 |       gender,
+  118 |       blood_group,
+  119 |       phone,
+  120 |       email
+  121 |     FROM bus_patient
+  122 |     ORDER BY id
+  123 |     LIMIT 1000`;
+  124 | 
+  125 |     await page.locator('.monaco-editor textarea, .CodeMirror-code textarea, [contenteditable="true"]').first().fill(largeDatasetQuery);
+  126 |     await page.click('button:has-text("Execute"), button:has-text("Run")');
+  127 | 
+  128 |     // Wait for results - should show 1000 rows
+  129 |     await expect(page.locator('table tbody tr, .data-grid-row').nth(0)).toBeVisible({ timeout: 20000 });
+  130 | 
+  131 |     // Check pagination controls
+  132 |     await expect(page.locator('button:has-text("Next"), text=Next, .pagination')).toBeVisible();
+  133 |   });
+  134 | 
+  135 |   test('3. Save queries for patient analytics', async ({ page }) => {
+  136 |     await page.goto(`${BASE_URL}/sql-editor`);
+  137 | 
+  138 |     // Wait for SQL editor to load
+  139 |     await expect(page.locator('.monaco-editor, [contenteditable="true"], textarea, .CodeMirror')).toBeVisible();
+  140 | 
+  141 |     // Enter patient demographics query
+  142 |     const query = `SELECT
+  143 |       gender,
+  144 |       blood_group,
+  145 |       COUNT(*) as patient_count,
+  146 |       ROUND(AVG(EXTRACT(YEAR FROM AGE(CURRENT_DATE, date_of_birth))), 2) as avg_age
+  147 |     FROM bus_patient
+  148 |     GROUP BY gender, blood_group
+  149 |     ORDER BY patient_count DESC`;
+  150 | 
+  151 |     await page.locator('.monaco-editor textarea, .CodeMirror-code textarea, [contenteditable="true"]').first().fill(query);
+  152 |     await page.click('button:has-text("Execute"), button:has-text("Run")');
+  153 | 
+  154 |     // Wait for results
+  155 |     await expect(page.locator('table, .results')).toBeVisible({ timeout: 15000 });
+  156 | 
+  157 |     // Save the query
+  158 |     await page.click('button:has-text("Save Query"), button:has-text("Save")');
+  159 | 
+  160 |     // Fill in save query form
+  161 |     await expect(page.locator('input[name="name"], input[placeholder*="name"]')).toBeVisible();
+  162 |     await page.fill('input[name="name"], input[placeholder*="name"]', 'Patient Demographics Summary');
+  163 |     await page.fill('textarea[name="description"], textarea[placeholder*="description"]', 'Gender and blood group distribution of 100K patients');
 ```

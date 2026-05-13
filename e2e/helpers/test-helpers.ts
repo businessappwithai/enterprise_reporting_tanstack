@@ -8,8 +8,10 @@ export class TestHelpers {
    * Goes to home page first, then logs in if needed
    */
   async login(email = 'admin@admin.com', password = 'admin') {
+    const BASE_URL = process.env.BASE_URL || 'http://localhost:4050';
+
     // Start at home page - this will redirect to login if not authenticated
-    await this.page.goto('/');
+    await this.page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' }).catch(() => {});
 
     // Wait for page load
     await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
@@ -28,14 +30,14 @@ export class TestHelpers {
         this.page.getByRole('heading', { name: /dashboard/i }).waitFor({ state: 'visible', timeout: 15000 }),
         // Option 2: Navigation menu
         this.page.getByRole('navigation').waitFor({ state: 'visible', timeout: 15000 }),
-        // Option 3: URL change to home (not login)
-        this.page.waitForURL(url => !url.includes('/login'), { timeout: 15000 }),
+        // Option 3: URL change to dashboard
+        this.page.waitForURL(/\/(dashboard|)/, { timeout: 15000 }),
       ]).catch(() => {
         // If none of the above work, just wait for the hard redirect timeout
         return this.page.waitForTimeout(5000);
       });
     } else {
-      // Already at home page, wait for it to be fully loaded
+      // Already logged in, wait for page to be fully loaded
       await this.page.waitForTimeout(2000);
     }
 
@@ -51,9 +53,11 @@ export class TestHelpers {
    * Uses direct URL navigation for reliability
    */
   async navigateToPage(pageName: 'Dashboard' | 'SQL Editor' | 'Reports' | 'Charts' | 'Dashboards') {
+    const BASE_URL = process.env.BASE_URL || 'http://localhost:4050';
+
     // Map page names to their routes
     const routes: Record<string, string> = {
-      'Dashboard': '/',
+      'Dashboard': '/dashboard',
       'SQL Editor': '/sql-editor',
       'Reports': '/reports',
       'Charts': '/charts',
@@ -66,7 +70,7 @@ export class TestHelpers {
     }
 
     // Use direct URL navigation - most reliable
-    await this.page.goto(route, { waitUntil: 'domcontentloaded' });
+    await this.page.goto(`${BASE_URL}${route}`, { waitUntil: 'domcontentloaded' });
 
     // Wait for page to be fully loaded
     await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});

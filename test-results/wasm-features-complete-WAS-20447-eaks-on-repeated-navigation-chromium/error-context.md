@@ -12,130 +12,137 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-Call log:
-  - navigating to "http://localhost:4050/", waiting until "load"
+Error: toBeVisible can be only used with Locator object
+```
 
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e7]
+      - heading "Welcome back" [level=3] [ref=e9]
+      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - text: Email
+          - textbox "Email" [ref=e14]:
+            - /placeholder: name@example.com
+        - generic [ref=e15]:
+          - text: Password
+          - textbox "Password" [ref=e16]
+      - button "Sign In" [ref=e18] [cursor=pointer]
+  - region "Notifications alt+T"
 ```
 
 # Test source
 
 ```ts
-  11  |   // Return cached cookie if available
-  12  |   if (cachedAuthCookie) {
-  13  |     console.log('Using cached auth cookie');
-  14  |     return cachedAuthCookie;
-  15  |   }
-  16  | 
-  17  |   console.log('Getting fresh auth cookie...');
-  18  | 
-  19  |   // Try API-based authentication first
-  20  |   try {
-  21  |     const signInResponse = await request.post('/api/auth/callback/credentials', {
-  22  |       headers: {
-  23  |         'Content-Type': 'application/json',
-  24  |       },
-  25  |       data: JSON.stringify({
-  26  |         email: 'admin@admin.com',
-  27  |         password: 'admin',
-  28  |         csrfToken: 'test-csrf-token',
-  29  |         json: true,
-  30  |       }),
-  31  |     });
-  32  | 
-  33  |     console.log('Sign-in response status:', signInResponse.status());
-  34  | 
-  35  |     // Get cookies from the response headers
-  36  |     const setCookieHeaders = signInResponse.headers()['set-cookie'];
-  37  |     if (setCookieHeaders) {
-  38  |       const cookieArray = Array.isArray(setCookieHeaders) ? setCookieHeaders : [setCookieHeaders];
-  39  |       for (const cookieHeader of cookieArray) {
-  40  |         const match = cookieHeader.match(/authjs\.session-token=([^;]+)/);
-  41  |         if (match) {
-  42  |           cachedAuthCookie = `authjs.session-token=${match[1]}`;
-  43  |           console.log('Got auth cookie from API sign-in');
-  44  |           return cachedAuthCookie;
-  45  |         }
-  46  |       }
-  47  |     }
-  48  | 
-  49  |     console.log('No session cookie in API response, trying browser fallback...');
-  50  |   } catch (error) {
-  51  |     console.log('API sign-in failed, trying browser fallback:', error);
-  52  |   }
-  53  | 
-  54  |   // Fallback: use browser-based login
-  55  |   if (!browser) {
-  56  |     throw new Error('Browser is required for fallback authentication');
-  57  |   }
-  58  | 
-  59  |   const page = await browser.newPage();
-  60  |   const testHelpers = new TestHelpers(page);
-  61  | 
-  62  |   try {
-  63  |     await page.goto('/');
-  64  |     const currentUrl = page.url();
-  65  | 
-  66  |     if (currentUrl.includes('/login')) {
-  67  |       console.log('Logging in via browser...');
-  68  |       await testHelpers.login();
-  69  |     }
-  70  | 
-  71  |     // Wait for session to be established
-  72  |     await page.waitForTimeout(5000);
-  73  |     await page.goto('/');
-  74  |     await page.waitForLoadState('domcontentloaded');
-  75  |     await page.waitForTimeout(3000);
-  76  | 
-  77  |     const cookies = await page.context().cookies();
-  78  |     console.log('Cookies after login:', cookies.map(c => c.name));
-  79  | 
-  80  |     const authCookieObj = cookies.find(c => c.name.includes('session-token'));
-  81  | 
-  82  |     if (!authCookieObj) {
-  83  |       throw new Error('No auth cookie found after login. Available cookies: ' + cookies.map(c => c.name).join(', '));
-  84  |     }
-  85  | 
-  86  |     cachedAuthCookie = `${authCookieObj.name}=${authCookieObj.value}`;
-  87  |     console.log('Got auth cookie from browser login');
-  88  | 
-  89  |     return cachedAuthCookie;
-  90  |   } finally {
-  91  |     await page.close();
-  92  |   }
-  93  | }
-  94  | 
-  95  | /**
-  96  |  * Clear cached auth cookie (useful for testing logout scenarios)
-  97  |  */
-  98  | export function clearAuthCache(): void {
-  99  |   cachedAuthCookie = null;
-  100 | }
-  101 | 
-  102 | /**
-  103 |  * Simple login function for E2E tests
-  104 |  * Performs login via UI and returns when authenticated
-  105 |  */
-  106 | export async function login(page: Page, email: string = 'admin@admin.com', password: string = 'admin'): Promise<void> {
-  107 |   const BASE_URL = process.env.BASE_URL || 'http://localhost:4050';
-  108 |   const testHelpers = new TestHelpers(page);
-  109 | 
-  110 |   // Navigate to login page if not already there
-> 111 |   await page.goto(BASE_URL);
-      |              ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-  112 |   const currentUrl = page.url();
-  113 | 
-  114 |   if (!currentUrl.includes('/login')) {
-  115 |     // Already logged in or on another page
-  116 |     return;
-  117 |   }
-  118 | 
-  119 |   // Perform login
-  120 |   await testHelpers.login();
-  121 | 
-  122 |   // Wait for navigation to dashboard
-  123 |   await page.waitForURL(/\/(dashboard|)/, { timeout: 10000 });
-  124 |   await page.waitForLoadState('domcontentloaded');
-  125 | }
-  126 | 
+  717 | 
+  718 |     // Feature flags might not be exposed globally
+  719 |     // The key is the page functions correctly
+  720 |     await expect(page.locator('h1')).toBeVisible();
+  721 |   });
+  722 | 
+  723 |   test('WASM-036: Progressive loading can be toggled', async ({ page }) => {
+  724 |     await page.goto(`${BASE_URL}/datasets`);
+  725 | 
+  726 |     await page.waitForTimeout(3000);
+  727 | 
+  728 |     // Progressive loading is controlled by feature flag
+  729 |     // We can't easily toggle it in E2E, but we can verify the page loads
+  730 |     await expect(page.locator('h1')).toBeVisible();
+  731 |   });
+  732 | 
+  733 |   test('WASM-037: Cross-filtering can be toggled', async ({ page }) => {
+  734 |     await page.goto(`${BASE_URL}/dashboards`);
+  735 | 
+  736 |     await page.waitForTimeout(2000);
+  737 | 
+  738 |     // Cross-filtering is controlled by feature flag
+  739 |     // Verify dashboard loads correctly
+  740 |     await expect(page.locator('h1')).toBeVisible();
+  741 |   });
+  742 | 
+  743 |   test('WASM-038: Offline mode can be toggled', async ({ page }) => {
+  744 |     await page.goto(`${BASE_URL}/datasets`);
+  745 | 
+  746 |     await page.waitForTimeout(2000);
+  747 | 
+  748 |     // Offline mode is controlled by feature flag
+  749 |     // Verify datasets page loads
+  750 |     await expect(page.locator('h1')).toBeVisible();
+  751 |   });
+  752 | });
+  753 | 
+  754 | test.describe('WASM Features - Performance', () => {
+  755 |   test.beforeEach(async ({ page }) => {
+  756 |     await login(page);
+  757 |   });
+  758 | 
+  759 |   test('WASM-039: Dataset page loads quickly', async ({ page }) => {
+  760 |     const startTime = Date.now();
+  761 | 
+  762 |     await page.goto(`${BASE_URL}/datasets`);
+  763 |     await page.waitForLoadState('domcontentloaded');
+  764 | 
+  765 |     const loadTime = Date.now() - startTime;
+  766 | 
+  767 |     // Should load within 5 seconds
+  768 |     expect(loadTime).toBeLessThan(5000);
+  769 |   });
+  770 | 
+  771 |   test('WASM-040: Query execution is responsive', async ({ page }) => {
+  772 |     await page.goto(`${BASE_URL}/sql-editor`);
+  773 | 
+  774 |     await expect(page.locator('.monaco-editor')).toBeVisible({ timeout: 10000 });
+  775 | 
+  776 |     const startTime = Date.now();
+  777 | 
+  778 |     // Execute a simple query
+  779 |     await page.keyboard.type('SELECT 1');
+  780 |     await page.click('button:has-text("Run"), button:has-text("Execute")');
+  781 | 
+  782 |     // Wait for results or error
+  783 |     await page.waitForTimeout(3000);
+  784 | 
+  785 |     const executionTime = Date.now() - startTime;
+  786 | 
+  787 |     // Should complete within 5 seconds
+  788 |     expect(executionTime).toBeLessThan(5000);
+  789 |   });
+  790 | 
+  791 |   test('WASM-041: Chart rendering is fast', async ({ page }) => {
+  792 |     await page.goto(`${BASE_URL}/charts`);
+  793 | 
+  794 |     const startTime = Date.now();
+  795 | 
+  796 |     await page.waitForLoadState('domcontentloaded');
+  797 |     await page.waitForTimeout(2000);
+  798 | 
+  799 |     const renderTime = Date.now() - startTime;
+  800 | 
+  801 |     // Should render within 4 seconds
+  802 |     expect(renderTime).toBeLessThan(4000);
+  803 |   });
+  804 | 
+  805 |   test('WASM-042: No memory leaks on repeated navigation', async ({ page }) => {
+  806 |     // Navigate to various WASM-heavy pages multiple times
+  807 |     const pages = ['/datasets', '/sql-editor', '/charts', '/dashboards'];
+  808 | 
+  809 |     for (let i = 0; i < 3; i++) {
+  810 |       for (const pagePath of pages) {
+  811 |         await page.goto(`${BASE_URL}${pagePath}`);
+  812 |         await page.waitForTimeout(1000);
+  813 |       }
+  814 |     }
+  815 | 
+  816 |     // Should complete without hanging
+> 817 |     await expect(page).toBeVisible();
+      |                        ^ Error: toBeVisible can be only used with Locator object
+  818 |   });
+  819 | });
+  820 | 
 ```

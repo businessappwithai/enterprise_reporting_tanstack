@@ -12,130 +12,237 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
+TimeoutError: locator.fill: Timeout 15000ms exceeded.
 Call log:
-  - navigating to "http://localhost:4050/", waiting until "load"
+  - waiting for locator('.monaco-editor, [contenteditable="true"], textarea').first()
 
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e7]
+      - heading "Welcome back" [level=3] [ref=e9]
+      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - text: Email
+          - textbox "Email" [ref=e14]:
+            - /placeholder: name@example.com
+        - generic [ref=e15]:
+          - text: Password
+          - textbox "Password" [ref=e16]
+      - button "Sign In" [ref=e18] [cursor=pointer]
+  - region "Notifications alt+T"
 ```
 
 # Test source
 
 ```ts
-  11  |   // Return cached cookie if available
-  12  |   if (cachedAuthCookie) {
-  13  |     console.log('Using cached auth cookie');
-  14  |     return cachedAuthCookie;
-  15  |   }
-  16  | 
-  17  |   console.log('Getting fresh auth cookie...');
-  18  | 
-  19  |   // Try API-based authentication first
-  20  |   try {
-  21  |     const signInResponse = await request.post('/api/auth/callback/credentials', {
-  22  |       headers: {
-  23  |         'Content-Type': 'application/json',
-  24  |       },
-  25  |       data: JSON.stringify({
-  26  |         email: 'admin@admin.com',
-  27  |         password: 'admin',
-  28  |         csrfToken: 'test-csrf-token',
-  29  |         json: true,
-  30  |       }),
-  31  |     });
-  32  | 
-  33  |     console.log('Sign-in response status:', signInResponse.status());
-  34  | 
-  35  |     // Get cookies from the response headers
-  36  |     const setCookieHeaders = signInResponse.headers()['set-cookie'];
-  37  |     if (setCookieHeaders) {
-  38  |       const cookieArray = Array.isArray(setCookieHeaders) ? setCookieHeaders : [setCookieHeaders];
-  39  |       for (const cookieHeader of cookieArray) {
-  40  |         const match = cookieHeader.match(/authjs\.session-token=([^;]+)/);
-  41  |         if (match) {
-  42  |           cachedAuthCookie = `authjs.session-token=${match[1]}`;
-  43  |           console.log('Got auth cookie from API sign-in');
-  44  |           return cachedAuthCookie;
-  45  |         }
-  46  |       }
-  47  |     }
-  48  | 
-  49  |     console.log('No session cookie in API response, trying browser fallback...');
-  50  |   } catch (error) {
-  51  |     console.log('API sign-in failed, trying browser fallback:', error);
-  52  |   }
-  53  | 
-  54  |   // Fallback: use browser-based login
-  55  |   if (!browser) {
-  56  |     throw new Error('Browser is required for fallback authentication');
-  57  |   }
-  58  | 
-  59  |   const page = await browser.newPage();
-  60  |   const testHelpers = new TestHelpers(page);
-  61  | 
-  62  |   try {
-  63  |     await page.goto('/');
-  64  |     const currentUrl = page.url();
-  65  | 
-  66  |     if (currentUrl.includes('/login')) {
-  67  |       console.log('Logging in via browser...');
-  68  |       await testHelpers.login();
-  69  |     }
-  70  | 
-  71  |     // Wait for session to be established
-  72  |     await page.waitForTimeout(5000);
-  73  |     await page.goto('/');
-  74  |     await page.waitForLoadState('domcontentloaded');
-  75  |     await page.waitForTimeout(3000);
-  76  | 
-  77  |     const cookies = await page.context().cookies();
-  78  |     console.log('Cookies after login:', cookies.map(c => c.name));
-  79  | 
-  80  |     const authCookieObj = cookies.find(c => c.name.includes('session-token'));
-  81  | 
-  82  |     if (!authCookieObj) {
-  83  |       throw new Error('No auth cookie found after login. Available cookies: ' + cookies.map(c => c.name).join(', '));
-  84  |     }
-  85  | 
-  86  |     cachedAuthCookie = `${authCookieObj.name}=${authCookieObj.value}`;
-  87  |     console.log('Got auth cookie from browser login');
-  88  | 
-  89  |     return cachedAuthCookie;
-  90  |   } finally {
-  91  |     await page.close();
-  92  |   }
-  93  | }
-  94  | 
-  95  | /**
-  96  |  * Clear cached auth cookie (useful for testing logout scenarios)
-  97  |  */
-  98  | export function clearAuthCache(): void {
-  99  |   cachedAuthCookie = null;
-  100 | }
-  101 | 
-  102 | /**
-  103 |  * Simple login function for E2E tests
-  104 |  * Performs login via UI and returns when authenticated
-  105 |  */
-  106 | export async function login(page: Page, email: string = 'admin@admin.com', password: string = 'admin'): Promise<void> {
-  107 |   const BASE_URL = process.env.BASE_URL || 'http://localhost:4050';
-  108 |   const testHelpers = new TestHelpers(page);
-  109 | 
-  110 |   // Navigate to login page if not already there
-> 111 |   await page.goto(BASE_URL);
-      |              ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-  112 |   const currentUrl = page.url();
-  113 | 
-  114 |   if (!currentUrl.includes('/login')) {
-  115 |     // Already logged in or on another page
-  116 |     return;
-  117 |   }
-  118 | 
-  119 |   // Perform login
-  120 |   await testHelpers.login();
-  121 | 
-  122 |   // Wait for navigation to dashboard
-  123 |   await page.waitForURL(/\/(dashboard|)/, { timeout: 10000 });
-  124 |   await page.waitForLoadState('domcontentloaded');
-  125 | }
-  126 | 
+  689 |     await page.fill('input[name="password"], input[type="password"]', 'admin');
+  690 |     await page.click('button[type="submit"], button:has-text("Sign In")');
+  691 | 
+  692 |     // Should be redirected to dashboard
+  693 |     await expect(page).toHaveURL(new RegExp('/'));
+  694 |   });
+  695 | 
+  696 |   test('34. Check for console errors', async ({ page }) => {
+  697 |     const errors: string[] = [];
+  698 | 
+  699 |     page.on('console', msg => {
+  700 |       if (msg.type() === 'error') {
+  701 |         errors.push(msg.text());
+  702 |       }
+  703 |     });
+  704 | 
+  705 |     await page.goto(`${BASE_URL}/`);
+  706 |     await page.goto(`${BASE_URL}/sql-editor`);
+  707 |     await page.goto(`${BASE_URL}/reports`);
+  708 | 
+  709 |     // Log any errors (for debugging, not failing test)
+  710 |     if (errors.length > 0) {
+  711 |       console.log('Console errors found:', errors);
+  712 |     }
+  713 |   });
+  714 | 
+  715 |   test('35. Page load performance check', async ({ page }) => {
+  716 |     const pages = [
+  717 |       { path: '/', name: 'Dashboard' },
+  718 |       { path: '/sql-editor', name: 'SQL Editor' },
+  719 |       { path: '/reports', name: 'Reports' },
+  720 |       { path: '/charts', name: 'Charts' },
+  721 |       { path: '/dashboards', name: 'Dashboards' }
+  722 |     ];
+  723 | 
+  724 |     for (const pageData of pages) {
+  725 |       const startTime = Date.now();
+  726 |       await page.goto(`${BASE_URL}${pageData.path}`);
+  727 | 
+  728 |       // Wait for page to be ready
+  729 |       await page.waitForLoadState('networkidle');
+  730 |       const loadTime = Date.now() - startTime;
+  731 | 
+  732 |       console.log(`${pageData.name} loaded in ${loadTime}ms`);
+  733 | 
+  734 |       // Page should load within 10 seconds
+  735 |       expect(loadTime).toBeLessThan(10000);
+  736 |     }
+  737 |   });
+  738 | });
+  739 | 
+  740 | test.describe('Load Testing - High Volume Data', () => {
+  741 |   test.beforeEach(async ({ page }) => {
+  742 |     await login(page);
+  743 |   });
+  744 | 
+  745 |   test('L1. Query 100K+ customers with pagination', async ({ page }) => {
+  746 |     await page.goto(`${BASE_URL}/sql-editor`);
+  747 | 
+  748 |     const editor = page.locator('.monaco-editor, [contenteditable="true"], textarea').first();
+  749 |     await editor.fill('SELECT * FROM customers ORDER BY id');
+  750 | 
+  751 |     const startTime = Date.now();
+  752 |     await page.click('button:has-text("Execute"), button:has-text("Run")');
+  753 |     await expect(page.locator('table, text=customer_id')).toBeVisible({ timeout: 30000 });
+  754 |     const queryTime = Date.now() - startTime;
+  755 | 
+  756 |     console.log(`100K customers query executed in ${queryTime}ms`);
+  757 |     expect(queryTime).toBeLessThan(30000);
+  758 |   });
+  759 | 
+  760 |   test('L2. Query 300K orders with date filter', async ({ page }) => {
+  761 |     await page.goto(`${BASE_URL}/sql-editor`);
+  762 | 
+  763 |     const editor = page.locator('.monaco-editor, [contenteditable="true"], textarea').first();
+  764 |     await editor.fill(`
+  765 |       SELECT
+  766 |         order_date,
+  767 |         status,
+  768 |         COUNT(*) as order_count,
+  769 |         SUM(total_amount) as daily_revenue
+  770 |       FROM orders
+  771 |       WHERE order_date >= '2024-01-01'
+  772 |       GROUP BY order_date, status
+  773 |       ORDER BY order_date DESC
+  774 |     `);
+  775 | 
+  776 |     const startTime = Date.now();
+  777 |     await page.click('button:has-text("Execute"), button:has-text("Run")');
+  778 |     await expect(page.locator('table, text=order_date')).toBeVisible({ timeout: 45000 });
+  779 |     const queryTime = Date.now() - startTime;
+  780 | 
+  781 |     console.log(`300K orders aggregation executed in ${queryTime}ms`);
+  782 |     expect(queryTime).toBeLessThan(45000);
+  783 |   });
+  784 | 
+  785 |   test('L3. Complex 3-table JOIN with large datasets', async ({ page }) => {
+  786 |     await page.goto(`${BASE_URL}/sql-editor`);
+  787 | 
+  788 |     const editor = page.locator('.monaco-editor, [contenteditable="true"], textarea').first();
+> 789 |     await editor.fill(`
+      |                  ^ TimeoutError: locator.fill: Timeout 15000ms exceeded.
+  790 |       SELECT
+  791 |         c.country,
+  792 |         c.segment,
+  793 |         p.category,
+  794 |         COUNT(DISTINCT o.order_id) as order_count,
+  795 |         SUM(oi.line_total) as total_revenue,
+  796 |         AVG(oi.line_total) as avg_line_total
+  797 |       FROM customers c
+  798 |       INNER JOIN orders o ON c.customer_id = o.customer_id
+  799 |       INNER JOIN order_items oi ON o.order_id = oi.order_id
+  800 |       INNER JOIN products p ON oi.product_id = p.product_id
+  801 |       WHERE o.order_date >= '2024-01-01'
+  802 |       GROUP BY c.country, c.segment, p.category
+  803 |       ORDER BY total_revenue DESC
+  804 |       LIMIT 500
+  805 |     `);
+  806 | 
+  807 |     const startTime = Date.now();
+  808 |     await page.click('button:has-text("Execute"), button:has-text("Run")');
+  809 |     await expect(page.locator('table')).toBeVisible({ timeout: 60000 });
+  810 |     const queryTime = Date.now() - startTime;
+  811 | 
+  812 |     console.log(`Complex 3-table JOIN executed in ${queryTime}ms`);
+  813 |     expect(queryTime).toBeLessThan(60000);
+  814 |   });
+  815 | 
+  816 |   test('L4. Multiple sequential queries (stress test)', async ({ page }) => {
+  817 |     await page.goto(`${BASE_URL}/sql-editor`);
+  818 | 
+  819 |     const queries = [
+  820 |       'SELECT COUNT(*) FROM customers',
+  821 |       'SELECT COUNT(*) FROM orders',
+  822 |       'SELECT COUNT(*) FROM order_items',
+  823 |       'SELECT COUNT(*) FROM products',
+  824 |       'SELECT COUNT(DISTINCT customer_id) FROM orders',
+  825 |       'SELECT country, COUNT(*) FROM customers GROUP BY country',
+  826 |       'SELECT status, COUNT(*) FROM orders GROUP BY status',
+  827 |       'SELECT category, COUNT(*) FROM products GROUP BY category'
+  828 |     ];
+  829 | 
+  830 |     const editor = page.locator('.monaco-editor, [contenteditable="true"], textarea').first();
+  831 |     const totalTime = Date.now();
+  832 | 
+  833 |     for (let i = 0; i < queries.length; i++) {
+  834 |       await editor.fill(queries[i]);
+  835 |       await page.click('button:has-text("Execute"), button:has-text("Run")');
+  836 |       await expect(page.locator('table, text=count')).toBeVisible({ timeout: 10000 });
+  837 |       console.log(`Query ${i + 1}/${queries.length} completed`);
+  838 |     }
+  839 | 
+  840 |     const totalTimeMs = Date.now() - totalTime;
+  841 |     console.log(`All queries completed in ${totalTimeMs}ms`);
+  842 | 
+  843 |     // All 8 queries should complete within 60 seconds
+  844 |     expect(totalTimeMs).toBeLessThan(60000);
+  845 |   });
+  846 | 
+  847 |   test('L5. Large result set handling', async ({ page }) => {
+  848 |     await page.goto(`${BASE_URL}/sql-editor`);
+  849 | 
+  850 |     // Query that returns 5000+ rows
+  851 |     const editor = page.locator('.monaco-editor, [contenteditable="true"], textarea').first();
+  852 |     await editor.fill(`
+  853 |       SELECT
+  854 |         o.order_id,
+  855 |         o.order_date,
+  856 |         c.name as customer_name,
+  857 |         o.total_amount,
+  858 |         o.status
+  859 |       FROM orders o
+  860 |       INNER JOIN customers c ON o.customer_id = c.customer_id
+  861 |       WHERE o.order_date >= '2024-01-01'
+  862 |       ORDER BY o.order_date DESC
+  863 |       LIMIT 5000
+  864 |     `);
+  865 | 
+  866 |     const startTime = Date.now();
+  867 |     await page.click('button:has-text("Execute"), button:has-text("Run")');
+  868 | 
+  869 |     // Wait for results and verify rendering
+  870 |     await expect(page.locator('table, tbody tr').first()).toBeVisible({ timeout: 30000 });
+  871 |     const queryTime = Date.now() - startTime;
+  872 | 
+  873 |     console.log(`5000 row result set loaded in ${queryTime}ms`);
+  874 |     expect(queryTime).toBeLessThan(30000);
+  875 |   });
+  876 | });
+  877 | 
+  878 | test.describe('Authentication & Security', () => {
+  879 |   test('A1. Invalid login shows error', async ({ page }) => {
+  880 |     await page.goto(`${BASE_URL}/login`);
+  881 | 
+  882 |     await page.fill('input[name="email"], input[type="email"]', 'invalid@test.com');
+  883 |     await page.fill('input[name="password"], input[type="password"]', 'wrongpassword');
+  884 |     await page.click('button[type="submit"], button:has-text("Sign In")');
+  885 | 
+  886 |     await expect(page.locator('text=Invalid email or password, text=Invalid').or(page.locator('.error'))).toBeVisible({ timeout: 5000 });
+  887 |   });
+  888 | 
+  889 |   test('A2. Protected routes redirect to login', async ({ page }) => {
 ```

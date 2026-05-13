@@ -12,130 +12,196 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-Call log:
-  - navigating to "http://localhost:4050/", waiting until "load"
+Error: expect(locator).toBeVisible() failed
 
+Locator: locator('.monaco-editor')
+Expected: visible
+Timeout: 10000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toBeVisible" with timeout 10000ms
+  - waiting for locator('.monaco-editor')
+
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e7]
+      - heading "Welcome back" [level=3] [ref=e9]
+      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - text: Email
+          - textbox "Email" [ref=e14]:
+            - /placeholder: name@example.com
+        - generic [ref=e15]:
+          - text: Password
+          - textbox "Password" [ref=e16]
+      - button "Sign In" [ref=e18] [cursor=pointer]
+  - region "Notifications alt+T"
 ```
 
 # Test source
 
 ```ts
-  11  |   // Return cached cookie if available
-  12  |   if (cachedAuthCookie) {
-  13  |     console.log('Using cached auth cookie');
-  14  |     return cachedAuthCookie;
-  15  |   }
+  1   | /**
+  2   |  * Comprehensive E2E Test for Hospital Management System
+  3   |  * Reports, Charts, and Dashboard with 40,000+ records
+  4   |  *
+  5   |  * This test verifies:
+  6   |  * 1. Report creation and viewer with 40,000+ hospital patient records
+  7   |  * 2. Chart creation and performance testing with large patient data
+  8   |  * 3. Comprehensive dashboard creation with multiple widgets
+  9   |  * 4. Performance metrics for rendering
+  10  |  *
+  11  |  * Prerequisites:
+  12  |  * - HMS (Hospital Management System) PostgreSQL data source configured
+  13  |  * - User authenticated
+  14  |  * - 100,000 patient records available in bus_patient table
+  15  |  */
   16  | 
-  17  |   console.log('Getting fresh auth cookie...');
-  18  | 
-  19  |   // Try API-based authentication first
-  20  |   try {
-  21  |     const signInResponse = await request.post('/api/auth/callback/credentials', {
-  22  |       headers: {
-  23  |         'Content-Type': 'application/json',
-  24  |       },
-  25  |       data: JSON.stringify({
-  26  |         email: 'admin@admin.com',
-  27  |         password: 'admin',
-  28  |         csrfToken: 'test-csrf-token',
-  29  |         json: true,
-  30  |       }),
-  31  |     });
-  32  | 
-  33  |     console.log('Sign-in response status:', signInResponse.status());
-  34  | 
-  35  |     // Get cookies from the response headers
-  36  |     const setCookieHeaders = signInResponse.headers()['set-cookie'];
-  37  |     if (setCookieHeaders) {
-  38  |       const cookieArray = Array.isArray(setCookieHeaders) ? setCookieHeaders : [setCookieHeaders];
-  39  |       for (const cookieHeader of cookieArray) {
-  40  |         const match = cookieHeader.match(/authjs\.session-token=([^;]+)/);
-  41  |         if (match) {
-  42  |           cachedAuthCookie = `authjs.session-token=${match[1]}`;
-  43  |           console.log('Got auth cookie from API sign-in');
-  44  |           return cachedAuthCookie;
-  45  |         }
-  46  |       }
-  47  |     }
-  48  | 
-  49  |     console.log('No session cookie in API response, trying browser fallback...');
-  50  |   } catch (error) {
-  51  |     console.log('API sign-in failed, trying browser fallback:', error);
-  52  |   }
-  53  | 
-  54  |   // Fallback: use browser-based login
-  55  |   if (!browser) {
-  56  |     throw new Error('Browser is required for fallback authentication');
-  57  |   }
-  58  | 
-  59  |   const page = await browser.newPage();
-  60  |   const testHelpers = new TestHelpers(page);
-  61  | 
-  62  |   try {
-  63  |     await page.goto('/');
-  64  |     const currentUrl = page.url();
-  65  | 
-  66  |     if (currentUrl.includes('/login')) {
-  67  |       console.log('Logging in via browser...');
-  68  |       await testHelpers.login();
-  69  |     }
-  70  | 
-  71  |     // Wait for session to be established
-  72  |     await page.waitForTimeout(5000);
-  73  |     await page.goto('/');
-  74  |     await page.waitForLoadState('domcontentloaded');
-  75  |     await page.waitForTimeout(3000);
-  76  | 
-  77  |     const cookies = await page.context().cookies();
-  78  |     console.log('Cookies after login:', cookies.map(c => c.name));
-  79  | 
-  80  |     const authCookieObj = cookies.find(c => c.name.includes('session-token'));
-  81  | 
-  82  |     if (!authCookieObj) {
-  83  |       throw new Error('No auth cookie found after login. Available cookies: ' + cookies.map(c => c.name).join(', '));
-  84  |     }
-  85  | 
-  86  |     cachedAuthCookie = `${authCookieObj.name}=${authCookieObj.value}`;
-  87  |     console.log('Got auth cookie from browser login');
-  88  | 
-  89  |     return cachedAuthCookie;
-  90  |   } finally {
-  91  |     await page.close();
-  92  |   }
-  93  | }
-  94  | 
-  95  | /**
-  96  |  * Clear cached auth cookie (useful for testing logout scenarios)
-  97  |  */
-  98  | export function clearAuthCache(): void {
-  99  |   cachedAuthCookie = null;
-  100 | }
-  101 | 
-  102 | /**
-  103 |  * Simple login function for E2E tests
-  104 |  * Performs login via UI and returns when authenticated
-  105 |  */
-  106 | export async function login(page: Page, email: string = 'admin@admin.com', password: string = 'admin'): Promise<void> {
-  107 |   const BASE_URL = process.env.BASE_URL || 'http://localhost:4050';
-  108 |   const testHelpers = new TestHelpers(page);
-  109 | 
-  110 |   // Navigate to login page if not already there
-> 111 |   await page.goto(BASE_URL);
-      |              ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-  112 |   const currentUrl = page.url();
-  113 | 
-  114 |   if (!currentUrl.includes('/login')) {
-  115 |     // Already logged in or on another page
-  116 |     return;
-  117 |   }
-  118 | 
-  119 |   // Perform login
-  120 |   await testHelpers.login();
-  121 | 
-  122 |   // Wait for navigation to dashboard
-  123 |   await page.waitForURL(/\/(dashboard|)/, { timeout: 10000 });
-  124 |   await page.waitForLoadState('domcontentloaded');
-  125 | }
-  126 | 
+  17  | import { test, expect } from '@playwright/test';
+  18  | import { login } from './test-auth';
+  19  | 
+  20  | const BASE_URL = process.env.BASE_URL || 'http://localhost:4050';
+  21  | 
+  22  | // Helper function to measure performance
+  23  | async function measurePerformance<T>(name: string, fn: () => Promise<T>): Promise<{ result: T; duration: number }> {
+  24  |   const start = Date.now();
+  25  |   const result = await fn();
+  26  |   const duration = Date.now() - start;
+  27  |   console.log(`⏱️  ${name}: ${duration}ms`);
+  28  |   return { result, duration };
+  29  | }
+  30  | 
+  31  | // Helper to wait for toast notification
+  32  | async function waitForToast(page: any, message?: string) {
+  33  |   await page.waitForTimeout(500);
+  34  |   const toast = page.locator('[data-sonner-toast]').first();
+  35  |   if (message) {
+  36  |     await expect(toast).toContainText(message, { timeout: 5000 });
+  37  |   } else {
+  38  |     await expect(toast).toBeVisible({ timeout: 5000 });
+  39  |   }
+  40  | }
+  41  | 
+  42  | test.describe('Comprehensive HMS Reports, Charts & Dashboard', () => {
+  43  |   test.beforeEach(async ({ page }) => {
+  44  |     await login(page);
+  45  |   });
+  46  | 
+  47  |   test('Test 1: Report viewer with 40,000+ patient records', async ({ page }) => {
+  48  |     console.log('\n=== Test 1: Report Viewer with 40K+ Patient Records ===\n');
+  49  | 
+  50  |     // Step 1: Go to SQL Editor and select HMS data source
+  51  |     console.log('Step 1: Setting up data source...');
+  52  |     await page.goto(`${BASE_URL}/sql-editor`);
+> 53  |     await expect(page.locator('.monaco-editor')).toBeVisible({ timeout: 10000 });
+      |                                                  ^ Error: expect(locator).toBeVisible() failed
+  54  | 
+  55  |     // Select HMS data source if there's a selector
+  56  |     const dataSourceSelector = page.locator('[data-testid="datasource-select"], select, [role="combobox"]').first();
+  57  |     if (await dataSourceSelector.isVisible().catch(() => false)) {
+  58  |       await dataSourceSelector.click();
+  59  |       await page.waitForTimeout(500);
+  60  | 
+  61  |       // Look for HMS, Hospital, or PostgreSQL option
+  62  |       const hospitalOption = page.getByText(/HMS|Hospital|postgres/i).or(page.locator('[data-value*="hospital"], [data-value*="hms"]'));
+  63  |       const count = await hospitalOption.count();
+  64  | 
+  65  |       if (count > 0) {
+  66  |         await hospitalOption.first().click();
+  67  |         console.log('✓ HMS data source selected');
+  68  |       } else {
+  69  |         // Try keyboard navigation
+  70  |         await page.keyboard.press('ArrowDown');
+  71  |         await page.waitForTimeout(300);
+  72  |         await page.keyboard.press('Enter');
+  73  |         console.log('✓ Data source selected (first available)');
+  74  |       }
+  75  |       await page.waitForTimeout(1000);
+  76  |     }
+  77  | 
+  78  |     // Step 2: Create a query for 50,000 patient records
+  79  |     console.log('Step 2: Creating query for 50,000 patient records...');
+  80  |     const query = `SELECT
+  81  |   id,
+  82  |   first_name,
+  83  |   last_name,
+  84  |   date_of_birth,
+  85  |   gender,
+  86  |   blood_group,
+  87  |   phone,
+  88  |   email,
+  89  |   address,
+  90  |   city,
+  91  |   state,
+  92  |   postal_code,
+  93  |   country,
+  94  |   created_at
+  95  | FROM bus_patient
+  96  | ORDER BY id
+  97  | LIMIT 50000`;
+  98  | 
+  99  |     await page.locator('.monaco-editor').click();
+  100 |     // Clear existing content and type new query
+  101 |     await page.keyboard.press('Control+A');
+  102 |     await page.keyboard.type(query);
+  103 | 
+  104 |     // Execute the query to verify it works
+  105 |     const executeBtn = page.getByRole('button', { name: /execute|run/i }).or(page.locator('button:has-text("Run")'));
+  106 |     await executeBtn.first().click();
+  107 |     await page.waitForTimeout(3000);
+  108 | 
+  109 |     // Verify results
+  110 |     const resultsArea = page.locator('.results, table, [data-testid="results"]').first();
+  111 |     if (await resultsArea.isVisible().catch(() => false)) {
+  112 |       console.log('✓ Query executed successfully');
+  113 |       // Take screenshot of results
+  114 |       await page.screenshot({ path: 'screenshots/hms-query-results-50k.png', fullPage: true });
+  115 |     }
+  116 | 
+  117 |     // Step 3: Save the query
+  118 |     console.log('Step 3: Saving query...');
+  119 |     const saveBtn = page.getByRole('button', { name: /save/i }).first();
+  120 |     await saveBtn.click();
+  121 |     await page.waitForTimeout(1000);
+  122 | 
+  123 |     const nameInput = page.locator('input[id="name"], input[name="name"]').or(page.locator('input[placeholder*="name"]')).first();
+  124 |     await nameInput.fill('50K Patients - Large Dataset Report');
+  125 | 
+  126 |     const confirmBtn = page.getByRole('button', { name: /save|create|confirm/i }).filter({ hasText: /save|create/i }).first();
+  127 |     await confirmBtn.click();
+  128 |     await page.waitForTimeout(2000);
+  129 | 
+  130 |     console.log('✓ Query saved');
+  131 | 
+  132 |     // Step 4: Create a report from this query
+  133 |     console.log('Step 4: Creating report...');
+  134 |     await page.goto(`${BASE_URL}/reports`);
+  135 |     await page.waitForTimeout(1000);
+  136 | 
+  137 |     // Click "New Report" button
+  138 |     const newReportBtn = page.getByRole('button', { name: /new.*report/i });
+  139 |     await newReportBtn.click();
+  140 |     await page.waitForTimeout(1000);
+  141 | 
+  142 |     // Fill in report details
+  143 |     const reportNameInput = page.locator('input[id="name"]');
+  144 |     await reportNameInput.fill('Patient Registry - 50K Records');
+  145 | 
+  146 |     const descInput = page.locator('input[id="description"]');
+  147 |     if (await descInput.isVisible().catch(() => false)) {
+  148 |       await descInput.fill('Comprehensive patient registry with 50,000 records');
+  149 |     }
+  150 | 
+  151 |     // Select the saved query
+  152 |     const querySelect = page.locator('[role="combobox"]').or(page.locator('select')).first();
+  153 |     await querySelect.click();
 ```

@@ -12,130 +12,356 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
+TimeoutError: locator.fill: Timeout 15000ms exceeded.
 Call log:
-  - navigating to "http://localhost:4050/", waiting until "load"
+  - waiting for locator('.monaco-editor, [contenteditable="true"], textarea').first()
 
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - link "Enterprise Reports" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img [ref=e6]
+        - generic [ref=e8]: Enterprise Reports
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - heading "Main" [level=2] [ref=e14]
+          - navigation [ref=e15]:
+            - link "Dashboard" [ref=e16] [cursor=pointer]:
+              - /url: /
+              - button "Dashboard" [ref=e17]:
+                - img [ref=e18]
+                - generic [ref=e21]: Dashboard
+            - link "SQL Editor" [ref=e22] [cursor=pointer]:
+              - /url: /sql-editor
+              - button "SQL Editor" [ref=e23]:
+                - img [ref=e24]
+                - generic [ref=e26]: SQL Editor
+            - link "Saved Queries" [ref=e27] [cursor=pointer]:
+              - /url: /queries
+              - button "Saved Queries" [ref=e28]:
+                - img [ref=e29]
+                - generic [ref=e33]: Saved Queries
+            - link "Reports" [ref=e34] [cursor=pointer]:
+              - /url: /reports
+              - button "Reports" [ref=e35]:
+                - img [ref=e36]
+                - generic [ref=e39]: Reports
+            - link "Charts" [ref=e40] [cursor=pointer]:
+              - /url: /charts
+              - button "Charts" [ref=e41]:
+                - img [ref=e42]
+                - generic [ref=e44]: Charts
+            - link "Dashboards" [ref=e45] [cursor=pointer]:
+              - /url: /dashboards
+              - button "Dashboards" [ref=e46]:
+                - img [ref=e47]
+                - generic [ref=e52]: Dashboards
+            - link "Filters" [ref=e53] [cursor=pointer]:
+              - /url: /filters
+              - button "Filters" [ref=e54]:
+                - img [ref=e55]
+                - generic [ref=e57]: Filters
+            - link "Jobs" [ref=e58] [cursor=pointer]:
+              - /url: /jobs
+              - button "Jobs" [ref=e59]:
+                - img [ref=e60]
+                - generic [ref=e62]: Jobs
+            - link "NL Query" [ref=e63] [cursor=pointer]:
+              - /url: /nl-query
+              - button "NL Query" [ref=e64]:
+                - img [ref=e65]
+                - generic [ref=e67]: NL Query
+        - generic [ref=e68]:
+          - heading "Administration" [level=2] [ref=e69]
+          - navigation [ref=e70]:
+            - link "Data Sources" [ref=e71] [cursor=pointer]:
+              - /url: /data-sources
+              - button "Data Sources" [ref=e72]:
+                - img [ref=e73]
+                - generic [ref=e77]: Data Sources
+            - link "Queue Management" [ref=e78] [cursor=pointer]:
+              - /url: /bull-board
+              - button "Queue Management" [ref=e79]:
+                - img [ref=e80]
+                - generic [ref=e84]: Queue Management
+            - link "Users" [ref=e85] [cursor=pointer]:
+              - /url: /admin/users
+              - button "Users" [ref=e86]:
+                - img [ref=e87]
+                - generic [ref=e92]: Users
+            - link "Roles" [ref=e93] [cursor=pointer]:
+              - /url: /admin/roles
+              - button "Roles" [ref=e94]:
+                - img [ref=e95]
+                - generic [ref=e97]: Roles
+            - link "Permissions" [ref=e98] [cursor=pointer]:
+              - /url: /admin/permissions
+              - button "Permissions" [ref=e99]:
+                - img [ref=e100]
+                - generic [ref=e102]: Permissions
+            - link "Settings" [ref=e103] [cursor=pointer]:
+              - /url: /settings
+              - button "Settings" [ref=e104]:
+                - img [ref=e105]
+                - generic [ref=e108]: Settings
+      - button [ref=e109] [cursor=pointer]:
+        - img [ref=e110]
+    - generic [ref=e112]:
+      - banner [ref=e113]:
+        - button "Sakila Demo DB sqlite3" [ref=e115] [cursor=pointer]:
+          - img [ref=e116]
+          - generic [ref=e120]: Sakila Demo DB
+          - generic [ref=e121]: sqlite3
+        - generic [ref=e122]:
+          - button "Toggle theme" [ref=e123] [cursor=pointer]:
+            - img [ref=e124]
+            - img
+            - generic [ref=e130]: Toggle theme
+          - button "Notifications" [ref=e131] [cursor=pointer]:
+            - img [ref=e132]
+            - generic [ref=e135]: Notifications
+          - button "SA" [ref=e136] [cursor=pointer]:
+            - generic [ref=e138]: SA
+      - main [ref=e139]:
+        - generic [ref=e140]:
+          - generic [ref=e141]:
+            - generic [ref=e142]:
+              - heading "SQL Editor" [level=1] [ref=e143]
+              - paragraph [ref=e144]: Write and execute SQL queries
+            - generic [ref=e145]:
+              - button "Validate" [ref=e146] [cursor=pointer]
+              - button "Run Query" [ref=e147] [cursor=pointer]
+              - button "Save Query" [disabled] [ref=e148]
+          - generic [ref=e150]:
+            - paragraph [ref=e151]: "Data Source:"
+            - button "▲" [ref=e152] [cursor=pointer]
+          - button "Loading SQL Editor..." [ref=e153]:
+            - generic [ref=e157]:
+              - img [ref=e158]
+              - generic [ref=e160]: Loading SQL Editor...
+          - generic [ref=e161]:
+            - generic [ref=e162]:
+              - paragraph [ref=e163]: Schema Browser (Select a data source)
+              - button "▼" [ref=e165] [cursor=pointer]
+            - paragraph [ref=e167]: Select a data source to view schema
+          - generic [ref=e168]:
+            - generic [ref=e169]:
+              - button "Results" [ref=e170] [cursor=pointer]
+              - button "Errors" [ref=e171] [cursor=pointer]
+              - button "Logs" [ref=e172] [cursor=pointer]
+            - paragraph [ref=e176]: No results yet. Run a query to see results here.
+  - region "Notifications alt+T"
 ```
 
 # Test source
 
 ```ts
-  11  |   // Return cached cookie if available
-  12  |   if (cachedAuthCookie) {
-  13  |     console.log('Using cached auth cookie');
-  14  |     return cachedAuthCookie;
-  15  |   }
-  16  | 
-  17  |   console.log('Getting fresh auth cookie...');
-  18  | 
-  19  |   // Try API-based authentication first
-  20  |   try {
-  21  |     const signInResponse = await request.post('/api/auth/callback/credentials', {
-  22  |       headers: {
-  23  |         'Content-Type': 'application/json',
-  24  |       },
-  25  |       data: JSON.stringify({
-  26  |         email: 'admin@admin.com',
-  27  |         password: 'admin',
-  28  |         csrfToken: 'test-csrf-token',
-  29  |         json: true,
-  30  |       }),
-  31  |     });
-  32  | 
-  33  |     console.log('Sign-in response status:', signInResponse.status());
-  34  | 
-  35  |     // Get cookies from the response headers
-  36  |     const setCookieHeaders = signInResponse.headers()['set-cookie'];
-  37  |     if (setCookieHeaders) {
-  38  |       const cookieArray = Array.isArray(setCookieHeaders) ? setCookieHeaders : [setCookieHeaders];
-  39  |       for (const cookieHeader of cookieArray) {
-  40  |         const match = cookieHeader.match(/authjs\.session-token=([^;]+)/);
-  41  |         if (match) {
-  42  |           cachedAuthCookie = `authjs.session-token=${match[1]}`;
-  43  |           console.log('Got auth cookie from API sign-in');
-  44  |           return cachedAuthCookie;
-  45  |         }
-  46  |       }
-  47  |     }
-  48  | 
-  49  |     console.log('No session cookie in API response, trying browser fallback...');
-  50  |   } catch (error) {
-  51  |     console.log('API sign-in failed, trying browser fallback:', error);
-  52  |   }
-  53  | 
-  54  |   // Fallback: use browser-based login
-  55  |   if (!browser) {
-  56  |     throw new Error('Browser is required for fallback authentication');
-  57  |   }
-  58  | 
-  59  |   const page = await browser.newPage();
-  60  |   const testHelpers = new TestHelpers(page);
-  61  | 
-  62  |   try {
-  63  |     await page.goto('/');
-  64  |     const currentUrl = page.url();
-  65  | 
-  66  |     if (currentUrl.includes('/login')) {
-  67  |       console.log('Logging in via browser...');
-  68  |       await testHelpers.login();
-  69  |     }
-  70  | 
-  71  |     // Wait for session to be established
-  72  |     await page.waitForTimeout(5000);
-  73  |     await page.goto('/');
-  74  |     await page.waitForLoadState('domcontentloaded');
-  75  |     await page.waitForTimeout(3000);
-  76  | 
-  77  |     const cookies = await page.context().cookies();
-  78  |     console.log('Cookies after login:', cookies.map(c => c.name));
-  79  | 
-  80  |     const authCookieObj = cookies.find(c => c.name.includes('session-token'));
-  81  | 
-  82  |     if (!authCookieObj) {
-  83  |       throw new Error('No auth cookie found after login. Available cookies: ' + cookies.map(c => c.name).join(', '));
-  84  |     }
-  85  | 
-  86  |     cachedAuthCookie = `${authCookieObj.name}=${authCookieObj.value}`;
-  87  |     console.log('Got auth cookie from browser login');
-  88  | 
-  89  |     return cachedAuthCookie;
-  90  |   } finally {
-  91  |     await page.close();
-  92  |   }
-  93  | }
-  94  | 
-  95  | /**
-  96  |  * Clear cached auth cookie (useful for testing logout scenarios)
-  97  |  */
-  98  | export function clearAuthCache(): void {
-  99  |   cachedAuthCookie = null;
-  100 | }
-  101 | 
-  102 | /**
-  103 |  * Simple login function for E2E tests
-  104 |  * Performs login via UI and returns when authenticated
-  105 |  */
-  106 | export async function login(page: Page, email: string = 'admin@admin.com', password: string = 'admin'): Promise<void> {
-  107 |   const BASE_URL = process.env.BASE_URL || 'http://localhost:4050';
-  108 |   const testHelpers = new TestHelpers(page);
-  109 | 
-  110 |   // Navigate to login page if not already there
-> 111 |   await page.goto(BASE_URL);
-      |              ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-  112 |   const currentUrl = page.url();
-  113 | 
-  114 |   if (!currentUrl.includes('/login')) {
-  115 |     // Already logged in or on another page
-  116 |     return;
-  117 |   }
-  118 | 
-  119 |   // Perform login
-  120 |   await testHelpers.login();
-  121 | 
-  122 |   // Wait for navigation to dashboard
-  123 |   await page.waitForURL(/\/(dashboard|)/, { timeout: 10000 });
-  124 |   await page.waitForLoadState('domcontentloaded');
-  125 | }
-  126 | 
+  461 |     await expect(page.locator('text=Jobs').or(page.locator('h1'))).toBeVisible();
+  462 |   });
+  463 | 
+  464 |   test('17. Create a scheduled job', async ({ page }) => {
+  465 |     await page.goto(`${BASE_URL}/jobs`);
+  466 | 
+  467 |     // Click new job
+  468 |     await page.click('button:has-text("New Job"), button:has-text("Create")');
+  469 | 
+  470 |     // Fill job details
+  471 |     await page.fill('input[name="name"]', 'Daily Sales Report');
+  472 |     await page.fill('textarea[name="description"]', 'Generates daily sales summary');
+  473 | 
+  474 |     // Save
+  475 |     await page.click('button:has-text("Save"), button[type="submit"]');
+  476 | 
+  477 |     // Verify
+  478 |     await expect(page.locator('text=Job created').or(page.locator('text=successfully'))).toBeVisible({ timeout: 5000 });
+  479 |   });
+  480 | 
+  481 |   test('18. Filters management', async ({ page }) => {
+  482 |     await page.goto(`${BASE_URL}/filters`);
+  483 | 
+  484 |     // Check filters page
+  485 |     await expect(page.locator('text=Filters').or(page.locator('h1'))).toBeVisible();
+  486 |   });
+  487 | 
+  488 |   test('19. User management (admin)', async ({ page }) => {
+  489 |     await page.goto(`${BASE_URL}/admin/users`);
+  490 | 
+  491 |     // Check users page
+  492 |     await expect(page.locator('text=Users').or(page.locator('h1'))).toBeVisible();
+  493 |   });
+  494 | 
+  495 |   test('20. Roles management', async ({ page }) => {
+  496 |     await page.goto(`${BASE_URL}/admin/roles`);
+  497 | 
+  498 |     // Check roles page
+  499 |     await expect(page.locator('text=Roles').or(page.locator('h1'))).toBeVisible();
+  500 |   });
+  501 | 
+  502 |   test('21. Settings page', async ({ page }) => {
+  503 |     await page.goto(`${BASE_URL}/settings`);
+  504 | 
+  505 |     // Check settings page
+  506 |     await expect(page.locator('text=Settings').or(page.locator('h1'))).toBeVisible();
+  507 |   });
+  508 | 
+  509 |   test('22. Theme toggle', async ({ page }) => {
+  510 |     await page.goto(`${BASE_URL}/`);
+  511 | 
+  512 |     // Get initial theme
+  513 |     const html = page.locator('html');
+  514 |     const initialClass = await html.getAttribute('class');
+  515 | 
+  516 |     // Click theme toggle
+  517 |     await page.click('button:has-text("Toggle theme"), button[aria-label*="theme"]');
+  518 | 
+  519 |     // Wait for theme change
+  520 |     await page.waitForTimeout(500);
+  521 |     const newClass = await html.getAttribute('class');
+  522 | 
+  523 |     // Theme should have changed
+  524 |     expect(initialClass).not.toBe(newClass);
+  525 |   });
+  526 | 
+  527 |   test('23. Notifications panel', async ({ page }) => {
+  528 |     await page.goto(`${BASE_URL}/`);
+  529 | 
+  530 |     // Click notifications button
+  531 |     await page.click('button:has-text("Notifications"), [aria-label*="notification"]');
+  532 | 
+  533 |     // Check notifications panel appears
+  534 |     await expect(page.locator('[role="dialog"], .popover, text=Notifications').or(page.locator('text=No notifications'))).toBeVisible();
+  535 |   });
+  536 | 
+  537 |   test('24. Sidebar navigation', async ({ page }) => {
+  538 |     await page.goto(`${BASE_URL}/`);
+  539 | 
+  540 |     // Navigate through sidebar links
+  541 |     const links = [
+  542 |       { text: 'Dashboard', url: '/' },
+  543 |       { text: 'SQL Editor', url: '/sql-editor' },
+  544 |       { text: 'Reports', url: '/reports' },
+  545 |       { text: 'Charts', url: '/charts' },
+  546 |       { text: 'Dashboards', url: '/dashboards' }
+  547 |     ];
+  548 | 
+  549 |     for (const link of links) {
+  550 |       await page.click(`a:has-text("${link.text}")`);
+  551 |       await expect(page).toHaveURL(new RegExp(link.url));
+  552 |       await page.waitForTimeout(500);
+  553 |     }
+  554 |   });
+  555 | 
+  556 |   test('25. Pagination test - large dataset', async ({ page }) => {
+  557 |     await page.goto(`${BASE_URL}/sql-editor`);
+  558 | 
+  559 |     // Query that returns many records
+  560 |     const editor = page.locator('.monaco-editor, [contenteditable="true"], textarea').first();
+> 561 |     await editor.fill('SELECT * FROM orders LIMIT 1000');
+      |                  ^ TimeoutError: locator.fill: Timeout 15000ms exceeded.
+  562 |     await page.click('button:has-text("Execute"), button:has-text("Run")');
+  563 | 
+  564 |     // Check for pagination controls
+  565 |     await expect(page.locator('text=Next, text=Previous, button[aria-label*="page"]').or(page.locator('table')).first()).toBeVisible({ timeout: 15000 });
+  566 |   });
+  567 | 
+  568 |   test('26. SQL validation - error handling', async ({ page }) => {
+  569 |     await page.goto(`${BASE_URL}/sql-editor`);
+  570 | 
+  571 |     // Enter invalid SQL
+  572 |     const editor = page.locator('.monaco-editor, [contenteditable="true"], textarea').first();
+  573 |     await editor.fill('SELECT * FROM nonexistent_table');
+  574 | 
+  575 |     // Try to execute
+  576 |     await page.click('button:has-text("Execute"), button:has-text("Run")');
+  577 | 
+  578 |     // Should show error message
+  579 |     await page.waitForTimeout(2000);
+  580 | 
+  581 |     // Check for error indicator
+  582 |     const hasError = await page.locator('text=error, text=syntax, text=failed, .error, [role="alert"]').count() > 0;
+  583 |     // Error may or may not be shown depending on implementation
+  584 |   });
+  585 | 
+  586 |   test('27. Export functionality', async ({ page }) => {
+  587 |     await page.goto(`${BASE_URL}/sql-editor`);
+  588 | 
+  589 |     // Execute query
+  590 |     const editor = page.locator('.monaco-editor, [contenteditable="true"], textarea').first();
+  591 |     await editor.fill('SELECT * FROM customers LIMIT 100');
+  592 |     await page.click('button:has-text("Execute"), button:has-text("Run")');
+  593 | 
+  594 |     // Wait for results
+  595 |     await expect(page.locator('table, text=customer_id')).toBeVisible({ timeout: 10000 });
+  596 | 
+  597 |     // Check for export buttons
+  598 |     const exportBtn = page.locator('button:has-text("Export"), button:has-text("Download")').first();
+  599 |     if (await exportBtn.isVisible()) {
+  600 |       // Export should be available
+  601 |       expect(exportBtn).toBeTruthy();
+  602 |     }
+  603 |   });
+  604 | 
+  605 |   test('28. Search/filter functionality', async ({ page }) => {
+  606 |     await page.goto(`${BASE_URL}/reports`);
+  607 | 
+  608 |     // Look for search input
+  609 |     const searchInput = page.locator('input[placeholder*="search"], input[placeholder*="Search"], input[type="search"]').first();
+  610 | 
+  611 |     if (await searchInput.isVisible()) {
+  612 |       await searchInput.fill('test');
+  613 |       await page.waitForTimeout(500);
+  614 |     }
+  615 |   });
+  616 | 
+  617 |   test('29. Responsive design - mobile viewport', async ({ page }) => {
+  618 |     // Set mobile viewport
+  619 |     await page.setViewportSize({ width: 375, height: 667 });
+  620 |     await page.goto(`${BASE_URL}/`);
+  621 | 
+  622 |     // Check sidebar is collapsed or hidden
+  623 |     await expect(page.locator('button[aria-label*="menu"], button[aria-label*="Menu"]')).or(page.locator('.sidebar, aside')).toBeVisible();
+  624 |   });
+  625 | 
+  626 |   test('30. Performance - sequential queries', async ({ page }) => {
+  627 |     await page.goto(`${BASE_URL}/sql-editor`);
+  628 | 
+  629 |     const queries = [
+  630 |       'SELECT COUNT(*) FROM customers',
+  631 |       'SELECT COUNT(*) FROM orders',
+  632 |       'SELECT COUNT(*) FROM products'
+  633 |     ];
+  634 | 
+  635 |     const editor = page.locator('.monaco-editor, [contenteditable="true"], textarea').first();
+  636 |     const executionTimes: number[] = [];
+  637 | 
+  638 |     for (const query of queries) {
+  639 |       await editor.fill(query);
+  640 |       const startTime = Date.now();
+  641 |       await page.click('button:has-text("Execute"), button:has-text("Run")');
+  642 |       await expect(page.locator('table, text=count')).toBeVisible({ timeout: 10000 });
+  643 |       executionTimes.push(Date.now() - startTime);
+  644 |       await page.waitForTimeout(500);
+  645 |     }
+  646 | 
+  647 |     // Log performance
+  648 |     console.log('Query execution times:', executionTimes);
+  649 | 
+  650 |     // All queries should complete within 10 seconds each
+  651 |     executionTimes.forEach(time => {
+  652 |       expect(time).toBeLessThan(10000);
+  653 |     });
+  654 |   });
+  655 | 
+  656 |   test('31. Complex GROUP BY with multiple dimensions', async ({ page }) => {
+  657 |     await page.goto(`${BASE_URL}/sql-editor`);
+  658 | 
+  659 |     const query = COMPLEX_QUERIES.salesByMultipleDimensions;
+  660 |     const editor = page.locator('.monono-editor, [contenteditable="true"], textarea').first();
+  661 |     await editor.fill(query);
 ```

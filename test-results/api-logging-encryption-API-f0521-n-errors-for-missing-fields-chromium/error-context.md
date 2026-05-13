@@ -12,126 +12,203 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-Call log:
-  - navigating to "http://localhost:4050/", waiting until "load"
+Error: expect(received).toBe(expected) // Object.is equality
 
+Expected: 400
+Received: 200
 ```
 
 # Test source
 
 ```ts
-  1   | import { Page, Locator } from '@playwright/test';
-  2   | 
-  3   | export class TestHelpers {
-  4   |   constructor(private page: Page) {}
-  5   | 
-  6   |   /**
-  7   |    * Login to the application with default credentials
-  8   |    * Goes to home page first, then logs in if needed
-  9   |    */
-  10  |   async login(email = 'admin@admin.com', password = 'admin') {
-  11  |     // Start at home page - this will redirect to login if not authenticated
-> 12  |     await this.page.goto('/');
-      |                     ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-  13  | 
-  14  |     // Wait for page load
-  15  |     await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
-  16  | 
-  17  |     // Check if we're on login page
-  18  |     const currentUrl = this.page.url();
-  19  |     if (currentUrl.includes('/login')) {
-  20  |       // Need to log in
-  21  |       await this.page.getByPlaceholder('name@example.com').fill(email);
-  22  |       await this.page.getByLabel('Password').fill(password);
-  23  |       await this.page.getByRole('button', { name: 'Sign In' }).click();
-  24  | 
-  25  |       // Wait for ONE of multiple indicators of successful login (more robust)
-  26  |       await Promise.race([
-  27  |         // Option 1: Dashboard heading (case-insensitive)
-  28  |         this.page.getByRole('heading', { name: /dashboard/i }).waitFor({ state: 'visible', timeout: 15000 }),
-  29  |         // Option 2: Navigation menu
-  30  |         this.page.getByRole('navigation').waitFor({ state: 'visible', timeout: 15000 }),
-  31  |         // Option 3: URL change to home (not login)
-  32  |         this.page.waitForURL(url => !url.includes('/login'), { timeout: 15000 }),
-  33  |       ]).catch(() => {
-  34  |         // If none of the above work, just wait for the hard redirect timeout
-  35  |         return this.page.waitForTimeout(5000);
-  36  |       });
-  37  |     } else {
-  38  |       // Already at home page, wait for it to be fully loaded
-  39  |       await this.page.waitForTimeout(2000);
-  40  |     }
-  41  | 
-  42  |     // Wait for page to be fully loaded
-  43  |     await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
-  44  | 
-  45  |     // Additional wait for session to be established
-  46  |     await this.page.waitForTimeout(1500);
-  47  |   }
-  48  | 
-  49  |   /**
-  50  |    * Navigate to a specific page by name
-  51  |    * Uses direct URL navigation for reliability
-  52  |    */
-  53  |   async navigateToPage(pageName: 'Dashboard' | 'SQL Editor' | 'Reports' | 'Charts' | 'Dashboards') {
-  54  |     // Map page names to their routes
-  55  |     const routes: Record<string, string> = {
-  56  |       'Dashboard': '/',
-  57  |       'SQL Editor': '/sql-editor',
-  58  |       'Reports': '/reports',
-  59  |       'Charts': '/charts',
-  60  |       'Dashboards': '/dashboards',
-  61  |     };
-  62  | 
-  63  |     const route = routes[pageName];
-  64  |     if (!route) {
-  65  |       throw new Error(`Unknown page: ${pageName}`);
-  66  |     }
-  67  | 
-  68  |     // Use direct URL navigation - most reliable
-  69  |     await this.page.goto(route, { waitUntil: 'domcontentloaded' });
-  70  | 
-  71  |     // Wait for page to be fully loaded
-  72  |     await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
-  73  |     await this.page.waitForTimeout(1000);
-  74  |   }
-  75  | 
-  76  |   /**
-  77  |    * Wait for and verify toast notification
-  78  |    */
-  79  |   async verifyToast(message: string, type: 'success' | 'error' = 'success') {
-  80  |     const toast = this.page.getByText(message).first();
-  81  |     await toast.waitFor({ state: 'visible', timeout: 5000 });
-  82  |     return toast;
-  83  |   }
-  84  | 
-  85  |   /**
-  86  |    * Select from a dropdown by trigger and option text
-  87  |    * Improved to handle Radix UI dropdowns with better waiting
-  88  |    */
-  89  |   async selectDropdown(triggerText: string, optionText: string, timeout = 10000) {
-  90  |     // Click the dropdown trigger
-  91  |     const trigger = this.page.getByText(triggerText).first();
-  92  |     await trigger.waitFor({ state: 'visible', timeout });
-  93  |     await trigger.click();
-  94  | 
-  95  |     // Wait for dropdown content to appear - Radix UI uses portals
-  96  |     await this.page.waitForTimeout(500);
-  97  | 
-  98  |     // Try to find the option with multiple selectors for robustness
-  99  |     const option = this.page.getByRole('option', { name: optionText }).first();
-  100 | 
-  101 |     try {
-  102 |       await option.waitFor({ state: 'visible', timeout: 5000 });
-  103 |       await option.click();
-  104 |     } catch (error) {
-  105 |       // Fallback: try clicking by text if role='option' didn't work
-  106 |       const textOption = this.page.getByText(optionText).first();
-  107 |       await textOption.waitFor({ state: 'visible', timeout: 5000 });
-  108 |       await textOption.click();
-  109 |     }
-  110 | 
-  111 |     // Wait for selection to complete
-  112 |     await this.page.waitForTimeout(300);
+  283 |       sql: `
+  284 |         WITH numbers(n) AS (
+  285 |           SELECT 1
+  286 |           UNION ALL SELECT 2
+  287 |           UNION ALL SELECT 3
+  288 |           UNION ALL SELECT 4
+  289 |           UNION ALL SELECT 5
+  290 |         )
+  291 |         SELECT n FROM numbers
+  292 |         ORDER BY n
+  293 |       `,
+  294 |       dataSourceId: sqliteDataSourceId,
+  295 |       limit: 2,
+  296 |       offset: 1,
+  297 |     });
+  298 | 
+  299 |     expect(response.status()).toBe(200);
+  300 | 
+  301 |     const data = await ApiTestHelpers.extractJson(response);
+  302 |     expect(data.success).toBe(true);
+  303 |     expect(data.data.rows).toHaveLength(2);
+  304 |     expect(data.data.rows[0].n).toBe(2);
+  305 |     expect(data.data.rows[1].n).toBe(3);
+  306 |   });
+  307 | 
+  308 |   test('should reject non-SELECT query', async ({ request }) => {
+  309 |     const apiHelpers = new ApiTestHelpers(request, authCookie);
+  310 |     const response = await apiHelpers.executeSql({
+  311 |       sql: 'INSERT INTO users VALUES (1, "test")',
+  312 |       dataSourceId: sqliteDataSourceId,
+  313 |     });
+  314 | 
+  315 |     expect(response.status()).toBe(403);
+  316 | 
+  317 |     const data = await ApiTestHelpers.extractJson(response);
+  318 |     expect(data.success).toBe(false);
+  319 |     expect(data.error.code).toBe('FORBIDDEN');
+  320 |     expect(data.error.message).toContain('SELECT');
+  321 |   });
+  322 | 
+  323 |   test('should handle query syntax errors gracefully', async ({ request }) => {
+  324 |     const apiHelpers = new ApiTestHelpers(request, authCookie);
+  325 |     const response = await apiHelpers.executeSql({
+  326 |       sql: 'SELECT * FROM nonexistent_table',
+  327 |       dataSourceId: sqliteDataSourceId,
+  328 |     });
+  329 | 
+  330 |     // Should return error with proper status
+  331 |     expect(response.status()).toBeGreaterThanOrEqual(400);
+  332 | 
+  333 |     const data = await ApiTestHelpers.extractJson(response);
+  334 |     expect(data.success).toBe(false);
+  335 |     expect(data.error).toHaveProperty('code');
+  336 |     expect(data.error).toHaveProperty('message');
+  337 |   });
+  338 | 
+  339 |   test('should validate SQL before execution', async ({ request }) => {
+  340 |     const apiHelpers = new ApiTestHelpers(request, authCookie);
+  341 |     const response = await apiHelpers.validateSql({
+  342 |       sql: 'SELECT * FROM users WHERE id = ?',
+  343 |     });
+  344 | 
+  345 |     expect(response.status()).toBe(200);
+  346 | 
+  347 |     const data = await ApiTestHelpers.extractJson(response);
+  348 |     expect(data.success).toBe(true);
+  349 |     expect(data.data).toHaveProperty('isValid');
+  350 |   });
+  351 | });
+  352 | 
+  353 | test.describe('API - Error Logging Scenarios', () => {
+  354 |   let authCookie: string;
+  355 |   let authContext: any;
+  356 |   let authPage: any;
+  357 | 
+  358 |   test.beforeAll(async ({ browser }) => {
+  359 |     authContext = await browser.newContext();
+  360 |     authPage = await authContext.newPage();
+  361 | 
+  362 |     const testHelpers = new TestHelpers(authPage);
+  363 |     await testHelpers.login();
+  364 | 
+  365 |     const cookies = await authContext.cookies();
+  366 |     const authCookieObj = cookies.find(c => c.name.includes('session-token'));
+  367 |     authCookie = authCookieObj ? `${authCookieObj.name}=${authCookieObj.value}` : '';
+  368 |   });
+  369 | 
+  370 |   test.afterAll(async () => {
+  371 |     if (authPage) await authPage.close();
+  372 |     if (authContext) await authContext.close();
+  373 |   });
+  374 | 
+  375 |   test('should log validation errors for missing fields', async ({ request }) => {
+  376 |     const apiHelpers = new ApiTestHelpers(request, authCookie);
+  377 |     // Test data source creation with missing fields
+  378 |     const response = await apiHelpers.createDataSource({
+  379 |       name: 'Invalid DS',
+  380 |       // Missing clientType and connectionConfig
+  381 |     } as any);
+  382 | 
+> 383 |     expect(response.status()).toBe(400);
+      |                               ^ Error: expect(received).toBe(expected) // Object.is equality
+  384 | 
+  385 |     const data = await ApiTestHelpers.extractJson(response);
+  386 |     expect(data.success).toBe(false);
+  387 |     expect(data.error.code).toBe('INVALID_INPUT');
+  388 |   });
+  389 | 
+  390 |   test('should log validation errors for queries', async ({ request }) => {
+  391 |     const apiHelpers = new ApiTestHelpers(request, authCookie);
+  392 |     const response = await apiHelpers.createQuery({
+  393 |       name: 'Invalid Query',
+  394 |       // Missing dataSourceId and sqlContent
+  395 |     } as any);
+  396 | 
+  397 |     expect(response.status()).toBe(400);
+  398 | 
+  399 |     const data = await ApiTestHelpers.extractJson(response);
+  400 |     expect(data.success).toBe(false);
+  401 |     expect(data.error.code).toBe('INVALID_INPUT');
+  402 |   });
+  403 | 
+  404 |   test('should log not found errors', async ({ request }) => {
+  405 |     const apiHelpers = new ApiTestHelpers(request, authCookie);
+  406 |     const response = await apiHelpers.getDataSource('non-existent-id-12345');
+  407 |     expect(response.status()).toBe(404);
+  408 | 
+  409 |     const data = await ApiTestHelpers.extractJson(response);
+  410 |     expect(data.success).toBe(false);
+  411 |     expect(data.error.code).toBe('NOT_FOUND');
+  412 |   });
+  413 | });
+  414 | 
+  415 | test.describe('API - Performance Logging', () => {
+  416 |   let authCookie: string;
+  417 |   let authContext: any;
+  418 |   let authPage: any;
+  419 | 
+  420 |   test.beforeAll(async ({ browser }) => {
+  421 |     authContext = await browser.newContext();
+  422 |     authPage = await authContext.newPage();
+  423 | 
+  424 |     const testHelpers = new TestHelpers(authPage);
+  425 |     await testHelpers.login();
+  426 | 
+  427 |     const cookies = await authContext.cookies();
+  428 |     const authCookieObj = cookies.find(c => c.name.includes('session-token'));
+  429 |     authCookie = authCookieObj ? `${authCookieObj.name}=${authCookieObj.value}` : '';
+  430 |   });
+  431 | 
+  432 |   test.afterAll(async () => {
+  433 |     if (authPage) await authPage.close();
+  434 |     if (authContext) await authContext.close();
+  435 |   });
+  436 | 
+  437 |   test('should include duration in response metadata', async ({ request }) => {
+  438 |     const apiHelpers = new ApiTestHelpers(request, authCookie);
+  439 |     const startTime = Date.now();
+  440 | 
+  441 |     const response = await apiHelpers.getQueries();
+  442 | 
+  443 |     const endTime = Date.now();
+  444 |     const requestDuration = endTime - startTime;
+  445 | 
+  446 |     expect(response.status()).toBe(200);
+  447 | 
+  448 |     // The request should complete in reasonable time
+  449 |     expect(requestDuration).toBeLessThan(5000);
+  450 |   });
+  451 | 
+  452 |   test('should handle concurrent requests', async ({ request }) => {
+  453 |     const apiHelpers = new ApiTestHelpers(request, authCookie);
+  454 |     // Create multiple concurrent requests
+  455 |     const promises = [
+  456 |       apiHelpers.getQueries(),
+  457 |       apiHelpers.getDataSources(),
+  458 |       apiHelpers.getReports(),
+  459 |       apiHelpers.getDashboards(),
+  460 |     ];
+  461 | 
+  462 |     const results = await Promise.all(promises);
+  463 | 
+  464 |     // All requests should succeed
+  465 |     for (const response of results) {
+  466 |       expect(response.status()).toBeGreaterThanOrEqual(200);
+  467 |       expect(response.status()).toBeLessThan(300);
+  468 |     }
+  469 |   });
+  470 | });
+  471 | 
 ```

@@ -12,31 +12,44 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/login
-Call log:
-  - navigating to "http://localhost:4050/login", waiting until "load"
+Error: expect(locator).toBeVisible() failed
 
+Locator: locator('h1').or(locator('text=Chart')).first()
+Expected: visible
+Timeout: 5000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toBeVisible" with timeout 5000ms
+  - waiting for locator('h1').or(locator('text=Chart')).first()
+
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e7]
+      - heading "Welcome back" [level=3] [ref=e9]
+      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - text: Email
+          - textbox "Email" [ref=e14]:
+            - /placeholder: name@example.com
+        - generic [ref=e15]:
+          - text: Password
+          - textbox "Password" [ref=e16]
+      - button "Sign In" [ref=e18] [cursor=pointer]
+  - region "Notifications alt+T"
 ```
 
 # Test source
 
 ```ts
-  223 |     // Find sidebar links and navigate
-  224 |     const dashboardLink = page.locator('a').filter({ hasText: 'Dashboard' }).first();
-  225 |     if (await dashboardLink.isVisible()) {
-  226 |       await dashboardLink.click();
-  227 |       await expect(page).toHaveURL(/\//);
-  228 |     }
-  229 |   });
-  230 | 
-  231 |   test('C4. Quick Actions cards', async ({ page }) => {
-  232 |     await page.goto('/');
-  233 | 
-  234 |     // Check for Quick Actions
-  235 |     await expect(page.locator('text=Quick Actions').or(page.locator('text=SQL')).or(page.locator('text=Report')).first()).toBeVisible();
-  236 |   });
-  237 | 
-  238 |   test('C5. Page load performance', async ({ page }) => {
   239 |     const pages = [
   240 |       { path: '/', name: 'Dashboard' },
   241 |       { path: '/sql-editor', name: 'SQL Editor' },
@@ -121,8 +134,7 @@ Call log:
   320 | test.describe('Reports and Charts', () => {
   321 |   test.beforeEach(async ({ page }) => {
   322 |     // Login before each test
-> 323 |     await page.goto('/login');
-      |                ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/login
+  323 |     await page.goto('/login');
   324 |     await page.fill('input[name="email"], input[type="email"]', 'admin@admin.com');
   325 |     await page.fill('input[name="password"], input[type="password"]', 'admin');
   326 |     await page.click('button[type="submit"]');
@@ -138,7 +150,8 @@ Call log:
   336 |   test('R2. Charts page loads', async ({ page }) => {
   337 |     await page.goto('/charts');
   338 | 
-  339 |     await expect(page.locator('h1').or(page.locator('text=Chart')).first()).toBeVisible();
+> 339 |     await expect(page.locator('h1').or(page.locator('text=Chart')).first()).toBeVisible();
+      |                                                                             ^ Error: expect(locator).toBeVisible() failed
   340 |   });
   341 | 
   342 |   test('R3. Dashboards page loads', async ({ page }) => {

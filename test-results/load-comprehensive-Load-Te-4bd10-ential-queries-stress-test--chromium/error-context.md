@@ -12,55 +12,44 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/login
-Call log:
-  - navigating to "http://localhost:4050/login", waiting until "load"
+Error: expect(locator).toBeVisible() failed
 
+Locator: locator('text=SQL Editor').or(locator('h1'))
+Expected: visible
+Timeout: 5000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toBeVisible" with timeout 5000ms
+  - waiting for locator('text=SQL Editor').or(locator('h1'))
+
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e7]
+      - heading "Welcome back" [level=3] [ref=e9]
+      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - text: Email
+          - textbox "Email" [ref=e14]:
+            - /placeholder: name@example.com
+        - generic [ref=e15]:
+          - text: Password
+          - textbox "Password" [ref=e16]
+      - button "Sign In" [ref=e18] [cursor=pointer]
+  - region "Notifications alt+T"
 ```
 
 # Test source
 
 ```ts
-  1   | /**
-  2   |  * Load and Comprehensive Testing Suite
-  3   |  * Tests application with 300K+ records
-  4   |  */
-  5   | 
-  6   | import { test, expect } from '@playwright/test';
-  7   | 
-  8   | test.describe('Load Testing - Large Dataset', () => {
-  9   |   test.beforeEach(async ({ page }) => {
-  10  |     // Login before each test
-> 11  |     await page.goto('/login');
-      |                ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/login
-  12  |     await page.fill('input[name="email"], input[type="email"]', 'admin@admin.com');
-  13  |     await page.fill('input[name="password"], input[type="password"]', 'admin');
-  14  |     await page.click('button[type="submit"]');
-  15  |     await page.waitForURL(/\//);
-  16  |   });
-  17  | 
-  18  |   test('L1. Dashboard loads with large dataset', async ({ page }) => {
-  19  |     await page.goto('/');
-  20  | 
-  21  |     // Dashboard should load
-  22  |     await expect(page.locator('h1').first()).toContainText('Dashboard', { timeout: 10000 });
-  23  | 
-  24  |     // Stats should be visible
-  25  |     await expect(page.locator('text=Total Reports').first()).toBeVisible();
-  26  |     await expect(page.locator('text=Active Charts').first()).toBeVisible();
-  27  |     await expect(page.locator('text=Dashboards').first()).toBeVisible();
-  28  |   });
-  29  | 
-  30  |   test('L2. SQL Editor - Simple query on large dataset', async ({ page }) => {
-  31  |     await page.goto('/sql-editor');
-  32  | 
-  33  |     // Wait for page to load
-  34  |     await expect(page.locator('h1').or(page.locator('text=SQL')).first()).toBeVisible({ timeout: 10000 });
-  35  | 
-  36  |     // Wait for Monaco editor to load
-  37  |     await page.waitForSelector('.monaco-editor', { timeout: 10000 });
-  38  | 
-  39  |     // Click in the editor
   40  |     await page.locator('.monaco-editor').click();
   41  | 
   42  |     // Type simple query
@@ -133,4 +122,134 @@ Call log:
   109 |   test('L5. Aggregation query performance', async ({ page }) => {
   110 |     await page.goto('/sql-editor');
   111 | 
+  112 |     await expect(page.locator('text=SQL Editor').or(page.locator('h1'))).toBeVisible();
+  113 | 
+  114 |     const editor = page.locator('.monaco-editor, .view-line').first();
+  115 |     await editor.click();
+  116 | 
+  117 |     const aggQuery = `SELECT
+  118 |   status,
+  119 |   COUNT(*) as count,
+  120 |   SUM(total_amount) as total,
+  121 |   AVG(total_amount) as average
+  122 | FROM orders
+  123 | GROUP BY status`;
+  124 | 
+  125 |     await page.keyboard.type(aggQuery);
+  126 | 
+  127 |     const startTime = Date.now();
+  128 |     await page.click('button:has-text("Execute"), button:has-text("Run"), button:has-text("▶")');
+  129 | 
+  130 |     await page.waitForTimeout(10000);
+  131 |     const queryTime = Date.now() - startTime;
+  132 | 
+  133 |     console.log(`Aggregation query completed in ${queryTime}ms`);
+  134 |     expect(queryTime).toBeLessThan(20000);
+  135 |   });
+  136 | 
+  137 |   test('L6. Multiple sequential queries (stress test)', async ({ page }) => {
+  138 |     await page.goto('/sql-editor');
+  139 | 
+> 140 |     await expect(page.locator('text=SQL Editor').or(page.locator('h1'))).toBeVisible();
+      |                                                                          ^ Error: expect(locator).toBeVisible() failed
+  141 | 
+  142 |     const queries = [
+  143 |       'SELECT COUNT(*) FROM customers',
+  144 |       'SELECT COUNT(*) FROM orders',
+  145 |       'SELECT COUNT(*) FROM order_items',
+  146 |       'SELECT status, COUNT(*) FROM orders GROUP BY status'
+  147 |     ];
+  148 | 
+  149 |     const editor = page.locator('.monaco-editor, .view-line').first();
+  150 |     const totalTime = Date.now();
+  151 | 
+  152 |     for (const query of queries) {
+  153 |       await editor.click();
+  154 |       // Clear editor
+  155 |       await page.keyboard.press('Control+A');
+  156 |       await page.keyboard.press('Delete');
+  157 |       await page.keyboard.type(query);
+  158 | 
+  159 |       await page.click('button:has-text("Execute"), button:has-text("Run"), button:has-text("▶")');
+  160 |       await page.waitForTimeout(5000);
+  161 |     }
+  162 | 
+  163 |     const totalTimeMs = Date.now() - totalTime;
+  164 |     console.log(`All queries completed in ${totalTimeMs}ms`);
+  165 |     expect(totalTimeMs).toBeLessThan(60000);
+  166 |   });
+  167 | });
+  168 | 
+  169 | test.describe('Comprehensive Application Testing', () => {
+  170 |   test.beforeEach(async ({ page }) => {
+  171 |     // Login before each test
+  172 |     await page.goto('/login');
+  173 |     await page.fill('input[name="email"], input[type="email"]', 'admin@admin.com');
+  174 |     await page.fill('input[name="password"], input[type="password"]', 'admin');
+  175 |     await page.click('button[type="submit"]');
+  176 |     await page.waitForURL(/\//);
+  177 |   });
+  178 | 
+  179 |   test('C1. Navigate all main pages', async ({ page }) => {
+  180 |     const pages = [
+  181 |       { path: '/', name: 'Dashboard' },
+  182 |       { path: '/sql-editor', name: 'SQL Editor' },
+  183 |       { path: '/queries', name: 'Saved Queries' },
+  184 |       { path: '/reports', name: 'Reports' },
+  185 |       { path: '/charts', name: 'Charts' },
+  186 |       { path: '/dashboards', name: 'Dashboards' },
+  187 |       { path: '/filters', name: 'Filters' },
+  188 |       { path: '/jobs', name: 'Jobs' },
+  189 |       { path: '/data-sources', name: 'Data Sources' },
+  190 |       { path: '/admin/users', name: 'Users' },
+  191 |       { path: '/admin/roles', name: 'Roles' },
+  192 |       { path: '/settings', name: 'Settings' }
+  193 |     ];
+  194 | 
+  195 |     for (const pageData of pages) {
+  196 |       await page.goto(pageData.path);
+  197 |       const visible = await page.locator('h1').or(page.locator(`text=${pageData.name}`)).or(page.locator('text=Dashboard')).or(page.locator('text=SQL')).or(page.locator('text=Reports')).first().isVisible({ timeout: 10000 });
+  198 |       expect(visible).toBeTruthy();
+  199 |       console.log(`✓ ${pageData.name} page loaded`);
+  200 |     }
+  201 |   });
+  202 | 
+  203 |   test('C2. Theme toggle works', async ({ page }) => {
+  204 |     await page.goto('/');
+  205 | 
+  206 |     // Get initial theme
+  207 |     const html = page.locator('html');
+  208 |     const initialTheme = await html.getAttribute('class');
+  209 | 
+  210 |     // Toggle theme
+  211 |     await page.click('button:has-text("Toggle theme"), button[aria-label*="theme"], button:has([data-lucide="moon"], [data-lucide="sun"])');
+  212 | 
+  213 |     await page.waitForTimeout(1000);
+  214 |     const newTheme = await html.getAttribute('class');
+  215 | 
+  216 |     // Theme should change
+  217 |     expect(initialTheme).not.toBe(newTheme);
+  218 |   });
+  219 | 
+  220 |   test('C3. Sidebar navigation', async ({ page }) => {
+  221 |     await page.goto('/');
+  222 | 
+  223 |     // Find sidebar links and navigate
+  224 |     const dashboardLink = page.locator('a').filter({ hasText: 'Dashboard' }).first();
+  225 |     if (await dashboardLink.isVisible()) {
+  226 |       await dashboardLink.click();
+  227 |       await expect(page).toHaveURL(/\//);
+  228 |     }
+  229 |   });
+  230 | 
+  231 |   test('C4. Quick Actions cards', async ({ page }) => {
+  232 |     await page.goto('/');
+  233 | 
+  234 |     // Check for Quick Actions
+  235 |     await expect(page.locator('text=Quick Actions').or(page.locator('text=SQL')).or(page.locator('text=Report')).first()).toBeVisible();
+  236 |   });
+  237 | 
+  238 |   test('C5. Page load performance', async ({ page }) => {
+  239 |     const pages = [
+  240 |       { path: '/', name: 'Dashboard' },
 ```

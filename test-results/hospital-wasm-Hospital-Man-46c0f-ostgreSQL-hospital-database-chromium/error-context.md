@@ -12,130 +12,310 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
+TimeoutError: page.fill: Timeout 15000ms exceeded.
 Call log:
-  - navigating to "http://localhost:4050/", waiting until "load"
+  - waiting for locator('input[name="name"]')
 
+```
+
+# Page snapshot
+
+```yaml
+- generic:
+  - generic:
+    - complementary:
+      - generic:
+        - link:
+          - /url: /
+          - img
+          - generic: Enterprise Reports
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - heading [level=2]: Main
+                - navigation:
+                  - link:
+                    - /url: /
+                    - button:
+                      - img
+                      - generic: Dashboard
+                  - link:
+                    - /url: /sql-editor
+                    - button:
+                      - img
+                      - generic: SQL Editor
+                  - link:
+                    - /url: /queries
+                    - button:
+                      - img
+                      - generic: Saved Queries
+                  - link:
+                    - /url: /reports
+                    - button:
+                      - img
+                      - generic: Reports
+                  - link:
+                    - /url: /charts
+                    - button:
+                      - img
+                      - generic: Charts
+                  - link:
+                    - /url: /dashboards
+                    - button:
+                      - img
+                      - generic: Dashboards
+                  - link:
+                    - /url: /filters
+                    - button:
+                      - img
+                      - generic: Filters
+                  - link:
+                    - /url: /jobs
+                    - button:
+                      - img
+                      - generic: Jobs
+                  - link:
+                    - /url: /nl-query
+                    - button:
+                      - img
+                      - generic: NL Query
+              - generic:
+                - heading [level=2]: Administration
+                - navigation:
+                  - link:
+                    - /url: /data-sources
+                    - button:
+                      - img
+                      - generic: Data Sources
+                  - link:
+                    - /url: /bull-board
+                    - button:
+                      - img
+                      - generic: Queue Management
+                  - link:
+                    - /url: /admin/users
+                    - button:
+                      - img
+                      - generic: Users
+                  - link:
+                    - /url: /admin/roles
+                    - button:
+                      - img
+                      - generic: Roles
+                  - link:
+                    - /url: /admin/permissions
+                    - button:
+                      - img
+                      - generic: Permissions
+                  - link:
+                    - /url: /settings
+                    - button:
+                      - img
+                      - generic: Settings
+      - button:
+        - img
+    - generic:
+      - banner:
+        - generic:
+          - button:
+            - img
+            - generic: Sakila Demo DB
+            - generic: sqlite3
+        - generic:
+          - button:
+            - img
+            - generic: Toggle theme
+          - button:
+            - img
+            - generic: Notifications
+          - button:
+            - generic:
+              - generic: SA
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - heading [level=1]: Data Sources
+              - paragraph: Manage database connections for reports and queries
+            - button [expanded]:
+              - img
+              - text: New Data Source
+          - generic:
+            - generic:
+              - heading [level=3]:
+                - img
+                - text: All Data Sources
+            - generic:
+              - generic: No data sources configured. Add your first data source to get started.
+  - region "Notifications alt+T"
+  - dialog "Add Data Source" [ref=e2]:
+    - generic [ref=e3]:
+      - heading "Add Data Source" [level=2] [ref=e4]
+      - paragraph [ref=e5]: Configure a new database connection for your reports.
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - text: Name
+          - textbox "Name" [active] [ref=e9]:
+            - /placeholder: Production Database
+        - generic [ref=e10]:
+          - text: Database Type
+          - combobox "Database Type" [ref=e11] [cursor=pointer]:
+            - generic: PostgreSQL
+            - img [ref=e12]
+      - generic [ref=e14]:
+        - text: Description
+        - textbox "Description" [ref=e15]:
+          - /placeholder: Optional description
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - text: Host
+          - textbox "Host" [ref=e18]:
+            - /placeholder: localhost
+        - generic [ref=e19]:
+          - text: Port
+          - textbox "Port" [ref=e20]:
+            - /placeholder: "5432"
+      - generic [ref=e21]:
+        - text: Database
+        - textbox "Database" [ref=e22]:
+          - /placeholder: mydb
+      - generic [ref=e23]:
+        - generic [ref=e24]:
+          - text: Username
+          - textbox "Username" [ref=e25]:
+            - /placeholder: dbuser
+        - generic [ref=e26]:
+          - text: Password
+          - textbox "Password" [ref=e27]:
+            - /placeholder: "********"
+    - generic [ref=e29]:
+      - button "Test Connection" [disabled]
+      - button "Create" [disabled]
+    - button "Close" [ref=e30] [cursor=pointer]:
+      - img [ref=e31]
+      - generic [ref=e34]: Close
 ```
 
 # Test source
 
 ```ts
-  11  |   // Return cached cookie if available
-  12  |   if (cachedAuthCookie) {
-  13  |     console.log('Using cached auth cookie');
-  14  |     return cachedAuthCookie;
-  15  |   }
-  16  | 
-  17  |   console.log('Getting fresh auth cookie...');
-  18  | 
-  19  |   // Try API-based authentication first
-  20  |   try {
-  21  |     const signInResponse = await request.post('/api/auth/callback/credentials', {
-  22  |       headers: {
-  23  |         'Content-Type': 'application/json',
-  24  |       },
-  25  |       data: JSON.stringify({
-  26  |         email: 'admin@admin.com',
-  27  |         password: 'admin',
-  28  |         csrfToken: 'test-csrf-token',
-  29  |         json: true,
-  30  |       }),
-  31  |     });
-  32  | 
-  33  |     console.log('Sign-in response status:', signInResponse.status());
-  34  | 
-  35  |     // Get cookies from the response headers
-  36  |     const setCookieHeaders = signInResponse.headers()['set-cookie'];
-  37  |     if (setCookieHeaders) {
-  38  |       const cookieArray = Array.isArray(setCookieHeaders) ? setCookieHeaders : [setCookieHeaders];
-  39  |       for (const cookieHeader of cookieArray) {
-  40  |         const match = cookieHeader.match(/authjs\.session-token=([^;]+)/);
-  41  |         if (match) {
-  42  |           cachedAuthCookie = `authjs.session-token=${match[1]}`;
-  43  |           console.log('Got auth cookie from API sign-in');
-  44  |           return cachedAuthCookie;
-  45  |         }
-  46  |       }
-  47  |     }
-  48  | 
-  49  |     console.log('No session cookie in API response, trying browser fallback...');
-  50  |   } catch (error) {
-  51  |     console.log('API sign-in failed, trying browser fallback:', error);
-  52  |   }
-  53  | 
-  54  |   // Fallback: use browser-based login
-  55  |   if (!browser) {
-  56  |     throw new Error('Browser is required for fallback authentication');
-  57  |   }
-  58  | 
-  59  |   const page = await browser.newPage();
-  60  |   const testHelpers = new TestHelpers(page);
-  61  | 
-  62  |   try {
-  63  |     await page.goto('/');
-  64  |     const currentUrl = page.url();
-  65  | 
-  66  |     if (currentUrl.includes('/login')) {
-  67  |       console.log('Logging in via browser...');
-  68  |       await testHelpers.login();
-  69  |     }
-  70  | 
-  71  |     // Wait for session to be established
-  72  |     await page.waitForTimeout(5000);
-  73  |     await page.goto('/');
-  74  |     await page.waitForLoadState('domcontentloaded');
-  75  |     await page.waitForTimeout(3000);
-  76  | 
-  77  |     const cookies = await page.context().cookies();
-  78  |     console.log('Cookies after login:', cookies.map(c => c.name));
-  79  | 
-  80  |     const authCookieObj = cookies.find(c => c.name.includes('session-token'));
-  81  | 
-  82  |     if (!authCookieObj) {
-  83  |       throw new Error('No auth cookie found after login. Available cookies: ' + cookies.map(c => c.name).join(', '));
-  84  |     }
-  85  | 
-  86  |     cachedAuthCookie = `${authCookieObj.name}=${authCookieObj.value}`;
-  87  |     console.log('Got auth cookie from browser login');
-  88  | 
-  89  |     return cachedAuthCookie;
-  90  |   } finally {
-  91  |     await page.close();
-  92  |   }
-  93  | }
-  94  | 
-  95  | /**
-  96  |  * Clear cached auth cookie (useful for testing logout scenarios)
-  97  |  */
-  98  | export function clearAuthCache(): void {
-  99  |   cachedAuthCookie = null;
-  100 | }
-  101 | 
-  102 | /**
-  103 |  * Simple login function for E2E tests
-  104 |  * Performs login via UI and returns when authenticated
-  105 |  */
-  106 | export async function login(page: Page, email: string = 'admin@admin.com', password: string = 'admin'): Promise<void> {
-  107 |   const BASE_URL = process.env.BASE_URL || 'http://localhost:4050';
-  108 |   const testHelpers = new TestHelpers(page);
-  109 | 
-  110 |   // Navigate to login page if not already there
-> 111 |   await page.goto(BASE_URL);
-      |              ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-  112 |   const currentUrl = page.url();
-  113 | 
-  114 |   if (!currentUrl.includes('/login')) {
-  115 |     // Already logged in or on another page
-  116 |     return;
-  117 |   }
-  118 | 
-  119 |   // Perform login
-  120 |   await testHelpers.login();
-  121 | 
-  122 |   // Wait for navigation to dashboard
-  123 |   await page.waitForURL(/\/(dashboard|)/, { timeout: 10000 });
-  124 |   await page.waitForLoadState('domcontentloaded');
-  125 | }
-  126 | 
+  265 |     await page.goto(`${BASE_URL}/sql-editor`);
+  266 | 
+  267 |     // Wait for SQL editor to load
+  268 |     await expect(page.locator('.monaco-editor, [contenteditable="true"], textarea, .CodeMirror')).toBeVisible();
+  269 | 
+  270 |     // Execute multiple queries and measure performance
+  271 |     const queries = [
+  272 |       {
+  273 |         name: 'Count Query',
+  274 |         sql: 'SELECT COUNT(*) as count FROM bus_patient',
+  275 |       },
+  276 |       {
+  277 |         name: 'Aggregation Query',
+  278 |         sql: `SELECT gender, blood_group, COUNT(*) as count
+  279 |               FROM bus_patient
+  280 |               GROUP BY gender, blood_group`,
+  281 |       },
+  282 |       {
+  283 |         name: 'Large Result Set (1000 rows)',
+  284 |         sql: `SELECT * FROM bus_patient ORDER BY id LIMIT 1000`,
+  285 |       },
+  286 |     ];
+  287 | 
+  288 |     for (const queryTest of queries) {
+  289 |       const startTime = Date.now();
+  290 | 
+  291 |       await page.locator('.monaco-editor textarea, .CodeMirror-code textarea, [contenteditable="true"]').first().fill(queryTest.sql);
+  292 |       await page.click('button:has-text("Execute"), button:has-text("Run")');
+  293 | 
+  294 |       // Wait for results
+  295 |       await expect(page.locator('table, .results, .data-grid')).toBeVisible({ timeout: 20000 });
+  296 | 
+  297 |       const executionTime = Date.now() - startTime;
+  298 |       console.log(`${queryTest.name}: ${executionTime}ms`);
+  299 | 
+  300 |       // Verify query completed successfully
+  301 |       await expect(page.locator('table, .results')).toBeVisible();
+  302 |     }
+  303 |   });
+  304 | 
+  305 |   test('8. WASM feature flags verification', async ({ page }) => {
+  306 |     // Navigate to datasets page to verify WASM is enabled
+  307 |     await page.goto(`${BASE_URL}/datasets`);
+  308 | 
+  309 |     // Check if WASM features are indicated on the page
+  310 |     const wasmLocator = page.locator('text=WASM, text=DuckDB, text=Datasets');
+  311 |     const datasetLocator = page.locator('h1:has-text("Dataset")');
+  312 |     const isVisible = await wasmLocator.isVisible().catch(() => false) || await datasetLocator.isVisible().catch(() => false);
+  313 |     expect(isVisible).toBeTruthy();
+  314 | 
+  315 |     // Check for DuckDB status indicator
+  316 |     const duckdbStatus = page.locator('text=DuckDB, text=ready, text=initialized');
+  317 |     if (await duckdbStatus.count() > 0) {
+  318 |       console.log('DuckDB-Wasm is initialized and ready');
+  319 |     }
+  320 |   });
+  321 | 
+  322 |   test('9. End-to-end workflow - Complete patient analytics', async ({ page }) => {
+  323 |     // This test covers the complete workflow:
+  324 |     // 1. Navigate to SQL Editor
+  325 |     await page.goto(`${BASE_URL}/sql-editor`);
+  326 |     await expect(page.locator('.monaco-editor, [contenteditable="true"], textarea')).toBeVisible();
+  327 | 
+  328 |     // 2. Execute patient count query
+  329 |     await page.locator('.monaco-editor textarea, [contenteditable="true"]').first().fill('SELECT COUNT(*) FROM bus_patient');
+  330 |     await page.click('button:has-text("Execute"), button:has-text("Run")');
+  331 |     await expect(page.locator('text=100000, table, .results')).toBeVisible({ timeout: 15000 });
+  332 | 
+  333 |     // 3. Navigate to reports
+  334 |     await page.goto(`${BASE_URL}/reports`);
+  335 |     await expect(page.locator('h1:has-text("Report"), text=Reports, h1')).first().toBeVisible();
+  336 | 
+  337 |     // 4. Navigate to charts
+  338 |     await page.goto(`${BASE_URL}/charts`);
+  339 |     await expect(page.locator('text=Chart, text=Charts, h1').first()).toBeVisible();
+  340 | 
+  341 |     // 5. Navigate to dashboards
+  342 |     await page.goto(`${BASE_URL}/dashboards`);
+  343 |     await expect(page.locator('text=Dashboard, text=Dashboards, h1').first()).toBeVisible();
+  344 | 
+  345 |     // 6. Verify no console errors related to WASM
+  346 |     const logs = await page.evaluate(() => {
+  347 |       return (window as any).consoleLogs || [];
+  348 |     });
+  349 |     console.log('Console logs:', logs);
+  350 |   });
+  351 | });
+  352 | 
+  353 | test.describe('Hospital Management - Data Source Connection', () => {
+  354 |   test('Connect to local PostgreSQL hospital database', async ({ page }) => {
+  355 |     await login(page);
+  356 |     await page.goto(`${BASE_URL}/data-sources`);
+  357 | 
+  358 |     // Verify we can add a new data source
+  359 |     await expect(page.locator('button:has-text("Add"), button:has-text("New")')).toBeVisible();
+  360 | 
+  361 |     // Click add data source
+  362 |     await page.click('button:has-text("Add"), button:has-text("New")');
+  363 | 
+  364 |     // Fill connection details for local PostgreSQL
+> 365 |     await page.fill('input[name="name"]', 'Local Hospital DB');
+      |                ^ TimeoutError: page.fill: Timeout 15000ms exceeded.
+  366 |     await page.selectOption('select[name="clientType"]', 'pg');
+  367 |     await page.fill('input[name="host"]', 'localhost');
+  368 |     await page.fill('input[name="port"]', '5432');
+  369 |     await page.fill('input[name="database"]', 'hospital_management_system');
+  370 |     await page.fill('input[name="user"]', 'postgres');
+  371 | 
+  372 |     // Test connection
+  373 |     await page.click('button:has-text("Test Connection")');
+  374 | 
+  375 |     // Should show success or connection result
+  376 |     await expect(page.locator('text=Connection, text=success, text=failed, .toast, .notification')).first().toBeVisible({ timeout: 10000 });
+  377 |   });
+  378 | });
+  379 | 
 ```

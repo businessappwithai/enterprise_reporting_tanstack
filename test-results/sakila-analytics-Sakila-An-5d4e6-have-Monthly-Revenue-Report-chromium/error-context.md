@@ -12,126 +12,215 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-Call log:
-  - navigating to "http://localhost:4050/", waiting until "load"
+Error: expect(received).toBe(expected) // Object.is equality
 
+Expected: 200
+Received: 401
 ```
 
 # Test source
 
 ```ts
-  1   | import { Page, Locator } from '@playwright/test';
-  2   | 
-  3   | export class TestHelpers {
-  4   |   constructor(private page: Page) {}
-  5   | 
-  6   |   /**
-  7   |    * Login to the application with default credentials
-  8   |    * Goes to home page first, then logs in if needed
-  9   |    */
-  10  |   async login(email = 'admin@admin.com', password = 'admin') {
-  11  |     // Start at home page - this will redirect to login if not authenticated
-> 12  |     await this.page.goto('/');
-      |                     ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-  13  | 
-  14  |     // Wait for page load
-  15  |     await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
-  16  | 
-  17  |     // Check if we're on login page
-  18  |     const currentUrl = this.page.url();
-  19  |     if (currentUrl.includes('/login')) {
-  20  |       // Need to log in
-  21  |       await this.page.getByPlaceholder('name@example.com').fill(email);
-  22  |       await this.page.getByLabel('Password').fill(password);
-  23  |       await this.page.getByRole('button', { name: 'Sign In' }).click();
-  24  | 
-  25  |       // Wait for ONE of multiple indicators of successful login (more robust)
-  26  |       await Promise.race([
-  27  |         // Option 1: Dashboard heading (case-insensitive)
-  28  |         this.page.getByRole('heading', { name: /dashboard/i }).waitFor({ state: 'visible', timeout: 15000 }),
-  29  |         // Option 2: Navigation menu
-  30  |         this.page.getByRole('navigation').waitFor({ state: 'visible', timeout: 15000 }),
-  31  |         // Option 3: URL change to home (not login)
-  32  |         this.page.waitForURL(url => !url.includes('/login'), { timeout: 15000 }),
-  33  |       ]).catch(() => {
-  34  |         // If none of the above work, just wait for the hard redirect timeout
-  35  |         return this.page.waitForTimeout(5000);
-  36  |       });
-  37  |     } else {
-  38  |       // Already at home page, wait for it to be fully loaded
-  39  |       await this.page.waitForTimeout(2000);
-  40  |     }
-  41  | 
-  42  |     // Wait for page to be fully loaded
-  43  |     await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
-  44  | 
-  45  |     // Additional wait for session to be established
-  46  |     await this.page.waitForTimeout(1500);
-  47  |   }
-  48  | 
-  49  |   /**
-  50  |    * Navigate to a specific page by name
-  51  |    * Uses direct URL navigation for reliability
-  52  |    */
-  53  |   async navigateToPage(pageName: 'Dashboard' | 'SQL Editor' | 'Reports' | 'Charts' | 'Dashboards') {
-  54  |     // Map page names to their routes
-  55  |     const routes: Record<string, string> = {
-  56  |       'Dashboard': '/',
-  57  |       'SQL Editor': '/sql-editor',
-  58  |       'Reports': '/reports',
-  59  |       'Charts': '/charts',
-  60  |       'Dashboards': '/dashboards',
-  61  |     };
-  62  | 
-  63  |     const route = routes[pageName];
-  64  |     if (!route) {
-  65  |       throw new Error(`Unknown page: ${pageName}`);
-  66  |     }
-  67  | 
-  68  |     // Use direct URL navigation - most reliable
-  69  |     await this.page.goto(route, { waitUntil: 'domcontentloaded' });
+  68  |     const response = await apiHelpers.getQueries();
+  69  |     const data = await ApiTestHelpers.extractJson(response);
   70  | 
-  71  |     // Wait for page to be fully loaded
-  72  |     await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
-  73  |     await this.page.waitForTimeout(1000);
-  74  |   }
+  71  |     const query = data.data.items.find((q: any) => q.name === 'Top Customers by Spending');
+  72  |     expect(query).toBeDefined();
+  73  |   });
+  74  | });
   75  | 
-  76  |   /**
-  77  |    * Wait for and verify toast notification
-  78  |    */
-  79  |   async verifyToast(message: string, type: 'success' | 'error' = 'success') {
-  80  |     const toast = this.page.getByText(message).first();
-  81  |     await toast.waitFor({ state: 'visible', timeout: 5000 });
-  82  |     return toast;
-  83  |   }
+  76  | test.describe('Sakila Analytics - SQL Execution', () => {
+  77  |   let authCookie: string;
+  78  |   let authContext: any;
+  79  |   let authPage: any;
+  80  | 
+  81  |   test.beforeAll(async ({ browser }) => {
+  82  |     authContext = await browser.newContext();
+  83  |     authPage = await authContext.newPage();
   84  | 
-  85  |   /**
-  86  |    * Select from a dropdown by trigger and option text
-  87  |    * Improved to handle Radix UI dropdowns with better waiting
-  88  |    */
-  89  |   async selectDropdown(triggerText: string, optionText: string, timeout = 10000) {
-  90  |     // Click the dropdown trigger
-  91  |     const trigger = this.page.getByText(triggerText).first();
-  92  |     await trigger.waitFor({ state: 'visible', timeout });
-  93  |     await trigger.click();
-  94  | 
-  95  |     // Wait for dropdown content to appear - Radix UI uses portals
-  96  |     await this.page.waitForTimeout(500);
+  85  |     const testHelpers = new TestHelpers(authPage);
+  86  |     await testHelpers.login();
+  87  | 
+  88  |     const cookies = await authContext.cookies();
+  89  |     const authCookieObj = cookies.find(c => c.name.includes('session-token'));
+  90  |     authCookie = authCookieObj ? `${authCookieObj.name}=${authCookieObj.value}` : '';
+  91  |   });
+  92  | 
+  93  |   test.afterAll(async () => {
+  94  |     if (authPage) await authPage.close();
+  95  |     if (authContext) await authContext.close();
+  96  |   });
   97  | 
-  98  |     // Try to find the option with multiple selectors for robustness
-  99  |     const option = this.page.getByRole('option', { name: optionText }).first();
-  100 | 
-  101 |     try {
-  102 |       await option.waitFor({ state: 'visible', timeout: 5000 });
-  103 |       await option.click();
-  104 |     } catch (error) {
-  105 |       // Fallback: try clicking by text if role='option' didn't work
-  106 |       const textOption = this.page.getByText(optionText).first();
-  107 |       await textOption.waitFor({ state: 'visible', timeout: 5000 });
-  108 |       await textOption.click();
-  109 |     }
-  110 | 
-  111 |     // Wait for selection to complete
-  112 |     await this.page.waitForTimeout(300);
+  98  |   test('should execute Monthly Revenue Trend query', async ({ request }) => {
+  99  |     const apiHelpers = new ApiTestHelpers(request, authCookie);
+  100 |     const queriesResponse = await apiHelpers.getQueries();
+  101 |     const queriesData = await ApiTestHelpers.extractJson(queriesResponse);
+  102 |     const query = queriesData.data.items.find((q: any) => q.name === 'Monthly Revenue Trend');
+  103 | 
+  104 |     const executeResponse = await apiHelpers.executeQuery(query.id);
+  105 |     expect(executeResponse.status()).toBe(200);
+  106 | 
+  107 |     const result = await ApiTestHelpers.extractJson(executeResponse);
+  108 |     expect(result.success).toBe(true);
+  109 |     expect(result.data.rows).toBeInstanceOf(Array);
+  110 |     expect(result.data.rows.length).toBeGreaterThan(0);
+  111 |   });
+  112 | 
+  113 |   test('should execute Revenue by Category query', async ({ request }) => {
+  114 |     const apiHelpers = new ApiTestHelpers(request, authCookie);
+  115 |     const queriesResponse = await apiHelpers.getQueries();
+  116 |     const queriesData = await ApiTestHelpers.extractJson(queriesResponse);
+  117 |     const query = queriesData.data.items.find((q: any) => q.name === 'Revenue by Film Category');
+  118 | 
+  119 |     const executeResponse = await apiHelpers.executeQuery(query.id);
+  120 |     expect(executeResponse.status()).toBe(200);
+  121 | 
+  122 |     const result = await ApiTestHelpers.extractJson(executeResponse);
+  123 |     expect(result.success).toBe(true);
+  124 |     expect(result.data.rows).toBeInstanceOf(Array);
+  125 |   });
+  126 | 
+  127 |   test('should execute Top Customers query', async ({ request }) => {
+  128 |     const apiHelpers = new ApiTestHelpers(request, authCookie);
+  129 |     const queriesResponse = await apiHelpers.getQueries();
+  130 |     const queriesData = await ApiTestHelpers.extractJson(queriesResponse);
+  131 |     const query = queriesData.data.items.find((q: any) => q.name === 'Top Customers by Spending');
+  132 | 
+  133 |     const executeResponse = await apiHelpers.executeQuery(query.id);
+  134 |     expect(executeResponse.status()).toBe(200);
+  135 | 
+  136 |     const result = await ApiTestHelpers.extractJson(executeResponse);
+  137 |     expect(result.success).toBe(true);
+  138 |     expect(result.data.rows).toBeInstanceOf(Array);
+  139 |     expect(result.data.rows.length).toBeGreaterThan(0);
+  140 |   });
+  141 | });
+  142 | 
+  143 | test.describe('Sakila Analytics - Reports', () => {
+  144 |   let authCookie: string;
+  145 |   let authContext: any;
+  146 |   let authPage: any;
+  147 | 
+  148 |   test.beforeAll(async ({ browser }) => {
+  149 |     authContext = await browser.newContext();
+  150 |     authPage = await authContext.newPage();
+  151 | 
+  152 |     const testHelpers = new TestHelpers(authPage);
+  153 |     await testHelpers.login();
+  154 | 
+  155 |     const cookies = await authContext.cookies();
+  156 |     const authCookieObj = cookies.find(c => c.name.includes('session-token'));
+  157 |     authCookie = authCookieObj ? `${authCookieObj.name}=${authCookieObj.value}` : '';
+  158 |   });
+  159 | 
+  160 |   test.afterAll(async () => {
+  161 |     if (authPage) await authPage.close();
+  162 |     if (authContext) await authContext.close();
+  163 |   });
+  164 | 
+  165 |   test('should have Monthly Revenue Report', async ({ request }) => {
+  166 |     const apiHelpers = new ApiTestHelpers(request, authCookie);
+  167 |     const response = await apiHelpers.getReports();
+> 168 |     expect(response.status()).toBe(200);
+      |                               ^ Error: expect(received).toBe(expected) // Object.is equality
+  169 | 
+  170 |     const data = await ApiTestHelpers.extractJson(response);
+  171 |     const report = data.data.items.find((r: any) => r.name === 'Monthly Revenue Report');
+  172 |     expect(report).toBeDefined();
+  173 |     expect(report.description).toContain('revenue');
+  174 |   });
+  175 | 
+  176 |   test('should fetch report data', async ({ request }) => {
+  177 |     const apiHelpers = new ApiTestHelpers(request, authCookie);
+  178 |     const reportsResponse = await apiHelpers.getReports();
+  179 |     const reportsData = await ApiTestHelpers.extractJson(reportsResponse);
+  180 |     const report = reportsData.data.items.find((r: any) => r.name === 'Monthly Revenue Report');
+  181 | 
+  182 |     const dataResponse = await apiHelpers.getReportData(report.id);
+  183 |     expect(dataResponse.status()).toBe(200);
+  184 | 
+  185 |     const result = await ApiTestHelpers.extractJson(dataResponse);
+  186 |     expect(result.success).toBe(true);
+  187 |     expect(result.data.rows).toBeInstanceOf(Array);
+  188 |   });
+  189 | });
+  190 | 
+  191 | test.describe('Sakila Analytics - Charts', () => {
+  192 |   let authCookie: string;
+  193 |   let authContext: any;
+  194 |   let authPage: any;
+  195 | 
+  196 |   test.beforeAll(async ({ browser }) => {
+  197 |     authContext = await browser.newContext();
+  198 |     authPage = await authContext.newPage();
+  199 | 
+  200 |     const testHelpers = new TestHelpers(authPage);
+  201 |     await testHelpers.login();
+  202 | 
+  203 |     const cookies = await authContext.cookies();
+  204 |     const authCookieObj = cookies.find(c => c.name.includes('session-token'));
+  205 |     authCookie = authCookieObj ? `${authCookieObj.name}=${authCookieObj.value}` : '';
+  206 |   });
+  207 | 
+  208 |   test.afterAll(async () => {
+  209 |     if (authPage) await authPage.close();
+  210 |     if (authContext) await authContext.close();
+  211 |   });
+  212 | 
+  213 |   test('should have Revenue Over Time chart', async ({ request }) => {
+  214 |     const apiHelpers = new ApiTestHelpers(request, authCookie);
+  215 |     const response = await apiHelpers.getCharts();
+  216 |     expect(response.status()).toBe(200);
+  217 | 
+  218 |     const data = await ApiTestHelpers.extractJson(response);
+  219 |     const chart = data.data.items.find((c: any) => c.name === 'Revenue Over Time');
+  220 |     expect(chart).toBeDefined();
+  221 |     expect(chart.chart_type).toBe('line');
+  222 |   });
+  223 | 
+  224 |   test('should have Revenue by Category chart', async ({ request }) => {
+  225 |     const apiHelpers = new ApiTestHelpers(request, authCookie);
+  226 |     const response = await apiHelpers.getCharts();
+  227 |     expect(response.status()).toBe(200);
+  228 | 
+  229 |     const data = await ApiTestHelpers.extractJson(response);
+  230 |     const chart = data.data.items.find((c: any) => c.name === 'Revenue by Category');
+  231 |     expect(chart).toBeDefined();
+  232 |     expect(chart.chart_type).toBe('bar');
+  233 |   });
+  234 | 
+  235 |   test('should fetch chart data', async ({ request }) => {
+  236 |     const apiHelpers = new ApiTestHelpers(request, authCookie);
+  237 |     const chartsResponse = await apiHelpers.getCharts();
+  238 |     const chartsData = await ApiTestHelpers.extractJson(chartsResponse);
+  239 |     const chart = chartsData.data.items.find((c: any) => c.name === 'Revenue Over Time');
+  240 | 
+  241 |     const dataResponse = await apiHelpers.getChartData(chart.id);
+  242 |     expect(dataResponse.status()).toBe(200);
+  243 | 
+  244 |     const result = await ApiTestHelpers.extractJson(dataResponse);
+  245 |     expect(result.success).toBe(true);
+  246 |     expect(result.data.rows).toBeInstanceOf(Array);
+  247 |   });
+  248 | });
+  249 | 
+  250 | test.describe('Sakila Analytics - Dashboard', () => {
+  251 |   let authCookie: string;
+  252 |   let authContext: any;
+  253 |   let authPage: any;
+  254 | 
+  255 |   test.beforeAll(async ({ browser }) => {
+  256 |     authContext = await browser.newContext();
+  257 |     authPage = await authContext.newPage();
+  258 | 
+  259 |     const testHelpers = new TestHelpers(authPage);
+  260 |     await testHelpers.login();
+  261 | 
+  262 |     const cookies = await authContext.cookies();
+  263 |     const authCookieObj = cookies.find(c => c.name.includes('session-token'));
+  264 |     authCookie = authCookieObj ? `${authCookieObj.name}=${authCookieObj.value}` : '';
+  265 |   });
+  266 | 
+  267 |   test.afterAll(async () => {
+  268 |     if (authPage) await authPage.close();
 ```

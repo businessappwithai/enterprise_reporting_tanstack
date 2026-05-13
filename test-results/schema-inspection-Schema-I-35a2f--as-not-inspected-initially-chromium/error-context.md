@@ -12,10 +12,39 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-Call log:
-  - navigating to "http://localhost:4050/", waiting until "load"
+Error: expect(locator).toBeVisible() failed
 
+Locator: getByRole('heading', { name: 'Dashboard', exact: true })
+Expected: visible
+Timeout: 10000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toBeVisible" with timeout 10000ms
+  - waiting for getByRole('heading', { name: 'Dashboard', exact: true })
+
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e7]
+      - heading "Welcome back" [level=3] [ref=e9]
+      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - text: Email
+          - textbox "Email" [ref=e14]:
+            - /placeholder: name@example.com
+        - generic [ref=e15]:
+          - text: Password
+          - textbox "Password" [ref=e16]
+      - button "Sign In" [ref=e18] [cursor=pointer]
+  - region "Notifications alt+T"
 ```
 
 # Test source
@@ -47,12 +76,12 @@ Call log:
   24  |     // Create and authenticate page
   25  |     const context = await browser.newContext();
   26  |     const page = await context.newPage();
-> 27  |     await page.goto('/');
-      |                ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
+  27  |     await page.goto('/');
   28  |     await page.getByPlaceholder('name@example.com').fill('admin@admin.com');
   29  |     await page.getByLabel('Password').fill('admin');
   30  |     await page.getByRole('button', { name: 'Sign In' }).click();
-  31  |     await expect(page.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible({ timeout: 10000 });
+> 31  |     await expect(page.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible({ timeout: 10000 });
+      |                                                                                 ^ Error: expect(locator).toBeVisible() failed
   32  | 
   33  |     testDataSourceName = `Schema Inspection Test ${Date.now()}`;
   34  | 
@@ -149,4 +178,8 @@ Call log:
   125 | 
   126 |     // Find and click Inspect Schema button (green refresh icon)
   127 |     const inspectButton = page.locator('button[title="Import schema to enable entity metadata"], button:has-text("Inspect Schema")').first();
+  128 |     const hasButton = await inspectButton.isVisible().catch(() => false);
+  129 | 
+  130 |     if (hasButton) {
+  131 |       // Click inspect button
 ```

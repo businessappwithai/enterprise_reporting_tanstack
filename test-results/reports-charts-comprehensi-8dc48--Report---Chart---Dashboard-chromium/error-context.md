@@ -12,130 +12,171 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-Call log:
-  - navigating to "http://localhost:4050/", waiting until "load"
+Error: expect(locator).toBeVisible() failed
 
+Locator: locator('.monaco-editor')
+Expected: visible
+Timeout: 10000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toBeVisible" with timeout 10000ms
+  - waiting for locator('.monaco-editor')
+
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e7]
+      - heading "Welcome back" [level=3] [ref=e9]
+      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - text: Email
+          - textbox "Email" [ref=e14]:
+            - /placeholder: name@example.com
+        - generic [ref=e15]:
+          - text: Password
+          - textbox "Password" [ref=e16]
+      - button "Sign In" [ref=e18] [cursor=pointer]
+  - region "Notifications alt+T"
 ```
 
 # Test source
 
 ```ts
-  11  |   // Return cached cookie if available
-  12  |   if (cachedAuthCookie) {
-  13  |     console.log('Using cached auth cookie');
-  14  |     return cachedAuthCookie;
-  15  |   }
+  1   | /**
+  2   |  * Comprehensive Reporting and Charting E2E Test
+  3   |  *
+  4   |  * This test verifies the complete reporting and charting workflow:
+  5   |  * 1. Create and save query
+  6   |  * 2. Create report from query
+  7   |  * 3. Create chart from query
+  8   |  * 4. Create dashboard
+  9   |  * 5. Add widgets to dashboard
+  10  |  */
+  11  | 
+  12  | import { test, expect } from '@playwright/test';
+  13  | import { login } from './test-auth';
+  14  | 
+  15  | const BASE_URL = process.env.BASE_URL || 'http://localhost:4050';
   16  | 
-  17  |   console.log('Getting fresh auth cookie...');
-  18  | 
-  19  |   // Try API-based authentication first
-  20  |   try {
-  21  |     const signInResponse = await request.post('/api/auth/callback/credentials', {
-  22  |       headers: {
-  23  |         'Content-Type': 'application/json',
-  24  |       },
-  25  |       data: JSON.stringify({
-  26  |         email: 'admin@admin.com',
-  27  |         password: 'admin',
-  28  |         csrfToken: 'test-csrf-token',
-  29  |         json: true,
-  30  |       }),
-  31  |     });
-  32  | 
-  33  |     console.log('Sign-in response status:', signInResponse.status());
-  34  | 
-  35  |     // Get cookies from the response headers
-  36  |     const setCookieHeaders = signInResponse.headers()['set-cookie'];
-  37  |     if (setCookieHeaders) {
-  38  |       const cookieArray = Array.isArray(setCookieHeaders) ? setCookieHeaders : [setCookieHeaders];
-  39  |       for (const cookieHeader of cookieArray) {
-  40  |         const match = cookieHeader.match(/authjs\.session-token=([^;]+)/);
-  41  |         if (match) {
-  42  |           cachedAuthCookie = `authjs.session-token=${match[1]}`;
-  43  |           console.log('Got auth cookie from API sign-in');
-  44  |           return cachedAuthCookie;
-  45  |         }
-  46  |       }
-  47  |     }
+  17  | test.describe('Reporting and Charting Comprehensive Test', () => {
+  18  |   test.beforeEach(async ({ page }) => {
+  19  |     await login(page);
+  20  |   });
+  21  | 
+  22  |   test('Complete workflow: Query -> Report -> Chart -> Dashboard', async ({ page }) => {
+  23  |     console.log('\n=== Starting Complete Reporting Workflow ===\n');
+  24  | 
+  25  |     // Step 1: Go to SQL Editor and create a query
+  26  |     console.log('Step 1: Creating saved query...');
+  27  |     await page.goto(`${BASE_URL}/sql-editor`);
+> 28  |     await expect(page.locator('.monaco-editor')).toBeVisible({ timeout: 10000 });
+      |                                                  ^ Error: expect(locator).toBeVisible() failed
+  29  | 
+  30  |     // Type a test query
+  31  |     await page.locator('.monaco-editor').click();
+  32  |     await page.keyboard.type('SELECT COUNT(*) as total, gender FROM bus_patient GROUP BY gender');
+  33  | 
+  34  |     // Look for and click save button
+  35  |     const saveBtn = page.getByRole('button', { name: /save/i }).first();
+  36  |     await saveBtn.click();
+  37  |     await page.waitForTimeout(1000);
+  38  | 
+  39  |     // Fill in save dialog
+  40  |     const nameInput = page.locator('input[name="name"]').or(page.locator('input[placeholder*="name"]')).first();
+  41  |     await nameInput.fill('Patient Gender Distribution');
+  42  | 
+  43  |     const confirmBtn = page.getByRole('button', { name: /save|create|confirm/i }).or(page.getByRole('button', { name: /ok/i })).first();
+  44  |     await confirmBtn.click();
+  45  |     await page.waitForTimeout(2000);
+  46  | 
+  47  |     console.log('✓ Query saved successfully');
   48  | 
-  49  |     console.log('No session cookie in API response, trying browser fallback...');
-  50  |   } catch (error) {
-  51  |     console.log('API sign-in failed, trying browser fallback:', error);
-  52  |   }
+  49  |     // Step 2: Create a report from the query
+  50  |     console.log('Step 2: Creating report from query...');
+  51  |     await page.goto(`${BASE_URL}/reports`);
+  52  |     await page.waitForTimeout(2000);
   53  | 
-  54  |   // Fallback: use browser-based login
-  55  |   if (!browser) {
-  56  |     throw new Error('Browser is required for fallback authentication');
-  57  |   }
+  54  |     // Look for "Create New Report" button
+  55  |     const createReportBtn = page.getByRole('button', { name: /create.*report|new.*report|add.*report/i }).or(page.getByRole('button', { name: /create|new|add/i }).first());
+  56  |     await createReportBtn.click();
+  57  |     await page.waitForTimeout(1500);
   58  | 
-  59  |   const page = await browser.newPage();
-  60  |   const testHelpers = new TestHelpers(page);
-  61  | 
-  62  |   try {
-  63  |     await page.goto('/');
-  64  |     const currentUrl = page.url();
-  65  | 
-  66  |     if (currentUrl.includes('/login')) {
-  67  |       console.log('Logging in via browser...');
-  68  |       await testHelpers.login();
-  69  |     }
-  70  | 
-  71  |     // Wait for session to be established
-  72  |     await page.waitForTimeout(5000);
-  73  |     await page.goto('/');
-  74  |     await page.waitForLoadState('domcontentloaded');
-  75  |     await page.waitForTimeout(3000);
-  76  | 
-  77  |     const cookies = await page.context().cookies();
-  78  |     console.log('Cookies after login:', cookies.map(c => c.name));
-  79  | 
-  80  |     const authCookieObj = cookies.find(c => c.name.includes('session-token'));
-  81  | 
-  82  |     if (!authCookieObj) {
-  83  |       throw new Error('No auth cookie found after login. Available cookies: ' + cookies.map(c => c.name).join(', '));
-  84  |     }
-  85  | 
-  86  |     cachedAuthCookie = `${authCookieObj.name}=${authCookieObj.value}`;
-  87  |     console.log('Got auth cookie from browser login');
-  88  | 
-  89  |     return cachedAuthCookie;
-  90  |   } finally {
-  91  |     await page.close();
-  92  |   }
-  93  | }
-  94  | 
-  95  | /**
-  96  |  * Clear cached auth cookie (useful for testing logout scenarios)
-  97  |  */
-  98  | export function clearAuthCache(): void {
-  99  |   cachedAuthCookie = null;
-  100 | }
-  101 | 
-  102 | /**
-  103 |  * Simple login function for E2E tests
-  104 |  * Performs login via UI and returns when authenticated
-  105 |  */
-  106 | export async function login(page: Page, email: string = 'admin@admin.com', password: string = 'admin'): Promise<void> {
-  107 |   const BASE_URL = process.env.BASE_URL || 'http://localhost:4050';
-  108 |   const testHelpers = new TestHelpers(page);
+  59  |     // Fill in report details
+  60  |     const reportNameInput = page.locator('input[name="name"]').or(page.locator('input[placeholder*="name"]')).first();
+  61  |     if (await reportNameInput.isVisible().catch(() => false)) {
+  62  |       await reportNameInput.fill('Patient Gender Report');
+  63  |     }
+  64  | 
+  65  |     // Look for query selector
+  66  |     const querySelector = page.locator('select, [role="combobox"]').first();
+  67  |     if (await querySelector.isVisible().catch(() => false)) {
+  68  |       await querySelector.click();
+  69  |       await page.waitForTimeout(500);
+  70  |       const queryOption = page.getByText('Patient Gender Distribution').or(page.getByText('Patient Gender')).first();
+  71  |       if (await queryOption.isVisible().catch(() => false)) {
+  72  |         await queryOption.click();
+  73  |       }
+  74  |     }
+  75  | 
+  76  |     // Save report
+  77  |     const saveReportBtn = page.getByRole('button', { name: /save|create/i }).first();
+  78  |     await saveReportBtn.click();
+  79  |     await page.waitForTimeout(2000);
+  80  | 
+  81  |     console.log('✓ Report created successfully');
+  82  | 
+  83  |     // Step 3: Create a chart
+  84  |     console.log('Step 3: Creating chart...');
+  85  |     await page.goto(`${BASE_URL}/charts`);
+  86  |     await page.waitForTimeout(2000);
+  87  | 
+  88  |     // Look for "Create New Chart" button
+  89  |     const createChartBtn = page.getByRole('button', { name: /create.*chart|new.*chart|add.*chart/i }).or(page.getByRole('button', { name: /create|new|add/i }).first());
+  90  |     await createChartBtn.click();
+  91  |     await page.waitForTimeout(1500);
+  92  | 
+  93  |     // Fill in chart details
+  94  |     const chartNameInput = page.locator('input[name="name"]').or(page.locator('input[placeholder*="name"]')).first();
+  95  |     if (await chartNameInput.isVisible().catch(() => false)) {
+  96  |       await chartNameInput.fill('Gender Distribution Chart');
+  97  |     }
+  98  | 
+  99  |     // Select chart type (bar, pie, etc.)
+  100 |     const chartTypeSelector = page.locator('[role="combobox"]').filter({ hasText: /chart.*type|type/i }).or(page.locator('select').first());
+  101 |     if (await chartTypeSelector.isVisible().catch(() => false)) {
+  102 |       await chartTypeSelector.click();
+  103 |       await page.waitForTimeout(500);
+  104 |       const barOption = page.getByText(/bar|pie/i).first();
+  105 |       if (await barOption.isVisible().catch(() => false)) {
+  106 |         await barOption.click();
+  107 |       }
+  108 |     }
   109 | 
-  110 |   // Navigate to login page if not already there
-> 111 |   await page.goto(BASE_URL);
-      |              ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-  112 |   const currentUrl = page.url();
-  113 | 
-  114 |   if (!currentUrl.includes('/login')) {
-  115 |     // Already logged in or on another page
-  116 |     return;
-  117 |   }
-  118 | 
-  119 |   // Perform login
-  120 |   await testHelpers.login();
+  110 |     // Save chart
+  111 |     const saveChartBtn = page.getByRole('button', { name: /save|create/i }).first();
+  112 |     await saveChartBtn.click();
+  113 |     await page.waitForTimeout(2000);
+  114 | 
+  115 |     console.log('✓ Chart created successfully');
+  116 | 
+  117 |     // Step 4: Create a dashboard
+  118 |     console.log('Step 4: Creating dashboard...');
+  119 |     await page.goto(`${BASE_URL}/dashboards`);
+  120 |     await page.waitForTimeout(2000);
   121 | 
-  122 |   // Wait for navigation to dashboard
-  123 |   await page.waitForURL(/\/(dashboard|)/, { timeout: 10000 });
-  124 |   await page.waitForLoadState('domcontentloaded');
-  125 | }
+  122 |     // Look for "Create New Dashboard" button
+  123 |     const createDashboardBtn = page.getByRole('button', { name: /create.*dashboard|new.*dashboard/i }).or(page.getByRole('button', { name: /create|new/i }).first());
+  124 |     await createDashboardBtn.click();
+  125 |     await page.waitForTimeout(1500);
   126 | 
+  127 |     // Fill in dashboard details
+  128 |     const dashboardNameInput = page.locator('input[name="name"]').or(page.locator('input[placeholder*="name"]')).first();
 ```

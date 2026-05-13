@@ -12,43 +12,37 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
+TimeoutError: locator.waitFor: Timeout 10000ms exceeded.
 Call log:
-  - navigating to "http://localhost:4050/", waiting until "load"
+  - waiting for getByRole('button', { name: 'New Report' }).first() to be visible
 
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e7]
+      - heading "Welcome back" [level=3] [ref=e9]
+      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - text: Email
+          - textbox "Email" [ref=e14]:
+            - /placeholder: name@example.com
+        - generic [ref=e15]:
+          - text: Password
+          - textbox "Password" [ref=e16]
+      - button "Sign In" [ref=e18] [cursor=pointer]
+  - region "Notifications alt+T"
 ```
 
 # Test source
 
 ```ts
-  1   | import { Page, Locator } from '@playwright/test';
-  2   | 
-  3   | export class TestHelpers {
-  4   |   constructor(private page: Page) {}
-  5   | 
-  6   |   /**
-  7   |    * Login to the application with default credentials
-  8   |    * Goes to home page first, then logs in if needed
-  9   |    */
-  10  |   async login(email = 'admin@admin.com', password = 'admin') {
-  11  |     // Start at home page - this will redirect to login if not authenticated
-> 12  |     await this.page.goto('/');
-      |                     ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-  13  | 
-  14  |     // Wait for page load
-  15  |     await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
-  16  | 
-  17  |     // Check if we're on login page
-  18  |     const currentUrl = this.page.url();
-  19  |     if (currentUrl.includes('/login')) {
-  20  |       // Need to log in
-  21  |       await this.page.getByPlaceholder('name@example.com').fill(email);
-  22  |       await this.page.getByLabel('Password').fill(password);
-  23  |       await this.page.getByRole('button', { name: 'Sign In' }).click();
-  24  | 
-  25  |       // Wait for ONE of multiple indicators of successful login (more robust)
-  26  |       await Promise.race([
-  27  |         // Option 1: Dashboard heading (case-insensitive)
   28  |         this.page.getByRole('heading', { name: /dashboard/i }).waitFor({ state: 'visible', timeout: 15000 }),
   29  |         // Option 2: Navigation menu
   30  |         this.page.getByRole('navigation').waitFor({ state: 'visible', timeout: 15000 }),
@@ -134,4 +128,121 @@ Call log:
   110 | 
   111 |     // Wait for selection to complete
   112 |     await this.page.waitForTimeout(300);
+  113 |   }
+  114 | 
+  115 |   /**
+  116 |    * Fill a form field by label
+  117 |    */
+  118 |   async fillByLabel(label: string, value: string) {
+  119 |     await this.page.getByLabel(label).fill(value);
+  120 |   }
+  121 | 
+  122 |   /**
+  123 |    * Click a button by text
+  124 |    * Waits for button to be visible and enabled before clicking
+  125 |    */
+  126 |   async clickButton(text: string, timeout = 10000) {
+  127 |     const button = this.page.getByRole('button', { name: text }).first();
+> 128 |     await button.waitFor({ state: 'visible', timeout });
+      |                  ^ TimeoutError: locator.waitFor: Timeout 10000ms exceeded.
+  129 |     await button.click();
+  130 |   }
+  131 | 
+  132 |   /**
+  133 |    * Take a screenshot with a descriptive name
+  134 |    */
+  135 |   async screenshot(name: string) {
+  136 |     await this.page.screenshot({
+  137 |       path: `screenshots/${name}.png`,
+  138 |       fullPage: true,
+  139 |     });
+  140 |   }
+  141 | 
+  142 |   /**
+  143 |    * Wait for loading to complete (spinner disappears)
+  144 |    */
+  145 |   async waitForLoading() {
+  146 |     const spinners = this.page.locator('.animate-spin');
+  147 |     if (await spinners.count() > 0) {
+  148 |       await spinners.first().waitFor({ state: 'hidden', timeout: 10000 });
+  149 |     }
+  150 |   }
+  151 | 
+  152 |   /**
+  153 |    * Get table rows count
+  154 |    */
+  155 |   async getTableRowCount(tableLocator?: Locator) {
+  156 |     const table = tableLocator || this.page.locator('table').first();
+  157 |     const rows = await table.locator('tbody tr').all();
+  158 |     return rows.length;
+  159 |   }
+  160 | 
+  161 |   /**
+  162 |    * Verify table has content
+  163 |    */
+  164 |   async verifyTableHasContent(expectedMinRows = 1) {
+  165 |     const count = await this.getTableRowCount();
+  166 |     if (count < expectedMinRows) {
+  167 |       throw new Error(`Expected at least ${expectedMinRows} table rows, but found ${count}`);
+  168 |     }
+  169 |   }
+  170 | 
+  171 |   /**
+  172 |    * Click a menu item in a dropdown menu
+  173 |    */
+  174 |   async clickMenuItem(menuTriggerText: string, menuItemText: string) {
+  175 |     // Click the menu trigger (usually a button with icon)
+  176 |     const trigger = this.page.getByRole('button').filter({ hasText: menuTriggerText }).first();
+  177 |     await trigger.click();
+  178 | 
+  179 |     // Wait for menu to appear
+  180 |     await this.page.waitForTimeout(200);
+  181 | 
+  182 |     // Click the menu item
+  183 |     const menuItem = this.page.getByRole('menuitem').filter({ hasText: menuItemText }).first();
+  184 |     await menuItem.click();
+  185 |   }
+  186 | 
+  187 |   /**
+  188 |    * Wait for Monaco Editor to be ready
+  189 |    */
+  190 |   async waitForMonacoEditor() {
+  191 |     const editor = this.page.locator('.monaco-editor').first();
+  192 |     await editor.waitFor({ state: 'visible', timeout: 5000 });
+  193 |   }
+  194 | 
+  195 |   /**
+  196 |    * Type in Monaco Editor
+  197 |    */
+  198 |   async typeInMonacoEditor(text: string, append = false) {
+  199 |     await this.waitForMonacoEditor();
+  200 | 
+  201 |     // Click in the editor to focus it
+  202 |     const editor = this.page.locator('.monaco-editor').first();
+  203 |     await editor.click();
+  204 | 
+  205 |     if (!append) {
+  206 |       // Select all and delete existing content
+  207 |       await this.page.keyboard.press('ControlOrMeta+A');
+  208 |       await this.page.keyboard.press('Delete');
+  209 |     }
+  210 | 
+  211 |     // Type the new content
+  212 |     await this.page.keyboard.type(text);
+  213 |   }
+  214 | 
+  215 |   /**
+  216 |    * Get Monaco Editor content
+  217 |    */
+  218 |   async getMonacoEditorContent(): Promise<string> {
+  219 |     await this.waitForMonacoEditor();
+  220 | 
+  221 |     // Select all content
+  222 |     await this.page.keyboard.press('ControlOrMeta+A');
+  223 | 
+  224 |     // Copy to clipboard
+  225 |     await this.page.keyboard.press('ControlOrMeta+C');
+  226 | 
+  227 |     // Get from clipboard
+  228 |     return await this.page.evaluate(() => navigator.clipboard.readText());
 ```

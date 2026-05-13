@@ -12,10 +12,39 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-Call log:
-  - navigating to "http://localhost:4050/", waiting until "load"
+Error: expect(locator).toBeVisible() failed
 
+Locator: getByRole('heading', { name: 'Dashboard', exact: true })
+Expected: visible
+Timeout: 10000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toBeVisible" with timeout 10000ms
+  - waiting for getByRole('heading', { name: 'Dashboard', exact: true })
+
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e7]
+      - heading "Welcome back" [level=3] [ref=e9]
+      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - text: Email
+          - textbox "Email" [ref=e14]:
+            - /placeholder: name@example.com
+        - generic [ref=e15]:
+          - text: Password
+          - textbox "Password" [ref=e16]
+      - button "Sign In" [ref=e18] [cursor=pointer]
+  - region "Notifications alt+T"
 ```
 
 # Test source
@@ -30,8 +59,7 @@ Call log:
   7   | test.describe('Jobs Management', () => {
   8   |   test.beforeAll(async ({ browser }) => {
   9   |     authenticatedPage = await browser.newPage();
-> 10  |     await authenticatedPage.goto('/');
-      |                             ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
+  10  |     await authenticatedPage.goto('/');
   11  | 
   12  |     // Login
   13  |     await authenticatedPage.getByPlaceholder('name@example.com').fill('admin@admin.com');
@@ -39,7 +67,8 @@ Call log:
   15  |     await authenticatedPage.getByRole('button', { name: 'Sign In' }).click();
   16  | 
   17  |     // Wait for dashboard
-  18  |     await expect(authenticatedPage.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible({ timeout: 10000 });
+> 18  |     await expect(authenticatedPage.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible({ timeout: 10000 });
+      |                                                                                              ^ Error: expect(locator).toBeVisible() failed
   19  |   });
   20  | 
   21  |   test.afterAll(async () => {
@@ -132,4 +161,12 @@ Call log:
   108 |     await authenticatedPage.waitForTimeout(1000);
   109 | 
   110 |     // Look for retry button
+  111 |     const retryBtn = authenticatedPage.getByRole('button', { name: /retry|restart/i }).first();
+  112 |     if (await retryBtn.isVisible()) {
+  113 |       // Don't actually click - just verify it exists
+  114 |     }
+  115 | 
+  116 |     // Pass - retry functionality tested
+  117 |     expect(true).toBeTruthy();
+  118 |   });
 ```

@@ -12,130 +12,244 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-Call log:
-  - navigating to "http://localhost:4050/", waiting until "load"
+Error: expect(locator).toBeVisible() failed
 
+Locator: locator('h1').filter({ hasText: /reports/i })
+Expected: visible
+Timeout: 5000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toBeVisible" with timeout 5000ms
+  - waiting for locator('h1').filter({ hasText: /reports/i })
+
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e7]
+      - heading "Welcome back" [level=3] [ref=e9]
+      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - text: Email
+          - textbox "Email" [ref=e14]:
+            - /placeholder: name@example.com
+        - generic [ref=e15]:
+          - text: Password
+          - textbox "Password" [ref=e16]
+      - button "Sign In" [ref=e18] [cursor=pointer]
+  - region "Notifications alt+T"
 ```
 
 # Test source
 
 ```ts
-  11  |   // Return cached cookie if available
-  12  |   if (cachedAuthCookie) {
-  13  |     console.log('Using cached auth cookie');
-  14  |     return cachedAuthCookie;
-  15  |   }
-  16  | 
-  17  |   console.log('Getting fresh auth cookie...');
-  18  | 
-  19  |   // Try API-based authentication first
-  20  |   try {
-  21  |     const signInResponse = await request.post('/api/auth/callback/credentials', {
-  22  |       headers: {
-  23  |         'Content-Type': 'application/json',
-  24  |       },
-  25  |       data: JSON.stringify({
-  26  |         email: 'admin@admin.com',
-  27  |         password: 'admin',
-  28  |         csrfToken: 'test-csrf-token',
-  29  |         json: true,
-  30  |       }),
-  31  |     });
-  32  | 
-  33  |     console.log('Sign-in response status:', signInResponse.status());
-  34  | 
-  35  |     // Get cookies from the response headers
-  36  |     const setCookieHeaders = signInResponse.headers()['set-cookie'];
-  37  |     if (setCookieHeaders) {
-  38  |       const cookieArray = Array.isArray(setCookieHeaders) ? setCookieHeaders : [setCookieHeaders];
-  39  |       for (const cookieHeader of cookieArray) {
-  40  |         const match = cookieHeader.match(/authjs\.session-token=([^;]+)/);
-  41  |         if (match) {
-  42  |           cachedAuthCookie = `authjs.session-token=${match[1]}`;
-  43  |           console.log('Got auth cookie from API sign-in');
-  44  |           return cachedAuthCookie;
-  45  |         }
-  46  |       }
-  47  |     }
-  48  | 
-  49  |     console.log('No session cookie in API response, trying browser fallback...');
-  50  |   } catch (error) {
-  51  |     console.log('API sign-in failed, trying browser fallback:', error);
-  52  |   }
-  53  | 
-  54  |   // Fallback: use browser-based login
-  55  |   if (!browser) {
-  56  |     throw new Error('Browser is required for fallback authentication');
-  57  |   }
-  58  | 
-  59  |   const page = await browser.newPage();
-  60  |   const testHelpers = new TestHelpers(page);
-  61  | 
-  62  |   try {
-  63  |     await page.goto('/');
-  64  |     const currentUrl = page.url();
-  65  | 
-  66  |     if (currentUrl.includes('/login')) {
-  67  |       console.log('Logging in via browser...');
-  68  |       await testHelpers.login();
-  69  |     }
-  70  | 
-  71  |     // Wait for session to be established
-  72  |     await page.waitForTimeout(5000);
-  73  |     await page.goto('/');
-  74  |     await page.waitForLoadState('domcontentloaded');
-  75  |     await page.waitForTimeout(3000);
-  76  | 
-  77  |     const cookies = await page.context().cookies();
-  78  |     console.log('Cookies after login:', cookies.map(c => c.name));
-  79  | 
-  80  |     const authCookieObj = cookies.find(c => c.name.includes('session-token'));
-  81  | 
-  82  |     if (!authCookieObj) {
-  83  |       throw new Error('No auth cookie found after login. Available cookies: ' + cookies.map(c => c.name).join(', '));
-  84  |     }
-  85  | 
-  86  |     cachedAuthCookie = `${authCookieObj.name}=${authCookieObj.value}`;
-  87  |     console.log('Got auth cookie from browser login');
-  88  | 
-  89  |     return cachedAuthCookie;
-  90  |   } finally {
-  91  |     await page.close();
-  92  |   }
-  93  | }
-  94  | 
-  95  | /**
-  96  |  * Clear cached auth cookie (useful for testing logout scenarios)
-  97  |  */
-  98  | export function clearAuthCache(): void {
-  99  |   cachedAuthCookie = null;
-  100 | }
-  101 | 
-  102 | /**
-  103 |  * Simple login function for E2E tests
-  104 |  * Performs login via UI and returns when authenticated
-  105 |  */
-  106 | export async function login(page: Page, email: string = 'admin@admin.com', password: string = 'admin'): Promise<void> {
-  107 |   const BASE_URL = process.env.BASE_URL || 'http://localhost:4050';
-  108 |   const testHelpers = new TestHelpers(page);
-  109 | 
-  110 |   // Navigate to login page if not already there
-> 111 |   await page.goto(BASE_URL);
-      |              ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-  112 |   const currentUrl = page.url();
-  113 | 
-  114 |   if (!currentUrl.includes('/login')) {
-  115 |     // Already logged in or on another page
-  116 |     return;
-  117 |   }
-  118 | 
-  119 |   // Perform login
-  120 |   await testHelpers.login();
-  121 | 
-  122 |   // Wait for navigation to dashboard
-  123 |   await page.waitForURL(/\/(dashboard|)/, { timeout: 10000 });
-  124 |   await page.waitForLoadState('domcontentloaded');
-  125 | }
-  126 | 
+  153 |       const firstRow = page.locator('table tbody tr, [role="row"]').first();
+  154 |       await firstRow.click();
+  155 | 
+  156 |       // Should show schema or navigate to detail page
+  157 |       await page.waitForTimeout(2000);
+  158 | 
+  159 |       // Look for tables or schema info
+  160 |       const hasTables = await page.locator('text=table, text=Tables').count() > 0;
+  161 |       const hasSchema = await page.locator('.schema, [data-testid="schema"]').count() > 0;
+  162 | 
+  163 |       expect(hasTables || hasSchema).toBeTruthy();
+  164 |     });
+  165 |   });
+  166 | 
+  167 |   // ========================================================================
+  168 |   // PART 3: SQL EDITOR
+  169 |   // ========================================================================
+  170 | 
+  171 |   test.describe('SQL Editor', () => {
+  172 |     test.beforeEach(async ({ page }) => {
+  173 |       await login(page);
+  174 |     });
+  175 | 
+  176 |     test('3.1 SQL editor page loads', async ({ page }) => {
+  177 |       await page.goto(`${BASE_URL}/sql-editor`);
+  178 | 
+  179 |       // Should have Monaco editor
+  180 |       await expect(page.locator('.monaco-editor, .editor-container')).toBeVisible({ timeout: 10000 });
+  181 | 
+  182 |       // Should have execute button
+  183 |       await expect(page.locator('button:has-text("Run"), button:has-text("Execute")')).toBeVisible();
+  184 |     });
+  185 | 
+  186 |     test('3.2 Can execute a simple query', async ({ page }) => {
+  187 |       await page.goto(`${BASE_URL}/sql-editor`);
+  188 | 
+  189 |       // Wait for editor to load
+  190 |       await expect(page.locator('.monaco-editor')).toBeVisible({ timeout: 10000 });
+  191 | 
+  192 |       // Type a query
+  193 |       await page.keyboard.type('SELECT 1 as test_column');
+  194 | 
+  195 |       // Click execute
+  196 |       await page.click('button:has-text("Run"), button:has-text("Execute")');
+  197 | 
+  198 |       // Wait for results
+  199 |       await page.waitForTimeout(3000);
+  200 | 
+  201 |       // Should show results table or no error
+  202 |       const hasResults = await page.locator('table, [role="table"], .results').count() > 0;
+  203 |       const hasNoError = await page.locator('text=error, text=Error').count() === 0;
+  204 | 
+  205 |       expect(hasResults || hasNoError).toBeTruthy();
+  206 |     });
+  207 | 
+  208 |     test('3.3 Can save a query', async ({ page }) => {
+  209 |       await page.goto(`${BASE_URL}/sql-editor`);
+  210 | 
+  211 |       await expect(page.locator('.monaco-editor')).toBeVisible({ timeout: 10000 });
+  212 | 
+  213 |       // Type query
+  214 |       const queryName = `E2E Test Query ${Date.now()}`;
+  215 |       await page.keyboard.type(`SELECT * FROM users LIMIT 10`);
+  216 | 
+  217 |       // Click save button
+  218 |       await page.click('button:has-text("Save")');
+  219 | 
+  220 |       // Fill name in dialog
+  221 |       await page.fill('input[name="name"], input[placeholder*="name"]', queryName);
+  222 |       await page.click('button:has-text("Save"), button:has-text("Create")');
+  223 | 
+  224 |       // Should show success
+  225 |       await expect(page.locator('text=saved, text=success').first()).toBeVisible({ timeout: 5000 });
+  226 |     });
+  227 | 
+  228 |     test('3.4 Can view schema browser', async ({ page }) => {
+  229 |       await page.goto(`${BASE_URL}/sql-editor`);
+  230 | 
+  231 |       // Look for schema browser panel
+  232 |       const schemaBrowser = page.locator('.schema-browser, [data-testid="schema-browser"], .sidebar').first();
+  233 | 
+  234 |       if (await schemaBrowser.isVisible()) {
+  235 |         // Should expand to show tables
+  236 |         await expect(schemaBrowser).toBeVisible();
+  237 |       }
+  238 |     });
+  239 |   });
+  240 | 
+  241 |   // ========================================================================
+  242 |   // PART 4: REPORTS
+  243 |   // ========================================================================
+  244 | 
+  245 |   test.describe('Reports', () => {
+  246 |     test.beforeEach(async ({ page }) => {
+  247 |       await login(page);
+  248 |     });
+  249 | 
+  250 |     test('4.1 Can view reports list', async ({ page }) => {
+  251 |       await page.goto(`${BASE_URL}/reports`);
+  252 | 
+> 253 |       await expect(page.locator('h1').filter({ hasText: /reports/i })).toBeVisible();
+      |                                                                        ^ Error: expect(locator).toBeVisible() failed
+  254 |       await expect(page.locator('table, [role="table"], .grid')).toBeVisible();
+  255 |     });
+  256 | 
+  257 |     test('4.2 Can create a new report', async ({ page }) => {
+  258 |       await page.goto(`${BASE_URL}/reports`);
+  259 | 
+  260 |       // Click new report button
+  261 |       await page.click('button:has-text("New Report"), button:has-text("Create Report")');
+  262 | 
+  263 |       // Should navigate to editor or show dialog
+  264 |       await page.waitForTimeout(2000);
+  265 | 
+  266 |       // Fill report name
+  267 |       const reportName = `E2E Report ${Date.now()}`;
+  268 |       const nameInput = page.locator('input[name="name"], input[placeholder*="name"]');
+  269 |       if (await nameInput.isVisible()) {
+  270 |         await nameInput.fill(reportName);
+  271 |       }
+  272 | 
+  273 |       // Select data source
+  274 |       const dataSourceSelect = page.locator('select[name="dataSource"], [role="combobox"]').first();
+  275 |       if (await dataSourceSelect.isVisible()) {
+  276 |         await dataSourceSelect.click();
+  277 |         await page.keyboard.press('ArrowDown');
+  278 |         await page.keyboard.press('Enter');
+  279 |       }
+  280 | 
+  281 |       // Save
+  282 |       const saveButton = page.locator('button:has-text("Save"), button:has-text("Create")').first();
+  283 |       if (await saveButton.isVisible()) {
+  284 |         await saveButton.click();
+  285 |         await page.waitForTimeout(2000);
+  286 |       }
+  287 |     });
+  288 | 
+  289 |     test('4.3 Can view report details', async ({ page }) => {
+  290 |       await page.goto(`${BASE_URL}/reports`);
+  291 | 
+  292 |       // Click on first report
+  293 |       const firstReport = page.locator('table tbody tr, [role="row"], .card').first();
+  294 |       const count = await firstReport.count();
+  295 | 
+  296 |       if (count > 0) {
+  297 |         await firstReport.first().click();
+  298 |         await page.waitForTimeout(2000);
+  299 | 
+  300 |         // Should show report details or data
+  301 |         const hasContent = await page.locator('table, .report-data, .chart').count() > 0;
+  302 |         expect(hasContent).toBeTruthy();
+  303 |       }
+  304 |     });
+  305 | 
+  306 |     test('4.4 Can export report data', async ({ page }) => {
+  307 |       await page.goto(`${BASE_URL}/reports`);
+  308 | 
+  309 |       // Look for export buttons
+  310 |       const exportButton = page.locator('button:has-text("Export"), button:has-text("Download")').first();
+  311 | 
+  312 |       if (await exportButton.isVisible()) {
+  313 |         await exportButton.click();
+  314 | 
+  315 |         // Should show export options
+  316 |         await expect(page.locator('text=CSV, text=PDF, text=Excel')).isVisible({ timeout: 3000 });
+  317 |       }
+  318 |     });
+  319 |   });
+  320 | 
+  321 |   // ========================================================================
+  322 |   // PART 5: CHARTS
+  323 |   // ========================================================================
+  324 | 
+  325 |   test.describe('Charts', () => {
+  326 |     test.beforeEach(async ({ page }) => {
+  327 |       await login(page);
+  328 |     });
+  329 | 
+  330 |     test('5.1 Can view charts list', async ({ page }) => {
+  331 |       await page.goto(`${BASE_URL}/charts`);
+  332 | 
+  333 |       await expect(page.locator('h1').filter({ hasText: /charts/i })).toBeVisible();
+  334 |     });
+  335 | 
+  336 |     test('5.2 Can create a bar chart', async ({ page }) => {
+  337 |       await page.goto(`${BASE_URL}/charts`);
+  338 | 
+  339 |       // Click new chart
+  340 |       await page.click('button:has-text("New Chart"), button:has-text("Create Chart")');
+  341 | 
+  342 |       // Wait for editor
+  343 |       await page.waitForTimeout(2000);
+  344 | 
+  345 |       // Select chart type
+  346 |       const chartTypeSelect = page.locator('select[name="type"], [role="combobox"]').first();
+  347 |       if (await chartTypeSelect.isVisible()) {
+  348 |         await chartTypeSelect.click();
+  349 |         await page.click('text=Bar');
+  350 |       }
+  351 | 
+  352 |       // Fill name
+  353 |       const chartName = `E2E Bar Chart ${Date.now()}`;
 ```

@@ -12,10 +12,32 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/login
+TimeoutError: page.fill: Timeout 15000ms exceeded.
 Call log:
-  - navigating to "http://localhost:4050/login", waiting until "load"
+  - waiting for locator('input[name="email"]')
 
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e7]
+      - heading "Welcome back" [level=3] [ref=e9]
+      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - text: Email
+          - textbox "Email" [ref=e14]:
+            - /placeholder: name@example.com
+        - generic [ref=e15]:
+          - text: Password
+          - textbox "Password" [ref=e16]
+      - button "Sign In" [ref=e18] [cursor=pointer]
+  - region "Notifications alt+T"
 ```
 
 # Test source
@@ -68,11 +90,11 @@ Call log:
   45  | 
   46  |   test.describe('Authentication & Authorization', () => {
   47  |     test('1.1 User can login with valid credentials', async ({ page }) => {
-> 48  |       await page.goto(`${BASE_URL}/login`);
-      |                  ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/login
+  48  |       await page.goto(`${BASE_URL}/login`);
   49  | 
   50  |       // Fill login form
-  51  |       await page.fill('input[name="email"]', ADMIN_CREDS.email);
+> 51  |       await page.fill('input[name="email"]', ADMIN_CREDS.email);
+      |                  ^ TimeoutError: page.fill: Timeout 15000ms exceeded.
   52  |       await page.fill('input[name="password"]', ADMIN_CREDS.password);
   53  |       await page.click('button[type="submit"]');
   54  | 
@@ -170,4 +192,7 @@ Call log:
   146 |       }
   147 |     });
   148 | 
+  149 |     test('2.4 Can view data source schema', async ({ page }) => {
+  150 |       await page.goto(`${BASE_URL}/data-sources`);
+  151 | 
 ```

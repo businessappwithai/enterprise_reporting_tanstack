@@ -12,130 +12,275 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
+Error: locator.isVisible: Unexpected token "=" while parsing css selector ".cached, [data-cached="true"], text=/cached/i". Did you mean to CSS.escape it?
 Call log:
-  - navigating to "http://localhost:4050/", waiting until "load"
+    - checking visibility of .cached, [data-cached="true"], text=/cached/i
 
+```
+
+# Page snapshot
+
+```yaml
+- generic:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - img
+      - generic:
+        - heading [level=1]: Something went wrong
+        - paragraph: An unexpected error has occurred. Our team has been notified and we're working to fix it.
+      - generic:
+        - paragraph: useDuckDB must be used within a DuckDBProvider
+      - generic:
+        - button:
+          - img
+          - text: Reload Page
+        - button: Report Error
+      - paragraph: If this problem persists, please contact your system administrator.
+  - dialog "Error Report" [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - img [ref=e5]
+        - heading "Error Report" [level=2] [ref=e7]
+      - paragraph [ref=e8]: An unexpected error occurred. Please help us improve by reporting this issue.
+    - generic [ref=e9]:
+      - generic [ref=e10]:
+        - paragraph [ref=e11]: useDuckDB must be used within a DuckDBProvider
+        - paragraph [ref=e12]: 2026-05-13T14:07:09.952Z
+      - generic [ref=e13]:
+        - text: Additional Information (Optional)
+        - textbox "Additional Information (Optional)" [active] [ref=e14]:
+          - /placeholder: Describe what you were doing when this error occurred...
+      - generic [ref=e15]:
+        - text: Email Preview
+        - generic [ref=e16]:
+          - textbox "Email Preview" [ref=e17]: "ERROR REPORT ============ Timestamp: 2026-05-13T14:07:09.952Z Error: useDuckDB must be used within a DuckDBProvider Stack Trace: Error: useDuckDB must be used within a DuckDBProvider at useDuckDB (http://localhost:4050/src/components/duckdb/DuckDBProvider.tsx:152:11) at DatasetsPage (http://localhost:4050/src/routes/_authed/datasets/index.tsx?tsr-split=component:29:7) at Object.react_stack_bottom_frame (http://localhost:4050/node_modules/.vite/deps/react-dom_client.js?v=a26a3e3e:18509:20) at renderWithHooks (http://localhost:4050/node_modules/.vite/deps/react-dom_client.js?v=a26a3e3e:5654:24) at updateFunctionComponent (http://localhost:4050/node_modules/.vite/deps/react-dom_client.js?v=a26a3e3e:7475:21) at beginWork (http://localhost:4050/node_modules/.vite/deps/react-dom_client.js?v=a26a3e3e:8525:20) at runWithFiberInDEV (http://localhost:4050/node_modules/.vite/deps/react-dom_client.js?v=a26a3e3e:997:72) at performUnitOfWork (http://localhost:4050/node_modules/.vite/deps/react-dom_client.js?v=a26a3e3e:12561:98) at workLoopSync (http://localhost:4050/node_modules/.vite/deps/react-dom_client.js?v=a26a3e3e:12424:43) at renderRootSync (http://localhost:4050/node_modules/.vite/deps/react-dom_client.js?v=a26a3e3e:12408:13) Component Stack: at DatasetsPage (http://localhost:4050/src/routes/_authed/datasets/index.tsx?tsr-split=component:29:7) at Lazy (<anonymous>) at MatchInnerImpl (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/Match.js?v=a26a3e3e:127:57) at SafeFragment (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/SafeFragment.js?v=a26a3e3e:5:57) at SafeFragment (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/SafeFragment.js?v=a26a3e3e:5:57) at SafeFragment (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/SafeFragment.js?v=a26a3e3e:5:57) at SafeFragment (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/SafeFragment.js?v=a26a3e3e:5:57) at MatchView (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/Match.js?v=a26a3e3e:66:22) at MatchImpl (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/Match.js?v=a26a3e3e:16:47) at OutletImpl (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/Match.js?v=a26a3e3e:250:18) at main (<anonymous>) at div (<anonymous>) at div (<anonymous>) at ActiveDataSourceProvider (http://localhost:4050/src/lib/hooks/use-active-datasource.tsx:20:44) at AppShell (http://localhost:4050/src/components/layout/app-shell.tsx:23:28) at AuthedLayout (http://localhost:4050/src/routes/_authed.tsx?tsr-split=component:25:13) at Lazy (<anonymous>) at MatchInnerImpl (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/Match.js?v=a26a3e3e:127:57) at SafeFragment (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/SafeFragment.js?v=a26a3e3e:5:57) at SafeFragment (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/SafeFragment.js?v=a26a3e3e:5:57) at SafeFragment (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/SafeFragment.js?v=a26a3e3e:5:57) at SafeFragment (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/SafeFragment.js?v=a26a3e3e:5:57) at MatchView (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/Match.js?v=a26a3e3e:66:22) at MatchImpl (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/Match.js?v=a26a3e3e:16:47) at Suspense (<anonymous>) at OutletImpl (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/Match.js?v=a26a3e3e:250:18) at V (http://localhost:4050/node_modules/.vite/deps/next-themes.js?v=a26a3e3e:44:25) at J (http://localhost:4050/node_modules/.vite/deps/next-themes.js?v=a26a3e3e:42:18) at QueryClientProvider (http://localhost:4050/node_modules/.vite/deps/@tanstack_react-query.js?v=a26a3e3e:3170:3) at Provider (http://localhost:4050/node_modules/.vite/deps/chunk-GQ5SNI5U.js?v=a26a3e3e:43:15) at TooltipProvider (http://localhost:4050/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=a26a3e3e:157:5) at TanStackDBWrapper (http://localhost:4050/src/lib/tanstack-db/provider.tsx:29:37) at ErrorBoundary (http://localhost:4050/src/components/errors/error-boundary.tsx:11:5) at body (<anonymous>) at html (<anonymous>) at RootComponent (http://localhost:4050/src/routes/__root.tsx:44:33) at MatchInnerImpl (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/Match.js?v=a26a3e3e:127:57) at SafeFragment (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/SafeFragment.js?v=a26a3e3e:5:57) at SafeFragment (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/SafeFragment.js?v=a26a3e3e:5:57) at SafeFragment (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/SafeFragment.js?v=a26a3e3e:5:57) at SafeFragment (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/SafeFragment.js?v=a26a3e3e:5:57) at MatchView (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/Match.js?v=a26a3e3e:66:22) at MatchImpl (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/Match.js?v=a26a3e3e:16:47) at CatchBoundaryImpl (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/CatchBoundary.js?v=a26a3e3e:20:5) at CatchBoundary (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/CatchBoundary.js?v=a26a3e3e:5:32) at MatchesInner (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/Matches.js?v=a26a3e3e:24:18) at SafeFragment (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/SafeFragment.js?v=a26a3e3e:5:57) at Matches (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/Matches.js?v=a26a3e3e:14:18) at RouterContextProvider (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/RouterProvider.js?v=a26a3e3e:12:34) at RouterProvider (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/RouterProvider.js?v=a26a3e3e:37:27) at AwaitInner (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/awaited.js?v=a26a3e3e:27:15) at Await (http://localhost:4050/node_modules/@tanstack/react-router/dist/esm/awaited.js?v=a26a3e3e:20:12) at StartClient (<anonymous>) Context: URL: http://localhost:4050/datasets User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.7727.15 Safari/537.36"
+          - button "Copy" [ref=e18] [cursor=pointer]:
+            - img [ref=e19]
+            - text: Copy
+        - paragraph [ref=e22]: This will be sent to admin@yourcompany.com
+      - paragraph [ref=e24]:
+        - strong [ref=e25]: "What happens next:"
+        - text: Clicking "Send Error Report" will open your email client with the error details pre-filled. You can review the contents before sending.
+    - generic [ref=e26]:
+      - button "Dismiss" [ref=e27] [cursor=pointer]:
+        - img [ref=e28]
+        - text: Dismiss
+      - button "Copy to Clipboard" [ref=e31] [cursor=pointer]:
+        - img [ref=e32]
+        - text: Copy to Clipboard
+      - button "Send Error Report" [ref=e35] [cursor=pointer]:
+        - img [ref=e36]
+        - text: Send Error Report
+    - button "Close" [ref=e39] [cursor=pointer]:
+      - img [ref=e40]
+      - generic [ref=e43]: Close
 ```
 
 # Test source
 
 ```ts
-  11  |   // Return cached cookie if available
-  12  |   if (cachedAuthCookie) {
-  13  |     console.log('Using cached auth cookie');
-  14  |     return cachedAuthCookie;
-  15  |   }
-  16  | 
-  17  |   console.log('Getting fresh auth cookie...');
-  18  | 
-  19  |   // Try API-based authentication first
-  20  |   try {
-  21  |     const signInResponse = await request.post('/api/auth/callback/credentials', {
-  22  |       headers: {
-  23  |         'Content-Type': 'application/json',
-  24  |       },
-  25  |       data: JSON.stringify({
-  26  |         email: 'admin@admin.com',
-  27  |         password: 'admin',
-  28  |         csrfToken: 'test-csrf-token',
-  29  |         json: true,
-  30  |       }),
-  31  |     });
-  32  | 
-  33  |     console.log('Sign-in response status:', signInResponse.status());
-  34  | 
-  35  |     // Get cookies from the response headers
-  36  |     const setCookieHeaders = signInResponse.headers()['set-cookie'];
-  37  |     if (setCookieHeaders) {
-  38  |       const cookieArray = Array.isArray(setCookieHeaders) ? setCookieHeaders : [setCookieHeaders];
-  39  |       for (const cookieHeader of cookieArray) {
-  40  |         const match = cookieHeader.match(/authjs\.session-token=([^;]+)/);
-  41  |         if (match) {
-  42  |           cachedAuthCookie = `authjs.session-token=${match[1]}`;
-  43  |           console.log('Got auth cookie from API sign-in');
-  44  |           return cachedAuthCookie;
-  45  |         }
-  46  |       }
-  47  |     }
-  48  | 
-  49  |     console.log('No session cookie in API response, trying browser fallback...');
-  50  |   } catch (error) {
-  51  |     console.log('API sign-in failed, trying browser fallback:', error);
-  52  |   }
-  53  | 
-  54  |   // Fallback: use browser-based login
-  55  |   if (!browser) {
-  56  |     throw new Error('Browser is required for fallback authentication');
-  57  |   }
-  58  | 
-  59  |   const page = await browser.newPage();
-  60  |   const testHelpers = new TestHelpers(page);
-  61  | 
-  62  |   try {
-  63  |     await page.goto('/');
-  64  |     const currentUrl = page.url();
-  65  | 
-  66  |     if (currentUrl.includes('/login')) {
-  67  |       console.log('Logging in via browser...');
-  68  |       await testHelpers.login();
-  69  |     }
-  70  | 
-  71  |     // Wait for session to be established
-  72  |     await page.waitForTimeout(5000);
-  73  |     await page.goto('/');
-  74  |     await page.waitForLoadState('domcontentloaded');
-  75  |     await page.waitForTimeout(3000);
-  76  | 
-  77  |     const cookies = await page.context().cookies();
-  78  |     console.log('Cookies after login:', cookies.map(c => c.name));
-  79  | 
-  80  |     const authCookieObj = cookies.find(c => c.name.includes('session-token'));
-  81  | 
-  82  |     if (!authCookieObj) {
-  83  |       throw new Error('No auth cookie found after login. Available cookies: ' + cookies.map(c => c.name).join(', '));
-  84  |     }
-  85  | 
-  86  |     cachedAuthCookie = `${authCookieObj.name}=${authCookieObj.value}`;
-  87  |     console.log('Got auth cookie from browser login');
-  88  | 
-  89  |     return cachedAuthCookie;
-  90  |   } finally {
-  91  |     await page.close();
-  92  |   }
-  93  | }
-  94  | 
-  95  | /**
-  96  |  * Clear cached auth cookie (useful for testing logout scenarios)
-  97  |  */
-  98  | export function clearAuthCache(): void {
-  99  |   cachedAuthCookie = null;
-  100 | }
-  101 | 
-  102 | /**
-  103 |  * Simple login function for E2E tests
-  104 |  * Performs login via UI and returns when authenticated
-  105 |  */
-  106 | export async function login(page: Page, email: string = 'admin@admin.com', password: string = 'admin'): Promise<void> {
-  107 |   const BASE_URL = process.env.BASE_URL || 'http://localhost:4050';
-  108 |   const testHelpers = new TestHelpers(page);
-  109 | 
-  110 |   // Navigate to login page if not already there
-> 111 |   await page.goto(BASE_URL);
-      |              ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-  112 |   const currentUrl = page.url();
-  113 | 
-  114 |   if (!currentUrl.includes('/login')) {
-  115 |     // Already logged in or on another page
-  116 |     return;
-  117 |   }
-  118 | 
-  119 |   // Perform login
-  120 |   await testHelpers.login();
-  121 | 
-  122 |   // Wait for navigation to dashboard
-  123 |   await page.waitForURL(/\/(dashboard|)/, { timeout: 10000 });
-  124 |   await page.waitForLoadState('domcontentloaded');
-  125 | }
-  126 | 
+  219 |     await page.waitForTimeout(3000);
+  220 | 
+  221 |     // Try to find and interact with a dataset
+  222 |     const datasetCard = page.locator('.dataset-card, table tbody tr').first();
+  223 | 
+  224 |     if (await datasetCard.isVisible()) {
+  225 |       // Click on dataset to load it
+  226 |       await datasetCard.click();
+  227 |       await page.waitForTimeout(3000);
+  228 | 
+  229 |       // Look for query interface
+  230 |       const queryButton = page.locator('button:has-text("Query"), button:has-text("Explore")').first();
+  231 | 
+  232 |       if (await queryButton.isVisible()) {
+  233 |         await queryButton.click();
+  234 |         await page.waitForTimeout(2000);
+  235 | 
+  236 |         // Should show query results or editor
+  237 |         const hasResults = await page.locator('table, .results, .monaco-editor').count() > 0;
+  238 |         expect(hasResults).toBeTruthy();
+  239 |       }
+  240 |     }
+  241 |   });
+  242 | 
+  243 |   test('WASM-013: Query results display in data grid', async ({ page }) => {
+  244 |     await page.goto(`${BASE_URL}/sql-editor`);
+  245 | 
+  246 |     await expect(page.locator('.monaco-editor')).toBeVisible({ timeout: 10000 });
+  247 | 
+  248 |     // Execute a simple query
+  249 |     await page.keyboard.type('SELECT 1 as id, \'test\' as name');
+  250 |     await page.click('button:has-text("Run"), button:has-text("Execute")');
+  251 | 
+  252 |     // Wait for results
+  253 |     await page.waitForTimeout(3000);
+  254 | 
+  255 |     // Should show results in a table or grid
+  256 |     const hasResults = await page.locator('table, [role="table"], .data-grid, .tanstack-table').count() > 0;
+  257 | 
+  258 |     // Note: Query might fail if no data source is configured, that's okay
+  259 |     // We're just testing the UI flow
+  260 |   });
+  261 | 
+  262 |   test('WASM-014: Memory monitor is present', async ({ page }) => {
+  263 |     await page.goto(`${BASE_URL}/datasets`);
+  264 | 
+  265 |     await page.waitForTimeout(2000);
+  266 | 
+  267 |     // Look for memory monitor (might be subtle)
+  268 |     const memoryMonitor = page.locator('.memory-monitor, [data-testid="memory-usage"], text=/memory/i');
+  269 | 
+  270 |     if (await memoryMonitor.isVisible()) {
+  271 |       await expect(memoryMonitor.first()).toBeVisible();
+  272 |     }
+  273 |     // If not visible, that's okay - it might be in a collapsed state
+  274 |   });
+  275 | 
+  276 |   test('WASM-015: Large dataset uses progressive loading', async ({ page }) => {
+  277 |     await page.goto(`${BASE_URL}/datasets`);
+  278 | 
+  279 |     await page.waitForTimeout(3000);
+  280 | 
+  281 |     // Look for progressive loading indicator
+  282 |     const progressIndicator = page.locator('.progress, [data-testid="progress"], text=/loading/i');
+  283 | 
+  284 |     // Progressive loading might not be active if no large datasets
+  285 |     if (await progressIndicator.isVisible()) {
+  286 |       await expect(progressIndicator.first()).toBeVisible();
+  287 |     }
+  288 |   });
+  289 | });
+  290 | 
+  291 | test.describe('WASM Features - Offline Mode', () => {
+  292 |   test.beforeEach(async ({ page }) => {
+  293 |     await login(page);
+  294 |   });
+  295 | 
+  296 |   test('WASM-016: Offline indicator shows connection status', async ({ page }) => {
+  297 |     await page.goto(`${BASE_URL}/datasets`);
+  298 | 
+  299 |     await page.waitForTimeout(2000);
+  300 | 
+  301 |     // Look for offline indicator
+  302 |     const offlineIndicator = page.locator('[data-testid="offline-indicator"], .offline-status, text=/online|offline/i');
+  303 | 
+  304 |     if (await offlineIndicator.isVisible()) {
+  305 |       await expect(offlineIndicator.first()).toBeVisible();
+  306 |     }
+  307 |     // If not visible, offline mode might not be enabled or user is online
+  308 |   });
+  309 | 
+  310 |   test('WASM-017: Cached datasets are indicated', async ({ page }) => {
+  311 |     await page.goto(`${BASE_URL}/datasets`);
+  312 | 
+  313 |     await page.waitForTimeout(3000);
+  314 | 
+  315 |     // Look for cached indicator on dataset cards
+  316 |     const cachedIndicator = page.locator('.cached, [data-cached="true"], text=/cached/i');
+  317 | 
+  318 |     // Might not have cached datasets
+> 319 |     if (await cachedIndicator.isVisible()) {
+      |                               ^ Error: locator.isVisible: Unexpected token "=" while parsing css selector ".cached, [data-cached="true"], text=/cached/i". Did you mean to CSS.escape it?
+  320 |       await expect(cachedIndicator.first()).toBeVisible();
+  321 |     }
+  322 |   });
+  323 | 
+  324 |   test('WASM-018: Can access datasets offline simulation', async ({ page }) => {
+  325 |     // Note: This is a simulation test - real offline testing requires service worker mocking
+  326 | 
+  327 |     await page.goto(`${BASE_URL}/datasets`);
+  328 | 
+  329 |     await page.waitForTimeout(3000);
+  330 | 
+  331 |     // Check if offline features are mentioned in UI
+  332 |     const offlineFeatures = page.locator('text=IndexedDB, text=Offline, text=Cache');
+  333 | 
+  334 |     // Offline features might be in documentation or subtle UI
+  335 |     const featureCount = await offlineFeatures.count();
+  336 | 
+  337 |     // At minimum, the page should load
+  338 |     await expect(page.locator('h1')).toBeVisible();
+  339 |   });
+  340 | });
+  341 | 
+  342 | test.describe('WASM Features - TanStack Table', () => {
+  343 |   test.beforeEach(async ({ page }) => {
+  344 |     await login(page);
+  345 |   });
+  346 | 
+  347 |   test('WASM-019: Table uses virtual scrolling', async ({ page }) => {
+  348 |     await page.goto(`${BASE_URL}/sql-editor`);
+  349 | 
+  350 |     await expect(page.locator('.monaco-editor')).toBeVisible({ timeout: 10000 });
+  351 | 
+  352 |     // Execute a query
+  353 |     await page.keyboard.type('SELECT * FROM users LIMIT 1000');
+  354 |     await page.click('button:has-text("Run"), button:has-text("Execute")');
+  355 | 
+  356 |     await page.waitForTimeout(3000);
+  357 | 
+  358 |     // Look for TanStack Table or virtual scrolling indicator
+  359 |     const table = page.locator('table, [role="table"], .tanstack-table').first();
+  360 | 
+  361 |     if (await table.isVisible()) {
+  362 |       await expect(table).toBeVisible();
+  363 | 
+  364 |       // Check if virtual scrolling is enabled (TanStack Virtual uses specific DOM structure)
+  365 |       const hasVirtualScroll = await page.locator('.virtual, [data-virtualized]').count() > 0;
+  366 | 
+  367 |       // Virtual scrolling might not be visible if result set is small
+  368 |       // The important thing is the table renders
+  369 |     }
+  370 |   });
+  371 | 
+  372 |   test('WASM-020: Table supports sorting', async ({ page }) => {
+  373 |     await page.goto(`${BASE_URL}/sql-editor`);
+  374 | 
+  375 |     await expect(page.locator('.monaco-editor')).toBeVisible({ timeout: 10000 });
+  376 | 
+  377 |     // Execute query
+  378 |     await page.keyboard.type('SELECT id, name FROM users LIMIT 100');
+  379 |     await page.click('button:has-text("Run"), button:has-text("Execute")');
+  380 | 
+  381 |     await page.waitForTimeout(3000);
+  382 | 
+  383 |     // Look for sortable column headers
+  384 |     const sortableHeader = page.locator('th[aria-sort], th.sortable, .sortable').first();
+  385 | 
+  386 |     if (await sortableHeader.isVisible()) {
+  387 |       // Click to sort
+  388 |       await sortableHeader.click();
+  389 |       await page.waitForTimeout(1000);
+  390 | 
+  391 |       // Check if sort indicator changed
+  392 |       const hasSortIndicator = await page.locator('th[aria-sort*="asc"], th[aria-sort*="desc"]').count() > 0;
+  393 |       expect(hasSortIndicator).toBeTruthy();
+  394 |     }
+  395 |   });
+  396 | 
+  397 |   test('WASM-021: Table supports column filtering', async ({ page }) => {
+  398 |     await page.goto(`${BASE_URL}/reports`);
+  399 | 
+  400 |     await page.waitForTimeout(2000);
+  401 | 
+  402 |     // Look for filter inputs in table
+  403 |     const filterInput = page.locator('input[placeholder*="filter"], input[placeholder*="search"], th input').first();
+  404 | 
+  405 |     if (await filterInput.isVisible()) {
+  406 |       await filterInput.fill('test');
+  407 |       await page.waitForTimeout(1000);
+  408 | 
+  409 |       // Should filter results (we can't easily verify this without knowing the data)
+  410 |       // Just check the interaction works
+  411 |       await expect(filterInput).toHaveValue('test');
+  412 |     }
+  413 |   });
+  414 | 
+  415 |   test('WASM-022: Table handles large datasets efficiently', async ({ page }) => {
+  416 |     await page.goto(`${BASE_URL}/sql-editor`);
+  417 | 
+  418 |     await expect(page.locator('.monaco-editor')).toBeVisible({ timeout: 10000 });
+  419 | 
 ```

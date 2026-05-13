@@ -12,126 +12,161 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-Call log:
-  - navigating to "http://localhost:4050/", waiting until "load"
+Error: expect(received).toBe(expected) // Object.is equality
 
+Expected: 401
+Received: 404
 ```
 
 # Test source
 
 ```ts
-  1   | import { Page, Locator } from '@playwright/test';
-  2   | 
-  3   | export class TestHelpers {
-  4   |   constructor(private page: Page) {}
-  5   | 
-  6   |   /**
-  7   |    * Login to the application with default credentials
-  8   |    * Goes to home page first, then logs in if needed
-  9   |    */
-  10  |   async login(email = 'admin@admin.com', password = 'admin') {
-  11  |     // Start at home page - this will redirect to login if not authenticated
-> 12  |     await this.page.goto('/');
-      |                     ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-  13  | 
-  14  |     // Wait for page load
-  15  |     await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
-  16  | 
-  17  |     // Check if we're on login page
-  18  |     const currentUrl = this.page.url();
-  19  |     if (currentUrl.includes('/login')) {
-  20  |       // Need to log in
-  21  |       await this.page.getByPlaceholder('name@example.com').fill(email);
-  22  |       await this.page.getByLabel('Password').fill(password);
-  23  |       await this.page.getByRole('button', { name: 'Sign In' }).click();
-  24  | 
-  25  |       // Wait for ONE of multiple indicators of successful login (more robust)
-  26  |       await Promise.race([
-  27  |         // Option 1: Dashboard heading (case-insensitive)
-  28  |         this.page.getByRole('heading', { name: /dashboard/i }).waitFor({ state: 'visible', timeout: 15000 }),
-  29  |         // Option 2: Navigation menu
-  30  |         this.page.getByRole('navigation').waitFor({ state: 'visible', timeout: 15000 }),
-  31  |         // Option 3: URL change to home (not login)
-  32  |         this.page.waitForURL(url => !url.includes('/login'), { timeout: 15000 }),
-  33  |       ]).catch(() => {
-  34  |         // If none of the above work, just wait for the hard redirect timeout
-  35  |         return this.page.waitForTimeout(5000);
-  36  |       });
-  37  |     } else {
-  38  |       // Already at home page, wait for it to be fully loaded
-  39  |       await this.page.waitForTimeout(2000);
+  1   | import { test, expect } from '@playwright/test';
+  2   | import { TestHelpers } from './helpers/test-helpers';
+  3   | import { ApiTestHelpers } from './api-test-helpers';
+  4   | 
+  5   | /**
+  6   |  * End-to-end tests for Natural Language Query with RBAC
+  7   |  *
+  8   |  * Tests cover:
+  9   |  * 1. Data Source RBAC - roles, user assignments, entity permissions
+  10  |  * 2. NL Query API - schema introspection, query execution, access control
+  11  |  * 3. NL Query UI - page loads, data source selection, CopilotKit sidebar
+  12  |  * 4. SQL Parser - entity extraction, access validation
+  13  |  * 5. Query History - tracking and retrieval
+  14  |  */
+  15  | 
+  16  | test.describe.configure({ mode: 'serial' });
+  17  | 
+  18  | let authCookie: string;
+  19  | let dataSourceId: string;
+  20  | let dsRoleId: string;
+  21  | 
+  22  | test.describe('Data Source RBAC API @batch6', () => {
+  23  |   test.beforeAll(async ({ browser }) => {
+  24  |     const page = await browser.newPage();
+  25  |     const testHelpers = new TestHelpers(page);
+  26  |     await testHelpers.login();
+  27  | 
+  28  |     const cookies = await page.context().cookies();
+  29  |     const authCookieObj = cookies.find(c => c.name === 'authjs.session-token') ||
+  30  |                           cookies.find(c => c.name === 'next-auth.session-token');
+  31  |     authCookie = authCookieObj ? `${authCookieObj.name}=${authCookieObj.value}` : '';
+  32  | 
+  33  |     // Get the existing data source
+  34  |     const dsResponse = await page.request.get('/api/data-sources/active', {
+  35  |       headers: { Cookie: authCookie },
+  36  |     });
+  37  |     const dsData = await dsResponse.json();
+  38  |     if (dsData.data && dsData.data.length > 0) {
+  39  |       dataSourceId = dsData.data[0].id;
   40  |     }
   41  | 
-  42  |     // Wait for page to be fully loaded
-  43  |     await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
+  42  |     await page.close();
+  43  |   });
   44  | 
-  45  |     // Additional wait for session to be established
-  46  |     await this.page.waitForTimeout(1500);
-  47  |   }
-  48  | 
-  49  |   /**
-  50  |    * Navigate to a specific page by name
-  51  |    * Uses direct URL navigation for reliability
-  52  |    */
-  53  |   async navigateToPage(pageName: 'Dashboard' | 'SQL Editor' | 'Reports' | 'Charts' | 'Dashboards') {
-  54  |     // Map page names to their routes
-  55  |     const routes: Record<string, string> = {
-  56  |       'Dashboard': '/',
-  57  |       'SQL Editor': '/sql-editor',
-  58  |       'Reports': '/reports',
-  59  |       'Charts': '/charts',
-  60  |       'Dashboards': '/dashboards',
-  61  |     };
-  62  | 
-  63  |     const route = routes[pageName];
-  64  |     if (!route) {
-  65  |       throw new Error(`Unknown page: ${pageName}`);
-  66  |     }
-  67  | 
-  68  |     // Use direct URL navigation - most reliable
-  69  |     await this.page.goto(route, { waitUntil: 'domcontentloaded' });
-  70  | 
-  71  |     // Wait for page to be fully loaded
-  72  |     await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
-  73  |     await this.page.waitForTimeout(1000);
-  74  |   }
+  45  |   test('should reject unauthenticated requests to DS roles', async ({ request }) => {
+  46  |     const response = await request.get(`/api/data-sources/${dataSourceId}/roles`);
+> 47  |     expect(response.status()).toBe(401);
+      |                               ^ Error: expect(received).toBe(expected) // Object.is equality
+  48  |   });
+  49  | 
+  50  |   test('should create a data source role', async ({ request }) => {
+  51  |     const response = await request.post(`/api/data-sources/${dataSourceId}/roles`, {
+  52  |       headers: { 'Content-Type': 'application/json', Cookie: authCookie },
+  53  |       data: { name: 'Test Analyst Role', description: 'E2E test role for entity access' },
+  54  |     });
+  55  | 
+  56  |     expect(response.status()).toBe(201);
+  57  |     const data = await response.json();
+  58  |     expect(data.success).toBe(true);
+  59  |     expect(data.data).toHaveProperty('id');
+  60  |     expect(data.data.name).toBe('Test Analyst Role');
+  61  |     dsRoleId = data.data.id;
+  62  |   });
+  63  | 
+  64  |   test('should list data source roles', async ({ request }) => {
+  65  |     const response = await request.get(`/api/data-sources/${dataSourceId}/roles`, {
+  66  |       headers: { Cookie: authCookie },
+  67  |     });
+  68  | 
+  69  |     expect(response.status()).toBe(200);
+  70  |     const data = await response.json();
+  71  |     expect(data.success).toBe(true);
+  72  |     expect(Array.isArray(data.data)).toBe(true);
+  73  |     expect(data.data.length).toBeGreaterThanOrEqual(1);
+  74  |   });
   75  | 
-  76  |   /**
-  77  |    * Wait for and verify toast notification
-  78  |    */
-  79  |   async verifyToast(message: string, type: 'success' | 'error' = 'success') {
-  80  |     const toast = this.page.getByText(message).first();
-  81  |     await toast.waitFor({ state: 'visible', timeout: 5000 });
-  82  |     return toast;
-  83  |   }
-  84  | 
-  85  |   /**
-  86  |    * Select from a dropdown by trigger and option text
-  87  |    * Improved to handle Radix UI dropdowns with better waiting
-  88  |    */
-  89  |   async selectDropdown(triggerText: string, optionText: string, timeout = 10000) {
-  90  |     // Click the dropdown trigger
-  91  |     const trigger = this.page.getByText(triggerText).first();
-  92  |     await trigger.waitFor({ state: 'visible', timeout });
-  93  |     await trigger.click();
-  94  | 
-  95  |     // Wait for dropdown content to appear - Radix UI uses portals
-  96  |     await this.page.waitForTimeout(500);
-  97  | 
-  98  |     // Try to find the option with multiple selectors for robustness
-  99  |     const option = this.page.getByRole('option', { name: optionText }).first();
-  100 | 
-  101 |     try {
-  102 |       await option.waitFor({ state: 'visible', timeout: 5000 });
-  103 |       await option.click();
-  104 |     } catch (error) {
-  105 |       // Fallback: try clicking by text if role='option' didn't work
-  106 |       const textOption = this.page.getByText(optionText).first();
-  107 |       await textOption.waitFor({ state: 'visible', timeout: 5000 });
-  108 |       await textOption.click();
-  109 |     }
-  110 | 
-  111 |     // Wait for selection to complete
-  112 |     await this.page.waitForTimeout(300);
+  76  |   test('should get a specific data source role', async ({ request }) => {
+  77  |     const response = await request.get(`/api/data-sources/${dataSourceId}/roles/${dsRoleId}`, {
+  78  |       headers: { Cookie: authCookie },
+  79  |     });
+  80  | 
+  81  |     expect(response.status()).toBe(200);
+  82  |     const data = await response.json();
+  83  |     expect(data.success).toBe(true);
+  84  |     expect(data.data.name).toBe('Test Analyst Role');
+  85  |   });
+  86  | 
+  87  |   test('should update a data source role', async ({ request }) => {
+  88  |     const response = await request.put(`/api/data-sources/${dataSourceId}/roles/${dsRoleId}`, {
+  89  |       headers: { 'Content-Type': 'application/json', Cookie: authCookie },
+  90  |       data: { description: 'Updated description for E2E test' },
+  91  |     });
+  92  | 
+  93  |     expect(response.status()).toBe(200);
+  94  |     const data = await response.json();
+  95  |     expect(data.success).toBe(true);
+  96  |     expect(data.data.description).toBe('Updated description for E2E test');
+  97  |   });
+  98  | 
+  99  |   test('should prevent duplicate role names for same data source', async ({ request }) => {
+  100 |     const response = await request.post(`/api/data-sources/${dataSourceId}/roles`, {
+  101 |       headers: { 'Content-Type': 'application/json', Cookie: authCookie },
+  102 |       data: { name: 'Test Analyst Role' },
+  103 |     });
+  104 | 
+  105 |     expect(response.status()).toBe(409);
+  106 |     const data = await response.json();
+  107 |     expect(data.success).toBe(false);
+  108 |   });
+  109 | 
+  110 |   test('should add entity permission to role', async ({ request }) => {
+  111 |     const response = await request.post(`/api/data-sources/${dataSourceId}/entity-permissions`, {
+  112 |       headers: { 'Content-Type': 'application/json', Cookie: authCookie },
+  113 |       data: {
+  114 |         ds_role_id: dsRoleId,
+  115 |         entity_name: 'actor',
+  116 |         entity_type: 'table',
+  117 |         permission_level: 'select',
+  118 |       },
+  119 |     });
+  120 | 
+  121 |     expect(response.status()).toBe(201);
+  122 |     const data = await response.json();
+  123 |     expect(data.success).toBe(true);
+  124 |     expect(data.data.entity_name).toBe('actor');
+  125 |     expect(data.data.permission_level).toBe('select');
+  126 |   });
+  127 | 
+  128 |   test('should add multiple entity permissions', async ({ request }) => {
+  129 |     const tables = ['film', 'film_actor', 'category', 'payment'];
+  130 |     for (const tableName of tables) {
+  131 |       const response = await request.post(`/api/data-sources/${dataSourceId}/entity-permissions`, {
+  132 |         headers: { 'Content-Type': 'application/json', Cookie: authCookie },
+  133 |         data: {
+  134 |           ds_role_id: dsRoleId,
+  135 |           entity_name: tableName,
+  136 |           entity_type: 'table',
+  137 |           permission_level: 'select',
+  138 |         },
+  139 |       });
+  140 |       expect(response.status()).toBe(201);
+  141 |     }
+  142 |   });
+  143 | 
+  144 |   test('should list entity permissions', async ({ request }) => {
+  145 |     const response = await request.get(
+  146 |       `/api/data-sources/${dataSourceId}/entity-permissions?ds_role_id=${dsRoleId}`,
+  147 |       { headers: { Cookie: authCookie } }
 ```

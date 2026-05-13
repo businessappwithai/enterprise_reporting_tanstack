@@ -12,10 +12,7 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-Call log:
-  - navigating to "http://localhost:4050/", waiting until "load"
-
+Error: No auth cookie found after login. Available cookies: 
 ```
 
 # Test source
@@ -83,8 +80,7 @@ Call log:
   60  |   const testHelpers = new TestHelpers(page);
   61  | 
   62  |   try {
-> 63  |     await page.goto('/');
-      |                ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
+  63  |     await page.goto('/');
   64  |     const currentUrl = page.url();
   65  | 
   66  |     if (currentUrl.includes('/login')) {
@@ -104,7 +100,8 @@ Call log:
   80  |     const authCookieObj = cookies.find(c => c.name.includes('session-token'));
   81  | 
   82  |     if (!authCookieObj) {
-  83  |       throw new Error('No auth cookie found after login. Available cookies: ' + cookies.map(c => c.name).join(', '));
+> 83  |       throw new Error('No auth cookie found after login. Available cookies: ' + cookies.map(c => c.name).join(', '));
+      |             ^ Error: No auth cookie found after login. Available cookies: 
   84  |     }
   85  | 
   86  |     cachedAuthCookie = `${authCookieObj.name}=${authCookieObj.value}`;

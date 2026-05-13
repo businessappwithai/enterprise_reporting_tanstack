@@ -12,25 +12,44 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/login
-Call log:
-  - navigating to "http://localhost:4050/login", waiting until "load"
+Error: expect(locator).toBeVisible() failed
 
+Locator: locator('h1').or(locator('text=Data Source')).first()
+Expected: visible
+Timeout: 5000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toBeVisible" with timeout 5000ms
+  - waiting for locator('h1').or(locator('text=Data Source')).first()
+
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e7]
+      - heading "Welcome back" [level=3] [ref=e9]
+      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - text: Email
+          - textbox "Email" [ref=e14]:
+            - /placeholder: name@example.com
+        - generic [ref=e15]:
+          - text: Password
+          - textbox "Password" [ref=e16]
+      - button "Sign In" [ref=e18] [cursor=pointer]
+  - region "Notifications alt+T"
 ```
 
 # Test source
 
 ```ts
-  195 |     for (const pageData of pages) {
-  196 |       await page.goto(pageData.path);
-  197 |       const visible = await page.locator('h1').or(page.locator(`text=${pageData.name}`)).or(page.locator('text=Dashboard')).or(page.locator('text=SQL')).or(page.locator('text=Reports')).first().isVisible({ timeout: 10000 });
-  198 |       expect(visible).toBeTruthy();
-  199 |       console.log(`✓ ${pageData.name} page loaded`);
-  200 |     }
-  201 |   });
-  202 | 
-  203 |   test('C2. Theme toggle works', async ({ page }) => {
-  204 |     await page.goto('/');
   205 | 
   206 |     // Get initial theme
   207 |     const html = page.locator('html');
@@ -121,8 +140,7 @@ Call log:
   292 | test.describe('Data Source Testing', () => {
   293 |   test.beforeEach(async ({ page }) => {
   294 |     // Login before each test
-> 295 |     await page.goto('/login');
-      |                ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/login
+  295 |     await page.goto('/login');
   296 |     await page.fill('input[name="email"], input[type="email"]', 'admin@admin.com');
   297 |     await page.fill('input[name="password"], input[type="password"]', 'admin');
   298 |     await page.click('button[type="submit"]');
@@ -132,7 +150,8 @@ Call log:
   302 |   test('D1. Data sources page loads', async ({ page }) => {
   303 |     await page.goto('/data-sources');
   304 | 
-  305 |     await expect(page.locator('h1').or(page.locator('text=Data Source')).first()).toBeVisible();
+> 305 |     await expect(page.locator('h1').or(page.locator('text=Data Source')).first()).toBeVisible();
+      |                                                                                   ^ Error: expect(locator).toBeVisible() failed
   306 |   });
   307 | 
   308 |   test('D2. Add data source form', async ({ page }) => {

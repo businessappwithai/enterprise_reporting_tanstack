@@ -12,22 +12,44 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/login
-Call log:
-  - navigating to "http://localhost:4050/login", waiting until "load"
+Error: expect(locator).toBeVisible() failed
 
+Locator: locator('text=Invalid').or(locator('.error')).or(locator('text=Email or password'))
+Expected: visible
+Timeout: 5000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toBeVisible" with timeout 5000ms
+  - waiting for locator('text=Invalid').or(locator('.error')).or(locator('text=Email or password'))
+
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e7]
+      - heading "Welcome back" [level=3] [ref=e9]
+      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - text: Email
+          - textbox "Email" [ref=e14]:
+            - /placeholder: name@example.com
+        - generic [ref=e15]:
+          - text: Password
+          - textbox "Password" [ref=e16]
+      - button "Sign In" [ref=e18] [cursor=pointer]
+  - region "Notifications alt+T"
 ```
 
 # Test source
 
 ```ts
-  171 |     // Login before each test
-  172 |     await page.goto('/login');
-  173 |     await page.fill('input[name="email"], input[type="email"]', 'admin@admin.com');
-  174 |     await page.fill('input[name="password"], input[type="password"]', 'admin');
-  175 |     await page.click('button[type="submit"]');
-  176 |     await page.waitForURL(/\//);
-  177 |   });
   178 | 
   179 |   test('C1. Navigate all main pages', async ({ page }) => {
   180 |     const pages = [
@@ -121,15 +143,15 @@ Call log:
   268 |   });
   269 | 
   270 |   test('A2. Invalid login shows error', async ({ page }) => {
-> 271 |     await page.goto('/login');
-      |                ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/login
+  271 |     await page.goto('/login');
   272 | 
   273 |     await page.fill('input[name="email"], input[type="email"]', 'invalid@test.com');
   274 |     await page.fill('input[name="password"], input[type="password"]', 'wrongpass');
   275 |     await page.click('button[type="submit"]');
   276 | 
   277 |     // Should show error
-  278 |     await expect(page.locator('text=Invalid').or(page.locator('.error')).or(page.locator('text=Email or password'))).toBeVisible({ timeout: 5000 });
+> 278 |     await expect(page.locator('text=Invalid').or(page.locator('.error')).or(page.locator('text=Email or password'))).toBeVisible({ timeout: 5000 });
+      |                                                                                                                      ^ Error: expect(locator).toBeVisible() failed
   279 |   });
   280 | 
   281 |   test('A3. Protected routes redirect to login', async ({ page, context }) => {
@@ -223,4 +245,10 @@ Call log:
   369 |   });
   370 | 
   371 |   test('ADM3. Settings page loads', async ({ page }) => {
+  372 |     await page.goto('/settings');
+  373 | 
+  374 |     await expect(page.locator('h1').first()).toBeVisible();
+  375 |   });
+  376 | });
+  377 | 
 ```

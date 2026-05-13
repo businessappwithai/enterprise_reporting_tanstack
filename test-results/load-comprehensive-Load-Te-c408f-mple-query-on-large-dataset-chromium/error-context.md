@@ -12,10 +12,39 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/login
-Call log:
-  - navigating to "http://localhost:4050/login", waiting until "load"
+Error: expect(locator).toBeVisible() failed
 
+Locator: locator('h1').or(locator('text=SQL')).first()
+Expected: visible
+Timeout: 10000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toBeVisible" with timeout 10000ms
+  - waiting for locator('h1').or(locator('text=SQL')).first()
+
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e7]
+      - heading "Welcome back" [level=3] [ref=e9]
+      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - text: Email
+          - textbox "Email" [ref=e14]:
+            - /placeholder: name@example.com
+        - generic [ref=e15]:
+          - text: Password
+          - textbox "Password" [ref=e16]
+      - button "Sign In" [ref=e18] [cursor=pointer]
+  - region "Notifications alt+T"
 ```
 
 # Test source
@@ -31,8 +60,7 @@ Call log:
   8   | test.describe('Load Testing - Large Dataset', () => {
   9   |   test.beforeEach(async ({ page }) => {
   10  |     // Login before each test
-> 11  |     await page.goto('/login');
-      |                ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/login
+  11  |     await page.goto('/login');
   12  |     await page.fill('input[name="email"], input[type="email"]', 'admin@admin.com');
   13  |     await page.fill('input[name="password"], input[type="password"]', 'admin');
   14  |     await page.click('button[type="submit"]');
@@ -55,7 +83,8 @@ Call log:
   31  |     await page.goto('/sql-editor');
   32  | 
   33  |     // Wait for page to load
-  34  |     await expect(page.locator('h1').or(page.locator('text=SQL')).first()).toBeVisible({ timeout: 10000 });
+> 34  |     await expect(page.locator('h1').or(page.locator('text=SQL')).first()).toBeVisible({ timeout: 10000 });
+      |                                                                           ^ Error: expect(locator).toBeVisible() failed
   35  | 
   36  |     // Wait for Monaco editor to load
   37  |     await page.waitForSelector('.monaco-editor', { timeout: 10000 });
@@ -133,4 +162,27 @@ Call log:
   109 |   test('L5. Aggregation query performance', async ({ page }) => {
   110 |     await page.goto('/sql-editor');
   111 | 
+  112 |     await expect(page.locator('text=SQL Editor').or(page.locator('h1'))).toBeVisible();
+  113 | 
+  114 |     const editor = page.locator('.monaco-editor, .view-line').first();
+  115 |     await editor.click();
+  116 | 
+  117 |     const aggQuery = `SELECT
+  118 |   status,
+  119 |   COUNT(*) as count,
+  120 |   SUM(total_amount) as total,
+  121 |   AVG(total_amount) as average
+  122 | FROM orders
+  123 | GROUP BY status`;
+  124 | 
+  125 |     await page.keyboard.type(aggQuery);
+  126 | 
+  127 |     const startTime = Date.now();
+  128 |     await page.click('button:has-text("Execute"), button:has-text("Run"), button:has-text("▶")');
+  129 | 
+  130 |     await page.waitForTimeout(10000);
+  131 |     const queryTime = Date.now() - startTime;
+  132 | 
+  133 |     console.log(`Aggregation query completed in ${queryTime}ms`);
+  134 |     expect(queryTime).toBeLessThan(20000);
 ```

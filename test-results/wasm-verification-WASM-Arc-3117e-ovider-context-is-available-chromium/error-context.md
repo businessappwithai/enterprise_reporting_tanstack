@@ -12,130 +12,176 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-Call log:
-  - navigating to "http://localhost:4050/", waiting until "load"
+Error: expect(locator).toBeVisible() failed
 
+Locator: locator('.monaco-editor')
+Expected: visible
+Timeout: 10000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toBeVisible" with timeout 10000ms
+  - waiting for locator('.monaco-editor')
+
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e7]
+      - heading "Welcome back" [level=3] [ref=e9]
+      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - text: Email
+          - textbox "Email" [ref=e14]:
+            - /placeholder: name@example.com
+        - generic [ref=e15]:
+          - text: Password
+          - textbox "Password" [ref=e16]
+      - button "Sign In" [ref=e18] [cursor=pointer]
+  - region "Notifications alt+T"
 ```
 
 # Test source
 
 ```ts
-  11  |   // Return cached cookie if available
-  12  |   if (cachedAuthCookie) {
-  13  |     console.log('Using cached auth cookie');
-  14  |     return cachedAuthCookie;
-  15  |   }
-  16  | 
-  17  |   console.log('Getting fresh auth cookie...');
-  18  | 
-  19  |   // Try API-based authentication first
-  20  |   try {
-  21  |     const signInResponse = await request.post('/api/auth/callback/credentials', {
-  22  |       headers: {
-  23  |         'Content-Type': 'application/json',
-  24  |       },
-  25  |       data: JSON.stringify({
-  26  |         email: 'admin@admin.com',
-  27  |         password: 'admin',
-  28  |         csrfToken: 'test-csrf-token',
-  29  |         json: true,
-  30  |       }),
-  31  |     });
+  1   | /**
+  2   |  * WASM Architecture Verification Test
+  3   |  *
+  4   |  * This test verifies that WASM features are properly enabled and accessible.
+  5   |  * Run with: bun run test:e2e -- e2e/wasm-verification.spec.ts
+  6   |  */
+  7   | 
+  8   | import { test, expect } from '@playwright/test';
+  9   | import { login } from './test-auth';
+  10  | 
+  11  | const BASE_URL = process.env.BASE_URL || 'http://localhost:4050';
+  12  | 
+  13  | test.describe('WASM Architecture Verification', () => {
+  14  |   test.beforeEach(async ({ page }) => {
+  15  |     await login(page);
+  16  |   });
+  17  | 
+  18  |   test('Verify WASM feature flags are enabled', async ({ page }) => {
+  19  |     // Navigate to datasets page (WASM feature)
+  20  |     await page.goto(`${BASE_URL}/datasets`);
+  21  | 
+  22  |     // Check that the page loads successfully
+  23  |     const h1 = page.locator('h1').first();
+  24  |     await expect(h1).toBeVisible({ timeout: 10000 });
+  25  | 
+  26  |     console.log('✓ Datasets page accessible - WASM features enabled');
+  27  |   });
+  28  | 
+  29  |   test('Verify DuckDB provider context is available', async ({ page }) => {
+  30  |     // Navigate to SQL editor
+  31  |     await page.goto(`${BASE_URL}/sql-editor`);
   32  | 
-  33  |     console.log('Sign-in response status:', signInResponse.status());
-  34  | 
-  35  |     // Get cookies from the response headers
-  36  |     const setCookieHeaders = signInResponse.headers()['set-cookie'];
-  37  |     if (setCookieHeaders) {
-  38  |       const cookieArray = Array.isArray(setCookieHeaders) ? setCookieHeaders : [setCookieHeaders];
-  39  |       for (const cookieHeader of cookieArray) {
-  40  |         const match = cookieHeader.match(/authjs\.session-token=([^;]+)/);
-  41  |         if (match) {
-  42  |           cachedAuthCookie = `authjs.session-token=${match[1]}`;
-  43  |           console.log('Got auth cookie from API sign-in');
-  44  |           return cachedAuthCookie;
-  45  |         }
-  46  |       }
-  47  |     }
+  33  |     // Wait for Monaco editor
+> 34  |     await expect(page.locator('.monaco-editor')).toBeVisible({ timeout: 10000 });
+      |                                                  ^ Error: expect(locator).toBeVisible() failed
+  35  | 
+  36  |     console.log('✓ SQL Editor with Monaco loaded - ready for DuckDB queries');
+  37  |   });
+  38  | 
+  39  |   test('Verify application pages load correctly', async ({ page }) => {
+  40  |     const pages = [
+  41  |       { path: '/', name: 'Dashboard' },
+  42  |       { path: '/sql-editor', name: 'SQL Editor' },
+  43  |       { path: '/datasets', name: 'Datasets' },
+  44  |       { path: '/dashboards', name: 'Dashboards' },
+  45  |       { path: '/reports', name: 'Reports' },
+  46  |       { path: '/charts', name: 'Charts' },
+  47  |     ];
   48  | 
-  49  |     console.log('No session cookie in API response, trying browser fallback...');
-  50  |   } catch (error) {
-  51  |     console.log('API sign-in failed, trying browser fallback:', error);
-  52  |   }
-  53  | 
-  54  |   // Fallback: use browser-based login
-  55  |   if (!browser) {
-  56  |     throw new Error('Browser is required for fallback authentication');
-  57  |   }
-  58  | 
-  59  |   const page = await browser.newPage();
-  60  |   const testHelpers = new TestHelpers(page);
-  61  | 
-  62  |   try {
-  63  |     await page.goto('/');
-  64  |     const currentUrl = page.url();
-  65  | 
-  66  |     if (currentUrl.includes('/login')) {
-  67  |       console.log('Logging in via browser...');
-  68  |       await testHelpers.login();
-  69  |     }
-  70  | 
-  71  |     // Wait for session to be established
-  72  |     await page.waitForTimeout(5000);
-  73  |     await page.goto('/');
-  74  |     await page.waitForLoadState('domcontentloaded');
-  75  |     await page.waitForTimeout(3000);
+  49  |     for (const pageInfo of pages) {
+  50  |       await page.goto(`${BASE_URL}${pageInfo.path}`);
+  51  |       await page.waitForTimeout(1000);
+  52  | 
+  53  |       // Just check that we don't get a 404 or crash
+  54  |       const visible = await page.locator('h1, h2, h3').first().isVisible().catch(() => false);
+  55  |       console.log(`✓ ${pageInfo.name} page loads`);
+  56  |     }
+  57  | 
+  58  |     expect(true).toBeTruthy();
+  59  |   });
+  60  | 
+  61  |   test('Verify no console errors related to WASM', async ({ page }) => {
+  62  |     const logs: string[] = [];
+  63  | 
+  64  |     page.on('console', msg => {
+  65  |       if (msg.type() === 'error') {
+  66  |         logs.push(msg.text());
+  67  |       }
+  68  |     });
+  69  | 
+  70  |     // Navigate through key pages
+  71  |     await page.goto(`${BASE_URL}/datasets`);
+  72  |     await page.waitForTimeout(2000);
+  73  | 
+  74  |     await page.goto(`${BASE_URL}/sql-editor`);
+  75  |     await page.waitForTimeout(2000);
   76  | 
-  77  |     const cookies = await page.context().cookies();
-  78  |     console.log('Cookies after login:', cookies.map(c => c.name));
-  79  | 
-  80  |     const authCookieObj = cookies.find(c => c.name.includes('session-token'));
-  81  | 
-  82  |     if (!authCookieObj) {
-  83  |       throw new Error('No auth cookie found after login. Available cookies: ' + cookies.map(c => c.name).join(', '));
-  84  |     }
-  85  | 
-  86  |     cachedAuthCookie = `${authCookieObj.name}=${authCookieObj.value}`;
-  87  |     console.log('Got auth cookie from browser login');
-  88  | 
-  89  |     return cachedAuthCookie;
-  90  |   } finally {
-  91  |     await page.close();
-  92  |   }
-  93  | }
-  94  | 
-  95  | /**
-  96  |  * Clear cached auth cookie (useful for testing logout scenarios)
-  97  |  */
-  98  | export function clearAuthCache(): void {
-  99  |   cachedAuthCookie = null;
-  100 | }
-  101 | 
-  102 | /**
-  103 |  * Simple login function for E2E tests
-  104 |  * Performs login via UI and returns when authenticated
-  105 |  */
-  106 | export async function login(page: Page, email: string = 'admin@admin.com', password: string = 'admin'): Promise<void> {
-  107 |   const BASE_URL = process.env.BASE_URL || 'http://localhost:4050';
-  108 |   const testHelpers = new TestHelpers(page);
-  109 | 
-  110 |   // Navigate to login page if not already there
-> 111 |   await page.goto(BASE_URL);
-      |              ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-  112 |   const currentUrl = page.url();
-  113 | 
-  114 |   if (!currentUrl.includes('/login')) {
-  115 |     // Already logged in or on another page
-  116 |     return;
-  117 |   }
-  118 | 
-  119 |   // Perform login
-  120 |   await testHelpers.login();
-  121 | 
-  122 |   // Wait for navigation to dashboard
-  123 |   await page.waitForURL(/\/(dashboard|)/, { timeout: 10000 });
-  124 |   await page.waitForLoadState('domcontentloaded');
-  125 | }
-  126 | 
+  77  |     // Check for WASM-related errors
+  78  |     const wasmErrors = logs.filter(log =>
+  79  |       log.includes('wasm') ||
+  80  |       log.includes('DuckDB') ||
+  81  |       log.includes('SharedArrayBuffer')
+  82  |     );
+  83  | 
+  84  |     if (wasmErrors.length > 0) {
+  85  |       console.log('WASM-related console errors:', wasmErrors);
+  86  |     }
+  87  | 
+  88  |     console.log(`✓ Console check complete - ${wasmErrors.length} WASM errors found`);
+  89  |   });
+  90  | });
+  91  | 
+  92  | test.describe('WASM Architecture - Feature Checklist', () => {
+  93  |   test('Display enabled WASM features', async ({ page }) => {
+  94  |     await login(page);
+  95  | 
+  96  |     console.log('\n' + '='.repeat(60));
+  97  |     console.log('WASM Architecture Feature Checklist');
+  98  |     console.log('='.repeat(60));
+  99  | 
+  100 |     // Check environment variables are set
+  101 |     console.log('✓ NEXT_PUBLIC_WASM_ENABLED=true');
+  102 |     console.log('✓ NEXT_PUBLIC_ECHARTS_ENABLED=true');
+  103 |     console.log('✓ NEXT_PUBLIC_CROSSFILTER_ENABLED=true');
+  104 |     console.log('✓ NEXT_PUBLIC_OFFLINE_ENABLED=true');
+  105 |     console.log('✓ NEXT_PUBLIC_PROGRESSIVE_ENABLED=true');
+  106 | 
+  107 |     console.log('\nWASM Components:');
+  108 |     console.log('  • DuckDB-Wasm - Client-side SQL execution');
+  109 |     console.log('  • Apache Arrow - Columnar data format');
+  110 |     console.log('  • Parquet export - Efficient data storage');
+  111 |     console.log('  • TanStack Table - Virtual scrolling tables');
+  112 |     console.log('  • Apache ECharts - Advanced charts');
+  113 |     console.log('  • IndexedDB - Offline caching');
+  114 | 
+  115 |     console.log('\n' + '='.repeat(60));
+  116 |     console.log('Test hospital data at: http://localhost:4050');
+  117 |     console.log('Login: admin@admin.com / admin');
+  118 |     console.log('Steps to test:');
+  119 |     console.log('  1. Navigate to Data Sources');
+  120 |     console.log('  2. Add PostgreSQL connection:');
+  121 |     console.log('     - Host: localhost');
+  122 |     console.log('     - Port: 5432');
+  123 |     console.log('     - Database: hospital_management_system');
+  124 |     console.log('     - User: postgres');
+  125 |     console.log('     - Password: (empty)');
+  126 |     console.log('  3. Go to SQL Editor and run queries against bus_patient');
+  127 |     console.log('  4. Create reports and charts');
+  128 |     console.log('='.repeat(60) + '\n');
+  129 | 
+  130 |     expect(true).toBeTruthy();
+  131 |   });
+  132 | });
+  133 | 
 ```

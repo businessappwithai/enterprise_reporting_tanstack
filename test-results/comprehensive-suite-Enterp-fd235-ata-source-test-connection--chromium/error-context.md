@@ -12,130 +12,237 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
+TimeoutError: page.click: Timeout 15000ms exceeded.
 Call log:
-  - navigating to "http://localhost:4050/", waiting until "load"
+  - waiting for locator('button:has-text("Add Data Source"), button:has-text("New")')
 
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e7]
+      - heading "Welcome back" [level=3] [ref=e9]
+      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - text: Email
+          - textbox "Email" [ref=e14]:
+            - /placeholder: name@example.com
+        - generic [ref=e15]:
+          - text: Password
+          - textbox "Password" [ref=e16]
+      - button "Sign In" [ref=e18] [cursor=pointer]
+  - region "Notifications alt+T"
 ```
 
 # Test source
 
 ```ts
-  11  |   // Return cached cookie if available
-  12  |   if (cachedAuthCookie) {
-  13  |     console.log('Using cached auth cookie');
-  14  |     return cachedAuthCookie;
-  15  |   }
-  16  | 
-  17  |   console.log('Getting fresh auth cookie...');
-  18  | 
-  19  |   // Try API-based authentication first
-  20  |   try {
-  21  |     const signInResponse = await request.post('/api/auth/callback/credentials', {
-  22  |       headers: {
-  23  |         'Content-Type': 'application/json',
-  24  |       },
-  25  |       data: JSON.stringify({
-  26  |         email: 'admin@admin.com',
-  27  |         password: 'admin',
-  28  |         csrfToken: 'test-csrf-token',
-  29  |         json: true,
-  30  |       }),
-  31  |     });
-  32  | 
-  33  |     console.log('Sign-in response status:', signInResponse.status());
-  34  | 
-  35  |     // Get cookies from the response headers
-  36  |     const setCookieHeaders = signInResponse.headers()['set-cookie'];
-  37  |     if (setCookieHeaders) {
-  38  |       const cookieArray = Array.isArray(setCookieHeaders) ? setCookieHeaders : [setCookieHeaders];
-  39  |       for (const cookieHeader of cookieArray) {
-  40  |         const match = cookieHeader.match(/authjs\.session-token=([^;]+)/);
-  41  |         if (match) {
-  42  |           cachedAuthCookie = `authjs.session-token=${match[1]}`;
-  43  |           console.log('Got auth cookie from API sign-in');
-  44  |           return cachedAuthCookie;
-  45  |         }
-  46  |       }
-  47  |     }
-  48  | 
-  49  |     console.log('No session cookie in API response, trying browser fallback...');
-  50  |   } catch (error) {
-  51  |     console.log('API sign-in failed, trying browser fallback:', error);
-  52  |   }
-  53  | 
-  54  |   // Fallback: use browser-based login
-  55  |   if (!browser) {
-  56  |     throw new Error('Browser is required for fallback authentication');
-  57  |   }
-  58  | 
-  59  |   const page = await browser.newPage();
-  60  |   const testHelpers = new TestHelpers(page);
-  61  | 
-  62  |   try {
-  63  |     await page.goto('/');
-  64  |     const currentUrl = page.url();
-  65  | 
-  66  |     if (currentUrl.includes('/login')) {
-  67  |       console.log('Logging in via browser...');
-  68  |       await testHelpers.login();
-  69  |     }
-  70  | 
-  71  |     // Wait for session to be established
-  72  |     await page.waitForTimeout(5000);
-  73  |     await page.goto('/');
-  74  |     await page.waitForLoadState('domcontentloaded');
-  75  |     await page.waitForTimeout(3000);
-  76  | 
-  77  |     const cookies = await page.context().cookies();
-  78  |     console.log('Cookies after login:', cookies.map(c => c.name));
-  79  | 
-  80  |     const authCookieObj = cookies.find(c => c.name.includes('session-token'));
-  81  | 
-  82  |     if (!authCookieObj) {
-  83  |       throw new Error('No auth cookie found after login. Available cookies: ' + cookies.map(c => c.name).join(', '));
-  84  |     }
-  85  | 
-  86  |     cachedAuthCookie = `${authCookieObj.name}=${authCookieObj.value}`;
-  87  |     console.log('Got auth cookie from browser login');
-  88  | 
-  89  |     return cachedAuthCookie;
-  90  |   } finally {
-  91  |     await page.close();
-  92  |   }
-  93  | }
-  94  | 
-  95  | /**
-  96  |  * Clear cached auth cookie (useful for testing logout scenarios)
-  97  |  */
-  98  | export function clearAuthCache(): void {
-  99  |   cachedAuthCookie = null;
-  100 | }
-  101 | 
-  102 | /**
-  103 |  * Simple login function for E2E tests
-  104 |  * Performs login via UI and returns when authenticated
-  105 |  */
-  106 | export async function login(page: Page, email: string = 'admin@admin.com', password: string = 'admin'): Promise<void> {
-  107 |   const BASE_URL = process.env.BASE_URL || 'http://localhost:4050';
-  108 |   const testHelpers = new TestHelpers(page);
-  109 | 
-  110 |   // Navigate to login page if not already there
-> 111 |   await page.goto(BASE_URL);
-      |              ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/
-  112 |   const currentUrl = page.url();
-  113 | 
-  114 |   if (!currentUrl.includes('/login')) {
-  115 |     // Already logged in or on another page
-  116 |     return;
-  117 |   }
-  118 | 
-  119 |   // Perform login
-  120 |   await testHelpers.login();
-  121 | 
-  122 |   // Wait for navigation to dashboard
-  123 |   await page.waitForURL(/\/(dashboard|)/, { timeout: 10000 });
-  124 |   await page.waitForLoadState('domcontentloaded');
-  125 | }
-  126 | 
+  341 |     // Submit
+  342 |     await page.click('button:has-text("Save"), button[type="submit"]');
+  343 | 
+  344 |     // Verify success message
+  345 |     await expect(page.locator('text=successfully saved, text=saved').or(page.locator('.toast'))).toBeVisible({ timeout: 5000 });
+  346 |   });
+  347 | 
+  348 |   test('8. View saved queries', async ({ page }) => {
+  349 |     await page.goto(`${BASE_URL}/queries`);
+  350 | 
+  351 |     // Check for saved queries section
+  352 |     await expect(page.locator('text=Saved Queries').or(page.locator('h1:has-text("Query")'))).toBeVisible();
+  353 |   });
+  354 | 
+  355 |   test('9. Create a new report from query results', async ({ page }) => {
+  356 |     await page.goto(`${BASE_URL}/sql-editor`);
+  357 | 
+  358 |     // Enter and execute query
+  359 |     const editor = page.locator('.monaco-editor, [contenteditable="true"], textarea').first();
+  360 |     await editor.fill('SELECT country, COUNT(*) as customer_count FROM customers GROUP BY country ORDER BY customer_count DESC');
+  361 |     await page.click('button:has-text("Execute"), button:has-text("Run")');
+  362 | 
+  363 |     // Wait for results
+  364 |     await expect(page.locator('table, text=country')).toBeVisible({ timeout: 10000 });
+  365 | 
+  366 |     // Click create report button
+  367 |     const createReportBtn = page.locator('button:has-text("Create Report"), button:has-text("Save as Report")').first();
+  368 |     if (await createReportBtn.isVisible()) {
+  369 |       await createReportBtn.click();
+  370 | 
+  371 |       // Fill report details
+  372 |       await page.fill('input[name="name"]', 'Customers by Country Report');
+  373 |       await page.fill('textarea[name="description"]', 'Distribution of customers by country');
+  374 | 
+  375 |       // Save
+  376 |       await page.click('button[type="submit"], button:has-text("Save")');
+  377 | 
+  378 |       // Verify success
+  379 |       await expect(page.locator('text=successfully created, text=Report created')).toBeVisible({ timeout: 5000 });
+  380 |     }
+  381 |   });
+  382 | 
+  383 |   test('10. Navigate to reports page', async ({ page }) => {
+  384 |     await page.goto(`${BASE_URL}/reports`);
+  385 | 
+  386 |     // Check reports page loads
+  387 |     await expect(page.locator('text=Reports').or(page.locator('h1'))).toBeVisible();
+  388 |   });
+  389 | 
+  390 |   test('11. Create a new chart', async ({ page }) => {
+  391 |     await page.goto(`${BASE_URL}/charts`);
+  392 | 
+  393 |     // Click new chart button
+  394 |     await page.click('button:has-text("New Chart"), button:has-text("Create")');
+  395 | 
+  396 |     // Fill chart details
+  397 |     await page.fill('input[name="name"]', 'Sales by Country Chart');
+  398 |     await page.selectOption('select[name="chartType"]', 'bar');
+  399 | 
+  400 |     // Save
+  401 |     await page.click('button:has-text("Save"), button[type="submit"]');
+  402 | 
+  403 |     // Verify chart created
+  404 |     await expect(page.locator('text=Chart created').or(page.locator('text=successfully saved'))).toBeVisible({ timeout: 5000 });
+  405 |   });
+  406 | 
+  407 |   test('12. Navigate to dashboards', async ({ page }) => {
+  408 |     await page.goto(`${BASE_URL}/dashboards`);
+  409 | 
+  410 |     // Check dashboards page
+  411 |     await expect(page.locator('text=Dashboards').or(page.locator('h1:has-text("Dashboard")'))).toBeVisible();
+  412 |   });
+  413 | 
+  414 |   test('13. Create a new dashboard', async ({ page }) => {
+  415 |     await page.goto(`${BASE_URL}/dashboards`);
+  416 | 
+  417 |     // Click new dashboard
+  418 |     await page.click('button:has-text("New Dashboard"), button:has-text("Create")');
+  419 | 
+  420 |     // Fill details
+  421 |     await page.fill('input[name="name"]', 'Executive Dashboard');
+  422 | 
+  423 |     // Save
+  424 |     await page.click('button:has-text("Save"), button[type="submit"]');
+  425 | 
+  426 |     // Verify
+  427 |     await expect(page.locator('text=Dashboard created').or(page.locator('text=successfully created'))).toBeVisible({ timeout: 5000 });
+  428 |   });
+  429 | 
+  430 |   test('14. Data sources management', async ({ page }) => {
+  431 |     await page.goto(`${BASE_URL}/data-sources`);
+  432 | 
+  433 |     // Check data sources page
+  434 |     await expect(page.locator('text=Data Sources').or(page.locator('h1'))).toBeVisible();
+  435 |   });
+  436 | 
+  437 |   test('15. Add a new data source (test connection)', async ({ page }) => {
+  438 |     await page.goto(`${BASE_URL}/data-sources`);
+  439 | 
+  440 |     // Click add new
+> 441 |     await page.click('button:has-text("Add Data Source"), button:has-text("New")');
+      |                ^ TimeoutError: page.click: Timeout 15000ms exceeded.
+  442 | 
+  443 |     // Fill form
+  444 |     await page.fill('input[name="name"]', 'Test SQLite Database');
+  445 |     await page.selectOption('select[name="client_type"]', 'sqlite');
+  446 | 
+  447 |     // Enter database path
+  448 |     await page.fill('input[name="path"], input[placeholder*="path"]', './database/test_large_dataset.db');
+  449 | 
+  450 |     // Test connection
+  451 |     await page.click('button:has-text("Test Connection")');
+  452 | 
+  453 |     // Wait for connection result (may fail if DB doesn't exist, that's OK)
+  454 |     await page.waitForTimeout(2000);
+  455 |   });
+  456 | 
+  457 |   test('16. Jobs management page', async ({ page }) => {
+  458 |     await page.goto(`${BASE_URL}/jobs`);
+  459 | 
+  460 |     // Check jobs page
+  461 |     await expect(page.locator('text=Jobs').or(page.locator('h1'))).toBeVisible();
+  462 |   });
+  463 | 
+  464 |   test('17. Create a scheduled job', async ({ page }) => {
+  465 |     await page.goto(`${BASE_URL}/jobs`);
+  466 | 
+  467 |     // Click new job
+  468 |     await page.click('button:has-text("New Job"), button:has-text("Create")');
+  469 | 
+  470 |     // Fill job details
+  471 |     await page.fill('input[name="name"]', 'Daily Sales Report');
+  472 |     await page.fill('textarea[name="description"]', 'Generates daily sales summary');
+  473 | 
+  474 |     // Save
+  475 |     await page.click('button:has-text("Save"), button[type="submit"]');
+  476 | 
+  477 |     // Verify
+  478 |     await expect(page.locator('text=Job created').or(page.locator('text=successfully'))).toBeVisible({ timeout: 5000 });
+  479 |   });
+  480 | 
+  481 |   test('18. Filters management', async ({ page }) => {
+  482 |     await page.goto(`${BASE_URL}/filters`);
+  483 | 
+  484 |     // Check filters page
+  485 |     await expect(page.locator('text=Filters').or(page.locator('h1'))).toBeVisible();
+  486 |   });
+  487 | 
+  488 |   test('19. User management (admin)', async ({ page }) => {
+  489 |     await page.goto(`${BASE_URL}/admin/users`);
+  490 | 
+  491 |     // Check users page
+  492 |     await expect(page.locator('text=Users').or(page.locator('h1'))).toBeVisible();
+  493 |   });
+  494 | 
+  495 |   test('20. Roles management', async ({ page }) => {
+  496 |     await page.goto(`${BASE_URL}/admin/roles`);
+  497 | 
+  498 |     // Check roles page
+  499 |     await expect(page.locator('text=Roles').or(page.locator('h1'))).toBeVisible();
+  500 |   });
+  501 | 
+  502 |   test('21. Settings page', async ({ page }) => {
+  503 |     await page.goto(`${BASE_URL}/settings`);
+  504 | 
+  505 |     // Check settings page
+  506 |     await expect(page.locator('text=Settings').or(page.locator('h1'))).toBeVisible();
+  507 |   });
+  508 | 
+  509 |   test('22. Theme toggle', async ({ page }) => {
+  510 |     await page.goto(`${BASE_URL}/`);
+  511 | 
+  512 |     // Get initial theme
+  513 |     const html = page.locator('html');
+  514 |     const initialClass = await html.getAttribute('class');
+  515 | 
+  516 |     // Click theme toggle
+  517 |     await page.click('button:has-text("Toggle theme"), button[aria-label*="theme"]');
+  518 | 
+  519 |     // Wait for theme change
+  520 |     await page.waitForTimeout(500);
+  521 |     const newClass = await html.getAttribute('class');
+  522 | 
+  523 |     // Theme should have changed
+  524 |     expect(initialClass).not.toBe(newClass);
+  525 |   });
+  526 | 
+  527 |   test('23. Notifications panel', async ({ page }) => {
+  528 |     await page.goto(`${BASE_URL}/`);
+  529 | 
+  530 |     // Click notifications button
+  531 |     await page.click('button:has-text("Notifications"), [aria-label*="notification"]');
+  532 | 
+  533 |     // Check notifications panel appears
+  534 |     await expect(page.locator('[role="dialog"], .popover, text=Notifications').or(page.locator('text=No notifications'))).toBeVisible();
+  535 |   });
+  536 | 
+  537 |   test('24. Sidebar navigation', async ({ page }) => {
+  538 |     await page.goto(`${BASE_URL}/`);
+  539 | 
+  540 |     // Navigate through sidebar links
+  541 |     const links = [
 ```

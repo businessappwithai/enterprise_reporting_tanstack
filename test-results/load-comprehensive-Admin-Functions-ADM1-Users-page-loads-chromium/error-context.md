@@ -12,25 +12,44 @@
 # Error details
 
 ```
-Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/login
-Call log:
-  - navigating to "http://localhost:4050/login", waiting until "load"
+Error: expect(locator).toBeVisible() failed
 
+Locator: locator('h1').or(locator('text=User')).first()
+Expected: visible
+Timeout: 5000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toBeVisible" with timeout 5000ms
+  - waiting for locator('h1').or(locator('text=User')).first()
+
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e7]
+      - heading "Welcome back" [level=3] [ref=e9]
+      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - text: Email
+          - textbox "Email" [ref=e14]:
+            - /placeholder: name@example.com
+        - generic [ref=e15]:
+          - text: Password
+          - textbox "Password" [ref=e16]
+      - button "Sign In" [ref=e18] [cursor=pointer]
+  - region "Notifications alt+T"
 ```
 
 # Test source
 
 ```ts
-  252 |       expect(loadTime).toBeLessThan(10000);
-  253 |     }
-  254 |   });
-  255 | });
-  256 | 
-  257 | test.describe('Authentication Tests', () => {
-  258 |   test('A1. Login with valid credentials', async ({ page }) => {
-  259 |     await page.goto('/login');
-  260 | 
-  261 |     // Fill login form
   262 |     await page.fill('input[name="email"], input[type="email"]', 'admin@admin.com');
   263 |     await page.fill('input[name="password"], input[type="password"]', 'admin');
   264 |     await page.click('button[type="submit"]');
@@ -121,8 +140,7 @@ Call log:
   349 | test.describe('Admin Functions', () => {
   350 |   test.beforeEach(async ({ page }) => {
   351 |     // Login before each test
-> 352 |     await page.goto('/login');
-      |                ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:4050/login
+  352 |     await page.goto('/login');
   353 |     await page.fill('input[name="email"], input[type="email"]', 'admin@admin.com');
   354 |     await page.fill('input[name="password"], input[type="password"]', 'admin');
   355 |     await page.click('button[type="submit"]');
@@ -132,7 +150,8 @@ Call log:
   359 |   test('ADM1. Users page loads', async ({ page }) => {
   360 |     await page.goto('/admin/users');
   361 | 
-  362 |     await expect(page.locator('h1').or(page.locator('text=User')).first()).toBeVisible();
+> 362 |     await expect(page.locator('h1').or(page.locator('text=User')).first()).toBeVisible();
+      |                                                                            ^ Error: expect(locator).toBeVisible() failed
   363 |   });
   364 | 
   365 |   test('ADM2. Roles page loads', async ({ page }) => {
