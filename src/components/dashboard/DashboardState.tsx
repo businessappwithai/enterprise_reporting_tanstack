@@ -2,12 +2,12 @@
 
 /**
  * Dashboard state management context for WASM-enhanced dashboards.
- * Tracks loaded datasets, active filters, and widget states.
+ * Tracks loaded datasets, active filters (via TanStack DB), and widget states.
  */
 
 import type React from "react";
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
-import { useCrossFilter } from "@/hooks/useCrossFilter";
+import { useCrossFilterDB } from "@/hooks/useCrossFilterDB";
 import type { ActiveFilter, CrossFilterConfig } from "@/types/filters";
 
 interface DashboardStateValue {
@@ -31,7 +31,7 @@ interface DashboardStateProviderProps {
 
 export function DashboardStateProvider({ config, children }: DashboardStateProviderProps) {
   const { activeFilters, applyFilter, removeFilter, clearFilters, getFilteredQuery } =
-    useCrossFilter(config);
+    useCrossFilterDB(config);
   const [widgetDatasets, setWidgetDatasets] = useState<Record<string, string>>({});
 
   const setWidgetDataset = useCallback((widgetId: string, datasetId: string) => {
