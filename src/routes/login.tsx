@@ -17,6 +17,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authenticateUser, createSession } from "@/lib/auth/session";
 
+if (import.meta.hot) {
+  import.meta.hot.decline();
+}
+
 export const loginFn = createServerFn({ method: "POST" })
   .inputValidator((data: { email: string; password: string }) => data)
   .handler(async ({ data }) => {
