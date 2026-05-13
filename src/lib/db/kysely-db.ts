@@ -7,7 +7,8 @@ import { existsSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import { Kysely, PostgresDialect, SqliteDialect } from "kysely";
 import { Pool } from "pg";
-import Database from "bun:sqlite";
+
+// bun:sqlite will be dynamically imported when needed
 
 // Database schema type definition
 // This is the most important part - defines all tables and their columns
@@ -322,7 +323,10 @@ export function getDb(): KyselyDB {
         dialect: new PostgresDialect({ pool }),
       });
     } else {
-      // SQLite via bun:sqlite
+      // SQLite via bun:sqlite - dynamically import to avoid Node.js ESM issues in Vite SSR
+      // biome-ignore lint/suspicious/noExplicitAny: dynamic require
+      const BunDatabase = require("bun:sqlite").Database;
+
       const dirPath = path.dirname(DATABASE_PATH);
       if (!existsSync(dirPath)) {
         mkdirSync(dirPath, { recursive: true });
@@ -331,7 +335,7 @@ export function getDb(): KyselyDB {
       db = new Kysely<Database>({
         dialect: new SqliteDialect({
           // biome-ignore lint/suspicious/noExplicitAny: bun:sqlite satisfies interface
-          database: new Database(DATABASE_PATH) as any,
+          database: new BunDatabase(DATABASE_PATH) as any,
         }),
       });
     }
