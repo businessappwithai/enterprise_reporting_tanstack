@@ -1,0 +1,227 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowLeft, Download, Edit, RefreshCw } from "lucide-react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
+import { Breadcrumb } from "@/components/layout/breadcrumb";
+import { DataTable } from "@/components/reporting/data-table";
+import { FilterBar } from "@/components/reporting/filter-bar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { ColumnDef } from "@tanstack/react-table";
+import type { ReportDefinition } from "@/types/database";
+
+export const Route = createFileRoute("/_authed/reports/$id/viewer")({
+  component: ReportViewerPage,
+});
+
+interface ReportRow {
+  [key: string]: unknown;
+}
+
+function ReportViewerPage() {
+  const { id: reportId } = Route.useParams();
+  const queryClient = useQueryClient();
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(50);
+
+  const { data: report, isLoading: isLoadingReport } = useQuery<ReportDefinition>({
+    queryKey: ["report", reportId],
+    queryFn: async () => {
+      const res = await fetch(`/api/reports/${reportId}`);
+      const data = await res.json();
+      return data.data;
+    },
+  });
+
+  const { data: reportData, isLoading: isLoadingData } = useQuery({
+    queryKey: ["report-data", reportId, pageIndex, pageSize],
+    queryFn: async () => {
+      const res = await fetch(`/api/reports/${reportId}/data?page=${pageIndex}&pageSize=${pageSize}`);
+      const data = await res.json();
+      return data.data;
+    },
+    enabled: !!report,
+  });
+
+  const exportMutation = useMutation({
+    mutationFn: async (format: "csv" | "xlsx" | "pdf") => {
+      const res = await fetch(`/api/reports/${reportId}/export`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ format }),
+      });
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${report?.name || "report"}.${format === "xlsx" ? "xlsx" : format}`;
+      a.click();
+      URL.revokeObjectURL(url);
+    },
+    onError: () => {
+      toast.error("Failed to export report");
+    },
+  });
+
+  const columns: ColumnDef<ReportRow>[] = useMemo(() => {
+    if (!report) return [];
+
+    try {
+      const columnConfig = JSON.parse(report.column_config || "[]");
+      return columnConfig
+        .filter((col: { visible: boolean }) => col.visible)
+        .map((col: { key: string; label: string }) => ({
+          accessorKey: col.key,
+          header: col.label || col.key,
+          cell: (info: { getValue: () => unknown }) => {
+            const value = info.getValue();
+            if (value === null || value === undefined) return "-";
+            if (typeof value === "number") return value.toLocaleString();
+            return String(value);
+          },
+        }));
+    } catch {
+      return [];
+    }
+  }, [report]);
+
+  if (isLoadingReport) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-96 w-full" />
+      </div>
+    );
+  }
+
+  if (!report) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-muted-foreground mb-4">Report not found</p>
+          <Link to="/reports/">
+            <Button>Back to Reports</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <Breadcrumb
+        items={[
+          { label: "Reports", href: "/reports" },
+          { label: report.name },
+        ]}
+      />
+
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link to="/reports/">
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold">{report.name}</h1>
+            {report.description && (
+              <p className="text-sm text-muted-foreground mt-1">{report.description}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => queryClient.invalidateQueries({ queryKey: ["report-data", reportId] })}
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+
+          {(() => {
+            const formats = report.export_formats ? JSON.parse(report.export_formats) : {};
+            return (
+              <>
+                {formats.csv && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => exportMutation.mutate("csv")}
+                    disabled={exportMutation.isPending}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    CSV
+                  </Button>
+                )}
+                {formats.xlsx && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => exportMutation.mutate("xlsx")}
+                    disabled={exportMutation.isPending}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Excel
+                  </Button>
+                )}
+                {formats.pdf && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => exportMutation.mutate("pdf")}
+                    disabled={exportMutation.isPending}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    PDF
+                  </Button>
+                )}
+              </>
+            );
+          })()}
+
+          <Link to={`/reports/${reportId}/editor`}>
+            <Button size="sm">
+              <Edit className="h-4 w-4 mr-2" />
+              Edit
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Report Data</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoadingData ? (
+            <Skeleton className="h-96 w-full" />
+          ) : reportData?.rows?.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <p>No data available for this report</p>
+            </div>
+          ) : (
+            <DataTable
+              data={reportData?.rows || []}
+              columns={columns}
+              isLoading={isLoadingData}
+              totalRows={reportData?.totalRows}
+              pageSize={pageSize}
+              pageIndex={pageIndex}
+              onPaginationChange={(pagination) => {
+                setPageIndex(pagination.pageIndex);
+                setPageSize(pagination.pageSize);
+              }}
+              colorTheme={report.color_theme ? JSON.parse(report.color_theme) : null}
+            />
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

@@ -58,6 +58,8 @@ import { Route as AuthedAdminPermissionsIndexRouteImport } from './routes/_authe
 import { Route as ApiSqlSchemaDataSourceIdRouteImport } from './routes/api/sql/schema.$dataSourceId'
 import { Route as ApiReportsIdFiltersRouteImport } from './routes/api/reports/$id/filters'
 import { Route as ApiReportsIdExportRouteImport } from './routes/api/reports/$id/export'
+import { Route as ApiReportsIdDataRouteImport } from './routes/api/reports/$id/data'
+import { Route as AuthedReportsIdViewerRouteImport } from './routes/_authed/reports/$id/viewer'
 import { Route as AuthedReportsIdEditorRouteImport } from './routes/_authed/reports/$id/editor'
 import { Route as AuthedDataSourcesIdPermissionsRouteImport } from './routes/_authed/data-sources/$id/permissions'
 import { Route as AuthedChartsViewerIdRouteImport } from './routes/_authed/charts/viewer/$id'
@@ -314,6 +316,16 @@ const ApiReportsIdExportRoute = ApiReportsIdExportRouteImport.update({
   path: '/export',
   getParentRoute: () => ApiReportsIdRoute,
 } as any)
+const ApiReportsIdDataRoute = ApiReportsIdDataRouteImport.update({
+  id: '/data',
+  path: '/data',
+  getParentRoute: () => ApiReportsIdRoute,
+} as any)
+const AuthedReportsIdViewerRoute = AuthedReportsIdViewerRouteImport.update({
+  id: '/reports/$id/viewer',
+  path: '/reports/$id/viewer',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedReportsIdEditorRoute = AuthedReportsIdEditorRouteImport.update({
   id: '/reports/$id/editor',
   path: '/reports/$id/editor',
@@ -392,6 +404,8 @@ export interface FileRoutesByFullPath {
   '/charts/viewer/$id': typeof AuthedChartsViewerIdRoute
   '/data-sources/$id/permissions': typeof AuthedDataSourcesIdPermissionsRoute
   '/reports/$id/editor': typeof AuthedReportsIdEditorRoute
+  '/reports/$id/viewer': typeof AuthedReportsIdViewerRoute
+  '/api/reports/$id/data': typeof ApiReportsIdDataRoute
   '/api/reports/$id/export': typeof ApiReportsIdExportRoute
   '/api/reports/$id/filters': typeof ApiReportsIdFiltersRouteWithChildren
   '/api/sql/schema/$dataSourceId': typeof ApiSqlSchemaDataSourceIdRoute
@@ -448,6 +462,8 @@ export interface FileRoutesByTo {
   '/charts/viewer/$id': typeof AuthedChartsViewerIdRoute
   '/data-sources/$id/permissions': typeof AuthedDataSourcesIdPermissionsRoute
   '/reports/$id/editor': typeof AuthedReportsIdEditorRoute
+  '/reports/$id/viewer': typeof AuthedReportsIdViewerRoute
+  '/api/reports/$id/data': typeof ApiReportsIdDataRoute
   '/api/reports/$id/export': typeof ApiReportsIdExportRoute
   '/api/reports/$id/filters': typeof ApiReportsIdFiltersRouteWithChildren
   '/api/sql/schema/$dataSourceId': typeof ApiSqlSchemaDataSourceIdRoute
@@ -506,6 +522,8 @@ export interface FileRoutesById {
   '/_authed/charts/viewer/$id': typeof AuthedChartsViewerIdRoute
   '/_authed/data-sources/$id/permissions': typeof AuthedDataSourcesIdPermissionsRoute
   '/_authed/reports/$id/editor': typeof AuthedReportsIdEditorRoute
+  '/_authed/reports/$id/viewer': typeof AuthedReportsIdViewerRoute
+  '/api/reports/$id/data': typeof ApiReportsIdDataRoute
   '/api/reports/$id/export': typeof ApiReportsIdExportRoute
   '/api/reports/$id/filters': typeof ApiReportsIdFiltersRouteWithChildren
   '/api/sql/schema/$dataSourceId': typeof ApiSqlSchemaDataSourceIdRoute
@@ -564,6 +582,8 @@ export interface FileRouteTypes {
     | '/charts/viewer/$id'
     | '/data-sources/$id/permissions'
     | '/reports/$id/editor'
+    | '/reports/$id/viewer'
+    | '/api/reports/$id/data'
     | '/api/reports/$id/export'
     | '/api/reports/$id/filters'
     | '/api/sql/schema/$dataSourceId'
@@ -620,6 +640,8 @@ export interface FileRouteTypes {
     | '/charts/viewer/$id'
     | '/data-sources/$id/permissions'
     | '/reports/$id/editor'
+    | '/reports/$id/viewer'
+    | '/api/reports/$id/data'
     | '/api/reports/$id/export'
     | '/api/reports/$id/filters'
     | '/api/sql/schema/$dataSourceId'
@@ -677,6 +699,8 @@ export interface FileRouteTypes {
     | '/_authed/charts/viewer/$id'
     | '/_authed/data-sources/$id/permissions'
     | '/_authed/reports/$id/editor'
+    | '/_authed/reports/$id/viewer'
+    | '/api/reports/$id/data'
     | '/api/reports/$id/export'
     | '/api/reports/$id/filters'
     | '/api/sql/schema/$dataSourceId'
@@ -1063,6 +1087,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiReportsIdExportRouteImport
       parentRoute: typeof ApiReportsIdRoute
     }
+    '/api/reports/$id/data': {
+      id: '/api/reports/$id/data'
+      path: '/data'
+      fullPath: '/api/reports/$id/data'
+      preLoaderRoute: typeof ApiReportsIdDataRouteImport
+      parentRoute: typeof ApiReportsIdRoute
+    }
+    '/_authed/reports/$id/viewer': {
+      id: '/_authed/reports/$id/viewer'
+      path: '/reports/$id/viewer'
+      fullPath: '/reports/$id/viewer'
+      preLoaderRoute: typeof AuthedReportsIdViewerRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/reports/$id/editor': {
       id: '/_authed/reports/$id/editor'
       path: '/reports/$id/editor'
@@ -1144,6 +1182,7 @@ interface AuthedRouteChildren {
   AuthedChartsViewerIdRoute: typeof AuthedChartsViewerIdRoute
   AuthedDataSourcesIdPermissionsRoute: typeof AuthedDataSourcesIdPermissionsRoute
   AuthedReportsIdEditorRoute: typeof AuthedReportsIdEditorRoute
+  AuthedReportsIdViewerRoute: typeof AuthedReportsIdViewerRoute
   AuthedDashboardsIdIndexRoute: typeof AuthedDashboardsIdIndexRoute
   AuthedMetadataEntitiesIndexRoute: typeof AuthedMetadataEntitiesIndexRoute
   AuthedSettingsEmailIndexRoute: typeof AuthedSettingsEmailIndexRoute
@@ -1170,6 +1209,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedChartsViewerIdRoute: AuthedChartsViewerIdRoute,
   AuthedDataSourcesIdPermissionsRoute: AuthedDataSourcesIdPermissionsRoute,
   AuthedReportsIdEditorRoute: AuthedReportsIdEditorRoute,
+  AuthedReportsIdViewerRoute: AuthedReportsIdViewerRoute,
   AuthedDashboardsIdIndexRoute: AuthedDashboardsIdIndexRoute,
   AuthedMetadataEntitiesIndexRoute: AuthedMetadataEntitiesIndexRoute,
   AuthedSettingsEmailIndexRoute: AuthedSettingsEmailIndexRoute,
@@ -1191,11 +1231,13 @@ const ApiReportsIdFiltersRouteWithChildren =
   ApiReportsIdFiltersRoute._addFileChildren(ApiReportsIdFiltersRouteChildren)
 
 interface ApiReportsIdRouteChildren {
+  ApiReportsIdDataRoute: typeof ApiReportsIdDataRoute
   ApiReportsIdExportRoute: typeof ApiReportsIdExportRoute
   ApiReportsIdFiltersRoute: typeof ApiReportsIdFiltersRouteWithChildren
 }
 
 const ApiReportsIdRouteChildren: ApiReportsIdRouteChildren = {
+  ApiReportsIdDataRoute: ApiReportsIdDataRoute,
   ApiReportsIdExportRoute: ApiReportsIdExportRoute,
   ApiReportsIdFiltersRoute: ApiReportsIdFiltersRouteWithChildren,
 }

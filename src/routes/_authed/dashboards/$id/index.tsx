@@ -402,8 +402,6 @@ export const Route = createFileRoute("/_authed/dashboards/$id/")({
 function DashboardViewerPage() {
   const { id: dashboardId } = Route.useParams();
 
-  const crossFilterEnabled = isFeatureEnabled("crossFilterEnabled");
-
   // Build widget configurations for cross-filtering
   const widgetConfigs = useMemo(() => {
     // This would be populated from dashboard metadata
@@ -411,14 +409,10 @@ function DashboardViewerPage() {
     return [];
   }, []);
 
-  // Wrap with CrossFilterProvider if enabled
-  if (crossFilterEnabled) {
-    return (
-      <CrossFilterProvider dashboardId={dashboardId} widgets={widgetConfigs}>
-        <DashboardViewerContent dashboardId={dashboardId} />
-      </CrossFilterProvider>
-    );
-  }
-
-  return <DashboardViewerContent dashboardId={dashboardId} />;
+  // Always wrap with CrossFilterProvider to provide DashboardStateContext
+  return (
+    <CrossFilterProvider dashboardId={dashboardId} widgets={widgetConfigs}>
+      <DashboardViewerContent dashboardId={dashboardId} />
+    </CrossFilterProvider>
+  );
 }
