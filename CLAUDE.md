@@ -2,6 +2,15 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ⚠️ MANDATORY: Bun Runtime Only
+
+**This project MUST ONLY use Bun runtime. Do NOT use Node.js anywhere.** 
+- Always use `bun run <script>` for all commands
+- Never use `npm`, `node`, or `yarn` 
+- Never use Node.js-specific modules (use `bun:*` modules instead)
+- Database layer uses `bun:sqlite` (via Kysely), not Node.js native modules like better-sqlite3
+- If you encounter Node.js-specific issues, refactor to use Bun equivalents
+
 ## Project Overview - Enterprise Reporting System
 
 Enterprise Reporting and Dashboard System built with **TanStack Start** (full-stack React), **Bun runtime**, **PostgreSQL** (via Kysely) with **TanStack DB** for reactive client-side collections, and **shadcn/ui**. Provides data visualization, SQL querying, role-based access control, job scheduling, and multi-format export capabilities.

@@ -15,11 +15,18 @@ let BunDB: any;
 
 const isBun = typeof (globalThis as any).Bun !== "undefined";
 
-if (isBun) {
-  // bun:sqlite is synchronously available under Bun via require
+// Always use bun:sqlite when available, with fallback for better-sqlite3
+try {
   BunDB = _require("bun:sqlite").Database;
-} else {
-  BunDB = _require("better-sqlite3");
+} catch {
+  try {
+    BunDB = _require("better-sqlite3");
+  } catch (err) {
+    throw new Error(
+      "Failed to load SQLite bindings. This project requires Bun runtime. " +
+      "Please use 'bun run dev' instead of Node.js tools."
+    );
+  }
 }
 
 class Statement {
