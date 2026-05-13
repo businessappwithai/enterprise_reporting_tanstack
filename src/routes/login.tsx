@@ -89,7 +89,6 @@ function LoginPage() {
                 placeholder="name@example.com"
                 required
                 disabled={isSubmitting}
-                defaultValue=""
               />
             </div>
 
@@ -101,7 +100,6 @@ function LoginPage() {
                 type="password"
                 required
                 disabled={isSubmitting}
-                defaultValue=""
               />
             </div>
           </CardContent>
