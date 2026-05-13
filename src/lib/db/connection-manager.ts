@@ -1,6 +1,7 @@
 import { join } from "node:path";
-import { Kysely, MssqlDialect, MysqlDialect, PostgresDialect, SqliteDialect, sql } from "kysely";
+import { Kysely, MssqlDialect, MysqlDialect, PostgresDialect, sql } from "kysely";
 import { Pool } from "pg";
+import { PGlite } from "@electric-sql/pglite";
 import { getDb } from "@/lib/db/config";
 import { decrypt } from "@/lib/security/encryption";
 import type { DatabaseClientType, DataSource } from "@/types/database";
@@ -24,37 +25,40 @@ interface ConnectionConfig {
   ssl?: boolean | { rejectUnauthorized: boolean };
 }
 
-function buildKyselyConnection(
+async function buildKyselyConnection(
   clientType: DatabaseClientType,
   connectionConfig: ConnectionConfig
-): AnyKysely {
+): Promise<AnyKysely> {
   switch (clientType) {
     case "sqlite3": {
-      // Access bun:sqlite from Bun runtime
-      // biome-ignore lint/suspicious/noExplicitAny: bun internals
-      const BunDatabase = (globalThis as any).Bun?.sqlite?.Database;
-
-      if (!BunDatabase) {
-        throw new Error(
-          "SQLite database requires Bun runtime. Run: bun run dev"
-        );
-      }
-
+      // Use PGLite for SQLite-compatible in-process database
       const filename = connectionConfig.filename || ":memory:";
-      let fullPath: string;
+      let dataDir: string;
       if (filename === ":memory:") {
-        fullPath = filename;
+        dataDir = "./data/in-memory";
       } else if (filename.startsWith("/")) {
-        fullPath = filename;
+        dataDir = join(filename, "..");
       } else if (filename.startsWith("./data/") || filename.startsWith("data/")) {
-        fullPath = join(process.cwd(), filename.replace(/^\.\//, ""));
+        dataDir = join(process.cwd(), filename.replace(/^\.\//, ".."));
       } else {
-        fullPath = join(process.cwd(), "data", "uploads", filename);
+        dataDir = join(process.cwd(), "data", "uploads");
       }
+
+      const pglite = new PGlite(dataDir);
+      await pglite.waitReady;
+
+      class PGlitePool {
+        async connect() {
+          return {
+            query: (sql: string, values?: unknown[]) => pglite.query(sql, values),
+            release: () => Promise.resolve(),
+          };
+        }
+      }
+
       return new Kysely({
-        dialect: new SqliteDialect({
-          // biome-ignore lint/suspicious/noExplicitAny: bun:sqlite Database
-          database: new BunDatabase(fullPath) as any,
+        dialect: new PostgresDialect({
+          pool: new PGlitePool() as any,
         }),
       });
     }
@@ -166,18 +170,9 @@ export async function getConnection(dataSource: DataSource): Promise<AnyKysely> 
     }
   }
 
-  const connection = buildKyselyConnection(dataSource.client_type, connectionConfig);
+  const connection = await buildKyselyConnection(dataSource.client_type, connectionConfig);
 
   await sql`SELECT 1`.execute(connection);
-
-  if (dataSource.client_type === "sqlite3") {
-    try {
-      const dbInfo = await sql`PRAGMA database_list`.execute(connection);
-      console.log("[CONNECTION MANAGER] SQLite database list:", dbInfo.rows);
-    } catch (e) {
-      console.error("[CONNECTION MANAGER] Failed to get database list:", e);
-    }
-  }
 
   connectionPool[poolKey] = connection;
   return connection;
@@ -191,31 +186,14 @@ export async function testConnection(
   let connection: AnyKysely | null = null;
 
   try {
-    if (clientType === "sqlite3" && connectionConfig.filename) {
-      const fs = await import("node:fs");
-      const filename = connectionConfig.filename;
-      const dbPath =
-        filename.startsWith("/") || filename === ":memory:"
-          ? filename
-          : join(process.cwd(), "data", "uploads", filename);
-
-      if (!fs.existsSync(dbPath)) {
-        return { success: false, message: `Database file not found: ${dbPath}` };
-      }
-      const stats = fs.statSync(dbPath);
-      if (stats.size === 0) {
-        return { success: false, message: `Database file is empty: ${dbPath}` };
-      }
-    }
-
-    connection = buildKyselyConnection(clientType, connectionConfig);
+    connection = await buildKyselyConnection(clientType, connectionConfig);
     await sql`SELECT 1`.execute(connection);
     const latency = Date.now() - startTime;
 
     if (clientType === "sqlite3") {
       const tables = await sql`
-        SELECT name FROM sqlite_master
-        WHERE type='table' AND name NOT LIKE 'sqlite_%'
+        SELECT tablename FROM pg_tables
+        WHERE schemaname = 'public'
         LIMIT 1
       `.execute(connection);
       return {

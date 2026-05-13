@@ -1,14 +1,12 @@
 /**
- * Kysely Database Configuration
+ * Kysely Database Configuration with PGLite
  * Type-safe SQL query builder using Kysely (https://kysely.dev/)
+ * Uses PGLite for in-process PostgreSQL
  */
 
-import { existsSync, mkdirSync } from "node:fs";
-import path from "node:path";
-import { Kysely, PostgresDialect, SqliteDialect } from "kysely";
+import { Kysely, PostgresDialect } from "kysely";
 import { Pool } from "pg";
-
-// bun:sqlite will be dynamically accessed when needed
+import { PGlite } from "@electric-sql/pglite";
 
 // Database schema type definition
 // This is the most important part - defines all tables and their columns
@@ -307,9 +305,21 @@ export interface DsEntityPermissionsTable {
 export type KyselyDB = Kysely<Database>;
 
 let db: KyselyDB | null = null;
+let pglite: PGlite | null = null;
 
 const DATABASE_URL = process.env.DATABASE_URL || "";
-const DATABASE_PATH = process.env.DATABASE_PATH || "./data/config.sqlite";
+const DATA_DIR = process.env.DATA_DIR || "./data";
+
+/**
+ * Initialize PGLite database (async)
+ */
+async function initPGlite(): Promise<PGlite> {
+  if (!pglite) {
+    pglite = new PGlite(DATA_DIR);
+    await pglite.waitReady;
+  }
+  return pglite;
+}
 
 /**
  * Get or create Kysely database instance
@@ -317,31 +327,28 @@ const DATABASE_PATH = process.env.DATABASE_PATH || "./data/config.sqlite";
 export function getDb(): KyselyDB {
   if (!db) {
     if (DATABASE_URL) {
-      // PostgreSQL
+      // PostgreSQL remote
       const pool = new Pool({ connectionString: DATABASE_URL });
       db = new Kysely<Database>({
         dialect: new PostgresDialect({ pool }),
       });
     } else {
-      // SQLite via bun:sqlite
-      const dirPath = path.dirname(DATABASE_PATH);
-      if (!existsSync(dirPath)) {
-        mkdirSync(dirPath, { recursive: true });
+      // PGLite (in-process PostgreSQL)
+      // Use a pool-like interface
+      class PGlitePool {
+        async connect() {
+          const pg = await initPGlite();
+          return {
+            query: (sql: string, values?: unknown[]) => pg.query(sql, values),
+            release: () => Promise.resolve(),
+          };
+        }
       }
 
-      // biome-ignore lint/suspicious/noExplicitAny: bun internals
-      const BunDatabase = (globalThis as any).Bun?.sqlite?.Database;
-
-      if (!BunDatabase) {
-        throw new Error(
-          "SQLite database requires Bun runtime. Run: bun run dev"
-        );
-      }
-
+      // biome-ignore lint/suspicious/noExplicitAny: PGlite pool adapter
       db = new Kysely<Database>({
-        dialect: new SqliteDialect({
-          // biome-ignore lint/suspicious/noExplicitAny: bun:sqlite satisfies interface
-          database: new BunDatabase(DATABASE_PATH) as any,
+        dialect: new PostgresDialect({
+          pool: new PGlitePool() as any,
         }),
       });
     }
