@@ -36,7 +36,7 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
         <Home className="h-4 w-4" />
       </Link>
 
-      {breadcrumbItems.map((item) => (
+      {breadcrumbItems.map((item, index) => (
         <div key={item.label + (item.href ?? "")} className="flex items-center">
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
           {item.href && index < breadcrumbItems.length - 1 ? (
