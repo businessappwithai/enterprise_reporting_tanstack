@@ -1,5 +1,6 @@
 import { createCollection } from '@tanstack/db'
 import { z } from 'zod'
+import { createElectricSyncAdapter, getElectricSyncConfig } from './electric-sync'
 
 // Active Filters schema
 const activeFiltersSchema = z.object({
@@ -18,12 +19,9 @@ export const activeFiltersCollection = createCollection({
   id: 'active-filters',
   schema: activeFiltersSchema,
   getKey: (item) => item.id,
-  sync: {
-    sync: () => {
-      // Phase 2+: Sync active filters from server
-      return undefined
-    },
-  },
+  ...createElectricSyncAdapter(
+    getElectricSyncConfig('active-filters', 'active_filters')
+  ),
 })
 
 // Chart Draft schema
@@ -44,12 +42,9 @@ export const chartDraftCollection = createCollection({
   id: 'chart-drafts',
   schema: chartDraftSchema,
   getKey: (item) => item.id,
-  sync: {
-    sync: () => {
-      // Phase 3: Restore drafts from localStorage
-      return undefined
-    },
-  },
+  ...createElectricSyncAdapter(
+    getElectricSyncConfig('chart-drafts', 'chart_drafts')
+  ),
 })
 
 // Dashboard State schema
@@ -67,12 +62,9 @@ export const dashboardStateCollection = createCollection({
   id: 'dashboard-state',
   schema: dashboardStateSchema,
   getKey: (item) => item.dashboardId,
-  sync: {
-    sync: () => {
-      // Phase 2: Sync dashboard state from server
-      return undefined
-    },
-  },
+  ...createElectricSyncAdapter(
+    getElectricSyncConfig('dashboard-state', 'dashboard_state')
+  ),
 })
 
 // Query History schema
@@ -91,12 +83,9 @@ export const queryHistoryCollection = createCollection({
   id: 'query-history',
   schema: queryHistorySchema,
   getKey: (item) => item.id,
-  sync: {
-    sync: () => {
-      // Phase 5: Persist query history to localStorage
-      return undefined
-    },
-  },
+  ...createElectricSyncAdapter(
+    getElectricSyncConfig('query-history', 'query_history')
+  ),
 })
 
 // Reports List schema
@@ -115,12 +104,9 @@ export const reportsCollection = createCollection({
   id: 'reports',
   schema: reportsSchema,
   getKey: (item) => item.id,
-  sync: {
-    sync: () => {
-      // Phase 4: Sync reports from server
-      return undefined
-    },
-  },
+  ...createElectricSyncAdapter(
+    getElectricSyncConfig('reports', 'reports')
+  ),
 })
 
 // Charts List schema
@@ -139,12 +125,9 @@ export const chartsCollection = createCollection({
   id: 'charts',
   schema: chartsSchema,
   getKey: (item) => item.id,
-  sync: {
-    sync: () => {
-      // Phase 4: Sync charts from server
-      return undefined
-    },
-  },
+  ...createElectricSyncAdapter(
+    getElectricSyncConfig('charts', 'charts')
+  ),
 })
 
 // Dashboards List schema
@@ -163,10 +146,7 @@ export const dashboardsCollection = createCollection({
   id: 'dashboards',
   schema: dashboardsSchema,
   getKey: (item) => item.id,
-  sync: {
-    sync: () => {
-      // Phase 4: Sync dashboards from server
-      return undefined
-    },
-  },
+  ...createElectricSyncAdapter(
+    getElectricSyncConfig('dashboards', 'dashboards')
+  ),
 })
