@@ -325,23 +325,9 @@ export function getDb(): KyselyDB {
       });
     } else {
       // SQLite via bun:sqlite (Bun-only runtime)
-      // Lazy load BunDatabase to avoid Node.js issues during Vite SSR
-      // biome-ignore lint/suspicious/noExplicitAny: dynamic import
-      const BunDatabaseModule = require("./bun-sqlite-compat") as any;
-      const BunDatabase = BunDatabaseModule.default;
-
-      const dirPath = path.dirname(DATABASE_PATH);
-
-      if (!existsSync(dirPath)) {
-        mkdirSync(dirPath, { recursive: true });
-      }
-
-      db = new Kysely<Database>({
-        dialect: new SqliteDialect({
-          // biome-ignore lint/suspicious/noExplicitAny: compat shim satisfies SqliteDialect's interface
-          database: new BunDatabase(DATABASE_PATH) as any,
-        }),
-      });
+      throw new Error(
+        "SQLite requires Bun runtime. Use 'bun run dev' instead of Node.js."
+      );
     }
   }
   return db;

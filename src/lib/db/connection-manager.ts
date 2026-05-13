@@ -5,9 +5,6 @@ import { getDb } from "@/lib/db/config";
 import { decrypt } from "@/lib/security/encryption";
 import type { DatabaseClientType, DataSource } from "@/types/database";
 
-// Lazy load BunDatabase to avoid loading bun:sqlite during SSR
-let BunDatabase: any = null;
-
 // biome-ignore lint/suspicious/noExplicitAny: external DB schema is unknown at compile time
 type AnyKysely = Kysely<any>;
 
@@ -33,11 +30,10 @@ function buildKyselyConnection(
 ): AnyKysely {
   switch (clientType) {
     case "sqlite3": {
-      // Lazy load BunDatabase to avoid loading bun:sqlite during SSR
-      if (!BunDatabase) {
-        // biome-ignore lint/suspicious/noExplicitAny: dynamic require
-        BunDatabase = require("./bun-sqlite-compat").default;
-      }
+      // SQLite only works with Bun runtime
+      throw new Error(
+        "SQLite requires Bun runtime. Use 'bun run dev' instead of Node.js."
+      );
       const filename = connectionConfig.filename || ":memory:";
       let fullPath: string;
       if (filename === ":memory:") {
