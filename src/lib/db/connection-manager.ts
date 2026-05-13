@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import { Kysely, MssqlDialect, MysqlDialect, PostgresDialect, SqliteDialect, sql } from "kysely";
 import { Pool } from "pg";
+import Database from "bun:sqlite";
 import { getDb } from "@/lib/db/config";
 import { decrypt } from "@/lib/security/encryption";
 import type { DatabaseClientType, DataSource } from "@/types/database";
@@ -30,10 +31,6 @@ function buildKyselyConnection(
 ): AnyKysely {
   switch (clientType) {
     case "sqlite3": {
-      // SQLite only works with Bun runtime
-      throw new Error(
-        "SQLite database requires Bun runtime. Use: bun run dev"
-      );
       const filename = connectionConfig.filename || ":memory:";
       let fullPath: string;
       if (filename === ":memory:") {
@@ -47,8 +44,8 @@ function buildKyselyConnection(
       }
       return new Kysely({
         dialect: new SqliteDialect({
-          // biome-ignore lint/suspicious/noExplicitAny: compat shim
-          database: new BunDatabase(fullPath) as any,
+          // biome-ignore lint/suspicious/noExplicitAny: bun:sqlite Database
+          database: new Database(fullPath) as any,
         }),
       });
     }
