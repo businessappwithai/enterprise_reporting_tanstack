@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ErrorBoundary } from "@/components/errors/error-boundary";
 import { Toaster } from "@/components/ui/sonner";
+import { TanStackDBWrapper } from "@/lib/tanstack-db/provider";
 import "@/styles/globals.css";
 
 interface RouterContext {
@@ -37,19 +38,21 @@ function RootComponent() {
       </head>
       <body className="min-h-screen bg-background font-sans antialiased">
         <ErrorBoundary>
-          <TooltipProvider>
-            <QueryClientProvider client={queryClient}>
-              <ThemeProvider
-                attribute="class"
-                defaultTheme="system"
-                enableSystem
-                disableTransitionOnChange
-              >
-                <Outlet />
-                <Toaster />
-              </ThemeProvider>
-            </QueryClientProvider>
-          </TooltipProvider>
+          <TanStackDBWrapper>
+            <TooltipProvider>
+              <QueryClientProvider client={queryClient}>
+                <ThemeProvider
+                  attribute="class"
+                  defaultTheme="system"
+                  enableSystem
+                  disableTransitionOnChange
+                >
+                  <Outlet />
+                  <Toaster />
+                </ThemeProvider>
+              </QueryClientProvider>
+            </TooltipProvider>
+          </TanStackDBWrapper>
         </ErrorBoundary>
         <Scripts />
       </body>
