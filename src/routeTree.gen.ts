@@ -45,6 +45,7 @@ import { Route as ApiReportsIdRouteImport } from './routes/api/reports/$id'
 import { Route as ApiNlQueryExecuteRouteImport } from './routes/api/nl-query/execute'
 import { Route as ApiDataSourcesUploadRouteImport } from './routes/api/data-sources/upload'
 import { Route as ApiDataSourcesActiveRouteImport } from './routes/api/data-sources/active'
+import { Route as ApiChartsIdRouteImport } from './routes/api/charts/$id'
 import { Route as ApiAuthPermissionsRouteImport } from './routes/api/auth/permissions'
 import { Route as ApiAdminUsersRouteImport } from './routes/api/admin/users'
 import { Route as ApiAdminRolesRouteImport } from './routes/api/admin/roles'
@@ -59,6 +60,8 @@ import { Route as ApiSqlSchemaDataSourceIdRouteImport } from './routes/api/sql/s
 import { Route as ApiReportsIdFiltersRouteImport } from './routes/api/reports/$id/filters'
 import { Route as ApiReportsIdExportRouteImport } from './routes/api/reports/$id/export'
 import { Route as ApiReportsIdDataRouteImport } from './routes/api/reports/$id/data'
+import { Route as ApiChartsIdFiltersRouteImport } from './routes/api/charts/$id/filters'
+import { Route as ApiChartsIdDataRouteImport } from './routes/api/charts/$id/data'
 import { Route as AuthedReportsIdViewerRouteImport } from './routes/_authed/reports/$id/viewer'
 import { Route as AuthedReportsIdEditorRouteImport } from './routes/_authed/reports/$id/editor'
 import { Route as AuthedDataSourcesIdPermissionsRouteImport } from './routes/_authed/data-sources/$id/permissions'
@@ -247,6 +250,11 @@ const ApiDataSourcesActiveRoute = ApiDataSourcesActiveRouteImport.update({
   path: '/api/data-sources/active',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiChartsIdRoute = ApiChartsIdRouteImport.update({
+  id: '/api/charts/$id',
+  path: '/api/charts/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthPermissionsRoute = ApiAuthPermissionsRouteImport.update({
   id: '/api/auth/permissions',
   path: '/api/auth/permissions',
@@ -321,6 +329,16 @@ const ApiReportsIdDataRoute = ApiReportsIdDataRouteImport.update({
   path: '/data',
   getParentRoute: () => ApiReportsIdRoute,
 } as any)
+const ApiChartsIdFiltersRoute = ApiChartsIdFiltersRouteImport.update({
+  id: '/filters',
+  path: '/filters',
+  getParentRoute: () => ApiChartsIdRoute,
+} as any)
+const ApiChartsIdDataRoute = ApiChartsIdDataRouteImport.update({
+  id: '/data',
+  path: '/data',
+  getParentRoute: () => ApiChartsIdRoute,
+} as any)
 const AuthedReportsIdViewerRoute = AuthedReportsIdViewerRouteImport.update({
   id: '/reports/$id/viewer',
   path: '/reports/$id/viewer',
@@ -377,6 +395,7 @@ export interface FileRoutesByFullPath {
   '/api/admin/roles': typeof ApiAdminRolesRoute
   '/api/admin/users': typeof ApiAdminUsersRoute
   '/api/auth/permissions': typeof ApiAuthPermissionsRoute
+  '/api/charts/$id': typeof ApiChartsIdRouteWithChildren
   '/api/data-sources/active': typeof ApiDataSourcesActiveRoute
   '/api/data-sources/upload': typeof ApiDataSourcesUploadRoute
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
@@ -405,6 +424,8 @@ export interface FileRoutesByFullPath {
   '/data-sources/$id/permissions': typeof AuthedDataSourcesIdPermissionsRoute
   '/reports/$id/editor': typeof AuthedReportsIdEditorRoute
   '/reports/$id/viewer': typeof AuthedReportsIdViewerRoute
+  '/api/charts/$id/data': typeof ApiChartsIdDataRoute
+  '/api/charts/$id/filters': typeof ApiChartsIdFiltersRoute
   '/api/reports/$id/data': typeof ApiReportsIdDataRoute
   '/api/reports/$id/export': typeof ApiReportsIdExportRoute
   '/api/reports/$id/filters': typeof ApiReportsIdFiltersRouteWithChildren
@@ -435,6 +456,7 @@ export interface FileRoutesByTo {
   '/api/admin/roles': typeof ApiAdminRolesRoute
   '/api/admin/users': typeof ApiAdminUsersRoute
   '/api/auth/permissions': typeof ApiAuthPermissionsRoute
+  '/api/charts/$id': typeof ApiChartsIdRouteWithChildren
   '/api/data-sources/active': typeof ApiDataSourcesActiveRoute
   '/api/data-sources/upload': typeof ApiDataSourcesUploadRoute
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
@@ -463,6 +485,8 @@ export interface FileRoutesByTo {
   '/data-sources/$id/permissions': typeof AuthedDataSourcesIdPermissionsRoute
   '/reports/$id/editor': typeof AuthedReportsIdEditorRoute
   '/reports/$id/viewer': typeof AuthedReportsIdViewerRoute
+  '/api/charts/$id/data': typeof ApiChartsIdDataRoute
+  '/api/charts/$id/filters': typeof ApiChartsIdFiltersRoute
   '/api/reports/$id/data': typeof ApiReportsIdDataRoute
   '/api/reports/$id/export': typeof ApiReportsIdExportRoute
   '/api/reports/$id/filters': typeof ApiReportsIdFiltersRouteWithChildren
@@ -495,6 +519,7 @@ export interface FileRoutesById {
   '/api/admin/roles': typeof ApiAdminRolesRoute
   '/api/admin/users': typeof ApiAdminUsersRoute
   '/api/auth/permissions': typeof ApiAuthPermissionsRoute
+  '/api/charts/$id': typeof ApiChartsIdRouteWithChildren
   '/api/data-sources/active': typeof ApiDataSourcesActiveRoute
   '/api/data-sources/upload': typeof ApiDataSourcesUploadRoute
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
@@ -523,6 +548,8 @@ export interface FileRoutesById {
   '/_authed/data-sources/$id/permissions': typeof AuthedDataSourcesIdPermissionsRoute
   '/_authed/reports/$id/editor': typeof AuthedReportsIdEditorRoute
   '/_authed/reports/$id/viewer': typeof AuthedReportsIdViewerRoute
+  '/api/charts/$id/data': typeof ApiChartsIdDataRoute
+  '/api/charts/$id/filters': typeof ApiChartsIdFiltersRoute
   '/api/reports/$id/data': typeof ApiReportsIdDataRoute
   '/api/reports/$id/export': typeof ApiReportsIdExportRoute
   '/api/reports/$id/filters': typeof ApiReportsIdFiltersRouteWithChildren
@@ -555,6 +582,7 @@ export interface FileRouteTypes {
     | '/api/admin/roles'
     | '/api/admin/users'
     | '/api/auth/permissions'
+    | '/api/charts/$id'
     | '/api/data-sources/active'
     | '/api/data-sources/upload'
     | '/api/nl-query/execute'
@@ -583,6 +611,8 @@ export interface FileRouteTypes {
     | '/data-sources/$id/permissions'
     | '/reports/$id/editor'
     | '/reports/$id/viewer'
+    | '/api/charts/$id/data'
+    | '/api/charts/$id/filters'
     | '/api/reports/$id/data'
     | '/api/reports/$id/export'
     | '/api/reports/$id/filters'
@@ -613,6 +643,7 @@ export interface FileRouteTypes {
     | '/api/admin/roles'
     | '/api/admin/users'
     | '/api/auth/permissions'
+    | '/api/charts/$id'
     | '/api/data-sources/active'
     | '/api/data-sources/upload'
     | '/api/nl-query/execute'
@@ -641,6 +672,8 @@ export interface FileRouteTypes {
     | '/data-sources/$id/permissions'
     | '/reports/$id/editor'
     | '/reports/$id/viewer'
+    | '/api/charts/$id/data'
+    | '/api/charts/$id/filters'
     | '/api/reports/$id/data'
     | '/api/reports/$id/export'
     | '/api/reports/$id/filters'
@@ -672,6 +705,7 @@ export interface FileRouteTypes {
     | '/api/admin/roles'
     | '/api/admin/users'
     | '/api/auth/permissions'
+    | '/api/charts/$id'
     | '/api/data-sources/active'
     | '/api/data-sources/upload'
     | '/api/nl-query/execute'
@@ -700,6 +734,8 @@ export interface FileRouteTypes {
     | '/_authed/data-sources/$id/permissions'
     | '/_authed/reports/$id/editor'
     | '/_authed/reports/$id/viewer'
+    | '/api/charts/$id/data'
+    | '/api/charts/$id/filters'
     | '/api/reports/$id/data'
     | '/api/reports/$id/export'
     | '/api/reports/$id/filters'
@@ -728,6 +764,7 @@ export interface RootRouteChildren {
   ApiAdminRolesRoute: typeof ApiAdminRolesRoute
   ApiAdminUsersRoute: typeof ApiAdminUsersRoute
   ApiAuthPermissionsRoute: typeof ApiAuthPermissionsRoute
+  ApiChartsIdRoute: typeof ApiChartsIdRouteWithChildren
   ApiDataSourcesActiveRoute: typeof ApiDataSourcesActiveRoute
   ApiDataSourcesUploadRoute: typeof ApiDataSourcesUploadRoute
   ApiNlQueryExecuteRoute: typeof ApiNlQueryExecuteRoute
@@ -996,6 +1033,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiDataSourcesActiveRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/charts/$id': {
+      id: '/api/charts/$id'
+      path: '/api/charts/$id'
+      fullPath: '/api/charts/$id'
+      preLoaderRoute: typeof ApiChartsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/permissions': {
       id: '/api/auth/permissions'
       path: '/api/auth/permissions'
@@ -1093,6 +1137,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/reports/$id/data'
       preLoaderRoute: typeof ApiReportsIdDataRouteImport
       parentRoute: typeof ApiReportsIdRoute
+    }
+    '/api/charts/$id/filters': {
+      id: '/api/charts/$id/filters'
+      path: '/filters'
+      fullPath: '/api/charts/$id/filters'
+      preLoaderRoute: typeof ApiChartsIdFiltersRouteImport
+      parentRoute: typeof ApiChartsIdRoute
+    }
+    '/api/charts/$id/data': {
+      id: '/api/charts/$id/data'
+      path: '/data'
+      fullPath: '/api/charts/$id/data'
+      preLoaderRoute: typeof ApiChartsIdDataRouteImport
+      parentRoute: typeof ApiChartsIdRoute
     }
     '/_authed/reports/$id/viewer': {
       id: '/_authed/reports/$id/viewer'
@@ -1258,6 +1316,20 @@ const ApiReportsRouteWithChildren = ApiReportsRoute._addFileChildren(
   ApiReportsRouteChildren,
 )
 
+interface ApiChartsIdRouteChildren {
+  ApiChartsIdDataRoute: typeof ApiChartsIdDataRoute
+  ApiChartsIdFiltersRoute: typeof ApiChartsIdFiltersRoute
+}
+
+const ApiChartsIdRouteChildren: ApiChartsIdRouteChildren = {
+  ApiChartsIdDataRoute: ApiChartsIdDataRoute,
+  ApiChartsIdFiltersRoute: ApiChartsIdFiltersRoute,
+}
+
+const ApiChartsIdRouteWithChildren = ApiChartsIdRoute._addFileChildren(
+  ApiChartsIdRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthedRoute: AuthedRouteWithChildren,
@@ -1272,6 +1344,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminRolesRoute: ApiAdminRolesRoute,
   ApiAdminUsersRoute: ApiAdminUsersRoute,
   ApiAuthPermissionsRoute: ApiAuthPermissionsRoute,
+  ApiChartsIdRoute: ApiChartsIdRouteWithChildren,
   ApiDataSourcesActiveRoute: ApiDataSourcesActiveRoute,
   ApiDataSourcesUploadRoute: ApiDataSourcesUploadRoute,
   ApiNlQueryExecuteRoute: ApiNlQueryExecuteRoute,
