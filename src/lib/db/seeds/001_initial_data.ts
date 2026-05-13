@@ -212,6 +212,140 @@ export async function seed(): Promise<void> {
     ])
     .execute();
 
+  // Create sample charts
+  const chartIds: string[] = [];
+  await db
+    .insertInto("chart_definitions")
+    .values([
+      {
+        id: (chartIds[0] = randomUUID()),
+        name: "Top Products Bar Chart",
+        description: "Bar chart showing top products by sales",
+        chart_type: "bar",
+        chart_config: JSON.stringify({
+          title: { text: "Top 10 Products by Sales" },
+          legend: { show: true, position: "bottom" },
+          tooltip: { enabled: true },
+        }),
+        data_mapping: JSON.stringify({
+          xAxis: { field: "product_name", label: "Product" },
+          yAxis: [{ field: "revenue", label: "Revenue" }],
+        }),
+        refresh_interval: null,
+        is_public: false,
+        created_by: adminUserId,
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        id: (chartIds[1] = randomUUID()),
+        name: "Regional Comparison",
+        description: "Comparison of sales across regions",
+        chart_type: "bar",
+        chart_config: JSON.stringify({
+          title: { text: "Sales by Region" },
+          legend: { show: true },
+        }),
+        data_mapping: JSON.stringify({
+          xAxis: { field: "region", label: "Region" },
+          yAxis: [{ field: "sales", label: "Sales" }],
+        }),
+        refresh_interval: null,
+        is_public: false,
+        created_by: adminUserId,
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        id: (chartIds[2] = randomUUID()),
+        name: "Regional Sales Distribution",
+        description: "Distribution of sales across regions",
+        chart_type: "pie",
+        chart_config: JSON.stringify({
+          title: { text: "Sales Distribution" },
+        }),
+        data_mapping: JSON.stringify({
+          xAxis: { field: "region", label: "Region" },
+          yAxis: [{ field: "sales", label: "Sales" }],
+        }),
+        refresh_interval: null,
+        is_public: false,
+        created_by: adminUserId,
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        id: (chartIds[3] = randomUUID()),
+        name: "Sales Trend",
+        description: "Sales trend over time",
+        chart_type: "line",
+        chart_config: JSON.stringify({
+          title: { text: "Sales Trend Over Time" },
+          animation: true,
+        }),
+        data_mapping: JSON.stringify({
+          xAxis: { field: "month", label: "Month" },
+          yAxis: [{ field: "sales", label: "Sales" }],
+        }),
+        refresh_interval: null,
+        is_public: false,
+        created_by: adminUserId,
+        created_at: now,
+        updated_at: now,
+      },
+    ])
+    .execute();
+
+  // Create sample dashboards
+  const dashboardIds: string[] = [];
+  await db
+    .insertInto("dashboard_layouts")
+    .values([
+      {
+        id: (dashboardIds[0] = randomUUID()),
+        name: "Executive Dashboard",
+        description: "High-level business metrics",
+        layout_config: JSON.stringify({
+          cols: { lg: 12, md: 10, sm: 6, xs: 4 },
+          rowHeight: 100,
+          layouts: { lg: [] },
+        }),
+        is_public: false,
+        created_by: adminUserId,
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        id: (dashboardIds[1] = randomUUID()),
+        name: "Sales Dashboard",
+        description: "Sales metrics and KPIs",
+        layout_config: JSON.stringify({
+          cols: { lg: 12, md: 10, sm: 6, xs: 4 },
+          rowHeight: 100,
+          layouts: { lg: [] },
+        }),
+        is_public: false,
+        created_by: adminUserId,
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        id: (dashboardIds[2] = randomUUID()),
+        name: "Product Performance",
+        description: "Product-level analytics",
+        layout_config: JSON.stringify({
+          cols: { lg: 12, md: 10, sm: 6, xs: 4 },
+          rowHeight: 100,
+          layouts: { lg: [] },
+        }),
+        is_public: false,
+        created_by: adminUserId,
+        created_at: now,
+        updated_at: now,
+      },
+    ])
+    .execute();
+
   console.log("Seed data created successfully");
   console.log("=================================");
   console.log("DEFAULT ADMIN CREDENTIALS:");
@@ -219,6 +353,11 @@ export async function seed(): Promise<void> {
   console.log("Password: admin");
   console.log("=================================");
   console.log("Analyst user: analyst@example.com / analyst123");
+  console.log("=================================");
+  console.log("Sample Charts Created:");
+  chartIds.forEach((id, i) => console.log(`  ${i + 1}. ${id}`));
+  console.log("Sample Dashboards Created:");
+  dashboardIds.forEach((id, i) => console.log(`  ${i + 1}. ${id}`));
 }
 
 // Run if executed directly
