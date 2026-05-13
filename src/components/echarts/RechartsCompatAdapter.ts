@@ -50,7 +50,7 @@ export function convertRechartsToECharts(
     type,
     title: chartConfig?.title?.text ?? undefined,
     colors: chartConfig?.colors ?? undefined,
-    seriesColors: seriesColors.length > 0 ? seriesColors : undefined,
+    seriesColors: seriesColors && seriesColors.length > 0 ? seriesColors : undefined,
     dataMapping: echartsMapping,
     animation: chartConfig?.animation ?? true,
     stacked: chartConfig?.stacked === true,
