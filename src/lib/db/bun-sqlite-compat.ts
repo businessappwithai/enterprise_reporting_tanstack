@@ -13,20 +13,16 @@ const _require = createRequire(import.meta.url);
 // biome-ignore lint/suspicious/noExplicitAny: runtime compat
 let BunDB: any;
 
-const isBun = typeof (globalThis as any).Bun !== "undefined";
-
-// Always use bun:sqlite when available, with fallback for better-sqlite3
+// This project is Bun-only. Only use bun:sqlite, never better-sqlite3.
+// If bun:sqlite fails, the project is not running under Bun.
 try {
   BunDB = _require("bun:sqlite").Database;
-} catch {
-  try {
-    BunDB = _require("better-sqlite3");
-  } catch (err) {
-    throw new Error(
-      "Failed to load SQLite bindings. This project requires Bun runtime. " +
-      "Please use 'bun run dev' instead of Node.js tools."
-    );
-  }
+} catch (err) {
+  throw new Error(
+    "FATAL: Failed to load bun:sqlite. This project requires Bun runtime (>= 1.3.0). " +
+    "Run commands with 'bun' only: bun run dev, bun install, etc. " +
+    "Do NOT use Node.js, npm, yarn, or node commands."
+  );
 }
 
 class Statement {

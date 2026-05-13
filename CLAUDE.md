@@ -2,14 +2,21 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## ⚠️ MANDATORY: Bun Runtime Only
+## ⚠️ MANDATORY: Bun Runtime ONLY - NO Node.js
 
-**This project MUST ONLY use Bun runtime. Do NOT use Node.js anywhere.** 
-- Always use `bun run <script>` for all commands
-- Never use `npm`, `node`, or `yarn` 
-- Never use Node.js-specific modules (use `bun:*` modules instead)
-- Database layer uses `bun:sqlite` (via Kysely), not Node.js native modules like better-sqlite3
-- If you encounter Node.js-specific issues, refactor to use Bun equivalents
+**CRITICAL: This project MUST use ONLY Bun runtime across the entire application. NO Node.js allowed anywhere.**
+
+### Rules (Non-negotiable)
+- ✅ ONLY `bun run <script>`, `bun install`, `bun build`
+- ❌ NEVER `npm`, `node`, `yarn`, `npx` commands
+- ❌ NEVER import or require Node.js-specific modules
+- ✅ ALWAYS use `bun:*` modules (bun:sqlite, bun:test, etc.)
+- ❌ NEVER use better-sqlite3 or other Node.js native modules
+- Database MUST use `bun:sqlite` exclusively via Kysely
+- If Node.js errors occur (binding files, native modules), refactor to use Bun equivalents
+
+### Why
+Vite SSR in Node.js context conflicts with Bun-specific modules like `bun:sqlite`. Using only Bun eliminates this class of errors entirely.
 
 ## Project Overview - Enterprise Reporting System
 

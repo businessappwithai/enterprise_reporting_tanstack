@@ -7,7 +7,9 @@ import { existsSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import { Kysely, PostgresDialect, SqliteDialect } from "kysely";
 import { Pool } from "pg";
-import BunDatabase from "./bun-sqlite-compat";
+
+// Lazy load BunDatabase to avoid loading bun:sqlite during Vite SSR
+// bun:sqlite is only available at runtime, not during Node.js SSR
 
 // Database schema type definition
 // This is the most important part - defines all tables and their columns
@@ -322,7 +324,12 @@ export function getDb(): KyselyDB {
         dialect: new PostgresDialect({ pool }),
       });
     } else {
-      // SQLite via bun:sqlite (Bun) or better-sqlite3 (Node/Vite SSR)
+      // SQLite via bun:sqlite (Bun-only runtime)
+      // Lazy load BunDatabase to avoid Node.js issues during Vite SSR
+      // biome-ignore lint/suspicious/noExplicitAny: dynamic import
+      const BunDatabaseModule = require("./bun-sqlite-compat") as any;
+      const BunDatabase = BunDatabaseModule.default;
+
       const dirPath = path.dirname(DATABASE_PATH);
 
       if (!existsSync(dirPath)) {
