@@ -8,8 +8,8 @@ import path from "node:path";
 import { Kysely, PostgresDialect, SqliteDialect } from "kysely";
 import { Pool } from "pg";
 
-// Lazy load BunDatabase to avoid loading bun:sqlite during Vite SSR
-// bun:sqlite is only available at runtime, not during Node.js SSR
+// Lazy load BunDatabase to avoid loading bun:sqlite during initialization
+// bun:sqlite is only available at Bun runtime
 
 // Database schema type definition
 // This is the most important part - defines all tables and their columns
@@ -326,7 +326,8 @@ export function getDb(): KyselyDB {
     } else {
       // SQLite via bun:sqlite (Bun-only runtime)
       throw new Error(
-        "SQLite requires Bun runtime. Use 'bun run dev' instead of Node.js."
+        "SQLite database requires Bun runtime initialization. " +
+        "Ensure you are using: bun run dev"
       );
     }
   }

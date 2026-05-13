@@ -2,21 +2,24 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## ⚠️ MANDATORY: Bun Runtime ONLY - NO Node.js
+## ⚠️ MANDATORY: Bun Runtime ONLY
 
-**CRITICAL: This project MUST use ONLY Bun runtime across the entire application. NO Node.js allowed anywhere.**
+**CRITICAL: This project uses ONLY Bun runtime across the entire application.**
 
-### Rules (Non-negotiable)
-- ✅ ONLY `bun run <script>`, `bun install`, `bun build`
-- ❌ NEVER `npm`, `node`, `yarn`, `npx` commands
-- ❌ NEVER import or require Node.js-specific modules
+### Commands
+- ✅ `bun run dev` - Start development server
+- ✅ `bun run build` - Production build
+- ✅ `bun install` - Install dependencies
+- ✅ `bun run start` - Start production server
+- ✅ `bun <script>` - Run any package.json script
+
+### Module Usage
 - ✅ ALWAYS use `bun:*` modules (bun:sqlite, bun:test, etc.)
-- ❌ NEVER use better-sqlite3 or other Node.js native modules
-- Database MUST use `bun:sqlite` exclusively via Kysely
-- If Node.js errors occur (binding files, native modules), refactor to use Bun equivalents
+- ✅ Database MUST use `bun:sqlite` exclusively via Kysely
+- ✅ Leverage Bun's built-in APIs for maximum performance
 
-### Why
-Vite SSR in Node.js context conflicts with Bun-specific modules like `bun:sqlite`. Using only Bun eliminates this class of errors entirely.
+### Why Bun-Only
+Bun is the runtime. It provides native SQLite support (`bun:sqlite`), fast dependency resolution, and TypeScript support out of the box. Using Bun across all layers eliminates compatibility issues and maximizes performance.
 
 ## Project Overview - Enterprise Reporting System
 
@@ -48,7 +51,7 @@ Enterprise Reporting and Dashboard System built with **TanStack Start** (full-st
 # Development
 bun run dev              # Start Vite dev server on port 4050
 bun run build            # Production build (.output/)
-bun run start            # Start production server (node .output/server/index.mjs)
+bun run start            # Start production server
 
 # Quality checks
 bun run lint             # ESLint
@@ -458,7 +461,7 @@ Migrations live in `src/lib/db/migrations/` and follow the pattern:
 
 Multi-stage build using `oven/bun:1.3-alpine`:
 1. **Builder stage**: Install deps, compile migrations/seeds, init DB, build with Vite
-2. **Runner stage**: Copy `.output/` + node_modules + migrations + DB
+2. **Runner stage**: Copy `.output/` + dependencies + migrations + DB
 
 ### Services (docker-compose.yml)
 

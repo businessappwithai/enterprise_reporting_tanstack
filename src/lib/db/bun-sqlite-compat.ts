@@ -13,15 +13,13 @@ const _require = createRequire(import.meta.url);
 // biome-ignore lint/suspicious/noExplicitAny: runtime compat
 let BunDB: any;
 
-// This project is Bun-only. Only use bun:sqlite, never better-sqlite3.
-// If bun:sqlite fails, the project is not running under Bun.
+// This project is Bun-only. Only use bun:sqlite.
 try {
   BunDB = _require("bun:sqlite").Database;
 } catch (err) {
   throw new Error(
     "FATAL: Failed to load bun:sqlite. This project requires Bun runtime (>= 1.3.0). " +
-    "Run commands with 'bun' only: bun run dev, bun install, etc. " +
-    "Do NOT use Node.js, npm, yarn, or node commands."
+    "Run: bun run dev"
   );
 }
 

@@ -32,7 +32,7 @@ function buildKyselyConnection(
     case "sqlite3": {
       // SQLite only works with Bun runtime
       throw new Error(
-        "SQLite requires Bun runtime. Use 'bun run dev' instead of Node.js."
+        "SQLite database requires Bun runtime. Use: bun run dev"
       );
       const filename = connectionConfig.filename || ":memory:";
       let fullPath: string;
