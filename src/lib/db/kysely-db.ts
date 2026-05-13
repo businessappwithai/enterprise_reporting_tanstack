@@ -8,7 +8,7 @@ import path from "node:path";
 import { Kysely, PostgresDialect, SqliteDialect } from "kysely";
 import { Pool } from "pg";
 
-// bun:sqlite will be dynamically imported when needed
+// bun:sqlite will be dynamically accessed when needed
 
 // Database schema type definition
 // This is the most important part - defines all tables and their columns
@@ -324,7 +324,11 @@ export function getDb(): KyselyDB {
       });
     } else {
       // SQLite via bun:sqlite
-      // Access bun:sqlite from Bun runtime
+      const dirPath = path.dirname(DATABASE_PATH);
+      if (!existsSync(dirPath)) {
+        mkdirSync(dirPath, { recursive: true });
+      }
+
       // biome-ignore lint/suspicious/noExplicitAny: bun internals
       const BunDatabase = (globalThis as any).Bun?.sqlite?.Database;
 
@@ -332,11 +336,6 @@ export function getDb(): KyselyDB {
         throw new Error(
           "SQLite database requires Bun runtime. Run: bun run dev"
         );
-      }
-
-      const dirPath = path.dirname(DATABASE_PATH);
-      if (!existsSync(dirPath)) {
-        mkdirSync(dirPath, { recursive: true });
       }
 
       db = new Kysely<Database>({
