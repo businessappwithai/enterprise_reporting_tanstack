@@ -73,15 +73,8 @@ export interface Notification {
 function createSyncOptions(endpoint: string) {
   return {
     sync: {
-      sync({
-        begin,
-        write,
-        commit,
-      }: {
-        begin: () => void;
-        write: (op: { type: string; id: string; value?: unknown }) => void;
-        commit: () => void;
-      }) {
+      sync(params: any) {
+        const { begin, write, commit, markReady } = params;
         let cursor: string | undefined;
 
         const poll = async () => {
@@ -101,6 +94,7 @@ function createSyncOptions(endpoint: string) {
             commit();
 
             if (nextCursor) cursor = nextCursor as string;
+            else markReady?.();
           } catch {}
         };
 
@@ -115,46 +109,46 @@ function createSyncOptions(endpoint: string) {
 
 export const reportsCollection =
   typeof window !== "undefined"
-    ? createCollection<Report, "id">({
+    ? createCollection({
         id: "reports",
-        getKey: (r) => r.id,
+        getKey: (r: any) => r.id,
         ...createSyncOptions("/api/sync/reports"),
       })
     : null;
 
 export const chartsCollection =
   typeof window !== "undefined"
-    ? createCollection<Chart, "id">({
+    ? createCollection({
         id: "charts",
-        getKey: (c) => c.id,
+        getKey: (c: any) => c.id,
         ...createSyncOptions("/api/sync/charts"),
       })
     : null;
 
 export const dashboardsCollection =
   typeof window !== "undefined"
-    ? createCollection<Dashboard, "id">({
+    ? createCollection({
         id: "dashboards",
-        getKey: (d) => d.id,
+        getKey: (d: any) => d.id,
         ...createSyncOptions("/api/sync/dashboards"),
       })
     : null;
 
 export const queriesCollection =
   typeof window !== "undefined"
-    ? createCollection<SavedQuery, "id">({
+    ? createCollection({
         id: "saved_queries",
-        getKey: (q) => q.id,
+        getKey: (q: any) => q.id,
         ...createSyncOptions("/api/sync/queries"),
       })
     : null;
 
 export const notificationsCollection =
   typeof window !== "undefined"
-    ? createCollection<Notification, "id">({
-        ...localOnlyCollectionOptions<Notification, "id">({
+    ? createCollection({
+        ...localOnlyCollectionOptions({
           id: "notifications",
-          getKey: (n) => n.id,
+          getKey: (n: any) => n.id,
         }),
       })
     : null;

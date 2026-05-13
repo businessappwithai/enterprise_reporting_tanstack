@@ -4,7 +4,17 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireAuth } from "@/lib/auth/middleware";
 import { getDb } from "@/lib/db/config";
 import { withErrorHandler, NotFoundError } from "@/lib/server-fns/with-error-handler";
-import type { FilterLink } from "@/lib/tanstack-db/collections";
+
+// Filter link type
+interface FilterLink {
+  id: string;
+  dashboardId: string;
+  widgetId: string;
+  field: string;
+  operator: string;
+  value: unknown;
+  createdAt: string;
+}
 
 interface GetDashboardFilterLinksInput {
   dashboardId: string;
