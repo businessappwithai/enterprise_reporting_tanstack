@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth/config'
 import { getDb } from '@/lib/db/config'
 import { createLogger } from '@/lib/logging/logger'
 import { AUDIT_ACTIONS } from '@/types/actions'
+import { LOG_COMPONENTS } from '@/types/components'
 import { v4 as uuidv4 } from 'uuid'
 
 async function getSession(request: Request) {
@@ -14,7 +15,7 @@ export const Route = createFileRoute('/api/queries')({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        const logger = createLogger({ component: 'Saved Queries API' })
+        const logger = createLogger({ component: LOG_COMPONENTS.SAVED_QUERIES_API })
         try {
           const session = await getSession(request)
           if (!session?.user) {
@@ -48,7 +49,7 @@ export const Route = createFileRoute('/api/queries')({
         }
       },
       POST: async ({ request }) => {
-        const logger = createLogger({ component: 'Saved Queries API' })
+        const logger = createLogger({ component: LOG_COMPONENTS.SAVED_QUERIES_API })
         const startTime = Date.now()
         try {
           const session = await getSession(request)

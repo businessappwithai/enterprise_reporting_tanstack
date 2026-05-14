@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { authenticateUser, createSession } from "@/lib/auth/session";
 import { createLogger } from "@/lib/logging/logger";
 import { AUDIT_ACTIONS } from "@/types/actions";
+import { LOG_COMPONENTS } from "@/types/components";
 
 if (import.meta.hot) {
   import.meta.hot.decline();
@@ -26,7 +27,7 @@ if (import.meta.hot) {
 export const loginFn = createServerFn({ method: "POST" })
   .inputValidator((data: { email: string; password: string }) => data)
   .handler(async ({ data, request }) => {
-    const logger = createLogger({ component: "Authentication" });
+    const logger = createLogger({ component: LOG_COMPONENTS.Authentication });
     const timestamp = new Date().toISOString();
     const userAgent = getRequestHeader("user-agent") || "unknown";
 

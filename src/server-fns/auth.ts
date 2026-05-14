@@ -4,9 +4,10 @@ import { getRequestHeader, setResponseHeader } from "@tanstack/react-start/serve
 import { verifySession } from "@/lib/auth/session";
 import { createLogger } from "@/lib/logging/logger";
 import { AUDIT_ACTIONS } from "@/types/actions";
+import { LOG_COMPONENTS } from "@/types/components";
 
 export const logoutFn = createServerFn({ method: "POST" }).handler(async () => {
-  const logger = createLogger({ component: "Authentication" });
+  const logger = createLogger({ component: LOG_COMPONENTS.Authentication });
 
   try {
     const cookie = getRequestHeader("cookie") || "";

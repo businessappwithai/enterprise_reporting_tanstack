@@ -9,6 +9,7 @@ import { json } from "@/lib/server/response";
 import { isReadOnlyQuery } from "@/lib/sql/validator";
 import { createLogger } from "@/lib/logging/logger";
 import { AUDIT_ACTIONS } from "@/types/actions";
+import { LOG_COMPONENTS } from "@/types/components";
 import type { DataSource } from "@/types/database";
 
 async function getSession(request: Request) {
@@ -23,7 +24,7 @@ export const Route = createFileRoute("/api/sql/execute")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const logger = createLogger({ component: "SQL Executor" });
+        const logger = createLogger({ component: LOG_COMPONENTS.SQL_EXECUTOR });
         const startTime = Date.now();
 
         try {
@@ -208,6 +209,7 @@ export const Route = createFileRoute("/api/sql/execute")({
             columnNames: columns.map((c) => c.name),
             limit: effectiveLimit,
             offset: effectiveOffset,
+            sql: sql,
             action: AUDIT_ACTIONS.SQL.QUERY_EXECUTION_SUCCESS,
             timestamp: new Date().toISOString(),
           });
@@ -244,11 +246,13 @@ export const Route = createFileRoute("/api/sql/execute")({
           const errorMessage = error instanceof Error ? error.message : "Unknown error";
           const totalTime = Date.now() - startTime;
 
+          const body = await request.json() as { sql: string };
           logger.error("SQL execution failed", error instanceof Error ? error : new Error(errorMessage), {
             userId: session?.user?.id || "unknown",
             email: session?.user?.email || "unknown",
             errorMessage,
             errorType: error?.constructor?.name || "Unknown",
+            sql: body?.sql,
             action: AUDIT_ACTIONS.SQL.QUERY_EXECUTION_FAILED,
             executionTime: totalTime,
             timestamp: new Date().toISOString(),
