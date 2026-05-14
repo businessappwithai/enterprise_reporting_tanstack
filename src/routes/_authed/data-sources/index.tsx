@@ -101,6 +101,7 @@ function DataSourcesPage() {
       const data = await res.json();
       return data.items || data.data?.items || [];
     },
+    staleTime: 0,
   });
 
   const resetForm = () => {
