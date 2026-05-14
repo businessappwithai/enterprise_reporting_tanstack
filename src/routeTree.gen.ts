@@ -44,6 +44,7 @@ import { Route as ApiSqlExecuteRouteImport } from './routes/api/sql/execute'
 import { Route as ApiReportsIdRouteImport } from './routes/api/reports/$id'
 import { Route as ApiNlQueryExecuteRouteImport } from './routes/api/nl-query/execute'
 import { Route as ApiDataSourcesUploadRouteImport } from './routes/api/data-sources/upload'
+import { Route as ApiDataSourcesTestRouteImport } from './routes/api/data-sources/test'
 import { Route as ApiDataSourcesActiveRouteImport } from './routes/api/data-sources/active'
 import { Route as ApiDashboardsIdRouteImport } from './routes/api/dashboards/$id'
 import { Route as ApiChartsIdRouteImport } from './routes/api/charts/$id'
@@ -247,6 +248,11 @@ const ApiDataSourcesUploadRoute = ApiDataSourcesUploadRouteImport.update({
   path: '/api/data-sources/upload',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiDataSourcesTestRoute = ApiDataSourcesTestRouteImport.update({
+  id: '/api/data-sources/test',
+  path: '/api/data-sources/test',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiDataSourcesActiveRoute = ApiDataSourcesActiveRouteImport.update({
   id: '/api/data-sources/active',
   path: '/api/data-sources/active',
@@ -410,6 +416,7 @@ export interface FileRoutesByFullPath {
   '/api/charts/$id': typeof ApiChartsIdRouteWithChildren
   '/api/dashboards/$id': typeof ApiDashboardsIdRouteWithChildren
   '/api/data-sources/active': typeof ApiDataSourcesActiveRoute
+  '/api/data-sources/test': typeof ApiDataSourcesTestRoute
   '/api/data-sources/upload': typeof ApiDataSourcesUploadRoute
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
   '/api/reports/$id': typeof ApiReportsIdRouteWithChildren
@@ -473,6 +480,7 @@ export interface FileRoutesByTo {
   '/api/charts/$id': typeof ApiChartsIdRouteWithChildren
   '/api/dashboards/$id': typeof ApiDashboardsIdRouteWithChildren
   '/api/data-sources/active': typeof ApiDataSourcesActiveRoute
+  '/api/data-sources/test': typeof ApiDataSourcesTestRoute
   '/api/data-sources/upload': typeof ApiDataSourcesUploadRoute
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
   '/api/reports/$id': typeof ApiReportsIdRouteWithChildren
@@ -538,6 +546,7 @@ export interface FileRoutesById {
   '/api/charts/$id': typeof ApiChartsIdRouteWithChildren
   '/api/dashboards/$id': typeof ApiDashboardsIdRouteWithChildren
   '/api/data-sources/active': typeof ApiDataSourcesActiveRoute
+  '/api/data-sources/test': typeof ApiDataSourcesTestRoute
   '/api/data-sources/upload': typeof ApiDataSourcesUploadRoute
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
   '/api/reports/$id': typeof ApiReportsIdRouteWithChildren
@@ -603,6 +612,7 @@ export interface FileRouteTypes {
     | '/api/charts/$id'
     | '/api/dashboards/$id'
     | '/api/data-sources/active'
+    | '/api/data-sources/test'
     | '/api/data-sources/upload'
     | '/api/nl-query/execute'
     | '/api/reports/$id'
@@ -666,6 +676,7 @@ export interface FileRouteTypes {
     | '/api/charts/$id'
     | '/api/dashboards/$id'
     | '/api/data-sources/active'
+    | '/api/data-sources/test'
     | '/api/data-sources/upload'
     | '/api/nl-query/execute'
     | '/api/reports/$id'
@@ -730,6 +741,7 @@ export interface FileRouteTypes {
     | '/api/charts/$id'
     | '/api/dashboards/$id'
     | '/api/data-sources/active'
+    | '/api/data-sources/test'
     | '/api/data-sources/upload'
     | '/api/nl-query/execute'
     | '/api/reports/$id'
@@ -791,6 +803,7 @@ export interface RootRouteChildren {
   ApiChartsIdRoute: typeof ApiChartsIdRouteWithChildren
   ApiDashboardsIdRoute: typeof ApiDashboardsIdRouteWithChildren
   ApiDataSourcesActiveRoute: typeof ApiDataSourcesActiveRoute
+  ApiDataSourcesTestRoute: typeof ApiDataSourcesTestRoute
   ApiDataSourcesUploadRoute: typeof ApiDataSourcesUploadRoute
   ApiNlQueryExecuteRoute: typeof ApiNlQueryExecuteRoute
   ApiSqlExecuteRoute: typeof ApiSqlExecuteRoute
@@ -1049,6 +1062,13 @@ declare module '@tanstack/react-router' {
       path: '/api/data-sources/upload'
       fullPath: '/api/data-sources/upload'
       preLoaderRoute: typeof ApiDataSourcesUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/data-sources/test': {
+      id: '/api/data-sources/test'
+      path: '/api/data-sources/test'
+      fullPath: '/api/data-sources/test'
+      preLoaderRoute: typeof ApiDataSourcesTestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/data-sources/active': {
@@ -1398,6 +1418,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiChartsIdRoute: ApiChartsIdRouteWithChildren,
   ApiDashboardsIdRoute: ApiDashboardsIdRouteWithChildren,
   ApiDataSourcesActiveRoute: ApiDataSourcesActiveRoute,
+  ApiDataSourcesTestRoute: ApiDataSourcesTestRoute,
   ApiDataSourcesUploadRoute: ApiDataSourcesUploadRoute,
   ApiNlQueryExecuteRoute: ApiNlQueryExecuteRoute,
   ApiSqlExecuteRoute: ApiSqlExecuteRoute,
