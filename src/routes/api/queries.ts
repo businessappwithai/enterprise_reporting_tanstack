@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { json } from '@/lib/server/response'
 import { auth } from '@/lib/auth/config'
 import { getDb } from '@/lib/db/config'
+import { createLogger } from '@/lib/logging/logger'
 import { v4 as uuidv4 } from 'uuid'
 
 async function getSession(request: Request) {
@@ -12,25 +13,48 @@ export const Route = createFileRoute('/api/queries')({
   server: {
     handlers: {
       GET: async ({ request }) => {
+        const logger = createLogger({ component: 'Saved Queries API' })
         try {
           const session = await getSession(request)
           if (!session?.user) {
+            logger.warn('Unauthorized access attempt to queries list', {
+              timestamp: new Date().toISOString(),
+              remoteIp: request.headers.get('x-forwarded-for') || 'unknown',
+            })
             return json({ success: false, error: { message: 'Not authenticated' } }, { status: 401 })
           }
 
           const db = getDb()
           const queries = await db.selectFrom('saved_queries').selectAll().execute()
 
+          logger.info('Queries list retrieved', {
+            userId: session.user.id,
+            email: session.user.email,
+            userName: session.user.name,
+            queriesCount: queries.length,
+            timestamp: new Date().toISOString(),
+          })
+
           return json({ success: true, data: { items: queries, meta: { total: queries.length } } })
         } catch (error) {
-          console.error('Error fetching queries:', error)
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+          logger.error('Failed to fetch queries', error instanceof Error ? error : new Error(errorMessage), {
+            errorMessage,
+            timestamp: new Date().toISOString(),
+          })
           return json({ success: false, error: { message: 'Failed to fetch queries' } }, { status: 500 })
         }
       },
       POST: async ({ request }) => {
+        const logger = createLogger({ component: 'Saved Queries API' })
+        const startTime = Date.now()
         try {
           const session = await getSession(request)
           if (!session?.user) {
+            logger.warn('Unauthorized access attempt to create query', {
+              timestamp: new Date().toISOString(),
+              remoteIp: request.headers.get('x-forwarded-for') || 'unknown',
+            })
             return json({ success: false, error: { message: 'Not authenticated' } }, { status: 401 })
           }
 
@@ -42,6 +66,16 @@ export const Route = createFileRoute('/api/queries')({
           }
 
           if (!body.name || !body.dataSourceId || !body.sqlContent) {
+            logger.warn('Query creation attempted with missing required fields', {
+              userId: session.user.id,
+              email: session.user.email,
+              missingFields: {
+                name: !body.name,
+                dataSourceId: !body.dataSourceId,
+                sqlContent: !body.sqlContent,
+              },
+              timestamp: new Date().toISOString(),
+            })
             return json({ success: false, error: { message: 'Missing required fields' } }, { status: 400 })
           }
 
@@ -60,9 +94,30 @@ export const Route = createFileRoute('/api/queries')({
             updated_at: now,
           }).execute()
 
+          const executionTime = Date.now() - startTime
+          logger.info('Query created successfully', {
+            userId: session.user.id,
+            email: session.user.email,
+            userName: session.user.name,
+            queryId: id,
+            queryName: body.name,
+            dataSourceId: body.dataSourceId,
+            sqlLength: body.sqlContent.length,
+            description: body.description,
+            executionTime,
+            timestamp: new Date().toISOString(),
+          })
+
           return json({ success: true, data: { id } }, { status: 201 })
         } catch (error) {
-          console.error('Error creating query:', error)
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+          const executionTime = Date.now() - startTime
+          logger.error('Failed to create query', error instanceof Error ? error : new Error(errorMessage), {
+            errorMessage,
+            errorType: error?.constructor?.name,
+            executionTime,
+            timestamp: new Date().toISOString(),
+          })
           return json({ success: false, error: { message: 'Failed to create query' } }, { status: 500 })
         }
       },
