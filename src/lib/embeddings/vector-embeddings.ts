@@ -6,20 +6,48 @@
 /**
  * Generate a simple vector embedding from text
  * For production, this would use OpenAI or similar API
- * This version uses a deterministic hash-based approach for testing
+ * This version uses word-based approach for better semantic similarity
  */
 export function generateTextEmbedding(text: string): number[] {
   // Create a 1536-dimensional vector (OpenAI embedding size)
   const vector = new Array(1536).fill(0);
 
-  // Simple hash-based approach: use character codes to distribute values
   const normalized = text.toLowerCase().trim();
 
-  for (let i = 0; i < normalized.length; i++) {
-    const charCode = normalized.charCodeAt(i);
-    const index = (charCode * 997 + i * 13) % 1536; // Distribute across dimensions
-    vector[index] += (charCode / 256) * 0.1; // Small weight per character
-  }
+  // Extract words and split into tokens
+  const words = normalized.split(/\s+/);
+  const tokens = new Set<string>();
+
+  // Add individual words
+  words.forEach((word) => {
+    tokens.add(word);
+    // Add character 2-grams for better matching
+    for (let i = 0; i < word.length - 1; i++) {
+      tokens.add(word.substring(i, i + 2));
+    }
+  });
+
+  // Convert tokens to vector dimensions
+  tokens.forEach((token) => {
+    let hash = 0;
+    for (let i = 0; i < token.length; i++) {
+      const char = token.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+
+    // Use hash to distribute token across dimensions
+    const absHash = Math.abs(hash);
+    const primaryIndex = absHash % 1536;
+    const weight = 0.2;
+
+    // Add the token weight to primary index
+    vector[primaryIndex] += weight;
+
+    // Add to nearby indices for smoother distribution
+    vector[(primaryIndex + 1) % 1536] += weight * 0.5;
+    vector[(primaryIndex - 1 + 1536) % 1536] += weight * 0.5;
+  });
 
   // Normalize the vector to unit length
   let magnitude = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
