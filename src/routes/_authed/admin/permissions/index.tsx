@@ -266,7 +266,7 @@ function PermissionsManagementPage() {
                       <Badge variant="outline">{permission.role_name}</Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {permission.resource_type.replace(/_/g, " ")}
+                      {permission.resource_type ? permission.resource_type.replace(/_/g, " ") : "—"}
                     </TableCell>
                     <TableCell>
                       {(() => {
