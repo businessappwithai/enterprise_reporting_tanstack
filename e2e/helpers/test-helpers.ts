@@ -4,48 +4,46 @@ export class TestHelpers {
   constructor(private page: Page) {}
 
   /**
-   * Login to the application with default credentials
-   * Goes to home page first, then logs in if needed
+   * Verify authentication - called by tests to ensure logged in
+   * In most cases, global setup handles auth, this is just for verification
    */
   async login(email = 'admin@admin.com', password = 'admin') {
     const BASE_URL = process.env.BASE_URL || 'http://localhost:4050';
 
-    // Start at home page - this will redirect to login if not authenticated
+    // Navigate to home
     await this.page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' }).catch(() => {});
 
-    // Wait for page load
-    await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
-
-    // Check if we're on login page
+    // Check current state
     const currentUrl = this.page.url();
-    if (currentUrl.includes('/login')) {
-      // Need to log in
+
+    // If not on login page, already authenticated
+    if (!currentUrl.includes('/login')) {
+      console.log('✓ Already authenticated via global setup');
+      return;
+    }
+
+    // If here, emergency re-auth is needed
+    console.log('⏳ Performing emergency re-authentication...');
+
+    try {
       await this.page.getByPlaceholder('name@example.com').fill(email);
       await this.page.getByLabel('Password').fill(password);
       await this.page.getByRole('button', { name: 'Sign In' }).click();
 
-      // Wait for ONE of multiple indicators of successful login (more robust)
+      // Wait for successful login (multiple indicators for reliability)
       await Promise.race([
-        // Option 1: Dashboard heading (case-insensitive)
-        this.page.getByRole('heading', { name: /dashboard/i }).waitFor({ state: 'visible', timeout: 15000 }),
-        // Option 2: Navigation menu
-        this.page.getByRole('navigation').waitFor({ state: 'visible', timeout: 15000 }),
-        // Option 3: URL change to dashboard
         this.page.waitForURL(/\/(dashboard|)/, { timeout: 15000 }),
-      ]).catch(() => {
-        // If none of the above work, just wait for the hard redirect timeout
-        return this.page.waitForTimeout(5000);
-      });
-    } else {
-      // Already logged in, wait for page to be fully loaded
-      await this.page.waitForTimeout(2000);
+        this.page.getByRole('heading', { name: /dashboard/i }).waitFor({ state: 'visible', timeout: 15000 }),
+        this.page.getByRole('navigation').waitFor({ state: 'visible', timeout: 15000 }),
+      ]).catch(() => this.page.waitForTimeout(3000));
+
+      console.log('✓ Emergency re-authentication successful');
+    } catch (error) {
+      console.error('⚠️  Emergency re-auth failed:', error);
+      throw error;
     }
 
-    // Wait for page to be fully loaded
     await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
-
-    // Additional wait for session to be established
-    await this.page.waitForTimeout(1500);
   }
 
   /**
