@@ -11,6 +11,7 @@ import { requireAuth } from "@/lib/auth/middleware";
 import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
 import { isSafeSelectQuery, translateNLToSQL } from "@/lib/nlquery/openai-translator";
+import { translateNLToSQLViaOllama, isOllamaAvailable } from "@/lib/nlquery/ollama-translator";
 import { getSchemaMetadata } from "@/lib/nlquery/schema-metadata";
 import { validateQueryAccess } from "@/lib/permissions/query-access-validator";
 import { logAudit } from "@/lib/security/audit";
@@ -94,20 +95,36 @@ export const executeNLQuery = createServerFn({
     // [Step 1] Get schema metadata
     const schema = await getSchemaMetadata(dataSource);
 
-    // [Step 1.5] Translate NL to SQL using OpenAI
-    const translation = await translateNLToSQL(nlQuestion, schema);
+    // [Step 1.5] Translate NL to SQL using Ollama (preferred) or OpenAI (fallback)
+    let translation = null;
+    let translationSource = "unknown";
+
+    // Try Ollama first if available
+    if (await isOllamaAvailable()) {
+      console.log("[NLQuery] Using Ollama for translation");
+      translationSource = "ollama";
+      translation = await translateNLToSQLViaOllama(nlQuestion, schema);
+    }
+
+    // Fall back to OpenAI if Ollama is not available or failed
     if (!translation) {
+      console.log("[NLQuery] Using OpenAI for translation");
+      translationSource = "openai";
+      translation = await translateNLToSQL(nlQuestion, schema);
+    }
+
+    if (!translation) {
+      const errorMsg = `Failed to generate SQL - ${translationSource} unavailable`;
       await logAudit({
         userId: session.user.id,
         action: "nl_query_error",
         resourceType: "query",
         resourceId: dataSourceId,
-        details: { nlQuestion, error: "Failed to generate SQL - OpenAI unavailable" },
+        details: { nlQuestion, error: errorMsg, translationSource },
       });
       return {
         success: false,
-        error:
-          "Could not translate your question to SQL. OpenAI integration may not be configured.",
+        error: `Could not translate your question to SQL. Please ensure ${translationSource === 'ollama' ? 'Ollama is running locally' : 'OpenAI API is configured'}.`,
       };
     }
 
@@ -159,6 +176,8 @@ export const executeNLQuery = createServerFn({
         generatedSQL: generatedSQL.substring(0, 500),
         confidence: reverseTranslation.confidence,
         englishMeaning: reverseTranslation.englishMeaning,
+        translationSource,
+        explanation: translation.explanation,
       },
     });
 
