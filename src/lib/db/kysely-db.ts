@@ -228,7 +228,7 @@ export interface LogsTable {
   metadata: string | null; // JSON
   error_stack: string | null;
   request_id: string | null;
-  message_vector: string | null; // JSON array of numbers
+  message_vector: string | null; // pgvector type or JSON array of numbers for PGLite
 }
 
 export interface EmailTemplatesTable {
