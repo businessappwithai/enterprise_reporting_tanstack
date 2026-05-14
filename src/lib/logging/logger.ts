@@ -1,5 +1,6 @@
 import pino from "pino";
 import { getDb } from "@/lib/db/config";
+import { generateLogEmbedding } from "@/lib/embeddings/vector-embeddings";
 
 export interface LogContext {
   userId?: string;
@@ -19,6 +20,7 @@ let dbWriteQueue: Array<{
   metadata?: Record<string, unknown>;
   errorStack?: string;
   requestId?: string;
+  messageVector?: number[];
 }> = [];
 
 const pinoLogger = pino({
@@ -78,6 +80,7 @@ async function flushLogsToDatabase() {
           metadata: metadataStr,
           error_stack: log.errorStack || null,
           request_id: log.requestId || null,
+          message_vector: log.messageVector ? JSON.stringify(log.messageVector) : null,
         })
         .execute();
     }
@@ -140,6 +143,7 @@ export function createLogger(context: LogContext) {
         sessionId: context.sessionId,
         metadata,
         requestId: context.requestId,
+        messageVector: generateLogEmbedding(message, context.component, "info", metadata),
       });
     },
 
@@ -164,6 +168,7 @@ export function createLogger(context: LogContext) {
         sessionId: context.sessionId,
         metadata,
         requestId: context.requestId,
+        messageVector: generateLogEmbedding(message, context.component, "warn", metadata),
       });
     },
 
@@ -190,6 +195,7 @@ export function createLogger(context: LogContext) {
         metadata,
         errorStack: error?.stack,
         requestId: context.requestId,
+        messageVector: generateLogEmbedding(message, context.component, "error", metadata),
       });
     },
 

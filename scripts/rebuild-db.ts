@@ -258,7 +258,8 @@ const tables = [
     session_id TEXT,
     metadata TEXT,
     error_stack TEXT,
-    request_id TEXT
+    request_id TEXT,
+    message_vector TEXT
   )`,
   `CREATE TABLE app_settings (
     key TEXT PRIMARY KEY,

@@ -228,6 +228,7 @@ export interface LogsTable {
   metadata: string | null; // JSON
   error_stack: string | null;
   request_id: string | null;
+  message_vector: string | null; // JSON array of numbers
 }
 
 export interface EmailTemplatesTable {
