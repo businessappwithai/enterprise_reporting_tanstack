@@ -12,6 +12,7 @@ import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
 import { isSafeSelectQuery, translateNLToSQL } from "@/lib/nlquery/openai-translator";
 import { translateNLToSQLViaOllama, isOllamaAvailable } from "@/lib/nlquery/ollama-translator";
+import { translateNLToSQLViaMastra } from "@/lib/nlquery/mastra-ollama-translator";
 import { getSchemaMetadata } from "@/lib/nlquery/schema-metadata";
 import { validateQueryAccess } from "@/lib/permissions/query-access-validator";
 import { logAudit } from "@/lib/security/audit";
@@ -95,20 +96,27 @@ export const executeNLQuery = createServerFn({
     // [Step 1] Get schema metadata
     const schema = await getSchemaMetadata(dataSource);
 
-    // [Step 1.5] Translate NL to SQL using Ollama (preferred) or OpenAI (fallback)
+    // [Step 1.5] Translate NL to SQL using Mastra.ai + Ollama (preferred) or OpenAI (fallback)
     let translation = null;
     let translationSource = "unknown";
 
-    // Try Ollama first if available
+    // Try Mastra.ai + Ollama first (Mastra-style workflow with validation & refinement)
     if (await isOllamaAvailable()) {
-      console.log("[NLQuery] Using Ollama for translation");
+      console.log("[NLQuery] Using Mastra.ai + Ollama for translation");
+      translationSource = "mastra-ollama";
+      translation = await translateNLToSQLViaMastra(nlQuestion, schema);
+    }
+
+    // Fall back to direct Ollama if Mastra translation fails
+    if (!translation && (await isOllamaAvailable())) {
+      console.log("[NLQuery] Falling back to direct Ollama translation");
       translationSource = "ollama";
       translation = await translateNLToSQLViaOllama(nlQuestion, schema);
     }
 
-    // Fall back to OpenAI if Ollama is not available or failed
+    // Fall back to OpenAI if Ollama is not available
     if (!translation) {
-      console.log("[NLQuery] Using OpenAI for translation");
+      console.log("[NLQuery] Falling back to OpenAI translation");
       translationSource = "openai";
       translation = await translateNLToSQL(nlQuestion, schema);
     }
