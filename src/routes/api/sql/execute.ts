@@ -8,6 +8,7 @@ import { logAudit } from "@/lib/security/audit";
 import { json } from "@/lib/server/response";
 import { isReadOnlyQuery } from "@/lib/sql/validator";
 import { createLogger } from "@/lib/logging/logger";
+import { AUDIT_ACTIONS } from "@/types/actions";
 import type { DataSource } from "@/types/database";
 
 async function getSession(request: Request) {
@@ -86,6 +87,7 @@ export const Route = createFileRoute("/api/sql/execute")({
               email: session.user.email,
               dataSourceId,
               sqlPreview: sql.substring(0, 100),
+              action: AUDIT_ACTIONS.SQL.NON_SELECT_QUERY_REJECTED,
               timestamp: new Date().toISOString(),
             });
             return json(
@@ -130,6 +132,7 @@ export const Route = createFileRoute("/api/sql/execute")({
             sqlPreview: sql.substring(0, 200),
             limit,
             offset,
+            action: AUDIT_ACTIONS.SQL.QUERY_EXECUTION_STARTED,
             timestamp: new Date().toISOString(),
           });
 
@@ -205,6 +208,7 @@ export const Route = createFileRoute("/api/sql/execute")({
             columnNames: columns.map((c) => c.name),
             limit: effectiveLimit,
             offset: effectiveOffset,
+            action: AUDIT_ACTIONS.SQL.QUERY_EXECUTION_SUCCESS,
             timestamp: new Date().toISOString(),
           });
 
@@ -245,6 +249,7 @@ export const Route = createFileRoute("/api/sql/execute")({
             email: session?.user?.email || "unknown",
             errorMessage,
             errorType: error?.constructor?.name || "Unknown",
+            action: AUDIT_ACTIONS.SQL.QUERY_EXECUTION_FAILED,
             executionTime: totalTime,
             timestamp: new Date().toISOString(),
           });

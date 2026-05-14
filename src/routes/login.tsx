@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authenticateUser, createSession } from "@/lib/auth/session";
 import { createLogger } from "@/lib/logging/logger";
+import { AUDIT_ACTIONS } from "@/types/actions";
 
 if (import.meta.hot) {
   import.meta.hot.decline();
@@ -32,6 +33,7 @@ export const loginFn = createServerFn({ method: "POST" })
     try {
       logger.info("Login attempt", {
         email: data.email,
+        action: AUDIT_ACTIONS.AUTH.LOGIN_ATTEMPT,
         timestamp,
         userAgent,
       });
@@ -41,6 +43,7 @@ export const loginFn = createServerFn({ method: "POST" })
       if (!user) {
         logger.warn("Failed login attempt - invalid credentials", {
           email: data.email,
+          action: AUDIT_ACTIONS.AUTH.LOGIN_FAILURE,
           timestamp,
           reason: "Invalid email or password",
           userAgent,
@@ -59,6 +62,7 @@ export const loginFn = createServerFn({ method: "POST" })
         userId: user.id,
         email: user.email,
         userName: user.name,
+        action: AUDIT_ACTIONS.AUTH.LOGIN_SUCCESS,
         roles: user.roles,
         timestamp,
         userAgent,

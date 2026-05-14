@@ -46,6 +46,7 @@ import { Route as ApiSqlExecuteRouteImport } from './routes/api/sql/execute'
 import { Route as ApiReportsIdRouteImport } from './routes/api/reports/$id'
 import { Route as ApiQueriesIdRouteImport } from './routes/api/queries/$id'
 import { Route as ApiNlQueryExecuteRouteImport } from './routes/api/nl-query/execute'
+import { Route as ApiLogsUsersRouteImport } from './routes/api/logs/users'
 import { Route as ApiDataSourcesUploadRouteImport } from './routes/api/data-sources/upload'
 import { Route as ApiDataSourcesTestRouteImport } from './routes/api/data-sources/test'
 import { Route as ApiDataSourcesActiveRouteImport } from './routes/api/data-sources/active'
@@ -266,6 +267,11 @@ const ApiNlQueryExecuteRoute = ApiNlQueryExecuteRouteImport.update({
   path: '/api/nl-query/execute',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiLogsUsersRoute = ApiLogsUsersRouteImport.update({
+  id: '/api/logs/users',
+  path: '/api/logs/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiDataSourcesUploadRoute = ApiDataSourcesUploadRouteImport.update({
   id: '/api/data-sources/upload',
   path: '/api/data-sources/upload',
@@ -470,6 +476,7 @@ export interface FileRoutesByFullPath {
   '/api/data-sources/active': typeof ApiDataSourcesActiveRoute
   '/api/data-sources/test': typeof ApiDataSourcesTestRoute
   '/api/data-sources/upload': typeof ApiDataSourcesUploadRoute
+  '/api/logs/users': typeof ApiLogsUsersRoute
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
   '/api/queries/$id': typeof ApiQueriesIdRoute
   '/api/reports/$id': typeof ApiReportsIdRouteWithChildren
@@ -542,6 +549,7 @@ export interface FileRoutesByTo {
   '/api/data-sources/active': typeof ApiDataSourcesActiveRoute
   '/api/data-sources/test': typeof ApiDataSourcesTestRoute
   '/api/data-sources/upload': typeof ApiDataSourcesUploadRoute
+  '/api/logs/users': typeof ApiLogsUsersRoute
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
   '/api/queries/$id': typeof ApiQueriesIdRoute
   '/api/reports/$id': typeof ApiReportsIdRouteWithChildren
@@ -616,6 +624,7 @@ export interface FileRoutesById {
   '/api/data-sources/active': typeof ApiDataSourcesActiveRoute
   '/api/data-sources/test': typeof ApiDataSourcesTestRoute
   '/api/data-sources/upload': typeof ApiDataSourcesUploadRoute
+  '/api/logs/users': typeof ApiLogsUsersRoute
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
   '/api/queries/$id': typeof ApiQueriesIdRoute
   '/api/reports/$id': typeof ApiReportsIdRouteWithChildren
@@ -690,6 +699,7 @@ export interface FileRouteTypes {
     | '/api/data-sources/active'
     | '/api/data-sources/test'
     | '/api/data-sources/upload'
+    | '/api/logs/users'
     | '/api/nl-query/execute'
     | '/api/queries/$id'
     | '/api/reports/$id'
@@ -762,6 +772,7 @@ export interface FileRouteTypes {
     | '/api/data-sources/active'
     | '/api/data-sources/test'
     | '/api/data-sources/upload'
+    | '/api/logs/users'
     | '/api/nl-query/execute'
     | '/api/queries/$id'
     | '/api/reports/$id'
@@ -835,6 +846,7 @@ export interface FileRouteTypes {
     | '/api/data-sources/active'
     | '/api/data-sources/test'
     | '/api/data-sources/upload'
+    | '/api/logs/users'
     | '/api/nl-query/execute'
     | '/api/queries/$id'
     | '/api/reports/$id'
@@ -903,6 +915,7 @@ export interface RootRouteChildren {
   ApiDataSourcesActiveRoute: typeof ApiDataSourcesActiveRoute
   ApiDataSourcesTestRoute: typeof ApiDataSourcesTestRoute
   ApiDataSourcesUploadRoute: typeof ApiDataSourcesUploadRoute
+  ApiLogsUsersRoute: typeof ApiLogsUsersRoute
   ApiNlQueryExecuteRoute: typeof ApiNlQueryExecuteRoute
   ApiSqlExecuteRoute: typeof ApiSqlExecuteRoute
   ApiSqlValidateRoute: typeof ApiSqlValidateRoute
@@ -1175,6 +1188,13 @@ declare module '@tanstack/react-router' {
       path: '/api/nl-query/execute'
       fullPath: '/api/nl-query/execute'
       preLoaderRoute: typeof ApiNlQueryExecuteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/logs/users': {
+      id: '/api/logs/users'
+      path: '/api/logs/users'
+      fullPath: '/api/logs/users'
+      preLoaderRoute: typeof ApiLogsUsersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/data-sources/upload': {
@@ -1606,6 +1626,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiDataSourcesActiveRoute: ApiDataSourcesActiveRoute,
   ApiDataSourcesTestRoute: ApiDataSourcesTestRoute,
   ApiDataSourcesUploadRoute: ApiDataSourcesUploadRoute,
+  ApiLogsUsersRoute: ApiLogsUsersRoute,
   ApiNlQueryExecuteRoute: ApiNlQueryExecuteRoute,
   ApiSqlExecuteRoute: ApiSqlExecuteRoute,
   ApiSqlValidateRoute: ApiSqlValidateRoute,

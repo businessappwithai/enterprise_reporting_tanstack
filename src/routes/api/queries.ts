@@ -3,6 +3,7 @@ import { json } from '@/lib/server/response'
 import { auth } from '@/lib/auth/config'
 import { getDb } from '@/lib/db/config'
 import { createLogger } from '@/lib/logging/logger'
+import { AUDIT_ACTIONS } from '@/types/actions'
 import { v4 as uuidv4 } from 'uuid'
 
 async function getSession(request: Request) {
@@ -32,6 +33,7 @@ export const Route = createFileRoute('/api/queries')({
             email: session.user.email,
             userName: session.user.name,
             queriesCount: queries.length,
+            action: AUDIT_ACTIONS.QUERIES.LIST_RETRIEVED,
             timestamp: new Date().toISOString(),
           })
 
@@ -69,6 +71,7 @@ export const Route = createFileRoute('/api/queries')({
             logger.warn('Query creation attempted with missing required fields', {
               userId: session.user.id,
               email: session.user.email,
+              action: AUDIT_ACTIONS.QUERIES.VALIDATION_FAILED,
               missingFields: {
                 name: !body.name,
                 dataSourceId: !body.dataSourceId,
@@ -81,6 +84,15 @@ export const Route = createFileRoute('/api/queries')({
 
           const id = uuidv4()
           const db = getDb()
+
+          logger.info('Query creation started', {
+            userId: session.user.id,
+            email: session.user.email,
+            queryName: body.name,
+            dataSourceId: body.dataSourceId,
+            action: AUDIT_ACTIONS.QUERIES.CREATE_STARTED,
+            timestamp: new Date().toISOString(),
+          })
 
           const now = new Date().toISOString()
           await db.insertInto('saved_queries').values({
@@ -104,6 +116,7 @@ export const Route = createFileRoute('/api/queries')({
             dataSourceId: body.dataSourceId,
             sqlLength: body.sqlContent.length,
             description: body.description,
+            action: AUDIT_ACTIONS.QUERIES.CREATE_SUCCESS,
             executionTime,
             timestamp: new Date().toISOString(),
           })
@@ -115,6 +128,7 @@ export const Route = createFileRoute('/api/queries')({
           logger.error('Failed to create query', error instanceof Error ? error : new Error(errorMessage), {
             errorMessage,
             errorType: error?.constructor?.name,
+            action: AUDIT_ACTIONS.QUERIES.CREATE_FAILED,
             executionTime,
             timestamp: new Date().toISOString(),
           })
