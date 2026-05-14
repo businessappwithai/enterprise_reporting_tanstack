@@ -1,6 +1,7 @@
 "use client";
 
 import type { OnMount } from "@monaco-editor/react";
+import { loader } from "@monaco-editor/react";
 import { Loader2 } from "lucide-react";
 import type { editor } from "monaco-editor";
 import { useTheme } from "next-themes";
@@ -16,6 +17,13 @@ interface MonacoSQLEditorProps {
   className?: string;
   schema?: SchemaInfo | null;
 }
+
+// Configure Monaco to use local package instead of CDN
+loader.config({
+  paths: {
+    vs: "/vs",
+  },
+});
 
 // Lazy load Monaco Editor
 const MonacoSQLEditorComponent = lazy(() =>
