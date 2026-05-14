@@ -7,13 +7,10 @@ import {
   Database,
   Loader2,
   LogOut,
-  Moon,
   Settings,
-  Sun,
   User,
   X,
 } from "lucide-react";
-import { useTheme } from "next-themes";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -28,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ThemeSelector } from "@/components/theme/theme-selector";
 import { useActiveDataSource } from "@/lib/hooks/use-active-datasource";
 import { logoutFn } from "@/server-fns/auth";
 
@@ -42,7 +40,6 @@ interface HeaderProps {
 }
 
 export function Header({ user }: HeaderProps) {
-  const { theme, setTheme } = useTheme();
   const { activeDataSource, isLoading } = useActiveDataSource();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -184,16 +181,7 @@ export function Header({ user }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="rounded-md h-9 w-9"
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-        >
-          <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-          <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-          <span className="sr-only">Toggle theme</span>
-        </Button>
+        <ThemeSelector />
 
         {/* Notifications */}
         <DropdownMenu>

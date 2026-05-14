@@ -19,27 +19,21 @@ export function ThemeSelector() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <Select value={theme || "system"} onValueChange={setTheme}>
-      <SelectTrigger className="w-40">
-        <SelectValue placeholder="Select theme" />
+    <Select value={theme === "dark" ? "dark" : "light"} onValueChange={setTheme}>
+      <SelectTrigger className="w-48">
+        <SelectValue placeholder="Swiss-Clean Design" />
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="light">
           <div className="flex items-center gap-2">
             <Sun className="h-4 w-4" />
-            <span>Light</span>
+            <span>Light Theme</span>
           </div>
         </SelectItem>
         <SelectItem value="dark">
           <div className="flex items-center gap-2">
             <Moon className="h-4 w-4" />
-            <span>Dark</span>
-          </div>
-        </SelectItem>
-        <SelectItem value="system">
-          <div className="flex items-center gap-2">
-            <Monitor className="h-4 w-4" />
-            <span>System</span>
+            <span>Dark Theme</span>
           </div>
         </SelectItem>
       </SelectContent>
