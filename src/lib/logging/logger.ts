@@ -47,20 +47,23 @@ async function flushLogsToDatabase() {
 
   try {
     const db = getDb();
-    for (const log of logsToWrite) {
+    // Batch insert all logs at once for better performance
+    if (logsToWrite.length > 0) {
       await db
         .insertInto("logs")
-        .values({
-          timestamp: new Date(log.timestamp),
-          level: log.level,
-          message: log.message,
-          component: log.component,
-          user_id: log.userId as any,
-          session_id: log.sessionId,
-          metadata: log.metadata,
-          error_stack: log.errorStack,
-          request_id: log.requestId,
-        })
+        .values(
+          logsToWrite.map((log) => ({
+            timestamp: new Date(log.timestamp),
+            level: log.level,
+            message: log.message,
+            component: log.component,
+            user_id: log.userId as any,
+            session_id: log.sessionId,
+            metadata: JSON.stringify(log.metadata),
+            error_stack: log.errorStack,
+            request_id: log.requestId,
+          }))
+        )
         .execute();
     }
   } catch (error) {
@@ -69,11 +72,29 @@ async function flushLogsToDatabase() {
   }
 }
 
-// Periodically flush logs to database
+// Periodically flush logs to database (server-side only)
 if (typeof window === "undefined") {
-  setInterval(() => {
-    flushLogsToDatabase();
-  }, 5000);
+  // Flush every 2 seconds to ensure logs don't pile up
+  const flushInterval = setInterval(async () => {
+    try {
+      await flushLogsToDatabase();
+    } catch (error) {
+      console.error("Periodic log flush failed:", error);
+    }
+  }, 2000);
+
+  // Ensure flush happens on process exit
+  process.on("SIGTERM", async () => {
+    clearInterval(flushInterval);
+    await flushLogsToDatabase();
+    process.exit(0);
+  });
+
+  process.on("SIGINT", async () => {
+    clearInterval(flushInterval);
+    await flushLogsToDatabase();
+    process.exit(0);
+  });
 }
 
 export function createLogger(context: LogContext) {
