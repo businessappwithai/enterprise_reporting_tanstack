@@ -59,7 +59,7 @@ export function logDatabaseConfig(): void {
   console.log(`Production: ${config.isProduction ? "Yes" : "No"}`);
 
   if (config.type === "postgres") {
-    console.log(`Connection: ${config.connectionUrl?.replace(/:[^@]*@/, ":***@**)}`);
+    console.log(`Connection: ${config.connectionUrl?.replace(/:[^@]*@/, ":***@")}`);
   } else {
     console.log(`Data Path: ${config.dataPath}`);
   }
