@@ -29,7 +29,7 @@ interface Log {
   component: string;
   user_id?: string;
   user_email?: string;
-  metadata?: Record<string, unknown>;
+  metadata?: string | Record<string, unknown>;
   error_stack?: string;
 }
 
@@ -234,32 +234,49 @@ export function LogsViewer() {
                     <TableCell className="text-sm flex-1">
                       <div className="space-y-1">
                         <div className="font-medium">{log.message}</div>
-                        {log.metadata?.sql && (
-                          <details className="mt-1" open>
-                            <summary className="text-xs text-purple-600 dark:text-purple-400 cursor-pointer font-medium">
-                              SQL Query
-                            </summary>
-                            <pre className="text-xs bg-purple-50 dark:bg-purple-900/20 p-2 rounded mt-1 overflow-auto max-h-40 border border-purple-200 dark:border-purple-800">
-                              {log.metadata.sql as string}
-                            </pre>
-                          </details>
-                        )}
-                        {log.metadata && (
-                          <details className="mt-1">
-                            <summary className="text-xs text-blue-600 dark:text-blue-400 cursor-pointer">
-                              Metadata
-                            </summary>
-                            <pre className="text-xs bg-black/5 dark:bg-white/5 p-2 rounded mt-1 overflow-auto max-h-32">
-                              {JSON.stringify(
-                                Object.fromEntries(
-                                  Object.entries(log.metadata).filter(([key]) => key !== 'sql')
-                                ),
-                                null,
-                                2
+                        {(() => {
+                          let parsedMetadata: Record<string, unknown> | null = null;
+                          try {
+                            if (typeof log.metadata === 'string') {
+                              parsedMetadata = JSON.parse(log.metadata);
+                            } else if (typeof log.metadata === 'object') {
+                              parsedMetadata = log.metadata;
+                            }
+                          } catch (e) {
+                            parsedMetadata = null;
+                          }
+
+                          return (
+                            <>
+                              {parsedMetadata?.sql && (
+                                <details className="mt-1" open>
+                                  <summary className="text-xs text-purple-600 dark:text-purple-400 cursor-pointer font-medium">
+                                    SQL Query
+                                  </summary>
+                                  <pre className="text-xs bg-purple-50 dark:bg-purple-900/20 p-2 rounded mt-1 overflow-auto max-h-40 border border-purple-200 dark:border-purple-800">
+                                    {parsedMetadata.sql as string}
+                                  </pre>
+                                </details>
                               )}
-                            </pre>
-                          </details>
-                        )}
+                              {parsedMetadata && (
+                                <details className="mt-1">
+                                  <summary className="text-xs text-blue-600 dark:text-blue-400 cursor-pointer">
+                                    Metadata
+                                  </summary>
+                                  <pre className="text-xs bg-black/5 dark:bg-white/5 p-2 rounded mt-1 overflow-auto max-h-32">
+                                    {JSON.stringify(
+                                      Object.fromEntries(
+                                        Object.entries(parsedMetadata).filter(([key]) => key !== 'sql')
+                                      ),
+                                      null,
+                                      2
+                                    )}
+                                  </pre>
+                                </details>
+                              )}
+                            </>
+                          );
+                        })()}
                         {log.error_stack && (
                           <details className="mt-1">
                             <summary className="text-xs text-red-600 dark:text-red-400 cursor-pointer">
