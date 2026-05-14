@@ -2,14 +2,17 @@
  * Mastra.ai Agent Connector
  *
  * Connects to a running Mastra.ai server for NL→SQL translation
+ * Enhanced with pgvector context for improved accuracy
  */
 
 import type { SchemaMetadata } from "@/lib/validation/translation-validator";
+import { buildMastraContextPrompt } from "./nl-query-context-service";
 
 export interface MastraAgentRequest {
   nlQuestion: string;
   schema: SchemaMetadata;
   context?: Record<string, unknown>;
+  contextPrompt?: string; // Enhanced context with similar successful queries
 }
 
 export interface MastraAgentResponse {
@@ -17,6 +20,8 @@ export interface MastraAgentResponse {
   explanation: string;
   confidence?: number;
   warnings?: string[];
+  canExecute?: boolean; // Whether the query should be allowed based on RBAC
+  executionReason?: string; // Why it can/can't be executed
 }
 
 /**
@@ -35,16 +40,25 @@ export async function isMastraAvailable(): Promise<boolean> {
 }
 
 /**
- * Translate NL to SQL using Mastra.ai agent
+ * Translate NL to SQL using Mastra.ai agent with enhanced context
  */
 export async function translateNLToSQLViaMastra(
   nlQuestion: string,
   schema: SchemaMetadata,
-  context?: Record<string, unknown>
+  context?: Record<string, unknown>,
+  contextPrompt?: string
 ): Promise<MastraAgentResponse | null> {
   const mastraUrl = process.env.MASTRA_URL || "http://localhost:4111";
 
   try {
+    // Include pgvector-enhanced context if provided
+    const enhancedContext = contextPrompt
+      ? {
+          ...context,
+          contextFromSimilarQueries: contextPrompt,
+        }
+      : context;
+
     const response = await fetch(`${mastraUrl}/api/nl-to-sql`, {
       method: "POST",
       headers: {
@@ -53,7 +67,7 @@ export async function translateNLToSQLViaMastra(
       body: JSON.stringify({
         nlQuestion,
         schema,
-        context,
+        context: enhancedContext,
       }),
       timeout: 30000,
     });

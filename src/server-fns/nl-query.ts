@@ -21,6 +21,11 @@ import {
   assessTranslationConfidence,
   reverseTranslateSql,
 } from "@/lib/validation/translation-validator";
+import {
+  storeNLQueryContext,
+  buildMastraContextPrompt,
+  getRoleQueryStats,
+} from "@/lib/nlquery/nl-query-context-service";
 
 export interface ExecuteNLQueryInput {
   nlQuestion: string;
@@ -146,7 +151,24 @@ export const executeNLQuery = createServerFn({
       tableInstructions: tableInstructionsMap,
     };
 
-    // [Step 1.5] Translate NL to SQL using Mastra.ai agent (primary) or Ollama (fallback)
+    // [Step 1.5] Build enhanced context with pgvector similar queries
+    let contextPrompt = "";
+    const userRoles = session.user.roles || [];
+    const primaryRole = userRoles[0] || "user";
+
+    if (mastraAvailable) {
+      // Build context from similar successful queries for this role
+      const schemaContextStr = JSON.stringify(enhancedSchema);
+      contextPrompt = await buildMastraContextPrompt(
+        dataSourceId,
+        primaryRole,
+        nlQuestion,
+        schemaContextStr
+      );
+      console.log("[NLQuery] Built enhanced context from similar role queries");
+    }
+
+    // [Step 1.6] Translate NL to SQL using Mastra.ai agent (primary) or Ollama (fallback)
     let translation: any = null;
     let translationSource = "";
 
@@ -155,7 +177,18 @@ export const executeNLQuery = createServerFn({
     if (mastraAvailable) {
       console.log("[NLQuery] Using Mastra.ai agent for translation");
       translationSource = "mastra-agent";
-      translation = await translateViaMastra(nlQuestion, enhancedSchema);
+      translation = await translateViaMastra(
+        nlQuestion,
+        enhancedSchema,
+        {
+          userId: session.user.id,
+          userEmail: session.user.email,
+          userRoles,
+          dataSourceId,
+          dataSourceName: dataSource.name,
+        },
+        contextPrompt
+      );
     }
 
     // Fall back to Ollama if Mastra is not available
@@ -286,7 +319,40 @@ export const executeNLQuery = createServerFn({
 
     const rows = Array.isArray(result) ? result : result?.rows || [];
 
-    // [Step 6] Log to OpenKB on success (D20-D25: auto-learn)
+    // [Step 6] Store successful query context with pgvector for future reference
+    try {
+      // Get embedding for the NL question (would need an embeddings service)
+      // For now, we store with null embedding - Mastra agent could provide it
+      const nlQueryEmbedding = translation.embedding || undefined;
+
+      await storeNLQueryContext({
+        dataSourceId,
+        userId: session.user.id,
+        roleName: primaryRole,
+        nlQuestion,
+        generatedSQL,
+        nlQuestionEmbedding,
+        schemaContext: enhancedSchema,
+        rbacContext: {
+          userId: session.user.id,
+          userEmail: session.user.email,
+          userRoles,
+        },
+        fieldInstructions: tableInstructionsMap,
+        executionTimeMs: executionTime,
+        rowCount: rows.length,
+        wasSuccessful: true,
+        translationConfidence: reverseTranslation.confidence || 0.9,
+        llmConfidence: translation.confidence || 0.9,
+      });
+
+      console.log("[NLQuery] Stored successful query context for role-based learning");
+    } catch (error) {
+      console.warn("[NLQuery] Failed to store query context:", error);
+      // Non-fatal error - continue even if context storage fails
+    }
+
+    // [Step 7] Log to OpenKB on success (D20-D25: auto-learn)
     try {
       const { logQueryToOpenKB } = await import("@/server-fns/openkb");
       await logQueryToOpenKB({
@@ -311,6 +377,7 @@ export const executeNLQuery = createServerFn({
         rowCount: rows.length,
         executionTime,
         confidence: reverseTranslation.confidence,
+        translationSource,
       },
     });
 
