@@ -95,6 +95,56 @@ export const executeNLQuery = createServerFn({
     // [Step 1] Get schema metadata
     const schema = await getSchemaMetadata(dataSource);
 
+    // [Step 1.2] Get LLM instructions for enhanced context
+    const fieldInstructions = await db
+      .selectFrom("schema_field_instructions")
+      .select([
+        "table_name",
+        "field_name",
+        "description",
+        "llm_instructions",
+        "example_values",
+        "business_meaning",
+      ])
+      .where("data_source_id", "=", dataSourceId)
+      .execute();
+
+    const tableInstructions = await db
+      .selectFrom("schema_table_instructions")
+      .select(["table_name", "description", "llm_instructions", "business_domain"])
+      .where("data_source_id", "=", dataSourceId)
+      .execute();
+
+    // Build lookup maps for enhanced context
+    const fieldInstructionsMap: Record<string, Record<string, any>> = {};
+    const tableInstructionsMap: Record<string, any> = {};
+
+    fieldInstructions.forEach((fi) => {
+      if (!fieldInstructionsMap[fi.table_name as string]) {
+        fieldInstructionsMap[fi.table_name as string] = {};
+      }
+      fieldInstructionsMap[fi.table_name as string][fi.field_name as string] = {
+        description: fi.description,
+        instructions: fi.llm_instructions,
+        examples: fi.example_values ? JSON.parse(fi.example_values as string) : undefined,
+      };
+    });
+
+    tableInstructions.forEach((ti) => {
+      tableInstructionsMap[ti.table_name as string] = {
+        description: ti.description,
+        instructions: ti.llm_instructions,
+        domain: ti.business_domain,
+      };
+    });
+
+    // Enhance schema with LLM instructions
+    const enhancedSchema = {
+      ...schema,
+      fieldInstructions: fieldInstructionsMap,
+      tableInstructions: tableInstructionsMap,
+    };
+
     // [Step 1.5] Translate NL to SQL using Mastra.ai + Ollama (required)
     if (!(await isOllamaAvailable())) {
       await logAudit({
@@ -117,7 +167,7 @@ export const executeNLQuery = createServerFn({
 
     console.log("[NLQuery] Using Mastra.ai + Ollama for translation");
     const translationSource = "mastra-ollama";
-    const translation = await translateNLToSQLViaMastra(nlQuestion, schema);
+    const translation = await translateNLToSQLViaMastra(nlQuestion, enhancedSchema);
 
     if (!translation) {
       await logAudit({

@@ -31,7 +31,8 @@ const tablesToDrop = [
   "ds_roles", "data_sources", "user_roles", "roles", "notifications",
   "email_templates", "nl_query_history", "error_messages",
   "metadata_entity_fields", "metadata_entity_registry", "data_source_filters",
-  "filters", "jobs", "reports", "charts", "dashboards", "users", "_migrations"
+  "filters", "jobs", "reports", "charts", "dashboards", "users", "_migrations",
+  "schema_field_instructions", "schema_table_instructions"
 ];
 
 for (const table of tablesToDrop) {
@@ -298,18 +299,56 @@ const tables = [
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
   )`,
+  `CREATE TABLE schema_field_instructions (
+    id TEXT PRIMARY KEY,
+    data_source_id TEXT REFERENCES data_sources(id) ON DELETE CASCADE NOT NULL,
+    table_name TEXT NOT NULL,
+    field_name TEXT NOT NULL,
+    field_type TEXT NOT NULL,
+    is_nullable BOOLEAN DEFAULT true,
+    is_primary_key BOOLEAN DEFAULT false,
+    is_foreign_key BOOLEAN DEFAULT false,
+    foreign_key_table TEXT,
+    foreign_key_field TEXT,
+    description TEXT,
+    llm_instructions TEXT,
+    example_values TEXT,
+    constraints TEXT,
+    business_meaning TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    created_by TEXT REFERENCES users(id) ON DELETE SET NULL,
+    updated_by TEXT REFERENCES users(id) ON DELETE SET NULL,
+    UNIQUE(data_source_id, table_name, field_name)
+  )`,
+  `CREATE TABLE schema_table_instructions (
+    id TEXT PRIMARY KEY,
+    data_source_id TEXT REFERENCES data_sources(id) ON DELETE CASCADE NOT NULL,
+    table_name TEXT NOT NULL,
+    description TEXT,
+    llm_instructions TEXT,
+    example_queries TEXT,
+    business_domain TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    created_by TEXT REFERENCES users(id) ON DELETE SET NULL,
+    updated_by TEXT REFERENCES users(id) ON DELETE SET NULL,
+    UNIQUE(data_source_id, table_name)
+  )`,
 ];
 
 for (const table of tables) {
   await pglite.query(table);
 }
 
-// Create indexes for logs table
+// Create indexes for logs table and schema instructions
 const indexes = [
   `CREATE INDEX idx_logs_timestamp ON logs(timestamp)`,
   `CREATE INDEX idx_logs_level ON logs(level)`,
   `CREATE INDEX idx_logs_user_id ON logs(user_id)`,
   `CREATE INDEX idx_logs_component ON logs(component)`,
+  `CREATE INDEX idx_schema_field_instructions_ds_table ON schema_field_instructions(data_source_id, table_name)`,
+  `CREATE INDEX idx_schema_table_instructions_ds ON schema_table_instructions(data_source_id)`,
 ];
 
 for (const index of indexes) {

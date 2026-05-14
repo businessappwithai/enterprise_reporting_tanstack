@@ -8,16 +8,25 @@
 import type { SchemaMetadata } from "@/lib/validation/translation-validator";
 
 /**
+ * Enhanced schema metadata with LLM instructions
+ */
+export interface EnhancedSchemaMetadata extends SchemaMetadata {
+  tableInstructions?: Record<string, { description?: string; instructions?: string; domain?: string }>;
+  fieldInstructions?: Record<string, Record<string, { description?: string; instructions?: string; examples?: string[] }>>;
+}
+
+/**
  * Translate NL to SQL using Mastra.ai + Ollama
  *
  * This leverages Mastra.ai's workflow orchestration to:
- * 1. Route to Ollama for SQL generation
- * 2. Validate generated SQL
- * 3. Retry with refined prompts if needed
+ * 1. Route to Ollama for SQL generation with complete schema context
+ * 2. Include field-level instructions for better accuracy
+ * 3. Validate generated SQL
+ * 4. Retry with refined prompts if needed
  */
 export async function translateNLToSQLViaMastra(
   nlQuestion: string,
-  schema: SchemaMetadata
+  schema: EnhancedSchemaMetadata
 ): Promise<{ sql: string; explanation: string; warnings?: string[] } | null> {
   const ollamaUrl = process.env.OLLAMA_URL || "http://localhost:11434";
   const ollamaModel = process.env.OLLAMA_MODEL || "sqlcoder";
@@ -222,19 +231,52 @@ function validateGeneratedSQL(
 }
 
 /**
- * Build schema context string
+ * Build comprehensive schema context string with field instructions
  */
-function buildSchemaContext(schema: SchemaMetadata): string {
+function buildSchemaContext(schema: EnhancedSchemaMetadata): string {
   if (!schema.tables || schema.tables.length === 0) {
     return "No tables available in schema.";
   }
 
-  return schema.tables
+  const enhancedSchema = schema.tables
     .map((table) => {
-      const columns = table.columns ? table.columns.join(", ") : "";
-      return `${table.name}: ${columns}`;
+      let tableContext = "";
+
+      // Add table-level instruction if available
+      const tableInstr = schema.tableInstructions?.[table.name];
+      if (tableInstr?.description) {
+        tableContext += `\n[TABLE CONTEXT] ${tableInstr.description}`;
+      }
+      if (tableInstr?.domain) {
+        tableContext += `\n[DOMAIN] ${tableInstr.domain}`;
+      }
+      if (tableInstr?.instructions) {
+        tableContext += `\n[INSTRUCTIONS] ${tableInstr.instructions}`;
+      }
+
+      // Add columns with detailed instructions
+      const columnsDetail = table.columns
+        ? table.columns
+            .map((col) => {
+              const fieldInstr = schema.fieldInstructions?.[table.name]?.[col];
+              if (fieldInstr?.instructions) {
+                return `${col} - ${fieldInstr.instructions}${
+                  fieldInstr.examples ? ` (e.g., ${fieldInstr.examples.join(", ")})` : ""
+                }`;
+              }
+              if (fieldInstr?.description) {
+                return `${col} - ${fieldInstr.description}`;
+              }
+              return col;
+            })
+            .join("\n    ")
+        : "";
+
+      return `\nTable: ${table.name}${tableContext}\nColumns:\n    ${columnsDetail}`;
     })
     .join("\n");
+
+  return enhancedSchema;
 }
 
 /**
