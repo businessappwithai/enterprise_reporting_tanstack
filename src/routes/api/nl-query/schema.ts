@@ -57,12 +57,31 @@ export const Route = createFileRoute("/api/nl-query/schema")({
           const connection = await getConnection(dataSource);
           const { schema, logs } = await introspectSchema(connection, dataSource.client_type);
 
+          // Fetch RBAC information for NL context
+          const userRoles = await db
+            .selectFrom("user_roles")
+            .select("role_name")
+            .where("user_id", "=", session.user.id)
+            .execute();
+
+          const roleNames = userRoles.map((r: any) => r.role_name);
+
+          // Build RBAC context for NL query generation
+          const rbacContext = {
+            currentUserId: session.user.id,
+            currentUserEmail: session.user.email,
+            currentUserRoles: roleNames,
+            dataSourceId,
+            dataSourceName: dataSource.name,
+          };
+
           return json({
             success: true,
             data: {
               tables: schema.tables || [],
               views: schema.views || [],
               logs,
+              rbacContext,
             },
           });
         } catch (error) {

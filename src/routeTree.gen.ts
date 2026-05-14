@@ -18,6 +18,7 @@ import { Route as ApiNotificationsRouteImport } from './routes/api/notifications
 import { Route as ApiJobsRouteImport } from './routes/api/jobs'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ApiFiltersRouteImport } from './routes/api/filters'
+import { Route as ApiCopilotkitRouteImport } from './routes/api/copilotkit'
 import { Route as AuthedSqlEditorRouteImport } from './routes/_authed/sql-editor'
 import { Route as AuthedLogsRouteImport } from './routes/_authed/logs'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
@@ -45,6 +46,7 @@ import { Route as ApiSqlValidateRouteImport } from './routes/api/sql/validate'
 import { Route as ApiSqlExecuteRouteImport } from './routes/api/sql/execute'
 import { Route as ApiReportsIdRouteImport } from './routes/api/reports/$id'
 import { Route as ApiQueriesIdRouteImport } from './routes/api/queries/$id'
+import { Route as ApiNlQuerySchemaRouteImport } from './routes/api/nl-query/schema'
 import { Route as ApiNlQueryExecuteRouteImport } from './routes/api/nl-query/execute'
 import { Route as ApiLogsUsersRouteImport } from './routes/api/logs/users'
 import { Route as ApiLogsSearchRouteImport } from './routes/api/logs/search'
@@ -65,6 +67,7 @@ import { Route as AuthedSettingsEmailIndexRouteImport } from './routes/_authed/s
 import { Route as AuthedMetadataEntitiesIndexRouteImport } from './routes/_authed/metadata/entities/index'
 import { Route as AuthedDashboardsIdIndexRouteImport } from './routes/_authed/dashboards/$id/index'
 import { Route as AuthedAdminUsersIndexRouteImport } from './routes/_authed/admin/users/index'
+import { Route as AuthedAdminSchemaInstructionsIndexRouteImport } from './routes/_authed/admin/schema-instructions/index'
 import { Route as AuthedAdminRolesIndexRouteImport } from './routes/_authed/admin/roles/index'
 import { Route as AuthedAdminPermissionsIndexRouteImport } from './routes/_authed/admin/permissions/index'
 import { Route as ApiSqlSchemaDataSourceIdRouteImport } from './routes/api/sql/schema.$dataSourceId'
@@ -126,6 +129,11 @@ const ApiHealthRoute = ApiHealthRouteImport.update({
 const ApiFiltersRoute = ApiFiltersRouteImport.update({
   id: '/api/filters',
   path: '/api/filters',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCopilotkitRoute = ApiCopilotkitRouteImport.update({
+  id: '/api/copilotkit',
+  path: '/api/copilotkit',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthedSqlEditorRoute = AuthedSqlEditorRouteImport.update({
@@ -264,6 +272,11 @@ const ApiQueriesIdRoute = ApiQueriesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ApiQueriesRoute,
 } as any)
+const ApiNlQuerySchemaRoute = ApiNlQuerySchemaRouteImport.update({
+  id: '/api/nl-query/schema',
+  path: '/api/nl-query/schema',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiNlQueryExecuteRoute = ApiNlQueryExecuteRouteImport.update({
   id: '/api/nl-query/execute',
   path: '/api/nl-query/execute',
@@ -366,6 +379,12 @@ const AuthedAdminUsersIndexRoute = AuthedAdminUsersIndexRouteImport.update({
   path: '/users/',
   getParentRoute: () => AuthedAdminRoute,
 } as any)
+const AuthedAdminSchemaInstructionsIndexRoute =
+  AuthedAdminSchemaInstructionsIndexRouteImport.update({
+    id: '/schema-instructions/',
+    path: '/schema-instructions/',
+    getParentRoute: () => AuthedAdminRoute,
+  } as any)
 const AuthedAdminRolesIndexRoute = AuthedAdminRolesIndexRouteImport.update({
   id: '/roles/',
   path: '/roles/',
@@ -470,6 +489,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthedDashboardRoute
   '/logs': typeof AuthedLogsRoute
   '/sql-editor': typeof AuthedSqlEditorRoute
+  '/api/copilotkit': typeof ApiCopilotkitRoute
   '/api/filters': typeof ApiFiltersRoute
   '/api/health': typeof ApiHealthRoute
   '/api/jobs': typeof ApiJobsRoute
@@ -492,6 +512,7 @@ export interface FileRoutesByFullPath {
   '/api/logs/search': typeof ApiLogsSearchRoute
   '/api/logs/users': typeof ApiLogsUsersRoute
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
+  '/api/nl-query/schema': typeof ApiNlQuerySchemaRoute
   '/api/queries/$id': typeof ApiQueriesIdRoute
   '/api/reports/$id': typeof ApiReportsIdRouteWithChildren
   '/api/sql/execute': typeof ApiSqlExecuteRoute
@@ -530,6 +551,7 @@ export interface FileRoutesByFullPath {
   '/api/sql/schema/$dataSourceId': typeof ApiSqlSchemaDataSourceIdRoute
   '/admin/permissions/': typeof AuthedAdminPermissionsIndexRoute
   '/admin/roles/': typeof AuthedAdminRolesIndexRoute
+  '/admin/schema-instructions/': typeof AuthedAdminSchemaInstructionsIndexRoute
   '/admin/users/': typeof AuthedAdminUsersIndexRoute
   '/dashboards/$id/': typeof AuthedDashboardsIdIndexRoute
   '/metadata/entities/': typeof AuthedMetadataEntitiesIndexRoute
@@ -545,6 +567,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthedDashboardRoute
   '/logs': typeof AuthedLogsRoute
   '/sql-editor': typeof AuthedSqlEditorRoute
+  '/api/copilotkit': typeof ApiCopilotkitRoute
   '/api/filters': typeof ApiFiltersRoute
   '/api/health': typeof ApiHealthRoute
   '/api/jobs': typeof ApiJobsRoute
@@ -567,6 +590,7 @@ export interface FileRoutesByTo {
   '/api/logs/search': typeof ApiLogsSearchRoute
   '/api/logs/users': typeof ApiLogsUsersRoute
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
+  '/api/nl-query/schema': typeof ApiNlQuerySchemaRoute
   '/api/queries/$id': typeof ApiQueriesIdRoute
   '/api/reports/$id': typeof ApiReportsIdRouteWithChildren
   '/api/sql/execute': typeof ApiSqlExecuteRoute
@@ -605,6 +629,7 @@ export interface FileRoutesByTo {
   '/api/sql/schema/$dataSourceId': typeof ApiSqlSchemaDataSourceIdRoute
   '/admin/permissions': typeof AuthedAdminPermissionsIndexRoute
   '/admin/roles': typeof AuthedAdminRolesIndexRoute
+  '/admin/schema-instructions': typeof AuthedAdminSchemaInstructionsIndexRoute
   '/admin/users': typeof AuthedAdminUsersIndexRoute
   '/dashboards/$id': typeof AuthedDashboardsIdIndexRoute
   '/metadata/entities': typeof AuthedMetadataEntitiesIndexRoute
@@ -622,6 +647,7 @@ export interface FileRoutesById {
   '/_authed/dashboard': typeof AuthedDashboardRoute
   '/_authed/logs': typeof AuthedLogsRoute
   '/_authed/sql-editor': typeof AuthedSqlEditorRoute
+  '/api/copilotkit': typeof ApiCopilotkitRoute
   '/api/filters': typeof ApiFiltersRoute
   '/api/health': typeof ApiHealthRoute
   '/api/jobs': typeof ApiJobsRoute
@@ -644,6 +670,7 @@ export interface FileRoutesById {
   '/api/logs/search': typeof ApiLogsSearchRoute
   '/api/logs/users': typeof ApiLogsUsersRoute
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
+  '/api/nl-query/schema': typeof ApiNlQuerySchemaRoute
   '/api/queries/$id': typeof ApiQueriesIdRoute
   '/api/reports/$id': typeof ApiReportsIdRouteWithChildren
   '/api/sql/execute': typeof ApiSqlExecuteRoute
@@ -682,6 +709,7 @@ export interface FileRoutesById {
   '/api/sql/schema/$dataSourceId': typeof ApiSqlSchemaDataSourceIdRoute
   '/_authed/admin/permissions/': typeof AuthedAdminPermissionsIndexRoute
   '/_authed/admin/roles/': typeof AuthedAdminRolesIndexRoute
+  '/_authed/admin/schema-instructions/': typeof AuthedAdminSchemaInstructionsIndexRoute
   '/_authed/admin/users/': typeof AuthedAdminUsersIndexRoute
   '/_authed/dashboards/$id/': typeof AuthedDashboardsIdIndexRoute
   '/_authed/metadata/entities/': typeof AuthedMetadataEntitiesIndexRoute
@@ -699,6 +727,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/logs'
     | '/sql-editor'
+    | '/api/copilotkit'
     | '/api/filters'
     | '/api/health'
     | '/api/jobs'
@@ -721,6 +750,7 @@ export interface FileRouteTypes {
     | '/api/logs/search'
     | '/api/logs/users'
     | '/api/nl-query/execute'
+    | '/api/nl-query/schema'
     | '/api/queries/$id'
     | '/api/reports/$id'
     | '/api/sql/execute'
@@ -759,6 +789,7 @@ export interface FileRouteTypes {
     | '/api/sql/schema/$dataSourceId'
     | '/admin/permissions/'
     | '/admin/roles/'
+    | '/admin/schema-instructions/'
     | '/admin/users/'
     | '/dashboards/$id/'
     | '/metadata/entities/'
@@ -774,6 +805,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/logs'
     | '/sql-editor'
+    | '/api/copilotkit'
     | '/api/filters'
     | '/api/health'
     | '/api/jobs'
@@ -796,6 +828,7 @@ export interface FileRouteTypes {
     | '/api/logs/search'
     | '/api/logs/users'
     | '/api/nl-query/execute'
+    | '/api/nl-query/schema'
     | '/api/queries/$id'
     | '/api/reports/$id'
     | '/api/sql/execute'
@@ -834,6 +867,7 @@ export interface FileRouteTypes {
     | '/api/sql/schema/$dataSourceId'
     | '/admin/permissions'
     | '/admin/roles'
+    | '/admin/schema-instructions'
     | '/admin/users'
     | '/dashboards/$id'
     | '/metadata/entities'
@@ -850,6 +884,7 @@ export interface FileRouteTypes {
     | '/_authed/dashboard'
     | '/_authed/logs'
     | '/_authed/sql-editor'
+    | '/api/copilotkit'
     | '/api/filters'
     | '/api/health'
     | '/api/jobs'
@@ -872,6 +907,7 @@ export interface FileRouteTypes {
     | '/api/logs/search'
     | '/api/logs/users'
     | '/api/nl-query/execute'
+    | '/api/nl-query/schema'
     | '/api/queries/$id'
     | '/api/reports/$id'
     | '/api/sql/execute'
@@ -910,6 +946,7 @@ export interface FileRouteTypes {
     | '/api/sql/schema/$dataSourceId'
     | '/_authed/admin/permissions/'
     | '/_authed/admin/roles/'
+    | '/_authed/admin/schema-instructions/'
     | '/_authed/admin/users/'
     | '/_authed/dashboards/$id/'
     | '/_authed/metadata/entities/'
@@ -922,6 +959,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthedRoute: typeof AuthedRouteWithChildren
   LoginRoute: typeof LoginRoute
+  ApiCopilotkitRoute: typeof ApiCopilotkitRoute
   ApiFiltersRoute: typeof ApiFiltersRoute
   ApiHealthRoute: typeof ApiHealthRoute
   ApiJobsRoute: typeof ApiJobsRoute
@@ -943,6 +981,7 @@ export interface RootRouteChildren {
   ApiLogsSearchRoute: typeof ApiLogsSearchRoute
   ApiLogsUsersRoute: typeof ApiLogsUsersRoute
   ApiNlQueryExecuteRoute: typeof ApiNlQueryExecuteRoute
+  ApiNlQuerySchemaRoute: typeof ApiNlQuerySchemaRoute
   ApiSqlExecuteRoute: typeof ApiSqlExecuteRoute
   ApiSqlValidateRoute: typeof ApiSqlValidateRoute
   ShareChartIdRoute: typeof ShareChartIdRoute
@@ -1018,6 +1057,13 @@ declare module '@tanstack/react-router' {
       path: '/api/filters'
       fullPath: '/api/filters'
       preLoaderRoute: typeof ApiFiltersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/copilotkit': {
+      id: '/api/copilotkit'
+      path: '/api/copilotkit'
+      fullPath: '/api/copilotkit'
+      preLoaderRoute: typeof ApiCopilotkitRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authed/sql-editor': {
@@ -1209,6 +1255,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiQueriesIdRouteImport
       parentRoute: typeof ApiQueriesRoute
     }
+    '/api/nl-query/schema': {
+      id: '/api/nl-query/schema'
+      path: '/api/nl-query/schema'
+      fullPath: '/api/nl-query/schema'
+      preLoaderRoute: typeof ApiNlQuerySchemaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/nl-query/execute': {
       id: '/api/nl-query/execute'
       path: '/api/nl-query/execute'
@@ -1349,6 +1402,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedAdminUsersIndexRouteImport
       parentRoute: typeof AuthedAdminRoute
     }
+    '/_authed/admin/schema-instructions/': {
+      id: '/_authed/admin/schema-instructions/'
+      path: '/schema-instructions'
+      fullPath: '/admin/schema-instructions/'
+      preLoaderRoute: typeof AuthedAdminSchemaInstructionsIndexRouteImport
+      parentRoute: typeof AuthedAdminRoute
+    }
     '/_authed/admin/roles/': {
       id: '/_authed/admin/roles/'
       path: '/roles'
@@ -1481,12 +1541,15 @@ declare module '@tanstack/react-router' {
 interface AuthedAdminRouteChildren {
   AuthedAdminPermissionsIndexRoute: typeof AuthedAdminPermissionsIndexRoute
   AuthedAdminRolesIndexRoute: typeof AuthedAdminRolesIndexRoute
+  AuthedAdminSchemaInstructionsIndexRoute: typeof AuthedAdminSchemaInstructionsIndexRoute
   AuthedAdminUsersIndexRoute: typeof AuthedAdminUsersIndexRoute
 }
 
 const AuthedAdminRouteChildren: AuthedAdminRouteChildren = {
   AuthedAdminPermissionsIndexRoute: AuthedAdminPermissionsIndexRoute,
   AuthedAdminRolesIndexRoute: AuthedAdminRolesIndexRoute,
+  AuthedAdminSchemaInstructionsIndexRoute:
+    AuthedAdminSchemaInstructionsIndexRoute,
   AuthedAdminUsersIndexRoute: AuthedAdminUsersIndexRoute,
 }
 
@@ -1649,6 +1712,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthedRoute: AuthedRouteWithChildren,
   LoginRoute: LoginRoute,
+  ApiCopilotkitRoute: ApiCopilotkitRoute,
   ApiFiltersRoute: ApiFiltersRoute,
   ApiHealthRoute: ApiHealthRoute,
   ApiJobsRoute: ApiJobsRoute,
@@ -1670,6 +1734,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiLogsSearchRoute: ApiLogsSearchRoute,
   ApiLogsUsersRoute: ApiLogsUsersRoute,
   ApiNlQueryExecuteRoute: ApiNlQueryExecuteRoute,
+  ApiNlQuerySchemaRoute: ApiNlQuerySchemaRoute,
   ApiSqlExecuteRoute: ApiSqlExecuteRoute,
   ApiSqlValidateRoute: ApiSqlValidateRoute,
   ShareChartIdRoute: ShareChartIdRoute,
