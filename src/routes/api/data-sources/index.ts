@@ -125,7 +125,7 @@ export const Route = createFileRoute("/api/data-sources/")({
           // Strip sensitive data from response
           const { connection_config: _cc, ...safeDataSource } = dataSource || {};
 
-          return json({ item: safeDataSource }, { status: 201 });
+          return json({ success: true, item: safeDataSource }, { status: 201 });
         } catch (error) {
           console.error("Data sources create error:", error);
           return json(
