@@ -264,46 +264,67 @@ export function QueryResults({ result, isLoading, error, onPageChange }: QueryRe
 
         {/* Scrollable Body */}
         <div ref={tableContainerRef} className="flex-1 overflow-auto min-h-0">
-          <Table style={{ borderCollapse: "separate", borderSpacing: "0", width: "100%" }}>
-            <TableBody>
-              {rowModel.rows.length === 0 ? (
+          {rowModel.rows.length === 0 ? (
+            <Table style={{ borderCollapse: "separate", borderSpacing: "0", width: "100%" }}>
+              <TableBody>
                 <TableRow>
                   <TableCell colSpan={columns.length} className="text-center text-muted-foreground py-8">
                     No results
                   </TableCell>
                 </TableRow>
-              ) : (
-                virtualizer.getVirtualItems().map((virtualRow) => {
-                  const row = rowModel.rows[virtualRow.index];
-                  const isEven = virtualRow.index % 2 === 0;
-                  return (
-                    <TableRow
-                      key={virtualRow.key}
-                      data-index={virtualRow.index}
-                      ref={virtualizer.measureElement}
-                      style={{
-                        height: `${virtualRow.size}px`,
-                        display: "table-row",
-                        backgroundColor: isEven ? "transparent" : uiSettings.tableRowStripeColor,
-                      }}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell
-                          key={cell.id}
-                          className="font-mono text-sm border-b py-2"
-                          style={{
-                            boxSizing: "border-box",
-                          }}
-                        >
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
+              </TableBody>
+            </Table>
+          ) : (
+            <div
+              style={{
+                height: `${virtualizer.getTotalSize()}px`,
+                width: "100%",
+                position: "relative",
+              }}
+            >
+              <Table
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  borderCollapse: "separate",
+                  borderSpacing: "0",
+                  transform: `translateY(${virtualizer.getVirtualItems()[0]?.start ?? 0}px)`,
+                }}
+              >
+                <TableBody>
+                  {virtualizer.getVirtualItems().map((virtualRow) => {
+                    const row = rowModel.rows[virtualRow.index];
+                    const isEven = virtualRow.index % 2 === 0;
+                    return (
+                      <TableRow
+                        key={virtualRow.key}
+                        data-index={virtualRow.index}
+                        ref={virtualizer.measureElement}
+                        style={{
+                          height: `${virtualRow.size}px`,
+                          backgroundColor: isEven ? "transparent" : uiSettings.tableRowStripeColor,
+                        }}
+                      >
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell
+                            key={cell.id}
+                            className="font-mono text-sm border-b py-2"
+                            style={{
+                              boxSizing: "border-box",
+                            }}
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </div>
       </div>
 
