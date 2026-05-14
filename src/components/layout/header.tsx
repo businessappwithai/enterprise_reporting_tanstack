@@ -122,12 +122,16 @@ export function Header({ user }: HeaderProps) {
     mutationFn: async () => {
       return logoutFn();
     },
+    onSuccess: () => {
+      // Clear cache and navigate on success
+      queryClient.clear();
+      navigate({ to: "/login" });
+    },
     onError: (error) => {
-      if ((error as any)?.statusCode === 307) {
-        // Redirect happened, clear cache and navigate
-        queryClient.clear();
-        navigate({ to: "/login" });
-      }
+      console.error("Logout error:", error);
+      // Fallback: still redirect even if there was an error
+      queryClient.clear();
+      navigate({ to: "/login" });
     },
   });
 

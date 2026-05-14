@@ -59,8 +59,15 @@ data/
 *.swp
 *.swo
 
-# Logs
+# Logs (runtime logs, not source code)
+logs/*.log
+logs/*.txt
 logs/
+
+# But track logs source code components
+!src/components/logs/
+!src/routes/api/logs/
+
 *.log
 
 # Temporary files
