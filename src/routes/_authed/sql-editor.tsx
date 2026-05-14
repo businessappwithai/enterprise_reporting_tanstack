@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { ChevronDown, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { useLogger } from "@/hooks/useLogger";
 import {
   Select,
   SelectContent,
@@ -23,7 +24,8 @@ export const Route = createFileRoute("/_authed/sql-editor")({
 function SQLEditorPage() {
   const search = Route.useSearch() as { queryId?: string };
   const queryClient = useQueryClient();
-  const [sqlContent, setSqlContent] = useState("SELECT * FROM actor LIMIT 10;");
+  const logger = useLogger({ component: "SQL Editor" });
+  const [sqlContent, setSqlContent] = useState("");
   const [selectedDataSource, setSelectedDataSource] = useState<string>("");
   const [queryResult, setQueryResult] = useState<SQLExecutionResponse | null>(null);
   const [executionError, setExecutionError] = useState<string | null>(null);
@@ -154,6 +156,11 @@ function SQLEditorPage() {
       setQueryLogs((prev) => [`[${timestamp}] Executing query...`, ...prev]);
       if (data.success) {
         const result = data.data;
+        logger.info("Query executed", {
+          rowCount: result.rowCount,
+          totalRows: result.totalRows,
+          executionTime: result.executionTime,
+        });
         if (result.warning) {
           setWarning(result.warning);
           setQueryResult(null);
@@ -162,6 +169,7 @@ function SQLEditorPage() {
           setCurrentOffset(0);
           setTotalRows(null);
           setHasMore(false);
+          logger.warn("Query warning", { warning: result.warning.message });
           setQueryLogs((prev) => [`[${timestamp}] Warning: ${result.warning.message}`, ...prev]);
           setActiveTab("logs");
         } else {
@@ -171,7 +179,8 @@ function SQLEditorPage() {
           setHasMore(result.pagination?.hasMore || false);
           setWarning(null);
           setExecutionError(null);
-          setQueryResult({ ...result, rows: result.rows || [] });
+          const finalResult = { ...result, rows: result.rows || [] };
+          setQueryResult(finalResult);
           setQueryLogs((prev) => [
             `[${timestamp}] Query executed successfully`,
             `[${timestamp}] Returned ${result.rowCount} rows${result.totalRows ? ` of ${result.totalRows} total` : ""} in ${result.executionTime}ms`,
@@ -180,11 +189,13 @@ function SQLEditorPage() {
           setActiveTab("results");
         }
       } else {
-        setExecutionError(data.error?.message || "Query execution failed");
+        const errorMessage = data.error?.message || "Query execution failed";
+        setExecutionError(errorMessage);
         setQueryResult(null);
         setWarning(null);
+        logger.error("Query execution failed", { error: errorMessage });
         setQueryLogs((prev) => [
-          `[${timestamp}] Error: ${data.error?.message || "Query execution failed"}`,
+          `[${timestamp}] Error: ${errorMessage}`,
           ...prev,
         ]);
         setActiveTab("errors");

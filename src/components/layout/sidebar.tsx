@@ -9,6 +9,7 @@ import {
   Home,
   Layers,
   LayoutDashboard,
+  SquareTerminal,
   MessageSquare,
   Play,
   Settings,
@@ -16,6 +17,7 @@ import {
   Terminal,
   Users,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -53,6 +55,7 @@ const adminNavItems = [
     permissionKey: "data_source" as const,
   },
   { href: "/bull-board", label: "Queue Management", icon: Layers, permissionKey: "queue" as const },
+  { href: "/logs", label: "System Logs", icon: SquareTerminal, permissionKey: null },
   { href: "/admin/users", label: "Users", icon: Users, permissionKey: "user" as const },
   { href: "/admin/roles", label: "Roles", icon: Shield, permissionKey: "role" as const },
   {
@@ -65,8 +68,15 @@ const adminNavItems = [
 ];
 
 export function Sidebar({ collapsed, onCollapse }: SidebarProps) {
-  const { location } = useRouterState();
-  const pathname = location.pathname;
+  // Suppress hydration mismatch - don't use router state on server
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const routerState = useRouterState();
+  const pathname = isMounted ? routerState.location.pathname : "/";
+
   const { data: permissions } = usePermissions();
   const canViewQuery = useCanView("query");
   const canViewReport = useCanView("report");
@@ -86,11 +96,11 @@ export function Sidebar({ collapsed, onCollapse }: SidebarProps) {
     // Always show items with no permission requirement
     if (permissionKey === null) return true;
 
+    // When permissions are still loading, assume we can view everything to prevent hydration mismatch
+    if (permissions === undefined) return true;
+
     // Admin users can see everything
     if (isAdminUser) return true;
-
-    // When permissions are still loading, show items (they'll be filtered once loaded)
-    if (permissions === undefined) return true;
 
     // Check specific permission types
     switch (permissionKey) {

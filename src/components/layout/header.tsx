@@ -118,6 +118,19 @@ export function Header({ user }: HeaderProps) {
     },
   });
 
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      return logoutFn();
+    },
+    onError: (error) => {
+      if ((error as any)?.statusCode === 307) {
+        // Redirect happened, clear cache and navigate
+        queryClient.clear();
+        navigate({ to: "/login" });
+      }
+    },
+  });
+
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case "error":
@@ -308,11 +321,12 @@ export function Header({ user }: HeaderProps) {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={() => logoutFn()}
+              onClick={() => logoutMutation.mutate()}
+              disabled={logoutMutation.isPending}
               className="text-destructive focus:text-destructive"
             >
               <LogOut className="mr-2 h-4 w-4" />
-              <span>Log out</span>
+              <span>{logoutMutation.isPending ? "Logging out..." : "Log out"}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
+import React from "react";
 import type { ResourceType } from "@/types/database";
 
 interface UserPermissions {
@@ -23,10 +24,22 @@ interface UserPermissions {
 /**
  * Hook to get all permissions for the current user.
  * Fetches from /api/auth/permissions which reads the session cookie server-side.
+ * Only fetches once after login and caches indefinitely to prevent sidebar flicker.
  */
 export function usePermissions() {
+  // Get session token from cookie to detect when user logs in/out
+  const [sessionToken, setSessionToken] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    const cookies = document.cookie.split("; ");
+    const token = cookies
+      .find((c) => c.startsWith("session_token="))
+      ?.split("=")[1] || null;
+    setSessionToken(token);
+  }, []);
+
   return useQuery<UserPermissions>({
-    queryKey: ["user-permissions"],
+    queryKey: ["user-permissions", sessionToken], // Include token in key so it refetches on logout
     queryFn: async () => {
       const res = await fetch("/api/auth/permissions");
       if (!res.ok) {
@@ -41,7 +54,9 @@ export function usePermissions() {
       }
       return res.json();
     },
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    staleTime: Infinity, // Never refetch automatically
+    gcTime: Infinity, // Keep cached indefinitely
+    enabled: !!sessionToken, // Only fetch if we have a session token
   });
 }
 

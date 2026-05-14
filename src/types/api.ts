@@ -94,12 +94,16 @@ export interface QueryPagination {
   limit: number;
   offset: number;
   hasMore: boolean;
+  totalRows?: number;
+  serverSide?: boolean;
+  maxClientRows?: number;
 }
 
 export interface SQLExecutionResponse {
   columns: ColumnInfo[];
   rows: Record<string, unknown>[];
   rowCount: number;
+  totalRows?: number;
   executionTime: number;
   truncated?: boolean;
   pagination?: QueryPagination;

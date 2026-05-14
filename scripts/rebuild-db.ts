@@ -24,7 +24,7 @@ console.log("Rebuilding database:", DATA_DIR);
 
 // Drop all tables (one at a time - PGLite doesn't support multi-statement queries)
 const tablesToDrop = [
-  "audit_log", "resource_permissions", "job_executions", "job_definitions",
+  "logs", "app_settings", "audit_log", "resource_permissions", "job_executions", "job_definitions",
   "dashboard_widgets", "dashboard_layouts", "chart_filters", "chart_definitions",
   "report_filters", "report_definitions", "filter_definitions", "saved_queries",
   "ds_entity_permissions", "data_source_entity_permissions", "ds_user_roles",
@@ -248,6 +248,24 @@ const tables = [
     permission_level TEXT NOT NULL,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
   )`,
+  `CREATE TABLE logs (
+    id TEXT PRIMARY KEY,
+    timestamp TEXT DEFAULT CURRENT_TIMESTAMP,
+    level TEXT NOT NULL,
+    message TEXT NOT NULL,
+    component TEXT NOT NULL,
+    user_id TEXT REFERENCES users(id),
+    session_id TEXT,
+    metadata TEXT,
+    error_stack TEXT,
+    request_id TEXT
+  )`,
+  `CREATE TABLE app_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  )`,
   `CREATE TABLE ds_roles (
     id TEXT PRIMARY KEY,
     data_source_id TEXT REFERENCES data_sources(id) ON DELETE CASCADE,
@@ -283,6 +301,22 @@ const tables = [
 
 for (const table of tables) {
   await pglite.query(table);
+}
+
+// Create indexes for logs table
+const indexes = [
+  `CREATE INDEX idx_logs_timestamp ON logs(timestamp)`,
+  `CREATE INDEX idx_logs_level ON logs(level)`,
+  `CREATE INDEX idx_logs_user_id ON logs(user_id)`,
+  `CREATE INDEX idx_logs_component ON logs(component)`,
+];
+
+for (const index of indexes) {
+  try {
+    await pglite.query(index);
+  } catch (e) {
+    // Ignore if index already exists
+  }
 }
 
 console.log("Inserting admin user...");
