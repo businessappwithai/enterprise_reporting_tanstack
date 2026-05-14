@@ -64,7 +64,7 @@ export const Route = createFileRoute('/api/queries/$id')({
           }
 
           const updateData: Record<string, unknown> = {
-            updated_at: new Date(),
+            updated_at: new Date().toISOString(),
           }
 
           if (body.name) updateData.name = body.name
