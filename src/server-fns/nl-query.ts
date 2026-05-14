@@ -11,7 +11,8 @@ import { requireAuth } from "@/lib/auth/middleware";
 import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
 import { isSafeSelectQuery } from "@/lib/nlquery/openai-translator";
-import { translateNLToSQLViaMastra, isOllamaAvailable } from "@/lib/nlquery/mastra-ollama-translator";
+import { translateNLToSQLViaMastra as translateViaOllama, isOllamaAvailable } from "@/lib/nlquery/mastra-ollama-translator";
+import { translateNLToSQLViaMastra as translateViaMastra, isMastraAvailable } from "@/lib/nlquery/mastra-connector";
 import { getSchemaMetadata } from "@/lib/nlquery/schema-metadata";
 import { validateQueryAccess } from "@/lib/permissions/query-access-validator";
 import { logAudit } from "@/lib/security/audit";
@@ -145,31 +146,30 @@ export const executeNLQuery = createServerFn({
       tableInstructions: tableInstructionsMap,
     };
 
-    // [Step 1.5] Translate NL to SQL using Mastra.ai + Ollama (required)
-    if (!(await isOllamaAvailable())) {
-      await logAudit({
-        userId: session.user.id,
-        action: "nl_query_error",
-        resourceType: "query",
-        resourceId: dataSourceId,
-        details: {
-          nlQuestion,
-          error: "Ollama is not available",
-          translationSource: "mastra-ollama",
-        },
-      });
-      return {
-        success: false,
-        error: "Natural language queries require Ollama. Please ensure Ollama is running at " +
-               (process.env.OLLAMA_URL || "http://localhost:11434"),
-      };
+    // [Step 1.5] Translate NL to SQL using Mastra.ai agent (primary) or Ollama (fallback)
+    let translation: any = null;
+    let translationSource = "";
+
+    // Try Mastra agent first (primary)
+    const mastraAvailable = await isMastraAvailable();
+    if (mastraAvailable) {
+      console.log("[NLQuery] Using Mastra.ai agent for translation");
+      translationSource = "mastra-agent";
+      translation = await translateViaMastra(nlQuestion, enhancedSchema);
     }
 
-    console.log("[NLQuery] Using Mastra.ai + Ollama for translation");
-    const translationSource = "mastra-ollama";
-    const translation = await translateNLToSQLViaMastra(nlQuestion, enhancedSchema);
+    // Fall back to Ollama if Mastra is not available
+    if (!translation && (await isOllamaAvailable())) {
+      console.log("[NLQuery] Mastra not available, falling back to Ollama");
+      translationSource = "mastra-ollama";
+      translation = await translateViaOllama(nlQuestion, enhancedSchema);
+    }
 
+    // If neither is available, return error
     if (!translation) {
+      const mastraUrl = process.env.MASTRA_URL || "http://localhost:4111";
+      const ollamaUrl = process.env.OLLAMA_URL || "http://localhost:11434";
+
       await logAudit({
         userId: session.user.id,
         action: "nl_query_error",
@@ -177,13 +177,15 @@ export const executeNLQuery = createServerFn({
         resourceId: dataSourceId,
         details: {
           nlQuestion,
-          error: "Mastra.ai + Ollama translation failed",
-          translationSource,
+          error: "Neither Mastra agent nor Ollama is available",
+          mastraUrl,
+          ollamaUrl,
         },
       });
+
       return {
         success: false,
-        error: "Could not translate your question to SQL. Please verify the question is clear and within schema scope.",
+        error: `Natural language queries require either Mastra.ai (${mastraUrl}) or Ollama (${ollamaUrl}) to be running.`,
       };
     }
 
