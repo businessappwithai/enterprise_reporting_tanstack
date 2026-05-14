@@ -55,7 +55,8 @@ function FiltersPage() {
     queryFn: async () => {
       const res = await fetch("/api/filters");
       if (!res.ok) throw new Error("Failed to fetch filters");
-      return res.json() as Promise<FilterDefinition[]>;
+      const json = await res.json();
+      return json.data || [];
     },
   });
 

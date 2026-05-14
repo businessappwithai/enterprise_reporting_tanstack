@@ -241,16 +241,16 @@ export function QueryResults({ result, isLoading, error, onPageChange }: QueryRe
         )}
       </div>
 
-      {/* Fixed Header + Scrollable Body */}
-      <div className="flex-1 flex flex-col overflow-hidden rounded-md border">
-        {/* Fixed Header - Outside Scroll Container */}
-        <div className="shrink-0">
+      {/* Virtualized Table with Fixed Header */}
+      <div className="flex flex-col flex-1 min-h-0 rounded-md border overflow-hidden">
+        {/* Fixed Header */}
+        <div className="flex-shrink-0 overflow-hidden bg-background">
           <Table style={{ borderCollapse: "separate", borderSpacing: "0", width: "100%" }}>
             <TableHeader className="bg-background shadow-sm">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id} className="whitespace-nowrap bg-background">
+                    <TableHead key={header.id} className="whitespace-nowrap bg-background h-10">
                       {header.isPlaceholder
                         ? null
                         : flexRender(header.column.columnDef.header, header.getContext())}
@@ -262,7 +262,7 @@ export function QueryResults({ result, isLoading, error, onPageChange }: QueryRe
           </Table>
         </div>
 
-        {/* Scrollable Body - Inside Overflow Container */}
+        {/* Scrollable Body */}
         <div ref={tableContainerRef} className="flex-1 overflow-auto min-h-0">
           <Table style={{ borderCollapse: "separate", borderSpacing: "0", width: "100%" }}>
             <TableBody>
@@ -273,7 +273,7 @@ export function QueryResults({ result, isLoading, error, onPageChange }: QueryRe
                   </TableCell>
                 </TableRow>
               ) : (
-                virtualizer.getVirtualItems().map((virtualRow, index) => {
+                virtualizer.getVirtualItems().map((virtualRow) => {
                   const row = rowModel.rows[virtualRow.index];
                   const isEven = virtualRow.index % 2 === 0;
                   return (

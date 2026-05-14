@@ -1,4 +1,5 @@
 import { join } from "node:path";
+import { mkdirSync } from "node:fs";
 import { Kysely, MssqlDialect, MysqlDialect, PostgresDialect, sql } from "kysely";
 import { Pool } from "pg";
 import { PGlite } from "@electric-sql/pglite";
@@ -39,11 +40,12 @@ async function buildKyselyConnection(
       } else if (filename.startsWith("/")) {
         dataDir = join(filename, "..");
       } else if (filename.startsWith("./data/") || filename.startsWith("data/")) {
-        dataDir = join(process.cwd(), filename.replace(/^\.\//, ".."));
+        dataDir = join(process.cwd(), filename.replace(/^\.\//, ""));
       } else {
         dataDir = join(process.cwd(), "data", "uploads");
       }
 
+      mkdirSync(dataDir, { recursive: true });
       const pglite = new PGlite(dataDir);
       await pglite.waitReady;
 
