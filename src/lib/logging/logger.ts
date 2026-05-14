@@ -143,7 +143,7 @@ export function createLogger(context: LogContext) {
         sessionId: context.sessionId,
         metadata,
         requestId: context.requestId,
-        messageVector: generateLogEmbedding(message, context.component, "info", metadata),
+        messageVector: undefined,
       });
     },
 
@@ -168,7 +168,7 @@ export function createLogger(context: LogContext) {
         sessionId: context.sessionId,
         metadata,
         requestId: context.requestId,
-        messageVector: generateLogEmbedding(message, context.component, "warn", metadata),
+        messageVector: undefined,
       });
     },
 
@@ -195,7 +195,7 @@ export function createLogger(context: LogContext) {
         metadata,
         errorStack: error?.stack,
         requestId: context.requestId,
-        messageVector: generateLogEmbedding(message, context.component, "error", metadata),
+        messageVector: undefined,
       });
     },
 

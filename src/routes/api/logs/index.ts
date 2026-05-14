@@ -43,7 +43,7 @@ export const Route = createFileRoute("/api/logs/")({
               message: body.message,
               component: body.component,
               user_id: session.user.id as any,
-              metadata: body.metadata,
+              metadata: body.metadata ? JSON.stringify(body.metadata) : null,
               error_stack: body.errorStack,
             })
             .execute();
