@@ -83,12 +83,16 @@ export function Sidebar({ collapsed, onCollapse }: SidebarProps) {
   const isAdminUser = permissions?.isAdmin ?? false;
 
   const canView = (permissionKey: string | null) => {
+    // Always show items with no permission requirement
     if (permissionKey === null) return true;
+
     // Admin users can see everything
     if (isAdminUser) return true;
-    // When permissions are still loading, be conservative and show items
-    // (they'll be filtered once permissions load)
+
+    // When permissions are still loading, show items (they'll be filtered once loaded)
     if (permissions === undefined) return true;
+
+    // Check specific permission types
     switch (permissionKey) {
       case "query":
         return canViewQuery;
@@ -111,7 +115,7 @@ export function Sidebar({ collapsed, onCollapse }: SidebarProps) {
       case "role":
         return canViewRole;
       default:
-        return true;
+        return false;
     }
   };
 
