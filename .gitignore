@@ -73,3 +73,4 @@ job-outputs/
 # Hostinger VPS Data (bind mounts - don't commit)
 /srv/
 .gstack/
+auth.json

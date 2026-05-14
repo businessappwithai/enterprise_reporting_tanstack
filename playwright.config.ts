@@ -1,10 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
-
-/**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
- */
-// require('dotenv').config();
+import path from 'path';
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -21,6 +16,8 @@ export default defineConfig({
   workers: 1,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
+  /* Global setup and teardown */
+  globalSetup: path.resolve('./e2e/global-setup.ts'),
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
@@ -32,6 +29,8 @@ export default defineConfig({
     /* Allow TanStack Router hydration to complete before actions */
     navigationTimeout: 30000,
     actionTimeout: 15000,
+    /* Reuse authentication state from global setup */
+    storageState: 'auth.json',
   },
 
   /* Configure projects for major browsers */

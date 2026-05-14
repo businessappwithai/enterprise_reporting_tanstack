@@ -1,91 +1,76 @@
-import { type Browser, type APIRequestContext, test, type Page } from '@playwright/test';
-import { TestHelpers } from './helpers/test-helpers';
+import { type APIRequestContext, type Page } from '@playwright/test';
 
-let cachedAuthCookie: string | null = null;
+const BASE_URL = process.env.BASE_URL || 'http://localhost:4050';
 
 /**
  * Get authentication cookie for API requests
- * Uses caching to avoid re-authenticating for every test suite
- * TanStack Start JWT-based authentication
+ * Note: Global setup handles authentication, this is for API-specific requests
  */
-export async function getAuthCookie(request: APIRequestContext, browser?: Browser): Promise<string> {
-  // Return cached cookie if available
-  if (cachedAuthCookie) {
-    console.log('Using cached auth cookie');
-    return cachedAuthCookie;
-  }
-
-  console.log('Getting fresh auth cookie via browser...');
-
-  // Use browser-based login for TanStack Start JWT authentication
-  if (!browser) {
-    throw new Error('Browser is required for TanStack Start authentication');
-  }
-
-  const page = await browser.newPage();
-  const testHelpers = new TestHelpers(page);
-
+export async function getAuthCookie(request: APIRequestContext): Promise<string> {
   try {
-    const BASE_URL = process.env.BASE_URL || 'http://localhost:4050';
-    await page.goto(BASE_URL);
-    const currentUrl = page.url();
+    // Try to get cookies from the request context (inherited from global auth)
+    const response = await request.get(`${BASE_URL}/dashboard`);
 
-    if (currentUrl.includes('/login')) {
-      console.log('Logging in via browser...');
-      await testHelpers.login('admin@admin.com', 'admin');
+    // If we get a 200, we're already authenticated
+    if (response.status() === 200) {
+      console.log('✓ Already authenticated via inherited session');
+      return '';
     }
 
-    // Wait for session to be established
-    await page.waitForTimeout(2000);
-    await page.goto(`${BASE_URL}/dashboard`, { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(2000);
-
-    const cookies = await page.context().cookies();
-    console.log('Cookies after login:', cookies.map(c => c.name));
-
-    const authCookieObj = cookies.find(c => c.name === 'session_token');
-
-    if (!authCookieObj) {
-      throw new Error('No session_token cookie found after login. Available cookies: ' + cookies.map(c => c.name).join(', '));
-    }
-
-    cachedAuthCookie = `${authCookieObj.name}=${authCookieObj.value}`;
-    console.log('Got auth cookie from browser login');
-
-    return cachedAuthCookie;
-  } finally {
-    await page.close();
+    throw new Error(`Auth check failed with status ${response.status()}`);
+  } catch (error) {
+    console.error('Error checking auth:', error);
+    throw new Error('Unable to verify authentication');
   }
 }
 
 /**
- * Clear cached auth cookie (useful for testing logout scenarios)
- */
-export function clearAuthCache(): void {
-  cachedAuthCookie = null;
-}
-
-/**
- * Simple login function for E2E tests
- * Performs login via UI and returns when authenticated
+ * Simple login function for E2E tests - emergency re-auth only
+ * In most cases, global setup authentication is sufficient
  */
 export async function login(page: Page, email: string = 'admin@admin.com', password: string = 'admin'): Promise<void> {
-  const BASE_URL = process.env.BASE_URL || 'http://localhost:4050';
-  const testHelpers = new TestHelpers(page);
+  // Navigate to home - should redirect to login if needed
+  await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(500);
 
-  // Navigate to login page if not already there
-  await page.goto(BASE_URL);
   const currentUrl = page.url();
 
+  // If already authenticated, return
   if (!currentUrl.includes('/login')) {
-    // Already logged in or on another page
+    console.log('✓ Already authenticated, skipping login');
     return;
   }
 
-  // Perform login
-  await testHelpers.login();
+  console.log('⏳ Performing emergency re-authentication...');
 
-  // Wait for navigation to dashboard
-  await page.waitForURL(/\/(dashboard|)/, { timeout: 10000 });
-  await page.waitForLoadState('domcontentloaded');
+  // Fill and submit login form
+  try {
+    // Email field
+    const emailInput = page.getByPlaceholder('name@example.com');
+    await emailInput.waitFor({ state: 'visible', timeout: 5000 });
+    await emailInput.fill(email);
+
+    // Password field
+    const passwordInput = page.getByLabel('Password');
+    await passwordInput.waitFor({ state: 'visible', timeout: 5000 });
+    await passwordInput.fill(password);
+
+    // Sign in button
+    const signInButton = page.getByRole('button', { name: 'Sign In' });
+    await signInButton.waitFor({ state: 'visible', timeout: 5000 });
+    await signInButton.click();
+
+    // Wait for successful authentication
+    await Promise.race([
+      page.waitForURL(/\/(dashboard|)/, { timeout: 15000 }),
+      page.waitForLoadState('domcontentloaded'),
+      page.getByRole('heading', { name: /dashboard/i }).waitFor({ timeout: 15000 }).catch(() => null),
+    ]);
+
+    console.log('✓ Emergency re-authentication successful');
+    await page.waitForTimeout(1000);
+  } catch (error) {
+    console.error('⚠️  Emergency re-authentication failed:', error);
+    throw new Error(`Login failed: ${error}`);
+  }
 }
