@@ -590,18 +590,25 @@ function DataSourcesPage() {
               </TableHeader>
               <TableBody>
                 {dataSources?.map((ds) => (
-                  <TableRow key={ds.id}>
-                    <TableCell className="font-medium">{ds.name}</TableCell>
+                  <TableRow key={ds.id} className={ds.is_deleted ? "opacity-60" : ""}>
+                    <TableCell className="font-medium">
+                      {ds.name}
+                      {ds.is_deleted && (
+                        <Badge variant="destructive" className="ml-2 text-xs">
+                          Deleted
+                        </Badge>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <Badge variant="outline">{ds.client_type}</Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{ds.description || "-"}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Badge variant={ds.is_active ? "default" : "secondary"}>
-                          {ds.is_active ? "Connected" : "No Connection"}
+                        <Badge variant={ds.is_deleted ? "secondary" : ds.is_active ? "default" : "secondary"}>
+                          {ds.is_deleted ? "Inactive" : ds.is_active ? "Connected" : "No Connection"}
                         </Badge>
-                        {ds.is_inspected && (
+                        {ds.is_inspected && !ds.is_deleted && (
                           <Badge variant="outline" className="text-green-600 border-green-600">
                             <Check className="h-3 w-3 mr-1" />
                             Inspected

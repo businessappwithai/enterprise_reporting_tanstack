@@ -31,7 +31,7 @@ export const Route = createFileRoute("/api/data-sources/")({
           const dataSources = await db
             .selectFrom("data_sources")
             .selectAll()
-            .where("is_deleted", "=", false)
+            .orderBy("is_deleted", "asc")
             .orderBy("name", "asc")
             .execute();
 

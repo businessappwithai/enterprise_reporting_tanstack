@@ -93,8 +93,12 @@ export const Route = createFileRoute("/api/data-sources/$id")({
             );
           }
 
-          // Only owner can edit
-          if (existing.created_by !== session.user.id) {
+          // Allow owner or admins to edit
+          const userRoles = session.user.roles || [];
+          const isAdmin = userRoles.includes("admin");
+          const isOwner = existing.created_by === session.user.id;
+
+          if (!isAdmin && !isOwner) {
             return json(
               { error: { message: "Forbidden" } },
               { status: 403 }
@@ -166,8 +170,12 @@ export const Route = createFileRoute("/api/data-sources/$id")({
             );
           }
 
-          // Only owner can edit
-          if (existing.created_by !== session.user.id) {
+          // Allow owner or admins to edit
+          const userRoles = session.user.roles || [];
+          const isAdmin = userRoles.includes("admin");
+          const isOwner = existing.created_by === session.user.id;
+
+          if (!isAdmin && !isOwner) {
             return json(
               { error: { message: "Forbidden" } },
               { status: 403 }
@@ -239,8 +247,12 @@ export const Route = createFileRoute("/api/data-sources/$id")({
             );
           }
 
-          // Only owner can delete
-          if (existing.created_by !== session.user.id) {
+          // Allow owner or admins to delete
+          const userRoles = session.user.roles || [];
+          const isAdmin = userRoles.includes("admin");
+          const isOwner = existing.created_by === session.user.id;
+
+          if (!isAdmin && !isOwner) {
             return json(
               { error: { message: "Forbidden" } },
               { status: 403 }

@@ -38,8 +38,12 @@ export const Route = createFileRoute("/api/data-sources/$id/inspect")({
             );
           }
 
-          // Only owner can inspect
-          if (dataSource.created_by !== session.user.id) {
+          // Allow owner or admins to inspect
+          const userRoles = session.user.roles || [];
+          const isAdmin = userRoles.includes("admin");
+          const isOwner = dataSource.created_by === session.user.id;
+
+          if (!isAdmin && !isOwner) {
             return json(
               { error: { message: "Forbidden" } },
               { status: 403 }
