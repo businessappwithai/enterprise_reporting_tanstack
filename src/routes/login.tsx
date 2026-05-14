@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { setResponseHeader } from "@tanstack/react-start/server";
+import { setResponseHeader, getRequestHeader } from "@tanstack/react-start/server";
 import { BarChart3, Loader2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -16,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authenticateUser, createSession } from "@/lib/auth/session";
+import { createLogger } from "@/lib/logging/logger";
 
 if (import.meta.hot) {
   import.meta.hot.decline();
@@ -23,15 +24,57 @@ if (import.meta.hot) {
 
 export const loginFn = createServerFn({ method: "POST" })
   .inputValidator((data: { email: string; password: string }) => data)
-  .handler(async ({ data }) => {
-    const user = await authenticateUser(data.email, data.password);
-    if (!user) throw new Error("Invalid credentials");
-    const token = await createSession(user);
-    setResponseHeader(
-      "Set-Cookie",
-      `session_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${30 * 24 * 3600}`
-    );
-    return { ok: true };
+  .handler(async ({ data, request }) => {
+    const logger = createLogger({ component: "Authentication" });
+    const timestamp = new Date().toISOString();
+    const userAgent = getRequestHeader("user-agent") || "unknown";
+
+    try {
+      logger.info("Login attempt", {
+        email: data.email,
+        timestamp,
+        userAgent,
+      });
+
+      const user = await authenticateUser(data.email, data.password);
+
+      if (!user) {
+        logger.warn("Failed login attempt - invalid credentials", {
+          email: data.email,
+          timestamp,
+          reason: "Invalid email or password",
+          userAgent,
+        });
+        throw new Error("Invalid credentials");
+      }
+
+      const token = await createSession(user);
+
+      setResponseHeader(
+        "Set-Cookie",
+        `session_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${30 * 24 * 3600}`
+      );
+
+      logger.info("Login successful", {
+        userId: user.id,
+        email: user.email,
+        userName: user.name,
+        roles: user.roles,
+        timestamp,
+        userAgent,
+      });
+
+      return { ok: true };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      logger.error("Login error", error instanceof Error ? error : new Error(errorMessage), {
+        email: data.email,
+        timestamp,
+        errorMessage,
+        userAgent,
+      });
+      throw error;
+    }
   });
 
 export const Route = createFileRoute("/login")({

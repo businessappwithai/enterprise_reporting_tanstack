@@ -7,6 +7,7 @@ import { getConnection } from "@/lib/db/connection-manager";
 import { logAudit } from "@/lib/security/audit";
 import { json } from "@/lib/server/response";
 import { isReadOnlyQuery } from "@/lib/sql/validator";
+import { createLogger } from "@/lib/logging/logger";
 import type { DataSource } from "@/types/database";
 
 async function getSession(request: Request) {
@@ -21,9 +22,16 @@ export const Route = createFileRoute("/api/sql/execute")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const logger = createLogger({ component: "SQL Executor" });
+        const startTime = Date.now();
+
         try {
           const session = await getSession(request);
           if (!session?.user) {
+            logger.warn("SQL execution attempt without authentication", {
+              timestamp: new Date().toISOString(),
+              remoteIp: request.headers.get("x-forwarded-for") || "unknown",
+            });
             return json(
               { success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } },
               { status: 401 }
@@ -42,6 +50,11 @@ export const Route = createFileRoute("/api/sql/execute")({
           const { sql, dataSourceId, limit, offset } = body;
 
           if (!sql) {
+            logger.warn("SQL execution with empty query", {
+              userId: session.user.id,
+              email: session.user.email,
+              timestamp: new Date().toISOString(),
+            });
             return json(
               {
                 success: false,
@@ -52,6 +65,12 @@ export const Route = createFileRoute("/api/sql/execute")({
           }
 
           if (!dataSourceId) {
+            logger.warn("SQL execution without data source", {
+              userId: session.user.id,
+              email: session.user.email,
+              sqlLength: sql.length,
+              timestamp: new Date().toISOString(),
+            });
             return json(
               {
                 success: false,
@@ -62,6 +81,13 @@ export const Route = createFileRoute("/api/sql/execute")({
           }
 
           if (!isReadOnlyQuery(sql)) {
+            logger.warn("Non-SELECT query attempted", {
+              userId: session.user.id,
+              email: session.user.email,
+              dataSourceId,
+              sqlPreview: sql.substring(0, 100),
+              timestamp: new Date().toISOString(),
+            });
             return json(
               {
                 success: false,
@@ -83,11 +109,29 @@ export const Route = createFileRoute("/api/sql/execute")({
             .executeTakeFirst();
 
           if (!dataSource) {
+            logger.warn("Data source not found or inactive", {
+              userId: session.user.id,
+              email: session.user.email,
+              dataSourceId,
+              timestamp: new Date().toISOString(),
+            });
             return json(
               { success: false, error: { code: "NOT_FOUND", message: "Data source not found" } },
               { status: 404 }
             );
           }
+
+          logger.info("SQL query execution started", {
+            userId: session.user.id,
+            email: session.user.email,
+            dataSourceName: (dataSource as any).name,
+            dataSourceId,
+            sqlLength: sql.length,
+            sqlPreview: sql.substring(0, 200),
+            limit,
+            offset,
+            timestamp: new Date().toISOString(),
+          });
 
           const connection = await getConnection(dataSource as unknown as DataSource);
 
@@ -105,7 +149,10 @@ export const Route = createFileRoute("/api/sql/execute")({
             totalRowCount = Number((countRows[0] as Record<string, unknown>)?.total) || 0;
           } catch (e) {
             // If counting fails, just continue without total row count
-            console.debug("Could not count total rows (non-blocking):", (e as Error)?.message);
+            logger.debug("Could not count total rows (non-blocking)", {
+              userId: session.user.id,
+              error: (e as Error)?.message,
+            });
             totalRowCount = 0;
           }
 
@@ -134,17 +181,32 @@ export const Route = createFileRoute("/api/sql/execute")({
             }
           }
 
-          const startTime = Date.now();
+          const executionStartTime = Date.now();
 
           const { rows: rawRows } = await kyselySql.raw(limitedSQL).execute(connection);
 
-          const executionTime = Date.now() - startTime;
+          const executionTime = Date.now() - executionStartTime;
 
           const rows = rawRows as Record<string, unknown>[];
           const columns: { name: string; type: string }[] =
             rows.length > 0
               ? Object.keys(rows[0]).map((name) => ({ name, type: typeof rows[0][name] }))
               : [];
+
+          logger.info("SQL query executed successfully", {
+            userId: session.user.id,
+            email: session.user.email,
+            dataSourceName: (dataSource as any).name,
+            dataSourceId,
+            rowCount: rows.length,
+            totalRows: totalRowCount,
+            executionTime,
+            columnCount: columns.length,
+            columnNames: columns.map((c) => c.name),
+            limit: effectiveLimit,
+            offset: effectiveOffset,
+            timestamp: new Date().toISOString(),
+          });
 
           await logAudit({
             userId: session.user.id,
@@ -174,13 +236,25 @@ export const Route = createFileRoute("/api/sql/execute")({
             },
           });
         } catch (error) {
-          console.error("[SQL EXECUTE ERROR]", error);
+          const session = await getSession(request);
+          const errorMessage = error instanceof Error ? error.message : "Unknown error";
+          const totalTime = Date.now() - startTime;
+
+          logger.error("SQL execution failed", error instanceof Error ? error : new Error(errorMessage), {
+            userId: session?.user?.id || "unknown",
+            email: session?.user?.email || "unknown",
+            errorMessage,
+            errorType: error?.constructor?.name || "Unknown",
+            executionTime: totalTime,
+            timestamp: new Date().toISOString(),
+          });
+
           return json(
             {
               success: false,
               error: {
                 code: "EXECUTION_ERROR",
-                message: error instanceof Error ? error.message : "Unknown error",
+                message: errorMessage,
               },
             },
             { status: 500 }
