@@ -47,28 +47,46 @@ async function flushLogsToDatabase() {
 
   try {
     const db = getDb();
-    // Batch insert all logs at once for better performance
-    if (logsToWrite.length > 0) {
+    // Insert logs one at a time to avoid serialization issues
+    for (const log of logsToWrite) {
+      let metadataStr: string | null = null;
+      try {
+        // Safely serialize metadata, handling circular references
+        if (log.metadata) {
+          metadataStr = JSON.stringify(log.metadata, (key, value) => {
+            // Filter out non-serializable values
+            if (typeof value === "function" || typeof value === "symbol") {
+              return undefined;
+            }
+            return value;
+          });
+        }
+      } catch (e) {
+        console.error("Failed to serialize metadata:", e);
+        metadataStr = null;
+      }
+
       await db
         .insertInto("logs")
-        .values(
-          logsToWrite.map((log) => ({
-            timestamp: new Date(log.timestamp),
-            level: log.level,
-            message: log.message,
-            component: log.component,
-            user_id: log.userId as any,
-            session_id: log.sessionId,
-            metadata: JSON.stringify(log.metadata),
-            error_stack: log.errorStack,
-            request_id: log.requestId,
-          }))
-        )
+        .values({
+          timestamp: new Date(log.timestamp),
+          level: log.level,
+          message: log.message,
+          component: log.component,
+          user_id: log.userId as any,
+          session_id: log.sessionId,
+          metadata: metadataStr,
+          error_stack: log.errorStack || null,
+          request_id: log.requestId || null,
+        })
         .execute();
     }
   } catch (error) {
     console.error("Failed to flush logs to database:", error);
-    dbWriteQueue = [...logsToWrite, ...dbWriteQueue];
+    // Only re-queue if we haven't already
+    if (dbWriteQueue.length === 0) {
+      dbWriteQueue = logsToWrite;
+    }
   }
 }
 

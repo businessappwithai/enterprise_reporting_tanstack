@@ -24,6 +24,7 @@ export interface Database {
   job_definitions: JobDefinitionsTable;
   job_executions: JobExecutionsTable;
   audit_log: AuditLogTable;
+  logs: LogsTable;
   email_templates: EmailTemplatesTable;
   resource_permissions: ResourcePermissionsTable;
   filter_definitions: FilterDefinitionsTable;
@@ -214,6 +215,19 @@ export interface AuditLogTable {
   ip_address: string | null;
   user_agent: string | null;
   created_at: string;
+}
+
+export interface LogsTable {
+  id?: string;
+  timestamp: string;
+  level: string;
+  message: string;
+  component: string;
+  user_id: string | null;
+  session_id: string | null;
+  metadata: string | null; // JSON
+  error_stack: string | null;
+  request_id: string | null;
 }
 
 export interface EmailTemplatesTable {
