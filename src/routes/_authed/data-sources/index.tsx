@@ -99,7 +99,7 @@ function DataSourcesPage() {
     queryFn: async () => {
       const res = await fetch("/api/data-sources");
       const data = await res.json();
-      return data.data?.items || [];
+      return data.items || data.data?.items || [];
     },
   });
 
