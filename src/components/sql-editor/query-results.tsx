@@ -239,59 +239,68 @@ export function QueryResults({ result, isLoading, error, onPageChange }: QueryRe
         )}
       </div>
 
-      {/* Virtualized Table */}
-      <div ref={tableContainerRef} className="flex-1 overflow-auto rounded-md border">
-        <Table style={{ borderCollapse: "separate", borderSpacing: "0" }}>
-          <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="whitespace-nowrap bg-background">
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {rowModel.rows.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="text-center text-muted-foreground">
-                  No results
-                </TableCell>
-              </TableRow>
-            ) : (
-              virtualizer.getVirtualItems().map((virtualRow) => {
-                const row = rowModel.rows[virtualRow.index];
-                return (
-                  <TableRow
-                    key={virtualRow.key}
-                    data-index={virtualRow.index}
-                    ref={virtualizer.measureElement}
-                    style={{
-                      height: `${virtualRow.size}px`,
-                      display: "table-row",
-                    }}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell
-                        key={cell.id}
-                        className="font-mono text-sm border-b py-2"
-                        style={{
-                          boxSizing: "border-box",
-                        }}
-                      >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
+      {/* Fixed Header + Scrollable Body */}
+      <div className="flex-1 flex flex-col overflow-hidden rounded-md border">
+        {/* Fixed Header - Outside Scroll Container */}
+        <div className="shrink-0">
+          <Table style={{ borderCollapse: "separate", borderSpacing: "0", width: "100%" }}>
+            <TableHeader className="bg-background shadow-sm">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id} className="whitespace-nowrap bg-background">
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
+          </Table>
+        </div>
+
+        {/* Scrollable Body - Inside Overflow Container */}
+        <div ref={tableContainerRef} className="flex-1 overflow-auto">
+          <Table style={{ borderCollapse: "separate", borderSpacing: "0", width: "100%" }}>
+            <TableBody>
+              {rowModel.rows.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="text-center text-muted-foreground py-8">
+                    No results
+                  </TableCell>
+                </TableRow>
+              ) : (
+                virtualizer.getVirtualItems().map((virtualRow) => {
+                  const row = rowModel.rows[virtualRow.index];
+                  return (
+                    <TableRow
+                      key={virtualRow.key}
+                      data-index={virtualRow.index}
+                      ref={virtualizer.measureElement}
+                      style={{
+                        height: `${virtualRow.size}px`,
+                        display: "table-row",
+                      }}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell
+                          key={cell.id}
+                          className="font-mono text-sm border-b py-2"
+                          style={{
+                            boxSizing: "border-box",
+                          }}
+                        >
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       {/* Performance Info for Large Datasets */}

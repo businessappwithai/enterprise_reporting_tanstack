@@ -104,34 +104,6 @@ export const Route = createFileRoute("/api/sql/execute")({
             console.error("Could not count total rows:", e);
           }
 
-          const tooLargeForInteractive = totalRowCount > MAX_CLIENT_ROWS;
-
-          if (tooLargeForInteractive) {
-            return json({
-              success: true,
-              data: {
-                columns: [],
-                rows: [],
-                rowCount: totalRowCount,
-                executionTime: 0,
-                truncated: false,
-                pagination: {
-                  limit: PAGE_SIZE,
-                  offset: offset || 0,
-                  hasMore: false,
-                  serverSide: true,
-                },
-                warning: {
-                  code: "DATASET_TOO_LARGE",
-                  message: `Query returns ${totalRowCount.toLocaleString()} rows, which exceeds the interactive limit of ${MAX_CLIENT_ROWS.toLocaleString()} rows.`,
-                  suggestion: "Run this query as a background job instead.",
-                  totalRows: totalRowCount,
-                  interactiveLimit: MAX_CLIENT_ROWS,
-                },
-              },
-            });
-          }
-
           let limitedSQL = sql.trim();
           const effectiveLimit = validatePageSize(limit || sqlEditorConfig.serverPageSize);
           const effectiveOffset = offset || 0;

@@ -44,9 +44,9 @@ export const paginationConfig: PaginationConfig = {
 
 // Client-side pagination for SQL Editor results
 export const sqlEditorConfig = {
-  serverPageSize: 500, // Server-side page size
-  maxClientRows: 5000, // Maximum rows to accumulate client-side (10 pages)
-  maxPagesToLoad: 10, // Maximum number of pages to accumulate
+  serverPageSize: 100, // Server-side page size
+  maxClientRows: 5000, // Maximum rows to accumulate client-side
+  maxPagesToLoad: 50, // Maximum number of pages to accumulate
 };
 
 /**

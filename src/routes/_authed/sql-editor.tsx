@@ -12,6 +12,7 @@ import {
 import { MonacoSQLEditorWrapper } from "@/components/sql-editor/monaco-editor-wrapper";
 import { QueryResults } from "@/components/sql-editor/query-results";
 import { SchemaBrowser } from "@/components/sql-editor/schema-browser";
+import { sqlEditorConfig } from "@/lib/config/pagination";
 import type { SQLExecutionResponse } from "@/types/api";
 import type { DataSource } from "@/types/database";
 
@@ -142,7 +143,7 @@ function SQLEditorPage() {
         body: JSON.stringify({
           sql,
           dataSourceId: selectedDataSource,
-          limit: 500,
+          limit: sqlEditorConfig.serverPageSize,
           offset: 0,
         }),
       });
@@ -212,7 +213,7 @@ function SQLEditorPage() {
         body: JSON.stringify({
           sql: sqlContent,
           dataSourceId: selectedDataSource,
-          limit: 500,
+          limit: sqlEditorConfig.serverPageSize,
           offset: nextOffset,
         }),
       });
@@ -240,7 +241,7 @@ function SQLEditorPage() {
   });
 
   const _handleLoadMore = useCallback(() => {
-    if (hasMore && !isLoadingMore && accumulatedRows.length < 5000) {
+    if (hasMore && !isLoadingMore && accumulatedRows.length < sqlEditorConfig.maxClientRows) {
       loadMoreMutation.mutate();
     }
   }, [hasMore, isLoadingMore, accumulatedRows.length, loadMoreMutation.mutate]);
@@ -268,7 +269,7 @@ function SQLEditorPage() {
         body: JSON.stringify({
           sql: sqlContent,
           dataSourceId: selectedDataSource,
-          limit: 500,
+          limit: sqlEditorConfig.serverPageSize,
           offset,
         }),
       });
