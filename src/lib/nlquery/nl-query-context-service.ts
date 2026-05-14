@@ -177,7 +177,8 @@ export async function findSimilarQueries(
   const embeddingString = `[${nlQuestionEmbedding.join(",")}]`;
 
   try {
-    const results = await db.raw.execute(
+    // Use Kysely's raw query for pgvector similarity search
+    const results = await (db as any).raw.query(
       `
       SELECT
         id,

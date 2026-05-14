@@ -33,6 +33,11 @@ export interface Database {
   ds_roles: DsRolesTable;
   ds_user_roles: DsUserRolesTable;
   ds_entity_permissions: DsEntityPermissionsTable;
+  schema_field_instructions: SchemaFieldInstructionsTable;
+  schema_table_instructions: SchemaTableInstructionsTable;
+  nl_query_context: NLQueryContextTable;
+  nl_query_role_stats: NLQueryRoleStatsTable;
+  nl_query_feedback: NLQueryFeedbackTable;
 }
 
 // Table type definitions — column names match actual DB schema from migrations
@@ -314,6 +319,99 @@ export interface DsEntityPermissionsTable {
   created_by: string | null;
   created_at: string;
   updated_at: string;
+}
+
+// Schema Instruction Tables (for NL query enhanced context)
+
+export interface SchemaFieldInstructionsTable {
+  id: string;
+  data_source_id: string;
+  table_name: string;
+  field_name: string;
+  field_type: string;
+  is_nullable: boolean;
+  is_primary_key: boolean;
+  is_foreign_key: boolean;
+  foreign_key_table: string | null;
+  foreign_key_field: string | null;
+  description: string | null;
+  llm_instructions: string | null;
+  example_values: string | null;
+  constraints: string | null;
+  business_meaning: string | null;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
+}
+
+export interface SchemaTableInstructionsTable {
+  id: string;
+  data_source_id: string;
+  table_name: string;
+  description: string | null;
+  llm_instructions: string | null;
+  example_queries: string | null;
+  business_domain: string | null;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
+}
+
+// NL Query Context Tables (pgvector-based learning system)
+
+export interface NLQueryContextTable {
+  id: string;
+  data_source_id: string;
+  user_id: string;
+  role_name: string;
+  nl_question: string;
+  generated_sql: string;
+  nl_question_embedding: string | null; // JSON array or pgvector
+  schema_context: string; // JSON
+  rbac_context: string; // JSON
+  field_instructions: string | null; // JSON
+  execution_time_ms: number | null;
+  row_count: number | null;
+  was_successful: boolean;
+  error_message: string | null;
+  translation_confidence: number | null;
+  llm_confidence: number | null;
+  query_type: string | null;
+  table_count: number | null;
+  join_count: number | null;
+  has_aggregation: boolean | null;
+  has_window_function: boolean | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface NLQueryRoleStatsTable {
+  id: string;
+  role_name: string;
+  data_source_id: string;
+  total_queries: number | null;
+  successful_queries: number | null;
+  failed_queries: number | null;
+  success_rate: number | null;
+  avg_execution_time_ms: number | null;
+  avg_rows_returned: number | null;
+  avg_confidence: number | null;
+  common_query_types: string | null; // JSON
+  common_tables: string | null; // JSON
+  common_joins: string | null; // JSON
+  updated_at: string;
+}
+
+export interface NLQueryFeedbackTable {
+  id: string;
+  nl_query_context_id: string;
+  feedback_type: string | null;
+  user_feedback: string | null;
+  corrected_sql: string | null;
+  feedback_by: string | null;
+  created_at: string;
 }
 
 // Database instance type

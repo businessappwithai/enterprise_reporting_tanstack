@@ -10,6 +10,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireAuth } from "@/lib/auth/middleware";
 import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
+import type { DataSource, User } from "@/types/database";
 import { isSafeSelectQuery } from "@/lib/nlquery/openai-translator";
 import { translateNLToSQLViaMastra as translateViaOllama, isOllamaAvailable } from "@/lib/nlquery/mastra-ollama-translator";
 import { translateNLToSQLViaMastra as translateViaMastra, isMastraAvailable } from "@/lib/nlquery/mastra-connector";
@@ -62,7 +63,7 @@ const CONFIDENCE_THRESHOLD = 0.9; // D3: ≥90% execute; <90% warn
  */
 export const executeNLQuery = createServerFn({
   method: "POST",
-}).handler(async (input: ExecuteNLQueryInput): Promise<ExecuteNLQueryResult> => {
+}).handler(async (input: ExecuteNLQueryInput) => {
   const session = await requireAuth();
   const { nlQuestion, dataSourceId, timeout = DEFAULT_TIMEOUT } = input;
 
@@ -99,7 +100,7 @@ export const executeNLQuery = createServerFn({
 
   try {
     // [Step 1] Get schema metadata
-    const schema = await getSchemaMetadata(dataSource);
+    const schema = await getSchemaMetadata(dataSource as any as DataSource);
 
     // [Step 1.2] Get LLM instructions for enhanced context
     const fieldInstructions = await db
@@ -151,10 +152,11 @@ export const executeNLQuery = createServerFn({
       tableInstructions: tableInstructionsMap,
     };
 
-    // [Step 1.5] Build enhanced context with pgvector similar queries
+    // [Step 1.5] Check if Mastra is available and build enhanced context with pgvector
     let contextPrompt = "";
     const userRoles = session.user.roles || [];
     const primaryRole = userRoles[0] || "user";
+    const mastraAvailable = await isMastraAvailable();
 
     if (mastraAvailable) {
       // Build context from similar successful queries for this role
@@ -171,9 +173,6 @@ export const executeNLQuery = createServerFn({
     // [Step 1.6] Translate NL to SQL using Mastra.ai agent (primary) or Ollama (fallback)
     let translation: any = null;
     let translationSource = "";
-
-    // Try Mastra agent first (primary)
-    const mastraAvailable = await isMastraAvailable();
     if (mastraAvailable) {
       console.log("[NLQuery] Using Mastra.ai agent for translation");
       translationSource = "mastra-agent";
@@ -205,7 +204,7 @@ export const executeNLQuery = createServerFn({
 
       await logAudit({
         userId: session.user.id,
-        action: "nl_query_error",
+        action: "execute",
         resourceType: "query",
         resourceId: dataSourceId,
         details: {
@@ -228,7 +227,7 @@ export const executeNLQuery = createServerFn({
     if (!isSafeSelectQuery(generatedSQL)) {
       await logAudit({
         userId: session.user.id,
-        action: "nl_query_error",
+        action: "execute",
         resourceType: "query",
         resourceId: dataSourceId,
         details: { nlQuestion, error: "Generated query is not a safe SELECT statement" },
@@ -262,7 +261,7 @@ export const executeNLQuery = createServerFn({
     // Log the generated query and its confidence
     await logAudit({
       userId: session.user.id,
-      action: "nl_query_generated",
+      action: "create",
       resourceType: "query",
       resourceId: dataSourceId,
       details: {
@@ -288,12 +287,12 @@ export const executeNLQuery = createServerFn({
     }
 
     // [Step 4] RBAC pre-flight check (D5)
-    const accessValidation = await validateQueryAccess(session.user, generatedSQL, dataSourceId);
+    const accessValidation = await validateQueryAccess(session.user as any as User, generatedSQL, dataSourceId);
 
     if (!accessValidation.allowed) {
       await logAudit({
         userId: session.user.id,
-        action: "query_access_denied",
+        action: "view",
         resourceType: "query",
         resourceId: dataSourceId,
         details: {
@@ -312,7 +311,7 @@ export const executeNLQuery = createServerFn({
     }
 
     // [Step 5] Execute query
-    const connection = await getConnection(dataSource);
+    const connection = await getConnection(dataSource as any as DataSource);
     const startTime = Date.now();
     const result = await connection.raw(generatedSQL).timeout(timeout);
     const executionTime = Date.now() - startTime;
@@ -331,7 +330,7 @@ export const executeNLQuery = createServerFn({
         roleName: primaryRole,
         nlQuestion,
         generatedSQL,
-        nlQuestionEmbedding,
+        nlQuestionEmbedding: nlQueryEmbedding,
         schemaContext: enhancedSchema,
         rbacContext: {
           userId: session.user.id,
@@ -368,7 +367,7 @@ export const executeNLQuery = createServerFn({
 
     await logAudit({
       userId: session.user.id,
-      action: "nl_query_executed",
+      action: "execute",
       resourceType: "query",
       resourceId: dataSourceId,
       details: {
@@ -394,7 +393,7 @@ export const executeNLQuery = createServerFn({
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     await logAudit({
       userId: session.user.id,
-      action: "nl_query_error",
+      action: "execute",
       resourceType: "query",
       resourceId: dataSourceId,
       details: { nlQuestion, error: errorMessage },
@@ -422,57 +421,55 @@ export const executeNLQuery = createServerFn({
  */
 export const executeNLQueryWithOverride = createServerFn({
   method: "POST",
-}).handler(
-  async (input: ExecuteNLQueryInput & { approvedSQL: string }): Promise<ExecuteNLQueryResult> => {
-    const session = await requireAuth();
-    const { approvedSQL, dataSourceId, timeout = DEFAULT_TIMEOUT } = input;
+}).handler(async (input: ExecuteNLQueryInput & { approvedSQL: string }) => {
+  const session = await requireAuth();
+  const { approvedSQL, dataSourceId, timeout = DEFAULT_TIMEOUT } = input;
 
-    const db = getDb();
-    const dataSource = await db
-      .selectFrom("data_sources")
-      .selectAll()
-      .where("id", "=", dataSourceId)
-      .where("is_active", "=", true)
-      .executeTakeFirst();
+  const db = getDb();
+  const dataSource = await db
+    .selectFrom("data_sources")
+    .selectAll()
+    .where("id", "=", dataSourceId)
+    .where("is_active", "=", true)
+    .executeTakeFirst();
 
-    if (!dataSource) {
-      return { success: false, error: "Data source not found" };
-    }
-
-    try {
-      // Log the override
-      await logAudit({
-        userId: session.user.id,
-        action: "nl_query_override",
-        resourceType: "query",
-        resourceId: dataSourceId,
-        details: {
-          sql: approvedSQL.substring(0, 500),
-          reason: "Manager approved low-confidence translation",
-        },
-      });
-
-      // Execute with override
-      const connection = await getConnection(dataSource);
-      const startTime = Date.now();
-      const result = await connection.raw(approvedSQL).timeout(timeout);
-      const executionTime = Date.now() - startTime;
-
-      const rows = Array.isArray(result) ? result : result?.rows || [];
-
-      return {
-        success: true,
-        sql: approvedSQL,
-        rows: rows.slice(0, 100),
-        rowCount: rows.length,
-        executionTime,
-      };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      return {
-        success: false,
-        error: errorMessage,
-      };
-    }
+  if (!dataSource) {
+    return { success: false, error: "Data source not found" };
   }
-);
+
+  try {
+    // Log the override
+    await logAudit({
+      userId: session.user.id,
+      action: "update",
+      resourceType: "query",
+      resourceId: dataSourceId,
+      details: {
+        sql: approvedSQL.substring(0, 500),
+        reason: "Manager approved low-confidence translation",
+      },
+    });
+
+    // Execute with override
+    const connection = await getConnection(dataSource as any as DataSource);
+    const startTime = Date.now();
+    const result = await connection.raw(approvedSQL).timeout(timeout);
+    const executionTime = Date.now() - startTime;
+
+    const rows = Array.isArray(result) ? result : result?.rows || [];
+
+    return {
+      success: true,
+      sql: approvedSQL,
+      rows: rows.slice(0, 100),
+      rowCount: rows.length,
+      executionTime,
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    return {
+      success: false,
+      error: errorMessage,
+    };
+  }
+});

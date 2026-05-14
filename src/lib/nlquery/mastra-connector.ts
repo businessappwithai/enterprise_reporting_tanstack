@@ -30,9 +30,12 @@ export interface MastraAgentResponse {
 export async function isMastraAvailable(): Promise<boolean> {
   const mastraUrl = process.env.MASTRA_URL || "http://localhost:4111";
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
     const response = await fetch(`${mastraUrl}/health`, {
-      timeout: 5000,
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
     return response.ok;
   } catch {
     return false;
@@ -59,6 +62,9 @@ export async function translateNLToSQLViaMastra(
         }
       : context;
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
     const response = await fetch(`${mastraUrl}/api/nl-to-sql`, {
       method: "POST",
       headers: {
@@ -69,15 +75,17 @@ export async function translateNLToSQLViaMastra(
         schema,
         context: enhancedContext,
       }),
-      timeout: 30000,
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       console.error(`[Mastra] Translation failed with status ${response.status}`);
       return null;
     }
 
-    const data = await response.json() as MastraAgentResponse;
+    const data = (await response.json()) as MastraAgentResponse;
     return data;
   } catch (error) {
     console.error("[Mastra] Connection error:", error);
@@ -92,21 +100,26 @@ export async function validateSQLViaMastra(sql: string): Promise<{ isValid: bool
   const mastraUrl = process.env.MASTRA_URL || "http://localhost:4111";
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
     const response = await fetch(`${mastraUrl}/api/validate-sql`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ sql }),
-      timeout: 10000,
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       return { isValid: false, errors: ["Validation failed"] };
     }
 
-    const data = await response.json() as { isValid: boolean; errors?: string[] };
-    return data;
+    const data = (await response.json()) as { isValid: boolean; errors?: string[] };
+    return { ...data, errors: data.errors || [] };
   } catch (error) {
     console.error("[Mastra] Validation error:", error);
     return { isValid: false, errors: ["Validation service unavailable"] };
