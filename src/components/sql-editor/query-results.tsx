@@ -21,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useUISettings } from "@/hooks/useUISettings";
 import type { ColumnInfo, SQLExecutionResponse } from "@/types/api";
 
 interface QueryResultsProps {
@@ -36,6 +37,7 @@ export function QueryResults({ result, isLoading, error, onPageChange }: QueryRe
   const [sorting, setSorting] = useState<SortingState>([]);
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const virtualizerRef = useRef<ReturnType<typeof useVirtualizer> | null>(null);
+  const uiSettings = useUISettings();
 
   // MEMORY LEAK FIX: Cleanup on unmount
   useEffect(() => {
@@ -261,7 +263,7 @@ export function QueryResults({ result, isLoading, error, onPageChange }: QueryRe
         </div>
 
         {/* Scrollable Body - Inside Overflow Container */}
-        <div ref={tableContainerRef} className="flex-1 overflow-auto">
+        <div ref={tableContainerRef} className="flex-1 overflow-auto min-h-0">
           <Table style={{ borderCollapse: "separate", borderSpacing: "0", width: "100%" }}>
             <TableBody>
               {rowModel.rows.length === 0 ? (
@@ -271,8 +273,9 @@ export function QueryResults({ result, isLoading, error, onPageChange }: QueryRe
                   </TableCell>
                 </TableRow>
               ) : (
-                virtualizer.getVirtualItems().map((virtualRow) => {
+                virtualizer.getVirtualItems().map((virtualRow, index) => {
                   const row = rowModel.rows[virtualRow.index];
+                  const isEven = virtualRow.index % 2 === 0;
                   return (
                     <TableRow
                       key={virtualRow.key}
@@ -281,6 +284,7 @@ export function QueryResults({ result, isLoading, error, onPageChange }: QueryRe
                       style={{
                         height: `${virtualRow.size}px`,
                         display: "table-row",
+                        backgroundColor: isEven ? "transparent" : uiSettings.tableRowStripeColor,
                       }}
                     >
                       {row.getVisibleCells().map((cell) => (

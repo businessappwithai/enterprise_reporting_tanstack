@@ -52,6 +52,7 @@ import { Route as ApiAuthPermissionsRouteImport } from './routes/api/auth/permis
 import { Route as ApiAdminUsersRouteImport } from './routes/api/admin/users'
 import { Route as ApiAdminRolesRouteImport } from './routes/api/admin/roles'
 import { Route as ApiAdminPermissionsRouteImport } from './routes/api/admin/permissions'
+import { Route as AuthedSettingsUiRouteImport } from './routes/_authed/settings/ui'
 import { Route as AuthedSettingsEmailIndexRouteImport } from './routes/_authed/settings/email/index'
 import { Route as AuthedMetadataEntitiesIndexRouteImport } from './routes/_authed/metadata/entities/index'
 import { Route as AuthedDashboardsIdIndexRouteImport } from './routes/_authed/dashboards/$id/index'
@@ -288,6 +289,11 @@ const ApiAdminPermissionsRoute = ApiAdminPermissionsRouteImport.update({
   path: '/api/admin/permissions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthedSettingsUiRoute = AuthedSettingsUiRouteImport.update({
+  id: '/settings/ui',
+  path: '/settings/ui',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedSettingsEmailIndexRoute =
   AuthedSettingsEmailIndexRouteImport.update({
     id: '/settings/email/',
@@ -409,6 +415,7 @@ export interface FileRoutesByFullPath {
   '/api/notifications': typeof ApiNotificationsRoute
   '/api/queries': typeof ApiQueriesRoute
   '/api/reports': typeof ApiReportsRouteWithChildren
+  '/settings/ui': typeof AuthedSettingsUiRoute
   '/api/admin/permissions': typeof ApiAdminPermissionsRoute
   '/api/admin/roles': typeof ApiAdminRolesRoute
   '/api/admin/users': typeof ApiAdminUsersRoute
@@ -473,6 +480,7 @@ export interface FileRoutesByTo {
   '/api/notifications': typeof ApiNotificationsRoute
   '/api/queries': typeof ApiQueriesRoute
   '/api/reports': typeof ApiReportsRouteWithChildren
+  '/settings/ui': typeof AuthedSettingsUiRoute
   '/api/admin/permissions': typeof ApiAdminPermissionsRoute
   '/api/admin/roles': typeof ApiAdminRolesRoute
   '/api/admin/users': typeof ApiAdminUsersRoute
@@ -539,6 +547,7 @@ export interface FileRoutesById {
   '/api/notifications': typeof ApiNotificationsRoute
   '/api/queries': typeof ApiQueriesRoute
   '/api/reports': typeof ApiReportsRouteWithChildren
+  '/_authed/settings/ui': typeof AuthedSettingsUiRoute
   '/api/admin/permissions': typeof ApiAdminPermissionsRoute
   '/api/admin/roles': typeof ApiAdminRolesRoute
   '/api/admin/users': typeof ApiAdminUsersRoute
@@ -605,6 +614,7 @@ export interface FileRouteTypes {
     | '/api/notifications'
     | '/api/queries'
     | '/api/reports'
+    | '/settings/ui'
     | '/api/admin/permissions'
     | '/api/admin/roles'
     | '/api/admin/users'
@@ -669,6 +679,7 @@ export interface FileRouteTypes {
     | '/api/notifications'
     | '/api/queries'
     | '/api/reports'
+    | '/settings/ui'
     | '/api/admin/permissions'
     | '/api/admin/roles'
     | '/api/admin/users'
@@ -734,6 +745,7 @@ export interface FileRouteTypes {
     | '/api/notifications'
     | '/api/queries'
     | '/api/reports'
+    | '/_authed/settings/ui'
     | '/api/admin/permissions'
     | '/api/admin/roles'
     | '/api/admin/users'
@@ -1120,6 +1132,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminPermissionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authed/settings/ui': {
+      id: '/_authed/settings/ui'
+      path: '/settings/ui'
+      fullPath: '/settings/ui'
+      preLoaderRoute: typeof AuthedSettingsUiRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/settings/email/': {
       id: '/_authed/settings/email/'
       path: '/settings/email'
@@ -1284,6 +1303,7 @@ interface AuthedRouteChildren {
   AuthedBullBoardRoute: typeof AuthedBullBoardRoute
   AuthedDashboardRoute: typeof AuthedDashboardRoute
   AuthedSqlEditorRoute: typeof AuthedSqlEditorRoute
+  AuthedSettingsUiRoute: typeof AuthedSettingsUiRoute
   AuthedChartsIndexRoute: typeof AuthedChartsIndexRoute
   AuthedDashboardsIndexRoute: typeof AuthedDashboardsIndexRoute
   AuthedDataSourcesIndexRoute: typeof AuthedDataSourcesIndexRoute
@@ -1311,6 +1331,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedBullBoardRoute: AuthedBullBoardRoute,
   AuthedDashboardRoute: AuthedDashboardRoute,
   AuthedSqlEditorRoute: AuthedSqlEditorRoute,
+  AuthedSettingsUiRoute: AuthedSettingsUiRoute,
   AuthedChartsIndexRoute: AuthedChartsIndexRoute,
   AuthedDashboardsIndexRoute: AuthedDashboardsIndexRoute,
   AuthedDataSourcesIndexRoute: AuthedDataSourcesIndexRoute,

@@ -1,5 +1,5 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { Bell, Database, Mail, Users as UsersIcon } from "lucide-react";
+import { Bell, Database, Mail, Palette, Users as UsersIcon } from "lucide-react";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const Route = createFileRoute("/_authed/settings/")({
@@ -48,6 +48,18 @@ function SettingsPage() {
             </div>
             <CardDescription>Configure notification preferences (Coming Soon)</CardDescription>
           </CardHeader>
+        </Card>
+
+        <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
+          <Link to="/settings/ui">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Palette className="h-5 w-5" />
+                <CardTitle>UI Settings</CardTitle>
+              </div>
+              <CardDescription>Configure table display and appearance</CardDescription>
+            </CardHeader>
+          </Link>
         </Card>
 
         <Card className="opacity-50">
