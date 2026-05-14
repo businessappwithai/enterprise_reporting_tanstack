@@ -12,152 +12,196 @@
 # Error details
 
 ```
-Error: expect(locator).toBeVisible() failed
-
-Locator: locator('[role="dialog"], .dialog, dialog')
-Expected: visible
-Timeout: 5000ms
-Error: element(s) not found
-
+TimeoutError: page.fill: Timeout 15000ms exceeded.
 Call log:
-  - Expect "toBeVisible" with timeout 5000ms
-  - waiting for locator('[role="dialog"], .dialog, dialog')
+  - waiting for locator('input[name="name"]')
 
 ```
 
 # Page snapshot
 
 ```yaml
-- generic [ref=e1]:
-  - generic [ref=e2]:
-    - complementary [ref=e3]:
-      - link "Enterprise Reports" [ref=e5] [cursor=pointer]:
-        - /url: /
-        - img [ref=e6]
-        - generic [ref=e8]: Enterprise Reports
-      - generic [ref=e12]:
-        - generic [ref=e13]:
-          - heading "Main" [level=2] [ref=e14]
-          - navigation [ref=e15]:
-            - link "Dashboard" [ref=e16] [cursor=pointer]:
-              - /url: /
-              - button "Dashboard" [ref=e17]:
-                - img [ref=e18]
-                - generic [ref=e21]: Dashboard
-            - link "SQL Editor" [ref=e22] [cursor=pointer]:
-              - /url: /sql-editor
-              - button "SQL Editor" [ref=e23]:
-                - img [ref=e24]
-                - generic [ref=e26]: SQL Editor
-            - link "Saved Queries" [ref=e27] [cursor=pointer]:
-              - /url: /queries
-              - button "Saved Queries" [ref=e28]:
-                - img [ref=e29]
-                - generic [ref=e33]: Saved Queries
-            - link "Reports" [ref=e34] [cursor=pointer]:
-              - /url: /reports
-              - button "Reports" [ref=e35]:
-                - img [ref=e36]
-                - generic [ref=e39]: Reports
-            - link "Charts" [ref=e40] [cursor=pointer]:
-              - /url: /charts
-              - button "Charts" [ref=e41]:
-                - img [ref=e42]
-                - generic [ref=e44]: Charts
-            - link "Dashboards" [ref=e45] [cursor=pointer]:
-              - /url: /dashboards
-              - button "Dashboards" [ref=e46]:
-                - img [ref=e47]
-                - generic [ref=e52]: Dashboards
-            - link "Filters" [ref=e53] [cursor=pointer]:
-              - /url: /filters
-              - button "Filters" [ref=e54]:
-                - img [ref=e55]
-                - generic [ref=e57]: Filters
-            - link "Jobs" [ref=e58] [cursor=pointer]:
-              - /url: /jobs
-              - button "Jobs" [ref=e59]:
-                - img [ref=e60]
-                - generic [ref=e62]: Jobs
-            - link "NL Query" [ref=e63] [cursor=pointer]:
-              - /url: /nl-query
-              - button "NL Query" [ref=e64]:
-                - img [ref=e65]
-                - generic [ref=e67]: NL Query
-        - generic [ref=e68]:
-          - heading "Administration" [level=2] [ref=e69]
-          - navigation [ref=e70]:
-            - link "Data Sources" [ref=e71] [cursor=pointer]:
-              - /url: /data-sources
-              - button "Data Sources" [ref=e72]:
-                - img [ref=e73]
-                - generic [ref=e77]: Data Sources
-            - link "Queue Management" [ref=e78] [cursor=pointer]:
-              - /url: /bull-board
-              - button "Queue Management" [ref=e79]:
-                - img [ref=e80]
-                - generic [ref=e84]: Queue Management
-            - link "Users" [ref=e85] [cursor=pointer]:
-              - /url: /admin/users
-              - button "Users" [ref=e86]:
-                - img [ref=e87]
-                - generic [ref=e92]: Users
-            - link "Roles" [ref=e93] [cursor=pointer]:
-              - /url: /admin/roles
-              - button "Roles" [ref=e94]:
-                - img [ref=e95]
-                - generic [ref=e97]: Roles
-            - link "Permissions" [ref=e98] [cursor=pointer]:
-              - /url: /admin/permissions
-              - button "Permissions" [ref=e99]:
-                - img [ref=e100]
-                - generic [ref=e102]: Permissions
-            - link "Settings" [ref=e103] [cursor=pointer]:
-              - /url: /settings
-              - button "Settings" [ref=e104]:
-                - img [ref=e105]
-                - generic [ref=e108]: Settings
-      - button [ref=e109] [cursor=pointer]:
-        - img [ref=e110]
-    - generic [ref=e112]:
-      - banner [ref=e113]:
-        - button "Sakila Demo DB sqlite3" [ref=e115] [cursor=pointer]:
-          - img [ref=e116]
-          - generic [ref=e120]: Sakila Demo DB
-          - generic [ref=e121]: sqlite3
-        - generic [ref=e122]:
-          - button "Toggle theme" [ref=e123] [cursor=pointer]:
-            - img [ref=e124]
+- generic:
+  - generic:
+    - complementary:
+      - generic:
+        - link:
+          - /url: /
+          - img
+          - generic: Enterprise Reports
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - heading [level=2]: Main
+                - navigation:
+                  - link:
+                    - /url: /
+                    - button:
+                      - img
+                      - generic: Dashboard
+                  - link:
+                    - /url: /sql-editor
+                    - button:
+                      - img
+                      - generic: SQL Editor
+                  - link:
+                    - /url: /queries
+                    - button:
+                      - img
+                      - generic: Saved Queries
+                  - link:
+                    - /url: /reports
+                    - button:
+                      - img
+                      - generic: Reports
+                  - link:
+                    - /url: /charts
+                    - button:
+                      - img
+                      - generic: Charts
+                  - link:
+                    - /url: /dashboards
+                    - button:
+                      - img
+                      - generic: Dashboards
+                  - link:
+                    - /url: /filters
+                    - button:
+                      - img
+                      - generic: Filters
+                  - link:
+                    - /url: /jobs
+                    - button:
+                      - img
+                      - generic: Jobs
+                  - link:
+                    - /url: /nl-query
+                    - button:
+                      - img
+                      - generic: NL Query
+              - generic:
+                - heading [level=2]: Administration
+                - navigation:
+                  - link:
+                    - /url: /data-sources
+                    - button:
+                      - img
+                      - generic: Data Sources
+                  - link:
+                    - /url: /bull-board
+                    - button:
+                      - img
+                      - generic: Queue Management
+                  - link:
+                    - /url: /admin/users
+                    - button:
+                      - img
+                      - generic: Users
+                  - link:
+                    - /url: /admin/roles
+                    - button:
+                      - img
+                      - generic: Roles
+                  - link:
+                    - /url: /admin/permissions
+                    - button:
+                      - img
+                      - generic: Permissions
+                  - link:
+                    - /url: /settings
+                    - button:
+                      - img
+                      - generic: Settings
+      - button:
+        - img
+    - generic:
+      - banner:
+        - generic:
+          - button:
             - img
-            - generic [ref=e130]: Toggle theme
-          - button "Notifications" [ref=e131] [cursor=pointer]:
-            - img [ref=e132]
-            - generic [ref=e135]: Notifications
-          - button "SA" [ref=e136] [cursor=pointer]:
-            - generic [ref=e138]: SA
-      - main [ref=e139]:
-        - generic [ref=e140]:
-          - generic [ref=e141]:
-            - generic [ref=e142]:
-              - heading "Data Sources" [level=1] [ref=e143]
-              - paragraph [ref=e144]: Manage database connections for reports and queries
-            - button "New Data Source" [active] [ref=e145] [cursor=pointer]:
-              - img [ref=e146]
+            - generic: Sakila Demo DB
+            - generic: sqlite3
+        - generic:
+          - button:
+            - img
+            - generic: Toggle theme
+          - button:
+            - img
+            - generic: Notifications
+          - button:
+            - generic:
+              - generic: SA
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - heading [level=1]: Data Sources
+              - paragraph: Manage database connections for reports and queries
+            - button [expanded]:
+              - img
               - text: New Data Source
-          - generic [ref=e147]:
-            - heading "All Data Sources" [level=3] [ref=e149]:
-              - img [ref=e150]
-              - text: All Data Sources
-            - generic [ref=e155]: No data sources configured. Add your first data source to get started.
+          - generic:
+            - generic:
+              - heading [level=3]:
+                - img
+                - text: All Data Sources
+            - generic:
+              - generic: No data sources configured. Add your first data source to get started.
   - region "Notifications alt+T"
+  - dialog "Add Data Source" [ref=e2]:
+    - generic [ref=e3]:
+      - heading "Add Data Source" [level=2] [ref=e4]
+      - paragraph [ref=e5]: Configure a new database connection for your reports.
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - text: Name
+          - textbox "Name" [active] [ref=e9]:
+            - /placeholder: Production Database
+        - generic [ref=e10]:
+          - text: Database Type
+          - combobox "Database Type" [ref=e11] [cursor=pointer]:
+            - generic: PostgreSQL
+            - img [ref=e12]
+      - generic [ref=e14]:
+        - text: Description
+        - textbox "Description" [ref=e15]:
+          - /placeholder: Optional description
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - text: Host
+          - textbox "Host" [ref=e18]:
+            - /placeholder: localhost
+        - generic [ref=e19]:
+          - text: Port
+          - textbox "Port" [ref=e20]:
+            - /placeholder: "5432"
+      - generic [ref=e21]:
+        - text: Database
+        - textbox "Database" [ref=e22]:
+          - /placeholder: mydb
+      - generic [ref=e23]:
+        - generic [ref=e24]:
+          - text: Username
+          - textbox "Username" [ref=e25]:
+            - /placeholder: dbuser
+        - generic [ref=e26]:
+          - text: Password
+          - textbox "Password" [ref=e27]:
+            - /placeholder: "********"
+    - generic [ref=e29]:
+      - button "Test Connection" [disabled]
+      - button "Create" [disabled]
+    - button "Close" [ref=e30] [cursor=pointer]:
+      - img [ref=e31]
+      - generic [ref=e34]: Close
 ```
 
 # Test source
 
 ```ts
-  18  |  * Run: bun run test:e2e -- e2e/complete-system-test.spec.ts
-  19  |  */
-  20  | 
   21  | import { test, expect } from '@playwright/test';
   22  | import { login } from './test-auth';
   23  | 
@@ -255,11 +299,11 @@ Call log:
   115 |       await page.click('button:has-text("New Data Source"), button:has-text("Add Data Source")');
   116 | 
   117 |       // Wait for dialog/modal
-> 118 |       await expect(page.locator('[role="dialog"], .dialog, dialog')).toBeVisible();
-      |                                                                      ^ Error: expect(locator).toBeVisible() failed
+  118 |       await expect(page.locator('[role="dialog"], .dialog, dialog')).toBeVisible();
   119 | 
   120 |       // Fill form
-  121 |       await page.fill('input[name="name"]', `E2E Test ${Date.now()}`);
+> 121 |       await page.fill('input[name="name"]', `E2E Test ${Date.now()}`);
+      |                  ^ TimeoutError: page.fill: Timeout 15000ms exceeded.
   122 |       await page.selectOption('select[name="type"]', 'postgres');
   123 |       await page.fill('input[name="host"]', 'localhost');
   124 |       await page.fill('input[name="port"]', '5432');
@@ -357,4 +401,7 @@ Call log:
   216 | 
   217 |       // Click save button
   218 |       await page.click('button:has-text("Save")');
+  219 | 
+  220 |       // Fill name in dialog
+  221 |       await page.fill('input[name="name"], input[placeholder*="name"]', queryName);
 ```

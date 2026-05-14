@@ -14,7 +14,10 @@ import {
 // Initialize all collections on mount to ensure they're ready
 export function TanStackDBWrapper({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    // Preload collections to ensure sync starts
+    // Initialize collections if needed
+    // Note: preload() is optional and only needed if sync is configured
+    // For now, collections are initialized with local state only
+
     const collections = [
       activeFiltersCollection,
       chartDraftCollection,
@@ -25,9 +28,21 @@ export function TanStackDBWrapper({ children }: { children: React.ReactNode }) {
       dashboardsCollection,
     ]
 
-    // Start sync for all collections
+    // Safely attempt to preload collections
+    // Skip if sync adapter isn't fully configured
     collections.forEach((collection) => {
-      collection.preload()
+      try {
+        // Only preload if the collection has the method and it's safe to call
+        if (collection.preload && typeof collection.preload === 'function') {
+          // Wrap in try-catch to prevent sync errors from blocking UI
+          Promise.resolve(collection.preload()).catch((error) => {
+            console.warn(`Preload failed for collection, continuing with local state:`, error)
+          })
+        }
+      } catch (error) {
+        // Silently continue - local state will work fine
+        console.debug('Collection preload skipped:', error)
+      }
     })
   }, [])
 

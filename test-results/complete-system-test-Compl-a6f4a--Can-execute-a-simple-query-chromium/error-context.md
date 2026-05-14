@@ -12,14 +12,11 @@
 # Error details
 
 ```
-Test timeout of 30000ms exceeded.
-```
-
-```
 Error: expect(locator).toBeVisible() failed
 
 Locator: locator('.monaco-editor')
 Expected: visible
+Timeout: 10000ms
 Error: element(s) not found
 
 Call log:

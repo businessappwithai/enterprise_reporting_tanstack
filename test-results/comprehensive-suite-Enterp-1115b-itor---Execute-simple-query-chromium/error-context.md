@@ -123,49 +123,48 @@ Call log:
         - img [ref=e110]
     - generic [ref=e112]:
       - banner [ref=e113]:
-        - generic [ref=e115]:
+        - button "Sakila Demo DB sqlite3" [ref=e115] [cursor=pointer]:
           - img [ref=e116]
-          - generic [ref=e118]: Loading connection...
-        - generic [ref=e119]:
-          - button "Toggle theme" [ref=e120] [cursor=pointer]:
-            - img [ref=e121]
+          - generic [ref=e120]: Sakila Demo DB
+          - generic [ref=e121]: sqlite3
+        - generic [ref=e122]:
+          - button "Toggle theme" [ref=e123] [cursor=pointer]:
+            - img [ref=e124]
             - img
-            - generic [ref=e127]: Toggle theme
-          - button "Notifications" [ref=e128] [cursor=pointer]:
-            - img [ref=e129]
-            - generic [ref=e132]: Notifications
-          - button "SA" [ref=e133] [cursor=pointer]:
-            - generic [ref=e135]: SA
-      - main [ref=e136]:
-        - generic [ref=e137]:
-          - generic [ref=e138]:
-            - generic [ref=e139]:
-              - heading "SQL Editor" [level=1] [ref=e140]
-              - paragraph [ref=e141]: Write and execute SQL queries
+            - generic [ref=e130]: Toggle theme
+          - button "Notifications" [ref=e131] [cursor=pointer]:
+            - img [ref=e132]
+            - generic [ref=e135]: Notifications
+          - button "SA" [ref=e136] [cursor=pointer]:
+            - generic [ref=e138]: SA
+      - main [ref=e139]:
+        - generic [ref=e140]:
+          - generic [ref=e141]:
             - generic [ref=e142]:
-              - button "Validate" [ref=e143] [cursor=pointer]
-              - button "Run Query" [ref=e144] [cursor=pointer]
-              - button "Save Query" [disabled] [ref=e145]
-          - generic [ref=e146]:
-            - generic [ref=e147]:
-              - paragraph [ref=e148]: "Data Source:"
-              - button "▲" [ref=e149] [cursor=pointer]
-            - paragraph [ref=e151]: Loading...
-          - button "Loading SQL Editor..." [ref=e152]:
-            - generic [ref=e156]:
-              - img [ref=e157]
-              - generic [ref=e159]: Loading SQL Editor...
-          - generic [ref=e160]:
-            - generic [ref=e161]:
-              - paragraph [ref=e162]: Schema Browser (Select a data source)
-              - button "▼" [ref=e164] [cursor=pointer]
-            - paragraph [ref=e166]: Select a data source to view schema
-          - generic [ref=e167]:
-            - generic [ref=e168]:
-              - button "Results" [ref=e169] [cursor=pointer]
-              - button "Errors" [ref=e170] [cursor=pointer]
-              - button "Logs" [ref=e171] [cursor=pointer]
-            - paragraph [ref=e175]: No results yet. Run a query to see results here.
+              - heading "SQL Editor" [level=1] [ref=e143]
+              - paragraph [ref=e144]: Write and execute SQL queries
+            - generic [ref=e145]:
+              - button "Validate" [ref=e146] [cursor=pointer]
+              - button "Run Query" [ref=e147] [cursor=pointer]
+              - button "Save Query" [disabled] [ref=e148]
+          - generic [ref=e150]:
+            - paragraph [ref=e151]: "Data Source:"
+            - button "▲" [ref=e152] [cursor=pointer]
+          - button "Loading SQL Editor..." [ref=e153]:
+            - generic [ref=e157]:
+              - img [ref=e158]
+              - generic [ref=e160]: Loading SQL Editor...
+          - generic [ref=e161]:
+            - generic [ref=e162]:
+              - paragraph [ref=e163]: Schema Browser (Select a data source)
+              - button "▼" [ref=e165] [cursor=pointer]
+            - paragraph [ref=e167]: Select a data source to view schema
+          - generic [ref=e168]:
+            - generic [ref=e169]:
+              - button "Results" [ref=e170] [cursor=pointer]
+              - button "Errors" [ref=e171] [cursor=pointer]
+              - button "Logs" [ref=e172] [cursor=pointer]
+            - paragraph [ref=e176]: No results yet. Run a query to see results here.
   - region "Notifications alt+T"
 ```
 

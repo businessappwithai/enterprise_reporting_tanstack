@@ -128,80 +128,14 @@ Received: false
             - generic [ref=e135]: SA
       - main [ref=e136]:
         - generic [ref=e137]:
-          - generic [ref=e138]:
-            - generic [ref=e139]:
-              - heading "Charts" [level=1] [ref=e140]
-              - paragraph [ref=e141]: Create and manage data visualizations
-            - generic [ref=e142]:
-              - link "Open Chart Editor" [ref=e143] [cursor=pointer]:
-                - /url: /charts/editor/new
-                - button "Open Chart Editor" [ref=e144]:
-                  - img [ref=e145]
-                  - text: Open Chart Editor
-              - button "Quick Create" [ref=e146] [cursor=pointer]:
-                - img [ref=e147]
-                - text: Quick Create
-          - generic [ref=e148]:
-            - heading "All Charts" [level=3] [ref=e150]:
-              - img [ref=e151]
+          - generic [ref=e139]:
+            - heading "Charts" [level=1] [ref=e140]
+            - paragraph [ref=e141]: Create and manage data visualizations
+          - generic [ref=e142]:
+            - heading "All Charts" [level=3] [ref=e144]:
+              - img [ref=e145]
               - text: All Charts
-            - table [ref=e155]:
-              - rowgroup [ref=e156]:
-                - row "Name Type Query Created Actions" [ref=e157]:
-                  - columnheader "Name" [ref=e158]
-                  - columnheader "Type" [ref=e159]
-                  - columnheader "Query" [ref=e160]
-                  - columnheader "Created" [ref=e161]
-                  - columnheader "Actions" [ref=e162]
-              - rowgroup [ref=e163]:
-                - row "Top Products Bar Chart bar No Query May 13, 2026, 05:51 PM" [ref=e164]:
-                  - cell "Top Products Bar Chart" [ref=e165]
-                  - cell "bar" [ref=e166]:
-                    - generic [ref=e167]:
-                      - img [ref=e168]
-                      - text: bar
-                  - cell "No Query" [ref=e170]:
-                    - generic [ref=e171]: No Query
-                  - cell "May 13, 2026, 05:51 PM" [ref=e172]
-                  - cell [ref=e173]:
-                    - button [ref=e174] [cursor=pointer]:
-                      - img [ref=e175]
-                - row "Regional Comparison bar No Query May 13, 2026, 05:51 PM" [ref=e179]:
-                  - cell "Regional Comparison" [ref=e180]
-                  - cell "bar" [ref=e181]:
-                    - generic [ref=e182]:
-                      - img [ref=e183]
-                      - text: bar
-                  - cell "No Query" [ref=e185]:
-                    - generic [ref=e186]: No Query
-                  - cell "May 13, 2026, 05:51 PM" [ref=e187]
-                  - cell [ref=e188]:
-                    - button [ref=e189] [cursor=pointer]:
-                      - img [ref=e190]
-                - row "Regional Sales Distribution pie No Query May 13, 2026, 05:51 PM" [ref=e194]:
-                  - cell "Regional Sales Distribution" [ref=e195]
-                  - cell "pie" [ref=e196]:
-                    - generic [ref=e197]:
-                      - img [ref=e198]
-                      - text: pie
-                  - cell "No Query" [ref=e201]:
-                    - generic [ref=e202]: No Query
-                  - cell "May 13, 2026, 05:51 PM" [ref=e203]
-                  - cell [ref=e204]:
-                    - button [ref=e205] [cursor=pointer]:
-                      - img [ref=e206]
-                - row "Sales Trend line No Query May 13, 2026, 05:51 PM" [ref=e210]:
-                  - cell "Sales Trend" [ref=e211]
-                  - cell "line" [ref=e212]:
-                    - generic [ref=e213]:
-                      - img [ref=e214]
-                      - text: line
-                  - cell "No Query" [ref=e217]:
-                    - generic [ref=e218]: No Query
-                  - cell "May 13, 2026, 05:51 PM" [ref=e219]
-                  - cell [ref=e220]:
-                    - button [ref=e221] [cursor=pointer]:
-                      - img [ref=e222]
+            - generic [ref=e148]: Loading charts...
   - region "Notifications alt+T"
 ```
 

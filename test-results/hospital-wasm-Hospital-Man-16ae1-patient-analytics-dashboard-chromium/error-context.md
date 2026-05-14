@@ -12,40 +12,224 @@
 # Error details
 
 ```
-TimeoutError: page.click: Timeout 15000ms exceeded.
+Error: expect(locator).toBeVisible() failed
+
+Locator: locator('input[name="name"]')
+Expected: visible
+Timeout: 5000ms
+Error: element(s) not found
+
 Call log:
-  - waiting for locator('button:has-text("Add"), button:has-text("New"), button:has-text("Create")')
+  - Expect "toBeVisible" with timeout 5000ms
+  - waiting for locator('input[name="name"]')
 
 ```
 
 # Page snapshot
 
 ```yaml
-- generic [active] [ref=e1]:
-  - generic [ref=e3]:
-    - generic [ref=e4]:
-      - img [ref=e7]
-      - heading "Welcome back" [level=3] [ref=e9]
-      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
-    - generic [ref=e11]:
-      - generic [ref=e12]:
-        - generic [ref=e13]:
-          - text: Email
-          - textbox "Email" [ref=e14]:
-            - /placeholder: name@example.com
-        - generic [ref=e15]:
-          - text: Password
-          - textbox "Password" [ref=e16]
-      - button "Sign In" [ref=e18] [cursor=pointer]
+- generic:
+  - generic:
+    - complementary:
+      - generic:
+        - link:
+          - /url: /
+          - img
+          - generic: Enterprise Reports
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - heading [level=2]: Main
+                - navigation:
+                  - link:
+                    - /url: /
+                    - button:
+                      - img
+                      - generic: Dashboard
+                  - link:
+                    - /url: /sql-editor
+                    - button:
+                      - img
+                      - generic: SQL Editor
+                  - link:
+                    - /url: /queries
+                    - button:
+                      - img
+                      - generic: Saved Queries
+                  - link:
+                    - /url: /reports
+                    - button:
+                      - img
+                      - generic: Reports
+                  - link:
+                    - /url: /charts
+                    - button:
+                      - img
+                      - generic: Charts
+                  - link:
+                    - /url: /dashboards
+                    - button:
+                      - img
+                      - generic: Dashboards
+                  - link:
+                    - /url: /filters
+                    - button:
+                      - img
+                      - generic: Filters
+                  - link:
+                    - /url: /jobs
+                    - button:
+                      - img
+                      - generic: Jobs
+                  - link:
+                    - /url: /nl-query
+                    - button:
+                      - img
+                      - generic: NL Query
+              - generic:
+                - heading [level=2]: Administration
+                - navigation:
+                  - link:
+                    - /url: /data-sources
+                    - button:
+                      - img
+                      - generic: Data Sources
+                  - link:
+                    - /url: /bull-board
+                    - button:
+                      - img
+                      - generic: Queue Management
+                  - link:
+                    - /url: /admin/users
+                    - button:
+                      - img
+                      - generic: Users
+                  - link:
+                    - /url: /admin/roles
+                    - button:
+                      - img
+                      - generic: Roles
+                  - link:
+                    - /url: /admin/permissions
+                    - button:
+                      - img
+                      - generic: Permissions
+                  - link:
+                    - /url: /settings
+                    - button:
+                      - img
+                      - generic: Settings
+      - button:
+        - img
+    - generic:
+      - banner:
+        - generic:
+          - button:
+            - img
+            - generic: Sakila Demo DB
+            - generic: sqlite3
+        - generic:
+          - button:
+            - img
+            - generic: Toggle theme
+          - button:
+            - img
+            - generic: Notifications
+          - button:
+            - generic:
+              - generic: SA
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - heading [level=1]: Dashboards
+              - paragraph: Create and manage interactive dashboards
+            - button [expanded]:
+              - img
+              - text: New Dashboard
+          - generic:
+            - generic:
+              - heading [level=3]:
+                - img
+                - text: All Dashboards
+            - generic:
+              - generic:
+                - table:
+                  - rowgroup:
+                    - row:
+                      - columnheader: Name
+                      - columnheader: Description
+                      - columnheader: Visibility
+                      - columnheader: Created
+                      - columnheader: Modified
+                      - columnheader: Actions
+                  - rowgroup:
+                    - row:
+                      - cell: Executive Dashboard
+                      - cell: High-level business metrics
+                      - cell:
+                        - generic:
+                          - img
+                          - text: Private
+                      - cell: May 13, 2026, 05:51 PM
+                      - cell: May 13, 2026, 05:51 PM
+                      - cell:
+                        - button:
+                          - img
+                    - row:
+                      - cell: Sales Dashboard
+                      - cell: Sales metrics and KPIs
+                      - cell:
+                        - generic:
+                          - img
+                          - text: Private
+                      - cell: May 13, 2026, 05:51 PM
+                      - cell: May 13, 2026, 05:51 PM
+                      - cell:
+                        - button:
+                          - img
+                    - row:
+                      - cell: Product Performance
+                      - cell: Product-level analytics
+                      - cell:
+                        - generic:
+                          - img
+                          - text: Private
+                      - cell: May 13, 2026, 05:51 PM
+                      - cell: May 13, 2026, 05:51 PM
+                      - cell:
+                        - button:
+                          - img
   - region "Notifications alt+T"
+  - dialog "Create Dashboard" [ref=e2]:
+    - generic [ref=e3]:
+      - heading "Create Dashboard" [level=2] [ref=e4]
+      - paragraph [ref=e5]: Create a new dashboard to organize your reports and charts.
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - text: Name
+        - textbox "Name" [active] [ref=e8]:
+          - /placeholder: My Dashboard
+      - generic [ref=e9]:
+        - text: Description
+        - textbox "Description" [ref=e10]:
+          - /placeholder: Optional description
+      - generic [ref=e11]:
+        - switch "Make dashboard public" [ref=e12] [cursor=pointer]
+        - generic [ref=e13]: Make dashboard public
+    - generic [ref=e14]:
+      - button "Cancel" [ref=e15] [cursor=pointer]
+      - button "Create Dashboard" [disabled]
+    - button "Close" [ref=e16] [cursor=pointer]:
+      - img [ref=e17]
+      - generic [ref=e20]: Close
 ```
 
 # Test source
 
 ```ts
-  148 |     GROUP BY gender, blood_group
-  149 |     ORDER BY patient_count DESC`;
-  150 | 
   151 |     await page.locator('.monaco-editor textarea, .CodeMirror-code textarea, [contenteditable="true"]').first().fill(query);
   152 |     await page.click('button:has-text("Execute"), button:has-text("Run")');
   153 | 
@@ -143,11 +327,11 @@ Call log:
   245 |     await page.goto(`${BASE_URL}/dashboards`);
   246 | 
   247 |     // Click "Add New Dashboard" or "Create Dashboard" button
-> 248 |     await page.click('button:has-text("Add"), button:has-text("New"), button:has-text("Create")');
-      |                ^ TimeoutError: page.click: Timeout 15000ms exceeded.
+  248 |     await page.click('button:has-text("Add"), button:has-text("New"), button:has-text("Create")');
   249 | 
   250 |     // Wait for form to load
-  251 |     await expect(page.locator('input[name="name"]')).toBeVisible({ timeout: 5000 });
+> 251 |     await expect(page.locator('input[name="name"]')).toBeVisible({ timeout: 5000 });
+      |                                                      ^ Error: expect(locator).toBeVisible() failed
   252 | 
   253 |     // Fill in dashboard details
   254 |     await page.fill('input[name="name"]', 'Patient Analytics Dashboard');
@@ -245,4 +429,7 @@ Call log:
   346 |     const logs = await page.evaluate(() => {
   347 |       return (window as any).consoleLogs || [];
   348 |     });
+  349 |     console.log('Console logs:', logs);
+  350 |   });
+  351 | });
 ```

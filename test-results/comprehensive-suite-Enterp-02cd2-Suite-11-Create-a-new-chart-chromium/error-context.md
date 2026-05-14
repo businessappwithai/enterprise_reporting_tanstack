@@ -12,40 +12,237 @@
 # Error details
 
 ```
-TimeoutError: page.click: Timeout 15000ms exceeded.
+TimeoutError: page.fill: Timeout 15000ms exceeded.
 Call log:
-  - waiting for locator('button:has-text("New Chart"), button:has-text("Create")')
+  - waiting for locator('input[name="name"]')
 
 ```
 
 # Page snapshot
 
 ```yaml
-- generic [active] [ref=e1]:
-  - generic [ref=e3]:
-    - generic [ref=e4]:
-      - img [ref=e7]
-      - heading "Welcome back" [level=3] [ref=e9]
-      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
-    - generic [ref=e11]:
-      - generic [ref=e12]:
-        - generic [ref=e13]:
-          - text: Email
-          - textbox "Email" [ref=e14]:
-            - /placeholder: name@example.com
-        - generic [ref=e15]:
-          - text: Password
-          - textbox "Password" [ref=e16]
-      - button "Sign In" [ref=e18] [cursor=pointer]
+- generic:
+  - generic:
+    - complementary:
+      - generic:
+        - link:
+          - /url: /
+          - img
+          - generic: Enterprise Reports
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - heading [level=2]: Main
+                - navigation:
+                  - link:
+                    - /url: /
+                    - button:
+                      - img
+                      - generic: Dashboard
+                  - link:
+                    - /url: /sql-editor
+                    - button:
+                      - img
+                      - generic: SQL Editor
+                  - link:
+                    - /url: /queries
+                    - button:
+                      - img
+                      - generic: Saved Queries
+                  - link:
+                    - /url: /reports
+                    - button:
+                      - img
+                      - generic: Reports
+                  - link:
+                    - /url: /charts
+                    - button:
+                      - img
+                      - generic: Charts
+                  - link:
+                    - /url: /dashboards
+                    - button:
+                      - img
+                      - generic: Dashboards
+                  - link:
+                    - /url: /filters
+                    - button:
+                      - img
+                      - generic: Filters
+                  - link:
+                    - /url: /jobs
+                    - button:
+                      - img
+                      - generic: Jobs
+                  - link:
+                    - /url: /nl-query
+                    - button:
+                      - img
+                      - generic: NL Query
+              - generic:
+                - heading [level=2]: Administration
+                - navigation:
+                  - link:
+                    - /url: /data-sources
+                    - button:
+                      - img
+                      - generic: Data Sources
+                  - link:
+                    - /url: /bull-board
+                    - button:
+                      - img
+                      - generic: Queue Management
+                  - link:
+                    - /url: /admin/users
+                    - button:
+                      - img
+                      - generic: Users
+                  - link:
+                    - /url: /admin/roles
+                    - button:
+                      - img
+                      - generic: Roles
+                  - link:
+                    - /url: /admin/permissions
+                    - button:
+                      - img
+                      - generic: Permissions
+                  - link:
+                    - /url: /settings
+                    - button:
+                      - img
+                      - generic: Settings
+      - button:
+        - img
+    - generic:
+      - banner:
+        - generic:
+          - button:
+            - img
+            - generic: Sakila Demo DB
+            - generic: sqlite3
+        - generic:
+          - button:
+            - img
+            - generic: Toggle theme
+          - button:
+            - img
+            - generic: Notifications
+          - button:
+            - generic:
+              - generic: SA
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - heading [level=1]: Charts
+              - paragraph: Create and manage data visualizations
+            - generic:
+              - link:
+                - /url: /charts/editor/new
+                - button:
+                  - img
+                  - text: Open Chart Editor
+              - button [expanded]:
+                - img
+                - text: Quick Create
+          - generic:
+            - generic:
+              - heading [level=3]:
+                - img
+                - text: All Charts
+            - generic:
+              - generic:
+                - table:
+                  - rowgroup:
+                    - row:
+                      - columnheader: Name
+                      - columnheader: Type
+                      - columnheader: Query
+                      - columnheader: Created
+                      - columnheader: Actions
+                  - rowgroup:
+                    - row:
+                      - cell: Top Products Bar Chart
+                      - cell:
+                        - generic:
+                          - img
+                          - text: bar
+                      - cell:
+                        - generic: No Query
+                      - cell: May 13, 2026, 05:51 PM
+                      - cell:
+                        - button:
+                          - img
+                    - row:
+                      - cell: Regional Comparison
+                      - cell:
+                        - generic:
+                          - img
+                          - text: bar
+                      - cell:
+                        - generic: No Query
+                      - cell: May 13, 2026, 05:51 PM
+                      - cell:
+                        - button:
+                          - img
+                    - row:
+                      - cell: Regional Sales Distribution
+                      - cell:
+                        - generic:
+                          - img
+                          - text: pie
+                      - cell:
+                        - generic: No Query
+                      - cell: May 13, 2026, 05:51 PM
+                      - cell:
+                        - button:
+                          - img
+                    - row:
+                      - cell: Sales Trend
+                      - cell:
+                        - generic:
+                          - img
+                          - text: line
+                      - cell:
+                        - generic: No Query
+                      - cell: May 13, 2026, 05:51 PM
+                      - cell:
+                        - button:
+                          - img
   - region "Notifications alt+T"
+  - dialog "Create Chart" [ref=e2]:
+    - generic [ref=e3]:
+      - heading "Create Chart" [level=2] [ref=e4]
+      - paragraph [ref=e5]: Create a new chart visualization from a saved query.
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - text: Name
+        - textbox "Name" [active] [ref=e8]:
+          - /placeholder: My Chart
+      - generic [ref=e9]:
+        - text: Chart Type
+        - combobox [ref=e10] [cursor=pointer]:
+          - generic: Bar Chart
+          - img [ref=e11]
+      - generic [ref=e13]:
+        - text: Data Source Query
+        - combobox [ref=e14] [cursor=pointer]:
+          - generic: Select a query
+          - img [ref=e15]
+    - generic [ref=e17]:
+      - button "Cancel" [ref=e18] [cursor=pointer]
+      - button "Create Chart" [disabled]
+    - button "Close" [ref=e19] [cursor=pointer]:
+      - img [ref=e20]
+      - generic [ref=e23]: Close
 ```
 
 # Test source
 
 ```ts
-  294 |     const editor = page.locator('.monaco-editor, [contenteditable="true"], textarea').first();
-  295 |     await editor.fill(query);
-  296 |     await page.click('button:has-text("Execute"), button:has-text("Run")');
   297 | 
   298 |     // Verify results load within reasonable time
   299 |     await expect(page.locator('table, [role="table"], text=order_id')).toBeVisible({ timeout: 30000 });
@@ -143,11 +340,11 @@ Call log:
   391 |     await page.goto(`${BASE_URL}/charts`);
   392 | 
   393 |     // Click new chart button
-> 394 |     await page.click('button:has-text("New Chart"), button:has-text("Create")');
-      |                ^ TimeoutError: page.click: Timeout 15000ms exceeded.
+  394 |     await page.click('button:has-text("New Chart"), button:has-text("Create")');
   395 | 
   396 |     // Fill chart details
-  397 |     await page.fill('input[name="name"]', 'Sales by Country Chart');
+> 397 |     await page.fill('input[name="name"]', 'Sales by Country Chart');
+      |                ^ TimeoutError: page.fill: Timeout 15000ms exceeded.
   398 |     await page.selectOption('select[name="chartType"]', 'bar');
   399 | 
   400 |     // Save
@@ -245,4 +442,7 @@ Call log:
   492 |     await expect(page.locator('text=Users').or(page.locator('h1'))).toBeVisible();
   493 |   });
   494 | 
+  495 |   test('20. Roles management', async ({ page }) => {
+  496 |     await page.goto(`${BASE_URL}/admin/roles`);
+  497 | 
 ```

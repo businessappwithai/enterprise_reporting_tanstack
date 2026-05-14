@@ -12,40 +12,196 @@
 # Error details
 
 ```
-TimeoutError: page.click: Timeout 15000ms exceeded.
+TimeoutError: page.fill: Timeout 15000ms exceeded.
 Call log:
-  - waiting for locator('button:has-text("Add Data Source"), button:has-text("New")')
+  - waiting for locator('input[name="name"]')
 
 ```
 
 # Page snapshot
 
 ```yaml
-- generic [active] [ref=e1]:
-  - generic [ref=e3]:
-    - generic [ref=e4]:
-      - img [ref=e7]
-      - heading "Welcome back" [level=3] [ref=e9]
-      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
-    - generic [ref=e11]:
-      - generic [ref=e12]:
-        - generic [ref=e13]:
-          - text: Email
-          - textbox "Email" [ref=e14]:
-            - /placeholder: name@example.com
-        - generic [ref=e15]:
-          - text: Password
-          - textbox "Password" [ref=e16]
-      - button "Sign In" [ref=e18] [cursor=pointer]
+- generic:
+  - generic:
+    - complementary:
+      - generic:
+        - link:
+          - /url: /
+          - img
+          - generic: Enterprise Reports
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - heading [level=2]: Main
+                - navigation:
+                  - link:
+                    - /url: /
+                    - button:
+                      - img
+                      - generic: Dashboard
+                  - link:
+                    - /url: /sql-editor
+                    - button:
+                      - img
+                      - generic: SQL Editor
+                  - link:
+                    - /url: /queries
+                    - button:
+                      - img
+                      - generic: Saved Queries
+                  - link:
+                    - /url: /reports
+                    - button:
+                      - img
+                      - generic: Reports
+                  - link:
+                    - /url: /charts
+                    - button:
+                      - img
+                      - generic: Charts
+                  - link:
+                    - /url: /dashboards
+                    - button:
+                      - img
+                      - generic: Dashboards
+                  - link:
+                    - /url: /filters
+                    - button:
+                      - img
+                      - generic: Filters
+                  - link:
+                    - /url: /jobs
+                    - button:
+                      - img
+                      - generic: Jobs
+                  - link:
+                    - /url: /nl-query
+                    - button:
+                      - img
+                      - generic: NL Query
+              - generic:
+                - heading [level=2]: Administration
+                - navigation:
+                  - link:
+                    - /url: /data-sources
+                    - button:
+                      - img
+                      - generic: Data Sources
+                  - link:
+                    - /url: /bull-board
+                    - button:
+                      - img
+                      - generic: Queue Management
+                  - link:
+                    - /url: /admin/users
+                    - button:
+                      - img
+                      - generic: Users
+                  - link:
+                    - /url: /admin/roles
+                    - button:
+                      - img
+                      - generic: Roles
+                  - link:
+                    - /url: /admin/permissions
+                    - button:
+                      - img
+                      - generic: Permissions
+                  - link:
+                    - /url: /settings
+                    - button:
+                      - img
+                      - generic: Settings
+      - button:
+        - img
+    - generic:
+      - banner:
+        - generic:
+          - button:
+            - img
+            - generic: Sakila Demo DB
+            - generic: sqlite3
+        - generic:
+          - button:
+            - img
+            - generic: Toggle theme
+          - button:
+            - img
+            - generic: Notifications
+          - button:
+            - generic:
+              - generic: SA
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - heading [level=1]: Data Sources
+              - paragraph: Manage database connections for reports and queries
+            - button [expanded]:
+              - img
+              - text: New Data Source
+          - generic:
+            - generic:
+              - heading [level=3]:
+                - img
+                - text: All Data Sources
+            - generic:
+              - generic: No data sources configured. Add your first data source to get started.
   - region "Notifications alt+T"
+  - dialog "Add Data Source" [ref=e2]:
+    - generic [ref=e3]:
+      - heading "Add Data Source" [level=2] [ref=e4]
+      - paragraph [ref=e5]: Configure a new database connection for your reports.
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - text: Name
+          - textbox "Name" [active] [ref=e9]:
+            - /placeholder: Production Database
+        - generic [ref=e10]:
+          - text: Database Type
+          - combobox "Database Type" [ref=e11] [cursor=pointer]:
+            - generic: PostgreSQL
+            - img [ref=e12]
+      - generic [ref=e14]:
+        - text: Description
+        - textbox "Description" [ref=e15]:
+          - /placeholder: Optional description
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - text: Host
+          - textbox "Host" [ref=e18]:
+            - /placeholder: localhost
+        - generic [ref=e19]:
+          - text: Port
+          - textbox "Port" [ref=e20]:
+            - /placeholder: "5432"
+      - generic [ref=e21]:
+        - text: Database
+        - textbox "Database" [ref=e22]:
+          - /placeholder: mydb
+      - generic [ref=e23]:
+        - generic [ref=e24]:
+          - text: Username
+          - textbox "Username" [ref=e25]:
+            - /placeholder: dbuser
+        - generic [ref=e26]:
+          - text: Password
+          - textbox "Password" [ref=e27]:
+            - /placeholder: "********"
+    - generic [ref=e29]:
+      - button "Test Connection" [disabled]
+      - button "Create" [disabled]
+    - button "Close" [ref=e30] [cursor=pointer]:
+      - img [ref=e31]
+      - generic [ref=e34]: Close
 ```
 
 # Test source
 
 ```ts
-  341 |     // Submit
-  342 |     await page.click('button:has-text("Save"), button[type="submit"]');
-  343 | 
   344 |     // Verify success message
   345 |     await expect(page.locator('text=successfully saved, text=saved').or(page.locator('.toast'))).toBeVisible({ timeout: 5000 });
   346 |   });
@@ -143,11 +299,11 @@ Call log:
   438 |     await page.goto(`${BASE_URL}/data-sources`);
   439 | 
   440 |     // Click add new
-> 441 |     await page.click('button:has-text("Add Data Source"), button:has-text("New")');
-      |                ^ TimeoutError: page.click: Timeout 15000ms exceeded.
+  441 |     await page.click('button:has-text("Add Data Source"), button:has-text("New")');
   442 | 
   443 |     // Fill form
-  444 |     await page.fill('input[name="name"]', 'Test SQLite Database');
+> 444 |     await page.fill('input[name="name"]', 'Test SQLite Database');
+      |                ^ TimeoutError: page.fill: Timeout 15000ms exceeded.
   445 |     await page.selectOption('select[name="client_type"]', 'sqlite');
   446 | 
   447 |     // Enter database path
@@ -245,4 +401,7 @@ Call log:
   539 | 
   540 |     // Navigate through sidebar links
   541 |     const links = [
+  542 |       { text: 'Dashboard', url: '/' },
+  543 |       { text: 'SQL Editor', url: '/sql-editor' },
+  544 |       { text: 'Reports', url: '/reports' },
 ```

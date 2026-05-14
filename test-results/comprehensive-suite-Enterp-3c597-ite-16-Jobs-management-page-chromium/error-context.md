@@ -16,8 +16,10 @@ Error: expect(locator).toBeVisible() failed
 
 Locator: locator('text=Jobs').or(locator('h1'))
 Expected: visible
-Timeout: 5000ms
-Error: element(s) not found
+Error: strict mode violation: locator('text=Jobs').or(locator('h1')) resolved to 3 elements:
+    1) <span>Jobs</span> aka getByRole('button', { name: 'Jobs' })
+    2) <h1 class="text-2xl font-bold">Background Jobs</h1> aka getByRole('heading', { name: 'Background Jobs' })
+    3) <button role="tab" type="button" tabindex="-1" aria-selected="false" data-state="inactive" data-orientation="horizontal" data-radix-collection-item="" id="radix-_R_3d5j6_-trigger-scheduled" aria-controls="radix-_R_3d5j6_-content-scheduled" class="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-eve…>Scheduled Jobs</button> aka getByRole('tab', { name: 'Scheduled Jobs' })
 
 Call log:
   - Expect "toBeVisible" with timeout 5000ms
@@ -29,21 +31,154 @@ Call log:
 
 ```yaml
 - generic [active] [ref=e1]:
-  - generic [ref=e3]:
-    - generic [ref=e4]:
-      - img [ref=e7]
-      - heading "Welcome back" [level=3] [ref=e9]
-      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
-    - generic [ref=e11]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - link "Enterprise Reports" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img [ref=e6]
+        - generic [ref=e8]: Enterprise Reports
       - generic [ref=e12]:
         - generic [ref=e13]:
-          - text: Email
-          - textbox "Email" [ref=e14]:
-            - /placeholder: name@example.com
-        - generic [ref=e15]:
-          - text: Password
-          - textbox "Password" [ref=e16]
-      - button "Sign In" [ref=e18] [cursor=pointer]
+          - heading "Main" [level=2] [ref=e14]
+          - navigation [ref=e15]:
+            - link "Dashboard" [ref=e16] [cursor=pointer]:
+              - /url: /
+              - button "Dashboard" [ref=e17]:
+                - img [ref=e18]
+                - generic [ref=e21]: Dashboard
+            - link "SQL Editor" [ref=e22] [cursor=pointer]:
+              - /url: /sql-editor
+              - button "SQL Editor" [ref=e23]:
+                - img [ref=e24]
+                - generic [ref=e26]: SQL Editor
+            - link "Saved Queries" [ref=e27] [cursor=pointer]:
+              - /url: /queries
+              - button "Saved Queries" [ref=e28]:
+                - img [ref=e29]
+                - generic [ref=e33]: Saved Queries
+            - link "Reports" [ref=e34] [cursor=pointer]:
+              - /url: /reports
+              - button "Reports" [ref=e35]:
+                - img [ref=e36]
+                - generic [ref=e39]: Reports
+            - link "Charts" [ref=e40] [cursor=pointer]:
+              - /url: /charts
+              - button "Charts" [ref=e41]:
+                - img [ref=e42]
+                - generic [ref=e44]: Charts
+            - link "Dashboards" [ref=e45] [cursor=pointer]:
+              - /url: /dashboards
+              - button "Dashboards" [ref=e46]:
+                - img [ref=e47]
+                - generic [ref=e52]: Dashboards
+            - link "Filters" [ref=e53] [cursor=pointer]:
+              - /url: /filters
+              - button "Filters" [ref=e54]:
+                - img [ref=e55]
+                - generic [ref=e57]: Filters
+            - link "Jobs" [ref=e58] [cursor=pointer]:
+              - /url: /jobs
+              - button "Jobs" [ref=e59]:
+                - img [ref=e60]
+                - generic [ref=e62]: Jobs
+            - link "NL Query" [ref=e63] [cursor=pointer]:
+              - /url: /nl-query
+              - button "NL Query" [ref=e64]:
+                - img [ref=e65]
+                - generic [ref=e67]: NL Query
+        - generic [ref=e68]:
+          - heading "Administration" [level=2] [ref=e69]
+          - navigation [ref=e70]:
+            - link "Data Sources" [ref=e71] [cursor=pointer]:
+              - /url: /data-sources
+              - button "Data Sources" [ref=e72]:
+                - img [ref=e73]
+                - generic [ref=e77]: Data Sources
+            - link "Queue Management" [ref=e78] [cursor=pointer]:
+              - /url: /bull-board
+              - button "Queue Management" [ref=e79]:
+                - img [ref=e80]
+                - generic [ref=e84]: Queue Management
+            - link "Users" [ref=e85] [cursor=pointer]:
+              - /url: /admin/users
+              - button "Users" [ref=e86]:
+                - img [ref=e87]
+                - generic [ref=e92]: Users
+            - link "Roles" [ref=e93] [cursor=pointer]:
+              - /url: /admin/roles
+              - button "Roles" [ref=e94]:
+                - img [ref=e95]
+                - generic [ref=e97]: Roles
+            - link "Permissions" [ref=e98] [cursor=pointer]:
+              - /url: /admin/permissions
+              - button "Permissions" [ref=e99]:
+                - img [ref=e100]
+                - generic [ref=e102]: Permissions
+            - link "Settings" [ref=e103] [cursor=pointer]:
+              - /url: /settings
+              - button "Settings" [ref=e104]:
+                - img [ref=e105]
+                - generic [ref=e108]: Settings
+      - button [ref=e109] [cursor=pointer]:
+        - img [ref=e110]
+    - generic [ref=e112]:
+      - banner [ref=e113]:
+        - generic [ref=e115]:
+          - img [ref=e116]
+          - generic [ref=e118]: Loading connection...
+        - generic [ref=e119]:
+          - button "Toggle theme" [ref=e120] [cursor=pointer]:
+            - img [ref=e121]
+            - img
+            - generic [ref=e127]: Toggle theme
+          - button "Notifications" [ref=e128] [cursor=pointer]:
+            - img [ref=e129]
+            - generic [ref=e132]: Notifications
+          - button "SA" [ref=e133] [cursor=pointer]:
+            - generic [ref=e135]: SA
+      - main [ref=e136]:
+        - generic [ref=e137]:
+          - generic [ref=e138]:
+            - generic [ref=e139]:
+              - heading "Background Jobs" [level=1] [ref=e140]
+              - paragraph [ref=e141]: Monitor and manage background job processing
+            - button "Refresh" [ref=e142] [cursor=pointer]:
+              - img [ref=e143]
+              - text: Refresh
+          - generic [ref=e148]:
+            - generic [ref=e149]:
+              - generic [ref=e150]:
+                - heading "Waiting" [level=3] [ref=e151]
+                - img [ref=e152]
+              - generic [ref=e156]: "0"
+            - generic [ref=e157]:
+              - generic [ref=e158]:
+                - heading "Active" [level=3] [ref=e159]
+                - img [ref=e160]
+              - generic [ref=e166]: "0"
+            - generic [ref=e167]:
+              - generic [ref=e168]:
+                - heading "Completed" [level=3] [ref=e169]
+                - img [ref=e170]
+              - generic [ref=e174]: "0"
+            - generic [ref=e175]:
+              - generic [ref=e176]:
+                - heading "Failed" [level=3] [ref=e177]
+                - img [ref=e178]
+              - generic [ref=e183]: "0"
+            - generic [ref=e184]:
+              - generic [ref=e185]:
+                - heading "Delayed" [level=3] [ref=e186]
+                - img [ref=e187]
+              - generic [ref=e191]: "0"
+          - generic [ref=e192]:
+            - tablist [ref=e193]:
+              - tab "Recent Executions" [selected] [ref=e194] [cursor=pointer]
+              - tab "Scheduled Jobs" [ref=e195] [cursor=pointer]
+            - tabpanel "Recent Executions" [ref=e196]:
+              - generic [ref=e197]:
+                - heading "Recent Job Executions" [level=3] [ref=e199]
+                - generic [ref=e201]: Loading...
   - region "Notifications alt+T"
 ```
 

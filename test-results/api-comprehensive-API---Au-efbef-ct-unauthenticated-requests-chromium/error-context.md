@@ -14,8 +14,8 @@
 ```
 Error: expect(received).toBe(expected) // Object.is equality
 
-Expected: "UNAUTHORIZED"
-Received: undefined
+Expected: 401
+Received: 200
 ```
 
 # Test source
@@ -69,12 +69,12 @@ Received: undefined
   46  | 
   47  |   test('should reject unauthenticated requests', async ({ request }) => {
   48  |     const response = await request.get('/api/queries');
-  49  |     expect(response.status()).toBe(401);
+> 49  |     expect(response.status()).toBe(401);
+      |                               ^ Error: expect(received).toBe(expected) // Object.is equality
   50  | 
   51  |     const data = await response.json();
   52  |     expect(data.success).toBe(false);
-> 53  |     expect(data.error.code).toBe('UNAUTHORIZED');
-      |                             ^ Error: expect(received).toBe(expected) // Object.is equality
+  53  |     expect(data.error.code).toBe('UNAUTHORIZED');
   54  |   });
   55  | });
   56  | 
@@ -171,8 +171,4 @@ Received: undefined
   147 |     expect(data.success).toBe(true);
   148 |     // API returns { data: { activeDataSource: {...} } }
   149 |     expect(data.data).toHaveProperty('activeDataSource');
-  150 |     // activeDataSource can be null if no active source exists
-  151 |     if (data.data.activeDataSource) {
-  152 |       expect(data.data.activeDataSource).toHaveProperty('id');
-  153 |       expect(data.data.activeDataSource).toHaveProperty('name');
 ```

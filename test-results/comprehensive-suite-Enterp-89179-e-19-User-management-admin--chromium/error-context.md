@@ -16,8 +16,14 @@ Error: expect(locator).toBeVisible() failed
 
 Locator: locator('text=Users').or(locator('h1'))
 Expected: visible
-Timeout: 5000ms
-Error: element(s) not found
+Error: strict mode violation: locator('text=Users').or(locator('h1')) resolved to 7 elements:
+    1) <span>Users</span> aka getByRole('button', { name: 'Users' })
+    2) <h1 class="text-3xl font-bold">Admin Panel</h1> aka getByRole('heading', { name: 'Admin Panel' })
+    3) <p class="text-muted-foreground">Manage system users, roles, and permissions</p> aka getByText('Manage system users, roles,')
+    4) <a href="/admin/users" aria-current="page" data-status="active" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 active">Users</a> aka getByRole('main').getByRole('link', { name: 'Users' })
+    5) <h1 class="text-2xl font-bold">User Management</h1> aka getByRole('heading', { name: 'User Management' })
+    6) <h3 class="text-lg font-semibold leading-none tracking-tight flex items-center gap-2">…</h3> aka getByRole('heading', { name: 'All Users' })
+    7) <div class="text-center py-8 text-muted-foreground">Loading users...</div> aka getByText('Loading users...')
 
 Call log:
   - Expect "toBeVisible" with timeout 5000ms
@@ -29,21 +35,136 @@ Call log:
 
 ```yaml
 - generic [active] [ref=e1]:
-  - generic [ref=e3]:
-    - generic [ref=e4]:
-      - img [ref=e7]
-      - heading "Welcome back" [level=3] [ref=e9]
-      - paragraph [ref=e10]: Sign in to your Enterprise Reporting account
-    - generic [ref=e11]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - link "Enterprise Reports" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img [ref=e6]
+        - generic [ref=e8]: Enterprise Reports
       - generic [ref=e12]:
         - generic [ref=e13]:
-          - text: Email
-          - textbox "Email" [ref=e14]:
-            - /placeholder: name@example.com
-        - generic [ref=e15]:
-          - text: Password
-          - textbox "Password" [ref=e16]
-      - button "Sign In" [ref=e18] [cursor=pointer]
+          - heading "Main" [level=2] [ref=e14]
+          - navigation [ref=e15]:
+            - link "Dashboard" [ref=e16] [cursor=pointer]:
+              - /url: /
+              - button "Dashboard" [ref=e17]:
+                - img [ref=e18]
+                - generic [ref=e21]: Dashboard
+            - link "SQL Editor" [ref=e22] [cursor=pointer]:
+              - /url: /sql-editor
+              - button "SQL Editor" [ref=e23]:
+                - img [ref=e24]
+                - generic [ref=e26]: SQL Editor
+            - link "Saved Queries" [ref=e27] [cursor=pointer]:
+              - /url: /queries
+              - button "Saved Queries" [ref=e28]:
+                - img [ref=e29]
+                - generic [ref=e33]: Saved Queries
+            - link "Reports" [ref=e34] [cursor=pointer]:
+              - /url: /reports
+              - button "Reports" [ref=e35]:
+                - img [ref=e36]
+                - generic [ref=e39]: Reports
+            - link "Charts" [ref=e40] [cursor=pointer]:
+              - /url: /charts
+              - button "Charts" [ref=e41]:
+                - img [ref=e42]
+                - generic [ref=e44]: Charts
+            - link "Dashboards" [ref=e45] [cursor=pointer]:
+              - /url: /dashboards
+              - button "Dashboards" [ref=e46]:
+                - img [ref=e47]
+                - generic [ref=e52]: Dashboards
+            - link "Filters" [ref=e53] [cursor=pointer]:
+              - /url: /filters
+              - button "Filters" [ref=e54]:
+                - img [ref=e55]
+                - generic [ref=e57]: Filters
+            - link "Jobs" [ref=e58] [cursor=pointer]:
+              - /url: /jobs
+              - button "Jobs" [ref=e59]:
+                - img [ref=e60]
+                - generic [ref=e62]: Jobs
+            - link "NL Query" [ref=e63] [cursor=pointer]:
+              - /url: /nl-query
+              - button "NL Query" [ref=e64]:
+                - img [ref=e65]
+                - generic [ref=e67]: NL Query
+        - generic [ref=e68]:
+          - heading "Administration" [level=2] [ref=e69]
+          - navigation [ref=e70]:
+            - link "Data Sources" [ref=e71] [cursor=pointer]:
+              - /url: /data-sources
+              - button "Data Sources" [ref=e72]:
+                - img [ref=e73]
+                - generic [ref=e77]: Data Sources
+            - link "Queue Management" [ref=e78] [cursor=pointer]:
+              - /url: /bull-board
+              - button "Queue Management" [ref=e79]:
+                - img [ref=e80]
+                - generic [ref=e84]: Queue Management
+            - link "Users" [ref=e85] [cursor=pointer]:
+              - /url: /admin/users
+              - button "Users" [ref=e86]:
+                - img [ref=e87]
+                - generic [ref=e92]: Users
+            - link "Roles" [ref=e93] [cursor=pointer]:
+              - /url: /admin/roles
+              - button "Roles" [ref=e94]:
+                - img [ref=e95]
+                - generic [ref=e97]: Roles
+            - link "Permissions" [ref=e98] [cursor=pointer]:
+              - /url: /admin/permissions
+              - button "Permissions" [ref=e99]:
+                - img [ref=e100]
+                - generic [ref=e102]: Permissions
+            - link "Settings" [ref=e103] [cursor=pointer]:
+              - /url: /settings
+              - button "Settings" [ref=e104]:
+                - img [ref=e105]
+                - generic [ref=e108]: Settings
+      - button [ref=e109] [cursor=pointer]:
+        - img [ref=e110]
+    - generic [ref=e112]:
+      - banner [ref=e113]:
+        - generic [ref=e115]:
+          - img [ref=e116]
+          - generic [ref=e118]: Loading connection...
+        - generic [ref=e119]:
+          - button "Toggle theme" [ref=e120] [cursor=pointer]:
+            - img [ref=e121]
+            - img
+            - generic [ref=e127]: Toggle theme
+          - button "Notifications" [ref=e128] [cursor=pointer]:
+            - img [ref=e129]
+            - generic [ref=e132]: Notifications
+          - button "SA" [ref=e133] [cursor=pointer]:
+            - generic [ref=e135]: SA
+      - main [ref=e136]:
+        - generic [ref=e137]:
+          - generic [ref=e138]:
+            - heading "Admin Panel" [level=1] [ref=e139]
+            - paragraph [ref=e140]: Manage system users, roles, and permissions
+          - generic [ref=e141]:
+            - link "Users" [ref=e142] [cursor=pointer]:
+              - /url: /admin/users
+            - link "Roles" [ref=e143] [cursor=pointer]:
+              - /url: /admin/roles
+            - link "Permissions" [ref=e144] [cursor=pointer]:
+              - /url: /admin/permissions
+          - generic [ref=e145]:
+            - generic [ref=e146]:
+              - generic [ref=e147]:
+                - heading "User Management" [level=1] [ref=e148]
+                - paragraph [ref=e149]: Manage user accounts and assign roles
+              - button "Create User" [ref=e150] [cursor=pointer]:
+                - img [ref=e151]
+                - text: Create User
+            - generic [ref=e154]:
+              - heading "All Users" [level=3] [ref=e156]:
+                - img [ref=e157]
+                - text: All Users
+              - generic [ref=e160]: Loading users...
   - region "Notifications alt+T"
 ```
 

@@ -125,33 +125,79 @@ Call log:
         - img [ref=e110]
     - generic [ref=e112]:
       - banner [ref=e113]:
-        - generic [ref=e115]:
+        - button "Sakila Demo DB sqlite3" [ref=e115] [cursor=pointer]:
           - img [ref=e116]
-          - generic [ref=e118]: Loading connection...
-        - generic [ref=e119]:
-          - button "Toggle theme" [ref=e120] [cursor=pointer]:
-            - img [ref=e121]
+          - generic [ref=e120]: Sakila Demo DB
+          - generic [ref=e121]: sqlite3
+        - generic [ref=e122]:
+          - button "Toggle theme" [ref=e123] [cursor=pointer]:
+            - img [ref=e124]
             - img
-            - generic [ref=e127]: Toggle theme
-          - button "Notifications" [ref=e128] [cursor=pointer]:
-            - img [ref=e129]
-            - generic [ref=e132]: Notifications
-          - button "SA" [ref=e133] [cursor=pointer]:
-            - generic [ref=e135]: SA
-      - main [ref=e136]:
-        - generic [ref=e137]:
-          - generic [ref=e138]:
-            - generic [ref=e139]:
-              - heading "Dashboards" [level=1] [ref=e140]
-              - paragraph [ref=e141]: Create and manage interactive dashboards
-            - button "New Dashboard" [ref=e142] [cursor=pointer]:
-              - img [ref=e143]
+            - generic [ref=e130]: Toggle theme
+          - button "Notifications" [ref=e131] [cursor=pointer]:
+            - img [ref=e132]
+            - generic [ref=e135]: Notifications
+          - button "SA" [ref=e136] [cursor=pointer]:
+            - generic [ref=e138]: SA
+      - main [ref=e139]:
+        - generic [ref=e140]:
+          - generic [ref=e141]:
+            - generic [ref=e142]:
+              - heading "Dashboards" [level=1] [ref=e143]
+              - paragraph [ref=e144]: Create and manage interactive dashboards
+            - button "New Dashboard" [ref=e145] [cursor=pointer]:
+              - img [ref=e146]
               - text: New Dashboard
-          - generic [ref=e144]:
-            - heading "All Dashboards" [level=3] [ref=e146]:
-              - img [ref=e147]
+          - generic [ref=e147]:
+            - heading "All Dashboards" [level=3] [ref=e149]:
+              - img [ref=e150]
               - text: All Dashboards
-            - generic [ref=e153]: Loading dashboards...
+            - table [ref=e157]:
+              - rowgroup [ref=e158]:
+                - row "Name Description Visibility Created Modified Actions" [ref=e159]:
+                  - columnheader "Name" [ref=e160]
+                  - columnheader "Description" [ref=e161]
+                  - columnheader "Visibility" [ref=e162]
+                  - columnheader "Created" [ref=e163]
+                  - columnheader "Modified" [ref=e164]
+                  - columnheader "Actions" [ref=e165]
+              - rowgroup [ref=e166]:
+                - row "Executive Dashboard High-level business metrics Private May 13, 2026, 05:51 PM May 13, 2026, 05:51 PM" [ref=e167]:
+                  - cell "Executive Dashboard" [ref=e168]
+                  - cell "High-level business metrics" [ref=e169]
+                  - cell "Private" [ref=e170]:
+                    - generic [ref=e171]:
+                      - img [ref=e172]
+                      - text: Private
+                  - cell "May 13, 2026, 05:51 PM" [ref=e175]
+                  - cell "May 13, 2026, 05:51 PM" [ref=e176]
+                  - cell [ref=e177]:
+                    - button [ref=e178] [cursor=pointer]:
+                      - img [ref=e179]
+                - row "Sales Dashboard Sales metrics and KPIs Private May 13, 2026, 05:51 PM May 13, 2026, 05:51 PM" [ref=e183]:
+                  - cell "Sales Dashboard" [ref=e184]
+                  - cell "Sales metrics and KPIs" [ref=e185]
+                  - cell "Private" [ref=e186]:
+                    - generic [ref=e187]:
+                      - img [ref=e188]
+                      - text: Private
+                  - cell "May 13, 2026, 05:51 PM" [ref=e191]
+                  - cell "May 13, 2026, 05:51 PM" [ref=e192]
+                  - cell [ref=e193]:
+                    - button [ref=e194] [cursor=pointer]:
+                      - img [ref=e195]
+                - row "Product Performance Product-level analytics Private May 13, 2026, 05:51 PM May 13, 2026, 05:51 PM" [ref=e199]:
+                  - cell "Product Performance" [ref=e200]
+                  - cell "Product-level analytics" [ref=e201]
+                  - cell "Private" [ref=e202]:
+                    - generic [ref=e203]:
+                      - img [ref=e204]
+                      - text: Private
+                  - cell "May 13, 2026, 05:51 PM" [ref=e207]
+                  - cell "May 13, 2026, 05:51 PM" [ref=e208]
+                  - cell [ref=e209]:
+                    - button [ref=e210] [cursor=pointer]:
+                      - img [ref=e211]
   - region "Notifications alt+T"
 ```
 
