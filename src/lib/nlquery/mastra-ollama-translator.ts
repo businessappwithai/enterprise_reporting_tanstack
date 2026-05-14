@@ -236,3 +236,17 @@ function buildSchemaContext(schema: SchemaMetadata): string {
     })
     .join("\n");
 }
+
+/**
+ * Check if Ollama is available and responding
+ */
+export async function isOllamaAvailable(): Promise<boolean> {
+  const ollamaUrl = process.env.OLLAMA_URL || "http://localhost:11434";
+  try {
+    const response = await fetch(`${ollamaUrl}/api/tags`, { timeout: 5000 });
+    return response.ok;
+  } catch (error) {
+    console.debug("[Mastra] Ollama not available:", error);
+    return false;
+  }
+}

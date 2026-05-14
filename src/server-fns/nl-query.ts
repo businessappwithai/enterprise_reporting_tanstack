@@ -10,9 +10,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireAuth } from "@/lib/auth/middleware";
 import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
-import { isSafeSelectQuery, translateNLToSQL } from "@/lib/nlquery/openai-translator";
-import { translateNLToSQLViaOllama, isOllamaAvailable } from "@/lib/nlquery/ollama-translator";
-import { translateNLToSQLViaMastra } from "@/lib/nlquery/mastra-ollama-translator";
+import { isSafeSelectQuery } from "@/lib/nlquery/openai-translator";
+import { translateNLToSQLViaMastra, isOllamaAvailable } from "@/lib/nlquery/mastra-ollama-translator";
 import { getSchemaMetadata } from "@/lib/nlquery/schema-metadata";
 import { validateQueryAccess } from "@/lib/permissions/query-access-validator";
 import { logAudit } from "@/lib/security/audit";
@@ -96,43 +95,45 @@ export const executeNLQuery = createServerFn({
     // [Step 1] Get schema metadata
     const schema = await getSchemaMetadata(dataSource);
 
-    // [Step 1.5] Translate NL to SQL using Mastra.ai + Ollama (preferred) or OpenAI (fallback)
-    let translation = null;
-    let translationSource = "unknown";
-
-    // Try Mastra.ai + Ollama first (Mastra-style workflow with validation & refinement)
-    if (await isOllamaAvailable()) {
-      console.log("[NLQuery] Using Mastra.ai + Ollama for translation");
-      translationSource = "mastra-ollama";
-      translation = await translateNLToSQLViaMastra(nlQuestion, schema);
-    }
-
-    // Fall back to direct Ollama if Mastra translation fails
-    if (!translation && (await isOllamaAvailable())) {
-      console.log("[NLQuery] Falling back to direct Ollama translation");
-      translationSource = "ollama";
-      translation = await translateNLToSQLViaOllama(nlQuestion, schema);
-    }
-
-    // Fall back to OpenAI if Ollama is not available
-    if (!translation) {
-      console.log("[NLQuery] Falling back to OpenAI translation");
-      translationSource = "openai";
-      translation = await translateNLToSQL(nlQuestion, schema);
-    }
-
-    if (!translation) {
-      const errorMsg = `Failed to generate SQL - ${translationSource} unavailable`;
+    // [Step 1.5] Translate NL to SQL using Mastra.ai + Ollama (required)
+    if (!(await isOllamaAvailable())) {
       await logAudit({
         userId: session.user.id,
         action: "nl_query_error",
         resourceType: "query",
         resourceId: dataSourceId,
-        details: { nlQuestion, error: errorMsg, translationSource },
+        details: {
+          nlQuestion,
+          error: "Ollama is not available",
+          translationSource: "mastra-ollama",
+        },
       });
       return {
         success: false,
-        error: `Could not translate your question to SQL. Please ensure ${translationSource === 'ollama' ? 'Ollama is running locally' : 'OpenAI API is configured'}.`,
+        error: "Natural language queries require Ollama. Please ensure Ollama is running at " +
+               (process.env.OLLAMA_URL || "http://localhost:11434"),
+      };
+    }
+
+    console.log("[NLQuery] Using Mastra.ai + Ollama for translation");
+    const translationSource = "mastra-ollama";
+    const translation = await translateNLToSQLViaMastra(nlQuestion, schema);
+
+    if (!translation) {
+      await logAudit({
+        userId: session.user.id,
+        action: "nl_query_error",
+        resourceType: "query",
+        resourceId: dataSourceId,
+        details: {
+          nlQuestion,
+          error: "Mastra.ai + Ollama translation failed",
+          translationSource,
+        },
+      });
+      return {
+        success: false,
+        error: "Could not translate your question to SQL. Please verify the question is clear and within schema scope.",
       };
     }
 
