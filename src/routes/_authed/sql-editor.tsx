@@ -1,7 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { RefreshCw } from "lucide-react";
+import { ChevronDown, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { MonacoSQLEditorWrapper } from "@/components/sql-editor/monaco-editor-wrapper";
 import { QueryResults } from "@/components/sql-editor/query-results";
 import { SchemaBrowser } from "@/components/sql-editor/schema-browser";
@@ -100,7 +107,7 @@ function SQLEditorPage() {
     queryFn: async () => {
       const res = await fetch("/api/data-sources");
       const data = await res.json();
-      const sources = data.data?.items || [];
+      const sources = data.items || data.data?.items || [];
       return sources.filter((ds: DataSource) => ds.is_active);
     },
     staleTime: 60000,
@@ -434,22 +441,27 @@ function SQLEditorPage() {
               ▲
             </button>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {isLoadingDataSources && <p className="text-xs text-muted-foreground">Loading...</p>}
-            {dataSources?.map((ds) => (
-              <button
-                type="button"
-                key={ds.id}
-                onClick={() => setSelectedDataSource(ds.id)}
-                className={`px-3 py-1.5 text-sm rounded border transition-colors ${
-                  selectedDataSource === ds.id
-                    ? "bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700"
-                    : "bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
-                }`}
-              >
-                {ds.name}
-              </button>
-            ))}
+          <div className="flex gap-2 items-center">
+            {isLoadingDataSources && <p className="text-xs text-muted-foreground">Loading datasources...</p>}
+            {!isLoadingDataSources && dataSources && dataSources.length > 0 && (
+              <Select value={selectedDataSource} onValueChange={setSelectedDataSource}>
+                <SelectTrigger className="w-64">
+                  <SelectValue placeholder="Select a data source..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {dataSources.map((ds) => (
+                    <SelectItem key={ds.id} value={ds.id}>
+                      {ds.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            {!isLoadingDataSources && (!dataSources || dataSources.length === 0) && (
+              <p className="text-xs text-red-600 dark:text-red-400">
+                No data sources configured. <a href="/data-sources" className="underline hover:no-underline">Create one</a>
+              </p>
+            )}
           </div>
         </div>
       ) : (
@@ -457,9 +469,9 @@ function SQLEditorPage() {
           <button
             type="button"
             onClick={() => setDataSourceCollapsed(false)}
-            className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400"
+            className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 w-full"
           >
-            <span>▼</span>
+            <ChevronDown className="h-4 w-4" />
             <span className="font-medium">
               {selectedDataSource
                 ? dataSources?.find((ds) => ds.id === selectedDataSource)?.name ||
