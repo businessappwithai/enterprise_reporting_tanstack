@@ -9,7 +9,7 @@ export const Route = createFileRoute("/_authed/nl-query/")({
 
 function NlQueryPage() {
   return (
-    <CopilotKit runtimeUrl="/api/copilotkit">
+    <CopilotKit runtimeUrl="/api/copilotkit" agents={[]}>
       <NlQueryWorkspace />
     </CopilotKit>
   );
