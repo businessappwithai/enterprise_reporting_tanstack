@@ -21,7 +21,7 @@ export const Route = createFileRoute('/api/queries')({
           const db = getDb()
           const queries = await db.selectFrom('saved_queries').selectAll().execute()
 
-          return json({ success: true, data: queries })
+          return json({ success: true, data: { items: queries, meta: { total: queries.length } } })
         } catch (error) {
           console.error('Error fetching queries:', error)
           return json({ success: false, error: { message: 'Failed to fetch queries' } }, { status: 500 })

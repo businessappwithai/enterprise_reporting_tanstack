@@ -1,4 +1,5 @@
 import { type QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { ThemeProvider } from "next-themes";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -50,6 +51,7 @@ function RootComponent() {
                   <Outlet />
                   <Toaster />
                 </ThemeProvider>
+                <ReactQueryDevtools initialIsOpen={false} />
               </QueryClientProvider>
             </TooltipProvider>
           </TanStackDBWrapper>
