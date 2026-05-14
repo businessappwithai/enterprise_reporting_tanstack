@@ -1,4 +1,4 @@
-import { createAPIFileRoute } from "@tanstack/react-start/server";
+import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
 import { verifySession } from "@/lib/auth/session";
 
@@ -17,27 +17,26 @@ interface TestConnectionResponse {
   };
 }
 
-export const Route = createAPIFileRoute("/api/data-sources/test")({
-  methods: ["POST"],
-  handler: async (request: Request): Promise<Response> => {
-    try {
-      // Verify authentication
-      const cookie = request.headers.get("cookie") || "";
-      const match = cookie.match(/session_token=([^;]+)/);
-      const token = match?.[1];
+async function getSession(request: Request) {
+  const cookie = request.headers.get("cookie") || "";
+  const match = cookie.match(/session_token=([^;]+)/);
+  const token = match?.[1];
+  if (!token) return null;
+  return verifySession(token);
+}
 
-      if (!token) {
-        return json({
-          error: { message: "Unauthorized" },
-        } as TestConnectionResponse);
-      }
-
-      const session = await verifySession(token);
-      if (!session) {
-        return json({
-          error: { message: "Invalid session" },
-        } as TestConnectionResponse);
-      }
+export const Route = createFileRoute("/api/data-sources/test")({
+  server: {
+    handlers: {
+      POST: async ({ request }: { request: Request }): Promise<Response> => {
+        try {
+          // Verify authentication
+          const session = await getSession(request);
+          if (!session?.user) {
+            return json({
+              error: { message: "Unauthorized" },
+            } as TestConnectionResponse);
+          }
 
       // Parse request body
       const body = (await request.json()) as TestConnectionRequest;
@@ -107,18 +106,20 @@ export const Route = createAPIFileRoute("/api/data-sources/test")({
         } as TestConnectionResponse);
       }
 
-      return json({
-        data: {
-          connected,
-          message,
-        },
-      } as TestConnectionResponse);
-    } catch (error) {
-      return json({
-        error: {
-          message: error instanceof Error ? error.message : "Internal server error",
-        },
-      } as TestConnectionResponse);
-    }
+        return json({
+          data: {
+            connected,
+            message,
+          },
+        } as TestConnectionResponse);
+        } catch (error) {
+          return json({
+            error: {
+              message: error instanceof Error ? error.message : "Internal server error",
+            },
+          } as TestConnectionResponse);
+        }
+      },
+    },
   },
 });
