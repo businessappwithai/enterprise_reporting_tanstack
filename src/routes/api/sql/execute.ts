@@ -95,13 +95,18 @@ export const Route = createFileRoute("/api/sql/execute")({
           const MAX_CLIENT_ROWS = sqlEditorConfig.maxClientRows;
 
           let totalRowCount = 0;
-          const countSQL = `SELECT COUNT(*) as total FROM (${sql.replace(/;$/, "")}) as count_query`;
 
+          // Try to get count, but don't fail if it doesn't work
+          // Different databases have different syntax quirks
           try {
+            const cleanSql = sql.trim().replace(/;$/, "");
+            const countSQL = `SELECT COUNT(*) as total FROM (${cleanSql}) as count_query`;
             const { rows: countRows } = await kyselySql.raw(countSQL).execute(connection);
             totalRowCount = Number((countRows[0] as Record<string, unknown>)?.total) || 0;
           } catch (e) {
-            console.error("Could not count total rows:", e);
+            // If counting fails, just continue without total row count
+            console.debug("Could not count total rows (non-blocking):", (e as Error)?.message);
+            totalRowCount = 0;
           }
 
           let limitedSQL = sql.trim();
