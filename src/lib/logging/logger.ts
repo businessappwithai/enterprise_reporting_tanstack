@@ -71,7 +71,7 @@ async function flushLogsToDatabase() {
       await db
         .insertInto("logs")
         .values({
-          timestamp: new Date(log.timestamp),
+          timestamp: log.timestamp,
           level: log.level,
           message: log.message,
           component: log.component,
