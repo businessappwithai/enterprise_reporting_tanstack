@@ -58,16 +58,18 @@ export function ChartReusableFilters({
                 <SelectValue placeholder="Choose a filter..." />
               </SelectTrigger>
               <SelectContent>
-                {availableFilters
-                  ?.filter((f) => !chartFilters?.some((cf) => cf.filter_id === f.id))
-                  .map((filter) => (
-                    <SelectItem key={filter.id} value={filter.id}>
-                      {filter.name}
-                      <span className="text-gray-500 text-xs ml-2">
-                        ({filter.display_field} → {filter.value_field})
-                      </span>
-                    </SelectItem>
-                  ))}
+                {availableFilters && Array.isArray(availableFilters)
+                  ? availableFilters
+                      .filter((f) => !chartFilters?.some((cf) => cf.filter_id === f.id))
+                      .map((filter) => (
+                        <SelectItem key={filter.id} value={filter.id}>
+                          {filter.name}
+                          <span className="text-gray-500 text-xs ml-2">
+                            ({filter.display_field} → {filter.value_field})
+                          </span>
+                        </SelectItem>
+                      ))
+                  : null}
               </SelectContent>
             </Select>
           </div>
