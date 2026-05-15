@@ -23,13 +23,29 @@ function NlQueryPage() {
   const { data: dataSourceId, isLoading: isLoadingDs } = useQuery({
     queryKey: ["active-data-source"],
     queryFn: async () => {
-      const response = await fetch("/api/data-sources");
-      const data = await response.json();
-      const hmsDs = data.data?.items?.find(
-        (ds: any) => ds.name === "HMS" || ds.client_type === "postgres"
-      );
-      return hmsDs?.id;
+      try {
+        const response = await fetch("/api/data-sources");
+        if (!response.ok) {
+          console.error("Failed to fetch data sources:", response.statusText);
+          return undefined;
+        }
+        const result = await response.json();
+
+        // Handle both direct items array and nested structure
+        const items = result.data?.items || result.items || [];
+        const hmsDs = items.find(
+          (ds: any) => ds.name === "HMS" || ds.client_type === "postgres"
+        );
+
+        console.log("Data sources found:", items.length, "HMS:", hmsDs?.id);
+        return hmsDs?.id;
+      } catch (error) {
+        console.error("Error fetching data sources:", error);
+        return undefined;
+      }
     },
+    retry: true,
+    retryDelay: 1000,
   });
 
   // Generate SQL from natural language
@@ -127,12 +143,25 @@ function NlQueryPage() {
           </CardContent>
         </Card>
       ) : !dataSourceId ? (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            No HMS data source found. Please create a data source in Data Sources page first.
-          </AlertDescription>
-        </Alert>
+        <Card>
+          <CardContent className="pt-6">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                <div className="space-y-2">
+                  <p>No HMS data source found. Please ensure a data source named "HMS" exists.</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.location.href = "/data-sources"}
+                  >
+                    Go to Data Sources
+                  </Button>
+                </div>
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+        </Card>
       ) : (
         <>
           {/* Question Input */}
