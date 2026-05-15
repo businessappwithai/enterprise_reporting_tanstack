@@ -22,7 +22,7 @@ export const Route = createFileRoute("/api/nl-query/schema")({
           }
 
           const body = await request.json();
-          const dataSourceId = body.data_source_id;
+          const dataSourceId = body.data_source_id || body.dataSourceId;
 
           if (!dataSourceId) {
             return json(
@@ -48,30 +48,39 @@ export const Route = createFileRoute("/api/nl-query/schema")({
             );
           }
 
-          // Get metadata entities (tables) for this data source
-          const entities = await db
-            .selectFrom("metadata_entities")
-            .selectAll()
-            .where("data_source_id", "=", dataSourceId)
-            .execute();
+          // Query PostgreSQL schema directly from information_schema
+          const tables = await db.raw<{ table_name: string }[]>(
+            `SELECT table_name FROM information_schema.tables
+             WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+             ORDER BY table_name`
+          );
 
-          // Get fields for each entity
+          // Build schema with fields
           const schema: Record<string, any> = {};
-          for (const entity of entities) {
-            const fields = await db
-              .selectFrom("metadata_fields")
-              .selectAll()
-              .where("entity_id", "=", entity.id)
-              .execute();
+          const tablesList = [];
 
-            schema[entity.name] = {
-              description: entity.description,
+          for (const { table_name } of tables) {
+            const fields = await db.raw<{ column_name: string; data_type: string }[]>(
+              `SELECT column_name, data_type FROM information_schema.columns
+               WHERE table_schema = 'public' AND table_name = ?
+               ORDER BY ordinal_position`,
+              [table_name]
+            );
+
+            schema[table_name] = {
+              description: `Table: ${table_name}`,
               fields: fields.map((f) => ({
-                name: f.name,
-                type: f.type,
-                description: f.description,
+                name: f.column_name,
+                type: f.data_type,
+                description: f.column_name,
               })),
             };
+
+            tablesList.push({
+              name: table_name,
+              description: `Table: ${table_name}`,
+              columns: fields.map((f) => f.column_name),
+            });
           }
 
           return json({
@@ -81,10 +90,7 @@ export const Route = createFileRoute("/api/nl-query/schema")({
               data_source_name: dataSource.name,
               client_type: dataSource.client_type,
               schema,
-              tables: entities.map((e) => ({
-                name: e.name,
-                description: e.description,
-              })),
+              tables: tablesList,
             },
           });
         } catch (error) {
