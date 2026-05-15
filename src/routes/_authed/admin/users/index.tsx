@@ -54,8 +54,9 @@ function UsersManagementPage() {
   const { data: usersData, isLoading: isLoadingUsers } = useQuery({
     queryKey: ["admin-users"],
     queryFn: async () => {
-      const result = await listUsers({ page: 0, pageSize: 100 });
-      return result.items || [];
+      const response = await fetch("/api/admin/users");
+      const result = await response.json();
+      return result.data || [];
     },
   });
 

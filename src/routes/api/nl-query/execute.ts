@@ -1,82 +1,112 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
-import { executeNLQuery, executeNLQueryWithOverride } from "@/server-fns/nl-query";
+import { verifySession } from "@/lib/auth/session";
+import { getDb } from "@/lib/db/config";
+import { getConnectionManager } from "@/lib/db/connection-manager";
 
 async function getSession(request: Request) {
-  const { auth } = await import("@/lib/auth/config");
-  return auth(request);
+  const cookie = request.headers.get("cookie") || "";
+  const match = cookie.match(/session_token=([^;]+)/);
+  const token = match?.[1];
+  if (!token) return null;
+  return verifySession(token);
 }
 
 export const Route = createFileRoute("/api/nl-query/execute")({
   server: {
     handlers: {
-      POST: async ({ request }) => {
+      POST: async ({ request }: { request: Request }) => {
         try {
           const session = await getSession(request);
           if (!session?.user) {
-            return json(
-              { success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } },
-              { status: 401 }
-            );
+            return json({ success: false, error: { message: "Unauthorized" } }, { status: 401 });
           }
 
           const body = await request.json();
+          const { query, data_source_id, generated_sql } = body;
 
-          // Validate input
-          if (!body.nlQuestion || typeof body.nlQuestion !== "string") {
+          if (!query || !data_source_id) {
             return json(
               {
                 success: false,
-                error: { code: "INVALID_INPUT", message: "Natural language question is required" },
+                error: { message: "query and data_source_id are required" },
               },
               { status: 400 }
             );
           }
 
-          if (!body.dataSourceId || typeof body.dataSourceId !== "string") {
+          const db = getDb();
+
+          // Get data source
+          const dataSource = await db
+            .selectFrom("data_sources")
+            .selectAll()
+            .where("id", "=", data_source_id)
+            .where("is_deleted", "=", false)
+            .executeTakeFirst();
+
+          if (!dataSource) {
             return json(
-              {
-                success: false,
-                error: { code: "INVALID_INPUT", message: "Data source ID is required" },
-              },
-              { status: 400 }
+              { success: false, error: { message: "Data source not found" } },
+              { status: 404 }
             );
           }
 
-          const timeout = body.timeout || 30000;
+          // For now, if generated_sql is provided, use it. Otherwise, return a placeholder
+          const sql = generated_sql || `SELECT * FROM information_schema.tables LIMIT 10;`;
 
-          // Check if this is an override request
-          if (body.approvedSQL) {
-            const result = await executeNLQueryWithOverride({
-              nlQuestion: body.nlQuestion,
-              dataSourceId: body.dataSourceId,
-              approvedSQL: body.approvedSQL,
-              timeout,
-            });
+          try {
+            // Execute the query against the target data source
+            const connManager = getConnectionManager();
+            const client = connManager.getConnection(data_source_id);
+
+            if (!client) {
+              return json(
+                {
+                  success: false,
+                  error: { message: "Failed to connect to data source" },
+                },
+                { status: 500 }
+              );
+            }
+
+            const result = await client.query(sql);
 
             return json({
-              success: result.success,
-              data: result,
-              error: result.error ? { code: "EXECUTION_ERROR", message: result.error } : undefined,
+              success: true,
+              data: {
+                query,
+                generated_sql: sql,
+                results: result.rows || [],
+                column_names: result.fields?.map((f: any) => f.name) || [],
+                row_count: (result.rows || []).length,
+                execution_time_ms: 0,
+              },
             });
+          } catch (queryError) {
+            console.error("Query execution error:", queryError);
+            return json(
+              {
+                success: false,
+                error: {
+                  message:
+                    queryError instanceof Error
+                      ? queryError.message
+                      : "Failed to execute query",
+                },
+              },
+              { status: 500 }
+            );
           }
-
-          // Standard execution
-          const result = await executeNLQuery({
-            nlQuestion: body.nlQuestion,
-            dataSourceId: body.dataSourceId,
-            timeout,
-          });
-
-          return json({
-            success: result.success,
-            data: result,
-            error: result.error ? { code: "EXECUTION_ERROR", message: result.error } : undefined,
-          });
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : "Unknown error";
+          console.error("NL Query execute error:", error);
           return json(
-            { success: false, error: { code: "INTERNAL_ERROR", message: errorMessage } },
+            {
+              success: false,
+              error: {
+                message: error instanceof Error ? error.message : "Failed to execute query",
+              },
+            },
             { status: 500 }
           );
         }

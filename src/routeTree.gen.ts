@@ -47,6 +47,7 @@ import { Route as ApiSqlExecuteRouteImport } from './routes/api/sql/execute'
 import { Route as ApiReportsIdRouteImport } from './routes/api/reports/$id'
 import { Route as ApiQueriesIdRouteImport } from './routes/api/queries/$id'
 import { Route as ApiNlQuerySchemaRouteImport } from './routes/api/nl-query/schema'
+import { Route as ApiNlQueryHistoryRouteImport } from './routes/api/nl-query/history'
 import { Route as ApiNlQueryExecuteRouteImport } from './routes/api/nl-query/execute'
 import { Route as ApiLogsUsersRouteImport } from './routes/api/logs/users'
 import { Route as ApiLogsSearchRouteImport } from './routes/api/logs/search'
@@ -274,6 +275,11 @@ const ApiQueriesIdRoute = ApiQueriesIdRouteImport.update({
 const ApiNlQuerySchemaRoute = ApiNlQuerySchemaRouteImport.update({
   id: '/api/nl-query/schema',
   path: '/api/nl-query/schema',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiNlQueryHistoryRoute = ApiNlQueryHistoryRouteImport.update({
+  id: '/api/nl-query/history',
+  path: '/api/nl-query/history',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiNlQueryExecuteRoute = ApiNlQueryExecuteRouteImport.update({
@@ -505,6 +511,7 @@ export interface FileRoutesByFullPath {
   '/api/logs/search': typeof ApiLogsSearchRoute
   '/api/logs/users': typeof ApiLogsUsersRoute
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
+  '/api/nl-query/history': typeof ApiNlQueryHistoryRoute
   '/api/nl-query/schema': typeof ApiNlQuerySchemaRoute
   '/api/queries/$id': typeof ApiQueriesIdRoute
   '/api/reports/$id': typeof ApiReportsIdRouteWithChildren
@@ -582,6 +589,7 @@ export interface FileRoutesByTo {
   '/api/logs/search': typeof ApiLogsSearchRoute
   '/api/logs/users': typeof ApiLogsUsersRoute
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
+  '/api/nl-query/history': typeof ApiNlQueryHistoryRoute
   '/api/nl-query/schema': typeof ApiNlQuerySchemaRoute
   '/api/queries/$id': typeof ApiQueriesIdRoute
   '/api/reports/$id': typeof ApiReportsIdRouteWithChildren
@@ -661,6 +669,7 @@ export interface FileRoutesById {
   '/api/logs/search': typeof ApiLogsSearchRoute
   '/api/logs/users': typeof ApiLogsUsersRoute
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
+  '/api/nl-query/history': typeof ApiNlQueryHistoryRoute
   '/api/nl-query/schema': typeof ApiNlQuerySchemaRoute
   '/api/queries/$id': typeof ApiQueriesIdRoute
   '/api/reports/$id': typeof ApiReportsIdRouteWithChildren
@@ -740,6 +749,7 @@ export interface FileRouteTypes {
     | '/api/logs/search'
     | '/api/logs/users'
     | '/api/nl-query/execute'
+    | '/api/nl-query/history'
     | '/api/nl-query/schema'
     | '/api/queries/$id'
     | '/api/reports/$id'
@@ -817,6 +827,7 @@ export interface FileRouteTypes {
     | '/api/logs/search'
     | '/api/logs/users'
     | '/api/nl-query/execute'
+    | '/api/nl-query/history'
     | '/api/nl-query/schema'
     | '/api/queries/$id'
     | '/api/reports/$id'
@@ -895,6 +906,7 @@ export interface FileRouteTypes {
     | '/api/logs/search'
     | '/api/logs/users'
     | '/api/nl-query/execute'
+    | '/api/nl-query/history'
     | '/api/nl-query/schema'
     | '/api/queries/$id'
     | '/api/reports/$id'
@@ -968,6 +980,7 @@ export interface RootRouteChildren {
   ApiLogsSearchRoute: typeof ApiLogsSearchRoute
   ApiLogsUsersRoute: typeof ApiLogsUsersRoute
   ApiNlQueryExecuteRoute: typeof ApiNlQueryExecuteRoute
+  ApiNlQueryHistoryRoute: typeof ApiNlQueryHistoryRoute
   ApiNlQuerySchemaRoute: typeof ApiNlQuerySchemaRoute
   ApiSqlExecuteRoute: typeof ApiSqlExecuteRoute
   ApiSqlValidateRoute: typeof ApiSqlValidateRoute
@@ -1247,6 +1260,13 @@ declare module '@tanstack/react-router' {
       path: '/api/nl-query/schema'
       fullPath: '/api/nl-query/schema'
       preLoaderRoute: typeof ApiNlQuerySchemaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/nl-query/history': {
+      id: '/api/nl-query/history'
+      path: '/api/nl-query/history'
+      fullPath: '/api/nl-query/history'
+      preLoaderRoute: typeof ApiNlQueryHistoryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/nl-query/execute': {
@@ -1713,6 +1733,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiLogsSearchRoute: ApiLogsSearchRoute,
   ApiLogsUsersRoute: ApiLogsUsersRoute,
   ApiNlQueryExecuteRoute: ApiNlQueryExecuteRoute,
+  ApiNlQueryHistoryRoute: ApiNlQueryHistoryRoute,
   ApiNlQuerySchemaRoute: ApiNlQuerySchemaRoute,
   ApiSqlExecuteRoute: ApiSqlExecuteRoute,
   ApiSqlValidateRoute: ApiSqlValidateRoute,

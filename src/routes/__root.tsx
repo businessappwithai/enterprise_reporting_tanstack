@@ -2,6 +2,7 @@ import { type QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { DuckDBProvider } from "@/components/duckdb/DuckDBProvider";
 import { ErrorBoundary } from "@/components/errors/error-boundary";
 import { Toaster } from "@/components/ui/sonner";
 import { TanStackDBWrapper } from "@/lib/tanstack-db/provider";
@@ -52,13 +53,15 @@ function RootComponent() {
         <ErrorBoundary>
           <ThemeProvider>
             <TanStackDBWrapper>
-              <TooltipProvider>
-                <QueryClientProvider client={queryClient}>
-                  <Outlet />
-                  <Toaster />
-                  <ReactQueryDevtools initialIsOpen={false} />
-                </QueryClientProvider>
-              </TooltipProvider>
+              <DuckDBProvider>
+                <TooltipProvider>
+                  <QueryClientProvider client={queryClient}>
+                    <Outlet />
+                    <Toaster />
+                    <ReactQueryDevtools initialIsOpen={false} />
+                  </QueryClientProvider>
+                </TooltipProvider>
+              </DuckDBProvider>
             </TanStackDBWrapper>
           </ThemeProvider>
         </ErrorBoundary>

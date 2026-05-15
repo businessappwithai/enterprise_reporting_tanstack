@@ -7,6 +7,7 @@ import {
   Database,
   Loader2,
   LogOut,
+  Menu,
   Settings,
   User,
   X,
@@ -37,9 +38,11 @@ interface AppUser {
 
 interface HeaderProps {
   user: AppUser;
+  onMobileMenuToggle?: () => void;
+  mobileMenuOpen?: boolean;
 }
 
-export function Header({ user }: HeaderProps) {
+export function Header({ user, onMobileMenuToggle, mobileMenuOpen }: HeaderProps) {
   const { activeDataSource, isLoading } = useActiveDataSource();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -148,6 +151,17 @@ export function Header({ user }: HeaderProps) {
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background px-6">
       <div className="flex items-center gap-3">
+        {/* Mobile Menu Toggle */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="lg:hidden h-9 w-9"
+          onClick={onMobileMenuToggle}
+          aria-label="Toggle menu"
+        >
+          <Menu className={`h-5 w-5 transition-transform ${mobileMenuOpen ? 'rotate-90' : ''}`} />
+        </Button>
+
         {/* Active Data Source */}
         {isLoading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">

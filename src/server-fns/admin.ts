@@ -34,13 +34,14 @@ import { withErrorHandler } from "@/lib/server-fns/with-error-handler";
 
 export const listUsers = createServerFn({ method: "GET" })
   .handler(async (input) => {
+    const session = await requireAuth();
+
     return withErrorHandler(
       async () => {
         const validated = await listUsersSchema.parseAsync(input).catch((err) => {
           throw new Error(`Validation failed: ${err.message}`);
         });
 
-        const session = await requireAuth();
         const admin = await isAdmin(session.user.id);
         if (!admin) {
           throw new Error("FORBIDDEN");
@@ -83,9 +84,10 @@ export const listUsers = createServerFn({ method: "GET" })
         };
       },
       {
-        userId: (await requireAuth()).user.id,
-        action: "execute",
-        details: { operation: "listUsers" },
+        user: session.user,
+        action: "listUsers",
+        resourceType: "user",
+        details: { operation: "list" },
       }
     );
   });

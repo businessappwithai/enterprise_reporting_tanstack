@@ -79,23 +79,28 @@ export const Route = createFileRoute('/api/dashboards/')({
             )
           }
 
+          const { randomUUID } = await import('node:crypto')
           const db = getDb()
-          const { lastInsertRowid } = await db
+          const id = randomUUID()
+          const now = new Date().toISOString()
+
+          await db
             .insertInto('dashboard_layouts')
             .values({
+              id,
               name: body.name,
               description: body.description || null,
-              layout: JSON.stringify(body.layout),
+              layout_config: JSON.stringify(body.layout),
               created_by: session.user.id,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
+              created_at: now,
+              updated_at: now,
             })
             .executeTakeFirstOrThrow()
 
           return json(
             {
               success: true,
-              data: { id: lastInsertRowid },
+              data: { id },
             },
             { status: 201 }
           )
