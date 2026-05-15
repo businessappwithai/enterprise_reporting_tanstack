@@ -597,6 +597,158 @@ Or the full build check:
 bun run build:check  # lint + typecheck + build
 ```
 
+## Natural Language Query (NL Query) - Mastra.ai + Ollama Setup
+
+The NL Query feature enables users to ask questions in plain English and receive SQL queries that can be executed against the database. It uses **Mastra.ai** for orchestration and **local Ollama** with the **sqlcoder:7b** model for SQL generation.
+
+### Quick Start
+
+**1. Install and Run Ollama**
+
+```bash
+# Download Ollama from https://ollama.ai
+# Or if already installed, start the service
+ollama serve
+
+# In another terminal, pull the sqlcoder:7b model
+ollama pull sqlcoder:7b
+
+# Verify it's loaded
+ollama list
+# Should show: sqlcoder:7b   latest
+```
+
+**2. Configure Environment Variables**
+
+Create or update your `.env.local` file:
+```bash
+# NL Query - Ollama Configuration
+OLLAMA_URL=http://localhost:11434
+OLLAMA_MODEL=sqlcoder:7b
+
+# Optional: Mastra.ai Server (for orchestration)
+MASTRA_URL=http://localhost:4111
+```
+
+**3. Start the Application**
+
+```bash
+bun run dev
+```
+
+**4. Test the NL Query Feature**
+
+1. Navigate to: http://localhost:4050/_authed/nl-query
+2. Ensure you're logged in (admin@admin.com / admin)
+3. Enter a natural language question: "Show me total patients by gender"
+4. Click "Generate SQL"
+5. Review the generated SQL
+6. Click "Execute Query" to run it
+
+### Architecture
+
+The NL Query system works as follows:
+
+```
+User Question
+    ↓
+NL Query Page (/src/routes/_authed/nl-query/index.tsx)
+    ↓
+CopilotKit API (/src/routes/api/copilotkit.ts)
+    ↓
+Mastra.ai Translator (/src/lib/nlquery/mastra-ollama-translator.ts)
+    ↓
+Database Schema (/api/nl-query/schema) ← Uses information_schema
+    ↓
+Ollama sqlcoder:7b Model (http://localhost:11434)
+    ↓
+SQL Query Generation
+    ↓
+SQL Validation & Execution
+    ↓
+Results displayed to user
+```
+
+### Components
+
+1. **NL Query Frontend Page** (`/_authed/nl-query`)
+   - User input for natural language questions
+   - Data source detection
+   - SQL display and explanation
+   - Query execution interface
+
+2. **Schema Endpoint** (`/api/nl-query/schema`)
+   - Queries PostgreSQL information_schema
+   - Returns table and column metadata
+   - Provides complete database structure to Ollama
+
+3. **CopilotKit Endpoint** (`/api/copilotkit`)
+   - Handles NL→SQL translation requests
+   - Routes to Mastra.ai Ollama translator
+   - Returns: SQL, explanation, warnings
+
+4. **Mastra.ai Translator** (`/lib/nlquery/mastra-ollama-translator.ts`)
+   - Connects to local Ollama on port 11434
+   - Uses sqlcoder:7b model for SQL generation
+   - Validates generated SQL
+   - Refines SQL if validation fails
+
+### Example Questions
+
+Try these questions to test the system:
+
+1. **Simple aggregation**: "Count patients by gender"
+2. **Multi-table join**: "Show admissions with patient names"
+3. **Date filtering**: "Patients admitted in the last 30 days"
+4. **Complex statistics**: "Average length of stay by department"
+
+### Troubleshooting
+
+**"Ollama not available" error:**
+- Ensure Ollama is running: `ollama serve`
+- Check Ollama URL: http://localhost:11434/api/tags should return 200 OK
+- Verify model is loaded: `ollama list` should show sqlcoder:7b
+
+**"No HMS data source found" error:**
+- Go to Data Sources page
+- Create a data source named "HMS" connecting to hospital_management_system PostgreSQL database
+- Ensure the user has access to the data source
+
+**"Schema endpoint returns no tables" error:**
+- Verify PostgreSQL is running and accessible
+- Check that hospital_management_system database exists
+- Confirm tables exist in public schema: `\dt` in psql
+
+**Ollama slow/timeout:**
+- First query is slower (model loading)
+- Subsequent queries are faster (model cached in memory)
+- Increase timeout if needed in mastra-ollama-translator.ts
+
+### Configuration
+
+| Setting | Default | Purpose |
+|---------|---------|---------|
+| OLLAMA_URL | http://localhost:11434 | Ollama service endpoint |
+| OLLAMA_MODEL | sqlcoder:7b | Model for SQL generation |
+| MASTRA_URL | http://localhost:4111 | Optional: Mastra.ai orchestration |
+| Schema timeout | 30s | Timeout for schema retrieval |
+| SQL generation timeout | 30s | Timeout for Ollama SQL generation |
+
+### Performance Notes
+
+- **First query**: ~5-10 seconds (model loading into memory)
+- **Subsequent queries**: 1-3 seconds (model cached)
+- **Large schemas**: May take longer with 30+ tables
+- **Model**: sqlcoder:7b requires ~4GB RAM (7B parameters)
+
+### Important
+
+⚠️ **Required for local development:**
+- Ollama must be running (`ollama serve`)
+- sqlcoder:7b model must be loaded (`ollama pull sqlcoder:7b`)
+- PostgreSQL hospital_management_system database must exist
+- User must be authenticated and have data source access
+
 ## Gstack Integration
 
 For web browsing and site testing, use the **`/browse` skill** from gstack. Never use `mcp__claude-in-chrome__*` tools.

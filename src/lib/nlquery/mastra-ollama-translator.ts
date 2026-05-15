@@ -29,7 +29,7 @@ export async function translateNLToSQLViaMastra(
   schema: EnhancedSchemaMetadata
 ): Promise<{ sql: string; explanation: string; warnings?: string[] } | null> {
   const ollamaUrl = process.env.OLLAMA_URL || "http://localhost:11434";
-  const ollamaModel = process.env.OLLAMA_MODEL || "sqlcoder";
+  const ollamaModel = process.env.OLLAMA_MODEL || "sqlcoder:7b";
 
   try {
     // Check if Ollama is available
