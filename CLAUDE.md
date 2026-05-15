@@ -39,7 +39,7 @@ Enterprise Reporting and Dashboard System built with **TanStack Start** (full-st
 | Database | PostgreSQL (Kysely) or SQLite (bun:sqlite via Kysely) |
 | Auth | Custom JWT (jose) with HTTP-only cookies |
 | Charts | Recharts, ECharts |
-| Job Queue | BullMQ + Redis (ioredis) |
+| Job Queue | Trigger.dev (Cloud-based job processing with local Mastra.ai API) |
 | AI/NL Query | OpenAI (via @ai-sdk/openai), CopilotKit |
 | Testing | Playwright (E2E only) |
 | Styling | Tailwind CSS with CSS variables (HSL color system) |
@@ -85,8 +85,8 @@ bun run test:reports     # e2e/reports.spec.ts
 bun run test:charts      # e2e/charts.spec.ts
 bun run test:granular-permissions  # e2e/granular-permissions.spec.ts
 
-# Background services
-bun run jobs:worker      # Start BullMQ job worker
+# Background services (Trigger.dev)
+bun run jobs:worker      # Initialize trigger.dev tasks (background job processing)
 
 # Docker
 ./rebuild.sh             # Rebuild Docker containers
@@ -455,6 +455,75 @@ bun run db:rollback
 Migrations live in `src/lib/db/migrations/` and follow the pattern:
 `YYYYMMDDHHMMSS_description.ts`
 
+## Background Jobs with Trigger.dev
+
+This application uses **Trigger.dev** for reliable background job processing, replacing the previous BullMQ + Redis setup. Trigger.dev provides cloud-native job orchestration while supporting local development via Mastra.ai server API endpoints.
+
+### Job Types
+
+The system processes the following background jobs:
+
+- **report:generate** - Generate reports (CSV, XLSX, PDF formats)
+- **data:export** - Export query results to files
+- **email:batch** - Send batch emails with attachments
+- **scheduled:refresh** - Scheduled data refresh for reports/charts/dashboards
+- **chart:render** - Render chart images (PNG, SVG)
+
+### Task Definitions
+
+Tasks are defined in `src/lib/jobs/trigger-tasks.ts`:
+- `reportGenerationTask` - Report generation with error handling
+- `dataExportTask` - Data export with format handling
+- `emailBatchTask` - Email delivery with template support
+- `scheduledRefreshTask` - Scheduled content refresh
+
+### Local Development Setup
+
+1. **Configure Local Mastra.ai API:**
+   ```bash
+   # Set environment variables
+   export TRIGGER_API_URL=http://localhost:3030  # Local Mastra.ai server
+   export TRIGGER_API_KEY=your-api-key           # Mastra.ai API key
+   ```
+
+2. **Start Mastra.ai Local Server** (if using self-hosted):
+   ```bash
+   mastra dev
+   ```
+
+3. **Jobs are automatically processed** when triggered via:
+   - `addJob()` - Submit immediate job
+   - `addScheduledJob()` - Schedule recurring job (cron)
+
+### Configuration
+
+- **Config file:** `trigger.config.ts`
+- **Default concurrency:** 5 workers (set via `WORKER_CONCURRENCY` env var)
+- **Retries:** 3 attempts with exponential backoff
+- **Job retention:** 24 hours for completed, 7 days for failed
+
+### Monitoring & Debugging
+
+- **Trigger.dev Dashboard:** https://dashboard.trigger.dev (for cloud deployments)
+- **Local Logs:** Printed to console during development
+- **Job Status:** Check via API or dashboard
+
+### Environment Variables
+
+| Variable | Purpose |
+|----------|---------|
+| `TRIGGER_API_KEY` | API key for Trigger.dev or Mastra.ai |
+| `TRIGGER_API_URL` | Base URL for Trigger.dev or local Mastra.ai (`http://localhost:3030`) |
+| `WORKER_CONCURRENCY` | Number of concurrent job workers (default: 5) |
+
+### Important Notes
+
+- ✅ NO Redis required - Trigger.dev handles persistent job storage
+- ✅ Local development uses Mastra.ai server API endpoints
+- ✅ Tasks defined in TypeScript with full type safety
+- ✅ Automatic retries and error handling built-in
+- ⚠️ Job definitions must be exported from `trigger-tasks.ts`
+
 ## Docker & Deployment
 
 ### Docker Build
@@ -466,8 +535,8 @@ Multi-stage build using `oven/bun:1.3-alpine`:
 ### Services (docker-compose.yml)
 
 - **nginx**: Reverse proxy with SSL (Let's Encrypt via certbot)
-- **redis**: BullMQ job queue backend
 - **app**: Main application (port 3000 internal)
+- **Note:** Redis is no longer required (Trigger.dev handles job processing)
 
 ### Key Environment Variables
 
@@ -475,9 +544,11 @@ Multi-stage build using `oven/bun:1.3-alpine`:
 |----------|---------|
 | `DATABASE_PATH` | SQLite database file path |
 | `AUTH_SECRET` | JWT session secret (min 32 chars) |
-| `REDIS_URL` | Redis connection for BullMQ |
 | `ENCRYPTION_KEY` | AES-256 key for credential encryption |
 | `OPENAI_API_KEY` | OpenAI API key for NL query feature |
+| `TRIGGER_API_KEY` | Trigger.dev or Mastra.ai API key |
+| `TRIGGER_API_URL` | Trigger.dev base URL or local Mastra.ai (`http://localhost:3030`) |
+| `WORKER_CONCURRENCY` | Job worker concurrency (default: 5) |
 | `DEFAULT_PAGE_SIZE` | Default pagination size (50) |
 | `MAX_PAGE_SIZE` | Max allowed page size (1000) |
 

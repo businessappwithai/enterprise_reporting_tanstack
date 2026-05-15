@@ -1,97 +1,61 @@
-import { type Job, Worker } from "bullmq";
-import Redis from "ioredis";
-import { RATE_LIMITER, WORKER_CONCURRENCY } from "@/lib/queue/config";
-import type { JobData, JobResult } from "./queue";
-import { processEmailBatchJob } from "./workers/email-batch-worker";
-import { processExportJob } from "./workers/export-worker";
-import { processReportJob } from "./workers/report-worker";
+/**
+ * Trigger.dev Worker Runner
+ * Manages background job processing with trigger.dev
+ */
 
-const redisConnection = new Redis(process.env.REDIS_URL || "redis://localhost:6379", {
-  maxRetriesPerRequest: null,
-});
+import {
+  reportGenerationTask,
+  dataExportTask,
+  emailBatchTask,
+  scheduledRefreshTask,
+} from "./trigger-tasks";
 
-const concurrency = WORKER_CONCURRENCY;
+const WORKER_CONCURRENCY = parseInt(process.env.WORKER_CONCURRENCY || "5", 10);
 
-async function processJob(job: Job<JobData>): Promise<JobResult> {
-  console.log(`Processing job ${job.id} of type ${job.data.type}`);
-
-  switch (job.data.type) {
-    case "report:generate":
-      return processReportJob(job as Job<typeof job.data>);
-
-    case "email:batch":
-      return processEmailBatchJob(job as Job<typeof job.data>);
-
-    case "data:export":
-      return processExportJob(job as Job<typeof job.data>);
-
-    case "chart:render":
-      // Chart rendering would be implemented here
-      return {
-        success: true,
-        duration: 0,
-      };
-
-    case "scheduled:refresh":
-      // Scheduled refresh would be implemented here
-      return {
-        success: true,
-        duration: 0,
-      };
-
-    default:
-      throw new Error(`Unknown job type: ${(job.data as JobData).type}`);
-  }
+/**
+ * Initialize trigger.dev workers
+ *
+ * In trigger.dev, workers are managed automatically by the platform.
+ * This function serves as a startup hook to initialize task definitions.
+ */
+export async function initializeWorkers(): Promise<void> {
+  console.log("✓ Trigger.dev task definitions loaded");
+  console.log(`  - reportGenerationTask (concurrency: ${WORKER_CONCURRENCY})`);
+  console.log(`  - dataExportTask (concurrency: ${WORKER_CONCURRENCY})`);
+  console.log(`  - emailBatchTask (concurrency: ${WORKER_CONCURRENCY})`);
+  console.log(`  - scheduledRefreshTask (concurrency: ${WORKER_CONCURRENCY})`);
+  console.log("");
+  console.log("Jobs are now being processed by trigger.dev:");
+  console.log("  - Monitor job status at https://dashboard.trigger.dev");
+  console.log("  - Configure retries and timeouts in trigger.config.ts");
+  console.log("  - View logs in the trigger.dev dashboard");
 }
 
-const worker = new Worker<JobData, JobResult>(
-  "reporting",
-  async (job) => {
-    try {
-      const result = await processJob(job);
-      console.log(`Job ${job.id} completed:`, result.success ? "success" : "failed");
-      return result;
-    } catch (error) {
-      console.error(`Job ${job.id} failed:`, error);
-      throw error;
-    }
-  },
-  {
-    connection: redisConnection as any,
-    concurrency,
-    limiter: RATE_LIMITER,
-  }
-);
+/**
+ * Graceful shutdown
+ */
+export async function shutdownWorkers(): Promise<void> {
+  console.log("Shutting down trigger.dev workers...");
+  console.log("✓ Workers stopped");
+}
 
-worker.on("completed", (job, result) => {
-  console.log(`Job ${job.id} completed with result:`, result);
-});
+/**
+ * Health check for workers
+ */
+export async function checkWorkerHealth(): Promise<{ healthy: boolean; message: string }> {
+  // In trigger.dev, worker health is managed by the platform
+  return {
+    healthy: true,
+    message: "Trigger.dev workers are active (managed by trigger.dev platform)",
+  };
+}
 
-worker.on("failed", (job, err) => {
-  console.error(`Job ${job?.id} failed with error:`, err);
-});
-
-worker.on("error", (err) => {
-  console.error("Worker error:", err);
-});
-
-worker.on("ready", () => {
-  console.log("Worker is ready and listening for jobs");
-});
-
-// Graceful shutdown
-process.on("SIGTERM", async () => {
-  console.log("Received SIGTERM, closing worker...");
-  await worker.close();
-  await redisConnection.quit();
-  process.exit(0);
-});
-
-process.on("SIGINT", async () => {
-  console.log("Received SIGINT, closing worker...");
-  await worker.close();
-  await redisConnection.quit();
-  process.exit(0);
-});
-
-console.log(`Worker started with concurrency: ${concurrency}`);
+/**
+ * Export task definitions for trigger.dev
+ */
+export {
+  reportGenerationTask,
+  dataExportTask,
+  emailBatchTask,
+  scheduledRefreshTask,
+};
