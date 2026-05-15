@@ -34,7 +34,11 @@ function NlQueryPage() {
         // Handle both direct items array and nested structure
         const items = result.data?.items || result.items || [];
         const hmsDs = items.find(
-          (ds: any) => ds.name === "HMS" || ds.client_type === "postgres"
+          (ds: any) =>
+            ds.name === "HMS" ||
+            ds.name === "Hospital Management System" ||
+            ds.client_type === "postgres" ||
+            ds.client_type === "postgresql"
         );
 
         console.log("Data sources found:", items.length, "HMS:", hmsDs?.id);
