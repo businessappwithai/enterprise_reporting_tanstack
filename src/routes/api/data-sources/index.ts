@@ -40,11 +40,14 @@ export const Route = createFileRoute("/api/data-sources/")({
             ({ connection_config: _cc, ...rest }) => rest
           );
 
-          await logAudit({
+          // Log audit asynchronously without blocking the response
+          logAudit({
             userId: session.user.id,
             action: "read",
             resourceType: "data_source",
             details: { operation: "listDataSources", count: sanitized.length },
+          }).catch((err) => {
+            console.error("Audit log error:", err);
           });
 
           return json({
@@ -111,12 +114,15 @@ export const Route = createFileRoute("/api/data-sources/")({
             })
             .execute();
 
-          await logAudit({
+          // Log audit asynchronously without blocking the response
+          logAudit({
             userId: session.user.id,
             action: "create",
             resourceType: "data_source",
             resourceId: id,
             details: { name, clientType },
+          }).catch((err) => {
+            console.error("Audit log error:", err);
           });
 
           const dataSource = await db
