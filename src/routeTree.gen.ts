@@ -54,6 +54,7 @@ import { Route as ApiLogsUsersRouteImport } from './routes/api/logs/users'
 import { Route as ApiLogsSearchRouteImport } from './routes/api/logs/search'
 import { Route as ApiLogsComponentsRouteImport } from './routes/api/logs/components'
 import { Route as ApiDataSourcesUploadRouteImport } from './routes/api/data-sources/upload'
+import { Route as ApiDataSourcesTestRouteImport } from './routes/api/data-sources/test'
 import { Route as ApiDataSourcesActiveRouteImport } from './routes/api/data-sources/active'
 import { Route as ApiDataSourcesIdRouteImport } from './routes/api/data-sources/$id'
 import { Route as ApiDashboardsIdRouteImport } from './routes/api/dashboards/$id'
@@ -313,6 +314,11 @@ const ApiDataSourcesUploadRoute = ApiDataSourcesUploadRouteImport.update({
   path: '/api/data-sources/upload',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiDataSourcesTestRoute = ApiDataSourcesTestRouteImport.update({
+  id: '/api/data-sources/test',
+  path: '/api/data-sources/test',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiDataSourcesActiveRoute = ApiDataSourcesActiveRouteImport.update({
   id: '/api/data-sources/active',
   path: '/api/data-sources/active',
@@ -512,6 +518,7 @@ export interface FileRoutesByFullPath {
   '/api/dashboards/$id': typeof ApiDashboardsIdRouteWithChildren
   '/api/data-sources/$id': typeof ApiDataSourcesIdRouteWithChildren
   '/api/data-sources/active': typeof ApiDataSourcesActiveRoute
+  '/api/data-sources/test': typeof ApiDataSourcesTestRoute
   '/api/data-sources/upload': typeof ApiDataSourcesUploadRoute
   '/api/logs/components': typeof ApiLogsComponentsRoute
   '/api/logs/search': typeof ApiLogsSearchRoute
@@ -591,6 +598,7 @@ export interface FileRoutesByTo {
   '/api/dashboards/$id': typeof ApiDashboardsIdRouteWithChildren
   '/api/data-sources/$id': typeof ApiDataSourcesIdRouteWithChildren
   '/api/data-sources/active': typeof ApiDataSourcesActiveRoute
+  '/api/data-sources/test': typeof ApiDataSourcesTestRoute
   '/api/data-sources/upload': typeof ApiDataSourcesUploadRoute
   '/api/logs/components': typeof ApiLogsComponentsRoute
   '/api/logs/search': typeof ApiLogsSearchRoute
@@ -672,6 +680,7 @@ export interface FileRoutesById {
   '/api/dashboards/$id': typeof ApiDashboardsIdRouteWithChildren
   '/api/data-sources/$id': typeof ApiDataSourcesIdRouteWithChildren
   '/api/data-sources/active': typeof ApiDataSourcesActiveRoute
+  '/api/data-sources/test': typeof ApiDataSourcesTestRoute
   '/api/data-sources/upload': typeof ApiDataSourcesUploadRoute
   '/api/logs/components': typeof ApiLogsComponentsRoute
   '/api/logs/search': typeof ApiLogsSearchRoute
@@ -753,6 +762,7 @@ export interface FileRouteTypes {
     | '/api/dashboards/$id'
     | '/api/data-sources/$id'
     | '/api/data-sources/active'
+    | '/api/data-sources/test'
     | '/api/data-sources/upload'
     | '/api/logs/components'
     | '/api/logs/search'
@@ -832,6 +842,7 @@ export interface FileRouteTypes {
     | '/api/dashboards/$id'
     | '/api/data-sources/$id'
     | '/api/data-sources/active'
+    | '/api/data-sources/test'
     | '/api/data-sources/upload'
     | '/api/logs/components'
     | '/api/logs/search'
@@ -912,6 +923,7 @@ export interface FileRouteTypes {
     | '/api/dashboards/$id'
     | '/api/data-sources/$id'
     | '/api/data-sources/active'
+    | '/api/data-sources/test'
     | '/api/data-sources/upload'
     | '/api/logs/components'
     | '/api/logs/search'
@@ -987,6 +999,7 @@ export interface RootRouteChildren {
   ApiDashboardsIdRoute: typeof ApiDashboardsIdRouteWithChildren
   ApiDataSourcesIdRoute: typeof ApiDataSourcesIdRouteWithChildren
   ApiDataSourcesActiveRoute: typeof ApiDataSourcesActiveRoute
+  ApiDataSourcesTestRoute: typeof ApiDataSourcesTestRoute
   ApiDataSourcesUploadRoute: typeof ApiDataSourcesUploadRoute
   ApiLogsComponentsRoute: typeof ApiLogsComponentsRoute
   ApiLogsSearchRoute: typeof ApiLogsSearchRoute
@@ -1322,6 +1335,13 @@ declare module '@tanstack/react-router' {
       path: '/api/data-sources/upload'
       fullPath: '/api/data-sources/upload'
       preLoaderRoute: typeof ApiDataSourcesUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/data-sources/test': {
+      id: '/api/data-sources/test'
+      path: '/api/data-sources/test'
+      fullPath: '/api/data-sources/test'
+      preLoaderRoute: typeof ApiDataSourcesTestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/data-sources/active': {
@@ -1748,6 +1768,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiDashboardsIdRoute: ApiDashboardsIdRouteWithChildren,
   ApiDataSourcesIdRoute: ApiDataSourcesIdRouteWithChildren,
   ApiDataSourcesActiveRoute: ApiDataSourcesActiveRoute,
+  ApiDataSourcesTestRoute: ApiDataSourcesTestRoute,
   ApiDataSourcesUploadRoute: ApiDataSourcesUploadRoute,
   ApiLogsComponentsRoute: ApiLogsComponentsRoute,
   ApiLogsSearchRoute: ApiLogsSearchRoute,

@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
 import { verifySession } from "@/lib/auth/session";
+import { DataSourceService } from "@/lib/services/data-source.service";
 import { getDb } from "@/lib/db/config";
-import { decrypt } from "@/lib/security/encryption";
 import { logAudit } from "@/lib/security/audit";
 
 async function getSession(request: Request) {
@@ -11,6 +11,13 @@ async function getSession(request: Request) {
   const token = match?.[1];
   if (!token) return null;
   return verifySession(token);
+}
+
+function checkPermission(session: any, createdBy: string): boolean {
+  const userRoles = session.user.roles || [];
+  const isAdmin = userRoles.includes("admin");
+  const isOwner = createdBy === session.user.id;
+  return isAdmin || isOwner;
 }
 
 export const Route = createFileRoute("/api/data-sources/$id")({
@@ -23,13 +30,7 @@ export const Route = createFileRoute("/api/data-sources/$id")({
             return json({ error: { message: "Unauthorized" } }, { status: 401 });
           }
 
-          const db = getDb();
-          const dataSource = await db
-            .selectFrom("data_sources")
-            .selectAll()
-            .where("id", "=", params.id)
-            .where("is_deleted", "=", false)
-            .executeTakeFirst();
+          const dataSource = await DataSourceService.getById(params.id, true);
 
           if (!dataSource) {
             return json(
@@ -38,26 +39,17 @@ export const Route = createFileRoute("/api/data-sources/$id")({
             );
           }
 
-          // Decrypt connection config for authorized users
-          let config = null;
-          try {
-            config = JSON.parse(decrypt(dataSource.connection_config));
-          } catch (e) {
-            // If decryption fails, don't include config
-          }
-
-          await logAudit({
+          logAudit({
             userId: session.user.id,
             action: "read",
             resourceType: "data_source",
             resourceId: params.id,
             details: { operation: "getDataSource", name: dataSource.name },
+          }).catch((err) => {
+            console.error("Audit log error:", err);
           });
 
-          return json({
-            ...dataSource,
-            connection_config: config,
-          });
+          return json(dataSource);
         } catch (error) {
           console.error("Data source get error:", error);
           return json(
@@ -93,12 +85,7 @@ export const Route = createFileRoute("/api/data-sources/$id")({
             );
           }
 
-          // Allow owner or admins to edit
-          const userRoles = session.user.roles || [];
-          const isAdmin = userRoles.includes("admin");
-          const isOwner = existing.created_by === session.user.id;
-
-          if (!isAdmin && !isOwner) {
+          if (!checkPermission(session, existing.created_by)) {
             return json(
               { error: { message: "Forbidden" } },
               { status: 403 }
@@ -106,33 +93,8 @@ export const Route = createFileRoute("/api/data-sources/$id")({
           }
 
           const body = await request.json();
-          const { name, description, connectionConfig, isActive } = body;
 
-          const updateData: Record<string, any> = {
-            updated_at: new Date().toISOString(),
-          };
-
-          if (name) updateData.name = name;
-          if (description !== undefined) updateData.description = description;
-          if (isActive !== undefined) updateData.is_active = isActive;
-          if (connectionConfig) {
-            const { encrypt } = await import("@/lib/security/encryption");
-            updateData.connection_config = encrypt(JSON.stringify(connectionConfig));
-          }
-
-          await db
-            .updateTable("data_sources")
-            .set(updateData)
-            .where("id", "=", params.id)
-            .execute();
-
-          await logAudit({
-            userId: session.user.id,
-            action: "update",
-            resourceType: "data_source",
-            resourceId: params.id,
-            details: { fields: Object.keys(updateData) },
-          });
+          await DataSourceService.update(params.id, body, session.user.id);
 
           return json({ success: true });
         } catch (error) {
@@ -170,12 +132,7 @@ export const Route = createFileRoute("/api/data-sources/$id")({
             );
           }
 
-          // Allow owner or admins to edit
-          const userRoles = session.user.roles || [];
-          const isAdmin = userRoles.includes("admin");
-          const isOwner = existing.created_by === session.user.id;
-
-          if (!isAdmin && !isOwner) {
+          if (!checkPermission(session, existing.created_by)) {
             return json(
               { error: { message: "Forbidden" } },
               { status: 403 }
@@ -183,33 +140,8 @@ export const Route = createFileRoute("/api/data-sources/$id")({
           }
 
           const body = await request.json();
-          const { name, description, connectionConfig, isActive, clientType } = body;
 
-          const updateData: Record<string, any> = {
-            updated_at: new Date().toISOString(),
-          };
-
-          if (name) updateData.name = name;
-          if (description !== undefined) updateData.description = description;
-          if (isActive !== undefined) updateData.is_active = isActive;
-          if (connectionConfig) {
-            const { encrypt } = await import("@/lib/security/encryption");
-            updateData.connection_config = encrypt(JSON.stringify(connectionConfig));
-          }
-
-          await db
-            .updateTable("data_sources")
-            .set(updateData)
-            .where("id", "=", params.id)
-            .execute();
-
-          await logAudit({
-            userId: session.user.id,
-            action: "update",
-            resourceType: "data_source",
-            resourceId: params.id,
-            details: { fields: Object.keys(updateData) },
-          });
+          await DataSourceService.update(params.id, body, session.user.id);
 
           return json({ success: true });
         } catch (error) {
@@ -235,7 +167,7 @@ export const Route = createFileRoute("/api/data-sources/$id")({
           const db = getDb();
           const existing = await db
             .selectFrom("data_sources")
-            .select("id", "created_by", "name")
+            .select("id", "created_by")
             .where("id", "=", params.id)
             .where("is_deleted", "=", false)
             .executeTakeFirst();
@@ -247,37 +179,14 @@ export const Route = createFileRoute("/api/data-sources/$id")({
             );
           }
 
-          // Allow owner or admins to delete
-          const userRoles = session.user.roles || [];
-          const isAdmin = userRoles.includes("admin");
-          const isOwner = existing.created_by === session.user.id;
-
-          if (!isAdmin && !isOwner) {
+          if (!checkPermission(session, existing.created_by)) {
             return json(
               { error: { message: "Forbidden" } },
               { status: 403 }
             );
           }
 
-          // Soft delete
-          const now = new Date().toISOString();
-          await db
-            .updateTable("data_sources")
-            .set({
-              is_deleted: true,
-              deleted_at: now,
-              deleted_by: session.user.id,
-            })
-            .where("id", "=", params.id)
-            .execute();
-
-          await logAudit({
-            userId: session.user.id,
-            action: "delete",
-            resourceType: "data_source",
-            resourceId: params.id,
-            details: { name: existing.name },
-          });
+          await DataSourceService.softDelete(params.id, session.user.id);
 
           return json({ success: true });
         } catch (error) {
