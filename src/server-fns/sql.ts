@@ -397,7 +397,13 @@ export const introspectSchema = createServerFn({
   const { introspectSchema: introspect } = await import("@/lib/sql/schema-introspection");
   const { schema, logs } = await introspect(connection, dataSource.client_type);
 
-  let syncResult: { success: boolean; errors?: string[] } | undefined;
+  let syncResult: {
+    entitiesCreated: number;
+    entitiesUpdated: number;
+    fieldsCreated: number;
+    fieldsUpdated: number;
+    errors: string[];
+  } | undefined;
   try {
     const { SyncService } = await import("@/lib/metadata/sync-service");
     syncResult = await SyncService.syncDataSource(dataSourceId, session.user.id);

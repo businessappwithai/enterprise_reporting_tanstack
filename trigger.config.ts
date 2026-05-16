@@ -10,4 +10,5 @@ export default defineConfig({
   runtime: "node",
   logLevel: "log",
   triggerDirectories: ["./src/lib/jobs"],
+  maxDuration: 3600,
 });
