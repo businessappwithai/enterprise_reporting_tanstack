@@ -5,9 +5,7 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [
-    tanstackStart({
-      target: 'bun',
-    }),
+    tanstackStart(),
     viteReact(),
   ],
   resolve: {

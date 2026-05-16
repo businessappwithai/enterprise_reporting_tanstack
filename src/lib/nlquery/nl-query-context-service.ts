@@ -262,7 +262,7 @@ async function updateRoleStats(
   const db = getDb();
 
   // Get or create stats record
-  let stats = await db
+  const stats = await db
     .selectFrom("nl_query_role_stats")
     .selectAll()
     .where("data_source_id", "=", dataSourceId)

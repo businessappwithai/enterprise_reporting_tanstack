@@ -9,8 +9,8 @@
  * Run: bun run db:migrate
  */
 
-import { Kysely } from "kysely";
-import { Database } from "../kysely-db";
+import type { Kysely } from "kysely";
+import type { Database } from "../kysely-db";
 
 export async function up(db: Kysely<Database>): Promise<void> {
   // Check if pgvector extension is available (PostgreSQL only)

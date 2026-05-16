@@ -3,7 +3,7 @@
  * Provides real-time synchronization between local collections and server via ElectricSQL
  */
 
-import { ChangeMessageOrDeleteKeyMessage } from '@tanstack/db'
+import type { ChangeMessageOrDeleteKeyMessage } from '@tanstack/db'
 
 /**
  * Configuration for ElectricSQL sync
@@ -35,7 +35,7 @@ export function createElectricSyncAdapter(config: ElectricSyncConfig) {
     [key: string]: any
   }) => {
     const { begin, write, commit, markReady } = params
-    let changeQueue: ChangeMessageOrDeleteKeyMessage<any, any>[] = []
+    const changeQueue: ChangeMessageOrDeleteKeyMessage<any, any>[] = []
 
     try {
       // Initialize sync

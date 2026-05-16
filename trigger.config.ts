@@ -10,7 +10,4 @@ export default defineConfig({
   runtime: "node",
   logLevel: "log",
   triggerDirectories: ["./src/lib/jobs"],
-  // Configure to use local Mastra.ai server API endpoints
-  apiKey: process.env.TRIGGER_API_KEY,
-  apiUrl: process.env.TRIGGER_API_URL || "http://localhost:3030",
 });
