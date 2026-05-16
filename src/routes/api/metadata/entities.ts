@@ -1,7 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { json } from '@/lib/server/response'
 import { verifySession } from '@/lib/auth/session'
-import { getDb } from '@/lib/db/config'
 import { EntityService } from '@/lib/metadata/entity-service'
 
 async function getSession(request: Request) {
@@ -31,24 +30,10 @@ export const Route = createFileRoute('/api/metadata/entities')({
             return json({ error: { message: 'data_source_id is required' } }, { status: 400 })
           }
 
-          const db = getDb()
-          const entityService = new EntityService(db)
-
-          let query = entityService.byDataSource(dataSourceId)
-
-          if (includeHidden) {
-            query = query.includeHidden()
-          } else {
-            query = query.byHidden(false)
-          }
-
-          if (!isActive) {
-            query = query.byActive(false)
-          } else {
-            query = query.byActive(true)
-          }
-
-          const result = await query.withCount()
+          const result = await EntityService.list({
+            data_source_id: dataSourceId,
+            include_hidden: includeHidden,
+          })
 
           return json({
             data: {
