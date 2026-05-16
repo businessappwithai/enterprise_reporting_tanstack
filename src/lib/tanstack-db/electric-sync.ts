@@ -63,7 +63,9 @@ export function createElectricSyncAdapter(config: ElectricSyncConfig) {
   }
 
   return {
-    sync: syncFn,
+    sync: {
+      sync: syncFn,
+    },
   }
 }
 
