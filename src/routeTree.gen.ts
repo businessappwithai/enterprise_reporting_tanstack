@@ -49,6 +49,7 @@ import { Route as ApiQueriesIdRouteImport } from './routes/api/queries/$id'
 import { Route as ApiNlQuerySchemaRouteImport } from './routes/api/nl-query/schema'
 import { Route as ApiNlQueryHistoryRouteImport } from './routes/api/nl-query/history'
 import { Route as ApiNlQueryExecuteRouteImport } from './routes/api/nl-query/execute'
+import { Route as ApiMetadataEntitiesRouteImport } from './routes/api/metadata/entities'
 import { Route as ApiLogsUsersRouteImport } from './routes/api/logs/users'
 import { Route as ApiLogsSearchRouteImport } from './routes/api/logs/search'
 import { Route as ApiLogsComponentsRouteImport } from './routes/api/logs/components'
@@ -287,6 +288,11 @@ const ApiNlQueryExecuteRoute = ApiNlQueryExecuteRouteImport.update({
   path: '/api/nl-query/execute',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMetadataEntitiesRoute = ApiMetadataEntitiesRouteImport.update({
+  id: '/api/metadata/entities',
+  path: '/api/metadata/entities',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiLogsUsersRoute = ApiLogsUsersRouteImport.update({
   id: '/api/logs/users',
   path: '/api/logs/users',
@@ -510,6 +516,7 @@ export interface FileRoutesByFullPath {
   '/api/logs/components': typeof ApiLogsComponentsRoute
   '/api/logs/search': typeof ApiLogsSearchRoute
   '/api/logs/users': typeof ApiLogsUsersRoute
+  '/api/metadata/entities': typeof ApiMetadataEntitiesRoute
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
   '/api/nl-query/history': typeof ApiNlQueryHistoryRoute
   '/api/nl-query/schema': typeof ApiNlQuerySchemaRoute
@@ -588,6 +595,7 @@ export interface FileRoutesByTo {
   '/api/logs/components': typeof ApiLogsComponentsRoute
   '/api/logs/search': typeof ApiLogsSearchRoute
   '/api/logs/users': typeof ApiLogsUsersRoute
+  '/api/metadata/entities': typeof ApiMetadataEntitiesRoute
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
   '/api/nl-query/history': typeof ApiNlQueryHistoryRoute
   '/api/nl-query/schema': typeof ApiNlQuerySchemaRoute
@@ -668,6 +676,7 @@ export interface FileRoutesById {
   '/api/logs/components': typeof ApiLogsComponentsRoute
   '/api/logs/search': typeof ApiLogsSearchRoute
   '/api/logs/users': typeof ApiLogsUsersRoute
+  '/api/metadata/entities': typeof ApiMetadataEntitiesRoute
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
   '/api/nl-query/history': typeof ApiNlQueryHistoryRoute
   '/api/nl-query/schema': typeof ApiNlQuerySchemaRoute
@@ -748,6 +757,7 @@ export interface FileRouteTypes {
     | '/api/logs/components'
     | '/api/logs/search'
     | '/api/logs/users'
+    | '/api/metadata/entities'
     | '/api/nl-query/execute'
     | '/api/nl-query/history'
     | '/api/nl-query/schema'
@@ -826,6 +836,7 @@ export interface FileRouteTypes {
     | '/api/logs/components'
     | '/api/logs/search'
     | '/api/logs/users'
+    | '/api/metadata/entities'
     | '/api/nl-query/execute'
     | '/api/nl-query/history'
     | '/api/nl-query/schema'
@@ -905,6 +916,7 @@ export interface FileRouteTypes {
     | '/api/logs/components'
     | '/api/logs/search'
     | '/api/logs/users'
+    | '/api/metadata/entities'
     | '/api/nl-query/execute'
     | '/api/nl-query/history'
     | '/api/nl-query/schema'
@@ -979,6 +991,7 @@ export interface RootRouteChildren {
   ApiLogsComponentsRoute: typeof ApiLogsComponentsRoute
   ApiLogsSearchRoute: typeof ApiLogsSearchRoute
   ApiLogsUsersRoute: typeof ApiLogsUsersRoute
+  ApiMetadataEntitiesRoute: typeof ApiMetadataEntitiesRoute
   ApiNlQueryExecuteRoute: typeof ApiNlQueryExecuteRoute
   ApiNlQueryHistoryRoute: typeof ApiNlQueryHistoryRoute
   ApiNlQuerySchemaRoute: typeof ApiNlQuerySchemaRoute
@@ -1274,6 +1287,13 @@ declare module '@tanstack/react-router' {
       path: '/api/nl-query/execute'
       fullPath: '/api/nl-query/execute'
       preLoaderRoute: typeof ApiNlQueryExecuteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/metadata/entities': {
+      id: '/api/metadata/entities'
+      path: '/api/metadata/entities'
+      fullPath: '/api/metadata/entities'
+      preLoaderRoute: typeof ApiMetadataEntitiesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/logs/users': {
@@ -1732,6 +1752,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiLogsComponentsRoute: ApiLogsComponentsRoute,
   ApiLogsSearchRoute: ApiLogsSearchRoute,
   ApiLogsUsersRoute: ApiLogsUsersRoute,
+  ApiMetadataEntitiesRoute: ApiMetadataEntitiesRoute,
   ApiNlQueryExecuteRoute: ApiNlQueryExecuteRoute,
   ApiNlQueryHistoryRoute: ApiNlQueryHistoryRoute,
   ApiNlQuerySchemaRoute: ApiNlQuerySchemaRoute,

@@ -335,13 +335,50 @@ const tables = [
     updated_by TEXT REFERENCES users(id) ON DELETE SET NULL,
     UNIQUE(data_source_id, table_name)
   )`,
+  `CREATE TABLE metadata_entity_header (
+    id TEXT PRIMARY KEY,
+    data_source_id TEXT REFERENCES data_sources(id) ON DELETE CASCADE NOT NULL,
+    entity_name TEXT NOT NULL,
+    entity_schema TEXT,
+    entity_type TEXT NOT NULL DEFAULT 'table',
+    schema_metadata TEXT NOT NULL,
+    last_introspected_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    description TEXT,
+    is_active BOOLEAN DEFAULT false,
+    is_hidden BOOLEAN DEFAULT true,
+    created_by TEXT REFERENCES users(id),
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(data_source_id, entity_name, entity_schema)
+  )`,
+  `CREATE TABLE metadata_entity_field (
+    id TEXT PRIMARY KEY,
+    entity_header_id TEXT REFERENCES metadata_entity_header(id) ON DELETE CASCADE NOT NULL,
+    field_name TEXT NOT NULL,
+    data_type TEXT NOT NULL,
+    is_nullable BOOLEAN,
+    is_primary_key BOOLEAN DEFAULT false,
+    is_foreign_key BOOLEAN DEFAULT false,
+    foreign_key_table TEXT,
+    foreign_key_column TEXT,
+    default_value TEXT,
+    description TEXT,
+    is_display_field BOOLEAN DEFAULT false,
+    is_searchable BOOLEAN DEFAULT true,
+    display_order INTEGER,
+    section_name TEXT,
+    relationship_ui_type TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(entity_header_id, field_name)
+  )`,
 ];
 
 for (const table of tables) {
   await pglite.query(table);
 }
 
-// Create indexes for logs table and schema instructions
+// Create indexes for logs table, schema instructions, and metadata
 const indexes = [
   `CREATE INDEX idx_logs_timestamp ON logs(timestamp)`,
   `CREATE INDEX idx_logs_level ON logs(level)`,
@@ -349,6 +386,16 @@ const indexes = [
   `CREATE INDEX idx_logs_component ON logs(component)`,
   `CREATE INDEX idx_schema_field_instructions_ds_table ON schema_field_instructions(data_source_id, table_name)`,
   `CREATE INDEX idx_schema_table_instructions_ds ON schema_table_instructions(data_source_id)`,
+  `CREATE INDEX idx_metadata_entity_header_ds ON metadata_entity_header(data_source_id)`,
+  `CREATE INDEX idx_metadata_entity_header_entity ON metadata_entity_header(entity_name)`,
+  `CREATE INDEX idx_metadata_entity_header_type ON metadata_entity_header(entity_type)`,
+  `CREATE INDEX idx_metadata_entity_header_active ON metadata_entity_header(is_active, is_hidden)`,
+  `CREATE INDEX idx_metadata_entity_field_header ON metadata_entity_field(entity_header_id)`,
+  `CREATE INDEX idx_metadata_entity_field_name ON metadata_entity_field(field_name)`,
+  `CREATE INDEX idx_metadata_entity_field_display ON metadata_entity_field(is_display_field)`,
+  `CREATE INDEX idx_metadata_entity_field_searchable ON metadata_entity_field(is_searchable)`,
+  `CREATE INDEX idx_metadata_entity_field_fk ON metadata_entity_field(is_foreign_key, foreign_key_table)`,
+  `CREATE INDEX idx_metadata_entity_field_section ON metadata_entity_field(entity_header_id, section_name, display_order)`,
 ];
 
 for (const index of indexes) {
