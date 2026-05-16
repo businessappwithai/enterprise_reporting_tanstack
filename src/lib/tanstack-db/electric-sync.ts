@@ -61,9 +61,11 @@ export function createElectricSyncAdapter(config: ElectricSyncConfig) {
     }
   }
 
-  // Return the adapter function directly under sync property
+  // Return the adapter wrapped for TanStack DB which expects config.sync.sync
   return {
-    sync: syncAdapter,
+    sync: {
+      sync: syncAdapter,
+    },
   }
 }
 
