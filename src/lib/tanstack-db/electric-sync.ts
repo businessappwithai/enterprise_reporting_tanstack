@@ -22,9 +22,9 @@ export interface ElectricSyncConfig {
 export function createElectricSyncAdapter(config: ElectricSyncConfig) {
   const { collectionName, tableName, primaryKey } = config
 
-  // Return a sync function that TanStack DB will call
-  // This function receives collection sync parameters
-  const syncFn = async (params: {
+  // Return a sync configuration that TanStack DB will use
+  // TanStack DB expects the sync adapter to be a callable function
+  const syncAdapter = async (params: {
     collection: any
     begin: (options?: { immediate?: boolean }) => void
     write: (message: ChangeMessageOrDeleteKeyMessage<any, any>) => void
@@ -35,7 +35,6 @@ export function createElectricSyncAdapter(config: ElectricSyncConfig) {
     [key: string]: any
   }) => {
     const { begin, write, commit, markReady } = params
-    const changeQueue: ChangeMessageOrDeleteKeyMessage<any, any>[] = []
 
     try {
       // Initialize sync
@@ -62,10 +61,9 @@ export function createElectricSyncAdapter(config: ElectricSyncConfig) {
     }
   }
 
+  // Return the adapter function directly under sync property
   return {
-    sync: {
-      sync: syncFn,
-    },
+    sync: syncAdapter,
   }
 }
 
