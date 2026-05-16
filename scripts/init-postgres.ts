@@ -31,10 +31,11 @@ try {
     "report_filters", "report_definitions", "filter_definitions", "saved_queries",
     "ds_entity_permissions", "data_source_entity_permissions", "ds_user_roles",
     "ds_roles", "data_sources", "user_roles", "roles", "notifications",
-    "email_templates", "nl_query_history", "error_messages",
+    "email_templates", "nl_query_history", "error_messages", "warning_configs", "error_occurrences",
     "metadata_entity_fields", "metadata_entity_registry", "data_source_filters",
     "filters", "jobs", "reports", "charts", "dashboards", "users", "_migrations",
-    "schema_field_instructions", "schema_table_instructions", "nl_query_context", "nl_query_role_stats", "nl_query_feedback"
+    "schema_field_instructions", "schema_table_instructions", "nl_query_context", "nl_query_role_stats", "nl_query_feedback",
+    "ds_schema_cache"
   ];
 
   for (const table of tablesToDrop) {
@@ -252,7 +253,7 @@ try {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`,
     `CREATE TABLE logs (
-      id TEXT PRIMARY KEY,
+      id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
       timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       level TEXT NOT NULL,
       message TEXT NOT NULL,
@@ -263,6 +264,84 @@ try {
       error_stack TEXT,
       request_id TEXT,
       message_vector TEXT
+    )`,
+    `CREATE TABLE notifications (
+      id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+      title TEXT NOT NULL,
+      message TEXT NOT NULL,
+      type TEXT NOT NULL,
+      is_read BOOLEAN DEFAULT false,
+      metadata TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `CREATE TABLE nl_query_history (
+      id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+      data_source_id TEXT REFERENCES data_sources(id) ON DELETE CASCADE,
+      user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+      natural_language_query TEXT NOT NULL,
+      generated_sql TEXT,
+      parsed_entities TEXT,
+      access_check_result TEXT NOT NULL DEFAULT 'pending',
+      access_check_details TEXT,
+      execution_result TEXT,
+      error_message TEXT,
+      execution_time_ms INTEGER,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `CREATE TABLE ds_schema_cache (
+      id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+      data_source_id TEXT REFERENCES data_sources(id) ON DELETE CASCADE,
+      schema_metadata TEXT,
+      sample_data TEXT,
+      embedding_data TEXT,
+      last_introspected_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(data_source_id)
+    )`,
+    `CREATE TABLE error_messages (
+      id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+      error_code TEXT NOT NULL UNIQUE,
+      severity TEXT DEFAULT 'error',
+      title TEXT NOT NULL,
+      message TEXT NOT NULL,
+      user_message TEXT,
+      suggestions TEXT,
+      documentation_url TEXT,
+      is_active BOOLEAN DEFAULT true,
+      category TEXT,
+      metadata TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `CREATE TABLE warning_configs (
+      id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+      warning_code TEXT NOT NULL UNIQUE,
+      name TEXT NOT NULL,
+      description TEXT,
+      trigger_type TEXT NOT NULL,
+      trigger_config TEXT,
+      severity TEXT DEFAULT 'warning',
+      message_template TEXT NOT NULL,
+      suggestions_template TEXT,
+      is_active BOOLEAN DEFAULT true,
+      display_duration INTEGER DEFAULT 5000,
+      require_dismissal BOOLEAN DEFAULT false,
+      enable_auto_resolve BOOLEAN DEFAULT true,
+      auto_resolve_after INTEGER DEFAULT 30000,
+      metadata TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `CREATE TABLE error_occurrences (
+      id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+      error_message_id TEXT REFERENCES error_messages(id) ON DELETE CASCADE,
+      user_id TEXT REFERENCES users(id),
+      session_id TEXT,
+      context_data TEXT,
+      resolved_at TIMESTAMP,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`,
     `CREATE TABLE app_settings (
       key TEXT PRIMARY KEY,
