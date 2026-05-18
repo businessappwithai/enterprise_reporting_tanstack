@@ -8,6 +8,7 @@ import type { DataMapping } from "@/types/charts";
  * Extract category (x-axis) values from rows using the data mapping.
  */
 export function extractCategories(rows: Record<string, unknown>[], mapping: DataMapping): string[] {
+  if (!Array.isArray(rows)) return [];
   const { x } = mapping;
   if (!x) return [];
   return rows.map((r) => String(r[x] ?? ""));
@@ -21,6 +22,7 @@ export function extractSeries(
   rows: Record<string, unknown>[],
   mapping: DataMapping
 ): { name: string; data: number[] }[] {
+  if (!Array.isArray(rows)) return [];
   const yColumns = Array.isArray(mapping.y) ? mapping.y : mapping.y ? [mapping.y] : [];
 
   return yColumns.map((col) => ({
@@ -36,6 +38,7 @@ export function extractGroupedSeries(
   rows: Record<string, unknown>[],
   mapping: DataMapping
 ): { name: string; data: number[] }[] {
+  if (!Array.isArray(rows)) return [];
   if (!mapping.group || !mapping.y) return extractSeries(rows, mapping);
 
   const yColumn = Array.isArray(mapping.y) ? mapping.y[0] : mapping.y;
@@ -71,6 +74,7 @@ export function extractScatterData(
   rows: Record<string, unknown>[],
   mapping: DataMapping
 ): [number, number][] {
+  if (!Array.isArray(rows)) return [];
   const yColumn = Array.isArray(mapping.y) ? mapping.y[0] : (mapping.y ?? "");
   const xCol = mapping.x ?? "";
   return rows.map((r) => [Number(r[xCol] ?? 0), Number(r[yColumn] ?? 0)]);
@@ -83,10 +87,22 @@ export function extractPieData(
   rows: Record<string, unknown>[],
   mapping: DataMapping
 ): { name: string; value: number }[] {
+  if (!Array.isArray(rows)) return [];
   const yColumn = Array.isArray(mapping.y) ? mapping.y[0] : (mapping.y ?? "");
   const xCol = mapping.x ?? "";
-  return rows.map((r) => ({
-    name: String(r[xCol] ?? ""),
+
+  // If xCol is not configured or produces no values, fall back to the first
+  // non-y column in the data that has string-like values.
+  const effectiveXCol = (() => {
+    if (xCol && rows.length > 0 && rows[0][xCol] !== undefined) return xCol;
+    if (rows.length === 0) return xCol;
+    const yCols = new Set(Array.isArray(mapping.y) ? mapping.y : mapping.y ? [mapping.y] : []);
+    const fallback = Object.keys(rows[0]).find((k) => !yCols.has(k));
+    return fallback ?? xCol;
+  })();
+
+  return rows.map((r, i) => ({
+    name: String(r[effectiveXCol] ?? `Item ${i + 1}`),
     value: Number(r[yColumn] ?? 0),
   }));
 }

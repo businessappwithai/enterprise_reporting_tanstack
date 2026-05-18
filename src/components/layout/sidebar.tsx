@@ -44,7 +44,7 @@ const mainNavItems = [
   },
   { href: "/filters", label: "Filters", icon: Filter, permissionKey: "filter" as const },
   { href: "/jobs", label: "Jobs", icon: Play, permissionKey: "job" as const },
-  { href: "/nl-query", label: "NL Query", icon: MessageSquare, permissionKey: "query" as const },
+  { href: "/nl-query", label: "NL Query", icon: MessageSquare, permissionKey: "nl_query" as const },
 ];
 
 const adminNavItems = [
@@ -55,7 +55,7 @@ const adminNavItems = [
     permissionKey: "data_source" as const,
   },
   { href: "/bull-board", label: "Queue Management", icon: Layers, permissionKey: "queue" as const },
-  { href: "/logs", label: "System Logs", icon: SquareTerminal, permissionKey: null },
+  { href: "/logs", label: "System Logs", icon: SquareTerminal, permissionKey: "log" as const },
   { href: "/admin/users", label: "Users", icon: Users, permissionKey: "user" as const },
   { href: "/admin/roles", label: "Roles", icon: Shield, permissionKey: "role" as const },
   {
@@ -64,7 +64,7 @@ const adminNavItems = [
     icon: Shield,
     permissionKey: "user" as const,
   },
-  { href: "/settings", label: "Settings", icon: Settings, permissionKey: null },
+  { href: "/settings", label: "Settings", icon: Settings, permissionKey: "setting" as const },
 ];
 
 export function Sidebar({ collapsed, onCollapse }: SidebarProps) {
@@ -88,6 +88,9 @@ export function Sidebar({ collapsed, onCollapse }: SidebarProps) {
   const canViewQueue = useCanView("queue");
   const canViewUser = useCanView("user");
   const canViewRole = useCanView("role");
+  const canViewNlQuery = useCanView("nl_query");
+  const canViewLog = useCanView("log");
+  const canViewSetting = useCanView("setting");
 
   // Derive isAdmin directly from permissions to avoid duplicate queries
   const isAdminUser = permissions?.isAdmin ?? false;
@@ -96,8 +99,8 @@ export function Sidebar({ collapsed, onCollapse }: SidebarProps) {
     // Always show items with no permission requirement
     if (permissionKey === null) return true;
 
-    // When permissions are still loading, assume we can view everything to prevent hydration mismatch
-    if (permissions === undefined) return true;
+    // When permissions are still loading, hide permission-required items
+    if (permissions === undefined) return false;
 
     // Admin users can see everything
     if (isAdminUser) return true;
@@ -124,6 +127,12 @@ export function Sidebar({ collapsed, onCollapse }: SidebarProps) {
         return canViewUser;
       case "role":
         return canViewRole;
+      case "nl_query":
+        return canViewNlQuery;
+      case "log":
+        return canViewLog;
+      case "setting":
+        return canViewSetting;
       default:
         return false;
     }

@@ -2,7 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
 import { verifySession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/config";
+import { getConnection } from "@/lib/db/connection-manager";
 import { translateNLToSQLViaMastra } from "@/lib/nlquery/mastra-ollama-translator";
+import { sql } from "kysely";
 
 /**
  * CopilotKit Runtime Endpoint
@@ -101,20 +103,70 @@ export const Route = createFileRoute("/api/copilotkit")({
             try {
               console.log("[CopilotKit] Generating SQL for:", nlQuestion);
 
-              // Get database schema
-              const db = getDb();
-              const tables = await db
-                .selectFrom("information_schema.tables")
-                .where("table_schema", "=", "public")
-                .select("table_name")
-                .execute();
+              const dataSourceId = body.input?.dataSourceId || body.dataSourceId;
 
-              const schema = {
-                tables: tables.map((t: any) => ({
-                  name: t.table_name,
-                  description: `Table: ${t.table_name}`,
-                })),
-              };
+              // Resolve the target connection: use selected data source if provided,
+              // otherwise fall back to the main app DB.
+              let targetDb: ReturnType<typeof getDb>;
+              if (dataSourceId) {
+                const appDb = getDb();
+                const dataSource = await appDb
+                  .selectFrom("data_sources")
+                  .selectAll()
+                  .where("id", "=", dataSourceId)
+                  .where("is_deleted", "=", false)
+                  .executeTakeFirst();
+                if (dataSource) {
+                  targetDb = await getConnection(dataSource as any) as any;
+                } else {
+                  targetDb = getDb();
+                }
+              } else {
+                targetDb = getDb();
+              }
+
+              // Query the target data source's schema
+              const tablesResult = await sql<{ table_name: string }>`
+                SELECT table_name FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+                ORDER BY table_name
+              `.execute(targetDb);
+
+              const allTableNames = tablesResult.rows.map((r) => r.table_name);
+
+              // Score tables by keyword relevance to the question so the most relevant
+              // tables appear first (and stay within the context window limit).
+              const questionLower = nlQuestion.toLowerCase();
+              const scored = allTableNames.map((name) => {
+                const nameLower = name.toLowerCase().replace(/^bus_/, "");
+                const words = nameLower.split(/[_\s]+/);
+                const score = words.reduce(
+                  (acc, w) => acc + (questionLower.includes(w) && w.length > 2 ? 1 : 0),
+                  0
+                );
+                return { name, score };
+              });
+              scored.sort((a, b) => b.score - a.score);
+              // Take top 40 — translator will further cap at its MAX_TABLES limit
+              const relevantTables = scored.slice(0, 40).map((s) => s.name);
+
+              // Fetch columns only for the selected tables (one query per table)
+              const schemaTablesList = await Promise.all(
+                relevantTables.map(async (tableName) => {
+                  const colsResult = await sql<{ column_name: string; data_type: string }>`
+                    SELECT column_name, data_type
+                    FROM information_schema.columns
+                    WHERE table_schema = 'public' AND table_name = ${tableName}
+                    ORDER BY ordinal_position
+                  `.execute(targetDb);
+                  return {
+                    name: tableName,
+                    columns: colsResult.rows.map((c) => ({ name: c.column_name, type: c.data_type })),
+                  };
+                })
+              );
+
+              const schema = { tables: schemaTablesList };
 
               // Translate NL to SQL using Ollama
               const result = await translateNLToSQLViaMastra(

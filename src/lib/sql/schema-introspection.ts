@@ -43,11 +43,11 @@ async function introspectSchemaInternal(
 ): Promise<SchemaInfo> {
   switch (dialect) {
     case "pg":
+    case "sqlite3":
+      // sqlite3 connections use PGlite (PostgreSQL-compatible), so introspect as Postgres
       return introspectPostgres(connection, addLog);
     case "mysql":
       return introspectMySQL(connection, addLog);
-    case "sqlite3":
-      return introspectSQLite(connection, addLog);
     case "mssql":
       return introspectMSSQL(connection, addLog);
     default:

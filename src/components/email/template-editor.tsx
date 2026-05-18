@@ -62,6 +62,7 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
     queryFn: async () => {
       if (!templateId) return null;
       const res = await fetch(`/api/email-templates/${templateId}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to load template`);
       const data = await res.json();
       if (data.success) {
         return data.data;
@@ -87,6 +88,7 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
     queryKey: ["queries"],
     queryFn: async () => {
       const res = await fetch("/api/queries");
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to load queries`);
       const data = await res.json();
       return data.data?.items || [];
     },
@@ -98,6 +100,7 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
     queryFn: async () => {
       if (!selectedQueryId) return [];
       const res = await fetch(`/api/queries/${selectedQueryId}/execute`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to execute query`);
       const data = await res.json();
       return data.data?.rows?.slice(0, 5) || [];
     },

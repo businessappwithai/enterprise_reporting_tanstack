@@ -39,7 +39,7 @@ export class DataSourceService {
     const dataSources = await db
       .selectFrom("data_sources")
       .selectAll()
-      .orderBy("is_deleted", "asc")
+      .where("is_deleted", "=", false)
       .orderBy("name", "asc")
       .execute();
 

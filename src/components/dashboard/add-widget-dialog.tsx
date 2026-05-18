@@ -52,6 +52,7 @@ export function AddWidgetDialog({ open, onOpenChange, onAddWidget }: AddWidgetDi
     queryKey: ["charts"],
     queryFn: async () => {
       const res = await fetch("/api/charts");
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to load charts`);
       const data = await res.json();
       return data.data?.items || [];
     },
@@ -63,6 +64,7 @@ export function AddWidgetDialog({ open, onOpenChange, onAddWidget }: AddWidgetDi
     queryKey: ["reports"],
     queryFn: async () => {
       const res = await fetch("/api/reports");
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to load reports`);
       const data = await res.json();
       return data.data?.items || [];
     },

@@ -282,7 +282,7 @@ export function QueryResults({ result, isLoading, error, onPageChange }: QueryRe
                 position: "relative",
               }}
             >
-              <Table
+              <table
                 style={{
                   position: "absolute",
                   top: 0,
@@ -292,8 +292,9 @@ export function QueryResults({ result, isLoading, error, onPageChange }: QueryRe
                   borderSpacing: "0",
                   transform: `translateY(${virtualizer.getVirtualItems()[0]?.start ?? 0}px)`,
                 }}
+                className="w-full caption-bottom text-sm"
               >
-                <TableBody>
+                <tbody>
                   {virtualizer.getVirtualItems().map((virtualRow) => {
                     const row = rowModel.rows[virtualRow.index];
                     const isEven = virtualRow.index % 2 === 0;
@@ -321,8 +322,8 @@ export function QueryResults({ result, isLoading, error, onPageChange }: QueryRe
                       </TableRow>
                     );
                   })}
-                </TableBody>
-              </Table>
+                </tbody>
+              </table>
             </div>
           )}
         </div>

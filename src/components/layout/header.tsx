@@ -4,7 +4,6 @@ import {
   Bell,
   Check,
   CheckCheck,
-  Database,
   Loader2,
   LogOut,
   Menu,
@@ -27,7 +26,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ThemeSelector } from "@/components/theme/theme-selector";
-import { useActiveDataSource } from "@/lib/hooks/use-active-datasource";
 import { logoutFn } from "@/server-fns/auth";
 
 interface AppUser {
@@ -43,7 +41,6 @@ interface HeaderProps {
 }
 
 export function Header({ user, onMobileMenuToggle, mobileMenuOpen }: HeaderProps) {
-  const { activeDataSource, isLoading } = useActiveDataSource();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showReadNotifications, setShowReadNotifications] = useState(false);
@@ -63,6 +60,7 @@ export function Header({ user, onMobileMenuToggle, mobileMenuOpen }: HeaderProps
     queryFn: async () => {
       const includeRead = showReadNotifications ? "true" : "false";
       const res = await fetch(`/api/notifications?includeRead=${includeRead}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to load notifications`);
       const data = await res.json();
       return data.data || [];
     },
@@ -161,37 +159,6 @@ export function Header({ user, onMobileMenuToggle, mobileMenuOpen }: HeaderProps
         >
           <Menu className={`h-5 w-5 transition-transform ${mobileMenuOpen ? 'rotate-90' : ''}`} />
         </Button>
-
-        {/* Active Data Source */}
-        {isLoading ? (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Loading connection...</span>
-          </div>
-        ) : activeDataSource ? (
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-2 rounded-md"
-            onClick={() => navigate({ to: "/data-sources" })}
-          >
-            <Database className="h-4 w-4 text-green-500" />
-            <span>{activeDataSource.name}</span>
-            <Badge variant="secondary" className="text-xs rounded-md">
-              {activeDataSource.client_type}
-            </Badge>
-          </Button>
-        ) : (
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-2 rounded-md"
-            onClick={() => navigate({ to: "/data-sources" })}
-          >
-            <Database className="h-4 w-4 text-muted-foreground" />
-            <span>No connection</span>
-          </Button>
-        )}
       </div>
 
       <div className="flex items-center gap-2">

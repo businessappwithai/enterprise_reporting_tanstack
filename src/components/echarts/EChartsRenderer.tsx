@@ -101,7 +101,7 @@ export function EChartsRenderer({
   const isDark = resolvedTheme === "dark";
 
   const option = useMemo(() => {
-    if (data.length === 0) return {};
+    if (!Array.isArray(data) || data.length === 0) return {};
 
     const base = getBaseEChartsOption(isDark);
     const chart = buildChart(config, data);

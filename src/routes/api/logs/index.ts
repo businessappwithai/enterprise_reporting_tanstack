@@ -38,7 +38,7 @@ export const Route = createFileRoute("/api/logs/")({
           await db
             .insertInto("logs")
             .values({
-              timestamp: new Date(),
+              timestamp: new Date().toISOString(),
               level: body.level,
               message: body.message,
               component: body.component,
@@ -83,67 +83,82 @@ export const Route = createFileRoute("/api/logs/")({
 
           const db = getDb();
 
-          // Check if user is admin
-          const userWithRoles = await db
-            .selectFrom("users")
-            .selectAll()
-            .where("id", "=", session.user.id as any)
-            .executeTakeFirst();
-
-          const isAdmin = userWithRoles?.is_admin || false;
+          // Determine admin status from session roles (roles are stored as strings)
+          const sessionRoles: string[] = (session.user as any).roles ?? [];
+          const isAdmin = sessionRoles.some((r) => r.toLowerCase() === "admin");
 
           // Non-admins can only see their own logs
           const filterByUserId = userId && isAdmin ? userId : session.user.id;
 
+          // ── 1. application logs (SQL editor executions) ──────────────────────
           let query = db
             .selectFrom("logs")
             .selectAll()
             .where("user_id", "=", filterByUserId as any);
 
-          if (level) {
+          if (level && level !== "info") {
             query = query.where("level", "=", level);
           }
-
           if (component) {
             query = query.where("component", "=", component);
           }
 
-          query = query.orderBy("timestamp", "desc");
+          const appLogs = await query.orderBy("timestamp", "desc").limit(limit).offset(offset).execute();
 
-          const logsQuery = query.limit(limit).offset(offset);
-
-          const logs = await logsQuery.execute();
-
-          const countQuery = db
-            .selectFrom("logs")
-            .select(db.fn.count<number>("id").as("count"))
+          // ── 2. audit log entries (resource create/update/delete) ─────────────
+          let auditQuery = db
+            .selectFrom("audit_log")
+            .selectAll()
             .where("user_id", "=", filterByUserId as any);
 
-          let countQueryWithFilters = countQuery;
-
-          if (level) {
-            countQueryWithFilters = countQueryWithFilters.where("level", "=", level);
-          }
-
           if (component) {
-            countQueryWithFilters = countQueryWithFilters.where("component", "=", component);
+            auditQuery = auditQuery.where("resource_type", "=", component as any);
           }
 
-          const countResult = await countQueryWithFilters.executeTakeFirst();
-          const totalCount = countResult?.count || 0;
+          const auditLogs = await auditQuery
+            .orderBy("created_at", "desc")
+            .limit(limit)
+            .execute();
 
-          // Enrich logs with user email
+          // Map audit_log rows to the Log shape expected by LogsViewer
+          const auditAsLogs = auditLogs.map((a) => ({
+            id: `audit-${a.id}`,
+            timestamp: a.created_at,
+            level: "info" as const,
+            message: `${a.action} ${a.resource_type}${a.resource_id ? ` (${a.resource_id.slice(0, 8)}…)` : ""}`,
+            component: a.resource_type,
+            user_id: a.user_id ?? null,
+            user_email: null as string | null,
+            metadata: a.details ?? null,
+            error_stack: null as string | null,
+          }));
+
+          // Merge, sort by time desc, slice to page
+          const merged = [...appLogs.map((l) => ({ ...l, user_email: null as string | null })), ...auditAsLogs]
+            .sort((a, b) => {
+              const ta = new Date(a.timestamp).getTime();
+              const tb = new Date(b.timestamp).getTime();
+              return tb - ta;
+            })
+            .slice(offset, offset + limit);
+
+          const totalCount = appLogs.length + auditLogs.length;
+
+          // Enrich with user email
+          const userCache = new Map<string, string>();
           const logsWithEmail = await Promise.all(
-            logs.map(async (log) => {
-              const user = await db
-                .selectFrom("users")
-                .select(["id", "email"])
-                .where("id", "=", log.user_id as any)
-                .executeTakeFirst();
-              return {
-                ...log,
-                user_email: user?.email || "unknown",
-              };
+            merged.map(async (log) => {
+              if (!log.user_id) return { ...log, user_email: "system" };
+              const uid = String(log.user_id);
+              if (!userCache.has(uid)) {
+                const user = await db
+                  .selectFrom("users")
+                  .select(["id", "email"])
+                  .where("id", "=", uid as any)
+                  .executeTakeFirst();
+                userCache.set(uid, user?.email ?? "unknown");
+              }
+              return { ...log, user_email: userCache.get(uid) ?? "unknown" };
             })
           );
 
@@ -155,7 +170,7 @@ export const Route = createFileRoute("/api/logs/")({
                 limit,
                 offset,
                 totalCount,
-                hasMore: offset + logs.length < totalCount,
+                hasMore: offset + merged.length < totalCount,
               },
             },
           });

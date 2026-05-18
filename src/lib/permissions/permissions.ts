@@ -79,33 +79,29 @@ export async function isAdmin(userId: string): Promise<boolean> {
 }
 
 /**
- * Check if user has a specific permission
- * Supports wildcard permissions like "resource:*" or "admin:*"
+ * Check if user has a specific permission.
+ * Pass `roles` when available so the Admin role bypasses all checks.
  */
 export function hasPermission(
   permissions: string[],
   resourceType: ResourceType,
-  action: string
+  action: string,
+  roles: string[] = []
 ): boolean {
-  // Check for admin wildcard
-  if (permissions.includes("admin:*")) {
-    return true;
-  }
+  // Admin role — unconditional full access
+  if (roles.some((r) => r.toLowerCase() === "admin")) return true;
 
-  // Check for resource wildcard with action
-  if (permissions.includes(`${resourceType}:*`)) {
-    return true;
-  }
+  // Super wildcard
+  if (permissions.includes("*:*")) return true;
 
-  // Check for specific permission
-  if (permissions.includes(`${resourceType}:${action}`)) {
-    return true;
-  }
+  // Admin permission wildcard
+  if (permissions.includes("admin:*")) return true;
 
-  // Check for wildcard action on any resource
-  if (permissions.includes("*:*")) {
-    return true;
-  }
+  // Resource wildcard
+  if (permissions.includes(`${resourceType}:*`)) return true;
+
+  // Exact match
+  if (permissions.includes(`${resourceType}:${action}`)) return true;
 
   return false;
 }

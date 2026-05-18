@@ -57,7 +57,9 @@ export const Route = createFileRoute("/api/dashboards/$id")({
 
           const { id } = params;
           const body = await request.json();
-          const { name, description, layout_config, is_public } = body;
+          // Accept both camelCase (layoutConfig) and snake_case (layout_config) from clients
+          const { name, description, layout_config, layoutConfig, is_public } = body;
+          const resolvedLayoutConfig = layout_config ?? layoutConfig;
 
           const { getDb } = await import("@/lib/db/config");
           const { logAudit } = await import("@/lib/security/audit");
@@ -80,19 +82,22 @@ export const Route = createFileRoute("/api/dashboards/$id")({
             .set({
               name: name ?? existing.name,
               description: description !== undefined ? description : existing.description,
-              layout_config: layout_config ? JSON.stringify(layout_config) : existing.layout_config,
+              layout_config: resolvedLayoutConfig
+                ? JSON.stringify(resolvedLayoutConfig)
+                : existing.layout_config,
               is_public: is_public !== undefined ? is_public : existing.is_public,
               updated_at: new Date().toISOString(),
             })
             .where("id", "=", id)
             .execute();
 
-          await logAudit({
+          // Non-fatal — audit log failure must not break the save
+          logAudit({
             userId: session.user.id,
             action: "update",
             resourceType: "dashboard",
             resourceId: id,
-          });
+          }).catch((err) => console.error("Audit log error:", err));
 
           const dashboard = await db
             .selectFrom("dashboard_layouts")

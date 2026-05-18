@@ -19,15 +19,25 @@ export async function getSecurityContext(): Promise<SecurityContext | null> {
   };
 }
 
+function isAdminRole(context: SecurityContext): boolean {
+  return context.roles.some((r) => r.toLowerCase() === "admin");
+}
+
 export function hasPermission(context: SecurityContext, permission: string): boolean {
-  // Check for wildcard admin permission
+  // Admin role — full access regardless of JWT permissions
+  if (isAdminRole(context)) return true;
+
+  // Super wildcard
+  if (context.permissions.includes("*:*")) return true;
+
+  // Admin permission wildcard
   if (context.permissions.includes("admin:*")) return true;
 
-  // Check for exact permission match
+  // Exact match
   if (context.permissions.includes(permission)) return true;
 
-  // Check for wildcard permission (e.g., 'report:*' matches 'report:view')
-  const [resource, _action] = permission.split(":");
+  // Resource wildcard (e.g. "report:*" matches "report:view")
+  const [resource] = permission.split(":");
   if (context.permissions.includes(`${resource}:*`)) return true;
 
   return false;
@@ -55,8 +65,8 @@ export async function canAccessResource(
   resourceId: string,
   requiredLevel: PermissionLevel
 ): Promise<boolean> {
-  // Admin has full access
-  if (hasPermission(context, "admin:*")) return true;
+  // Admin role — unconditional full access
+  if (isAdminRole(context)) return true;
 
   // Check general permission for the resource type
   const generalPermission = `${resourceType}:${requiredLevel}`;
@@ -97,10 +107,8 @@ export async function getAccessibleResourceIds(
   resourceType: ResourceType,
   minimumLevel: PermissionLevel = "view"
 ): Promise<string[]> {
-  // Admin can access all resources
-  if (hasPermission(context, "admin:*")) {
-    return []; // Empty means no filtering needed
-  }
+  // Admin can access all resources — empty array signals "no filtering needed"
+  if (isAdminRole(context)) return [];
 
   const db = getDb();
 

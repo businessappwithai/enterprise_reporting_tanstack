@@ -56,6 +56,7 @@ export function LogsViewer() {
       if (userFilter) params.append("userId", userFilter);
 
       const res = await fetch(`/api/logs?${params}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to load logs`);
       const data = await res.json();
       return data.data;
     },

@@ -32,6 +32,7 @@ function DatasetsPage() {
     async function fetchDatasets() {
       try {
         const res = await fetch("/api/datasets?pageSize=100");
+        if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to load datasets`);
         const json = await res.json();
         if (json.success) {
           setServerDatasets(json.data.datasets);

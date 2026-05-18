@@ -14,6 +14,8 @@
     "format:check": "biome format src --check",
     "db:migrate": "bun scripts/rebuild-db.ts",
     "db:seed": "bun src/lib/db/seeds/001_initial_data.ts",
+    "db:seed-sakila": "bun scripts/seed-sakila-pglite.ts",
+    "db:setup": "bun scripts/rebuild-db.ts && bun src/lib/db/seeds/001_initial_data.ts && bun scripts/seed-sakila-pglite.ts",
     "db:rollback": "echo 'Use scripts/rebuild-db.ts to reset the database'",
     "db:sample": "bun src/lib/db/sample-data/seed.ts",
     "db:seed-demo": "bun scripts/seed-demo-data.ts",

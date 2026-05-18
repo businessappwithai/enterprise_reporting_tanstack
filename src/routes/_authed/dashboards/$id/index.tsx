@@ -43,6 +43,7 @@ function DashboardViewerContent({ dashboardId }: { dashboardId: string }) {
     queryKey: ["dashboard", dashboardId],
     queryFn: async () => {
       const res = await fetch(`/api/dashboards/${dashboardId}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to load dashboard`);
       const data = await res.json();
       return data.data;
     },
@@ -53,6 +54,7 @@ function DashboardViewerContent({ dashboardId }: { dashboardId: string }) {
     queryKey: ["dashboard-widgets", dashboardId],
     queryFn: async () => {
       const res = await fetch(`/api/dashboards/${dashboardId}/widgets`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to load widgets`);
       const data = await res.json();
       return data.data.items || [];
     },
@@ -143,6 +145,7 @@ function DashboardViewerContent({ dashboardId }: { dashboardId: string }) {
 
   const handleSaveLayout = async () => {
     try {
+      // Save full grid layout to the dashboard record
       const res = await fetch(`/api/dashboards/${dashboardId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -159,9 +162,26 @@ function DashboardViewerContent({ dashboardId }: { dashboardId: string }) {
 
       if (!res.ok) throw new Error("Failed to save layout");
 
-      toast.success("Layout saved successfully");
+      // Also persist each widget's individual position so size is preserved
+      // even if the dashboard layout_config is later cleared.
+      await Promise.all(
+        layout.map((item) =>
+          fetch(`/api/dashboards/${dashboardId}/widgets/${item.i}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              positionConfig: { x: item.x, y: item.y, w: item.w, h: item.h, minW: item.minW ?? 2, minH: item.minH ?? 2 },
+            }),
+          }).catch(() => {
+            // Non-fatal — dashboard layout_config is the source of truth
+          })
+        )
+      );
+
+      toast.success("Layout saved");
       setHasChanges(false);
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-widgets", dashboardId] });
     } catch (_error) {
       toast.error("Failed to save layout");
     }
@@ -287,8 +307,15 @@ function DashboardViewerContent({ dashboardId }: { dashboardId: string }) {
             <Share2 className="h-4 w-4 mr-2" />
             Share
           </Button>
+          {/* Save Layout is always visible when there are pending changes */}
+          {hasChanges && (
+            <Button size="sm" onClick={handleSaveLayout}>
+              <Save className="h-4 w-4 mr-2" />
+              Save Layout
+            </Button>
+          )}
           {!isEditing ? (
-            <Button size="sm" onClick={() => setIsEditing(true)}>
+            <Button size="sm" variant={hasChanges ? "outline" : "default"} onClick={() => setIsEditing(true)}>
               <Edit className="h-4 w-4 mr-2" />
               Edit Layout
             </Button>
@@ -302,12 +329,6 @@ function DashboardViewerContent({ dashboardId }: { dashboardId: string }) {
                 <Eye className="h-4 w-4 mr-2" />
                 View
               </Button>
-              {hasChanges && (
-                <Button size="sm" onClick={handleSaveLayout}>
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Layout
-                </Button>
-              )}
             </>
           )}
         </div>

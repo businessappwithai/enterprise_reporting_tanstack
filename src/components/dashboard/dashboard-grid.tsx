@@ -60,14 +60,14 @@ export function DashboardGrid({
       containerPadding={[0, 0]}
       margin={[16, 16]}
       isDraggable={isEditing}
-      isResizable={isEditing}
+      isResizable
       onLayoutChange={handleLayoutChange}
       onDragStart={() => setIsDragging(true)}
       onDragStop={() => setIsDragging(false)}
       onResizeStart={() => setIsDragging(true)}
       onResizeStop={() => setIsDragging(false)}
       draggableHandle=".drag-handle"
-      resizeHandles={isEditing ? ["s", "e", "se", "sw", "n", "ne", "nw", "w"] : []}
+      resizeHandles={isEditing ? ["s", "e", "se", "sw", "n", "ne", "nw", "w"] : ["se"]}
       useCSSTransforms
     >
       {widgets.map((widget) => (
@@ -137,10 +137,13 @@ export function DashboardGrid({
             </CardContent>
           </Card>
 
-          {/* Resize Handle Indicator (only in edit mode) */}
-          {isEditing && (
-            <div className="absolute bottom-1 right-1 w-3 h-3 border-2 border-primary rounded-sm opacity-50 pointer-events-none" />
-          )}
+          {/* Resize handle indicator — always visible on hover */}
+          <div
+            className={cn(
+              "absolute bottom-1 right-1 w-3 h-3 border-r-2 border-b-2 border-primary rounded-br-sm pointer-events-none transition-opacity",
+              hoveredWidget === widget.id || isEditing ? "opacity-60" : "opacity-0"
+            )}
+          />
         </section>
       ))}
     </ResponsiveGridLayout>

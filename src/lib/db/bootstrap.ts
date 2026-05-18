@@ -1,59 +1,23 @@
 /**
- * Rebuilds the database with the correct schema matching Kysely types.
- * Uses PGLite for in-process PostgreSQL
- * Run: bun scripts/rebuild-db.ts
+ * Auto-bootstrap the PGlite schema on first startup.
+ * Uses CREATE TABLE IF NOT EXISTS so it is safe to run on every boot.
+ * The admin user is only inserted when no users exist.
  */
-import { PGlite } from "@electric-sql/pglite";
-import { existsSync, mkdirSync, rmSync } from "fs";
-import { join } from "path";
+import type { PGlite } from "@electric-sql/pglite";
 
-const DATA_DIR = process.env.DATA_DIR || "./data";
-if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });
+// bcrypt hash of "admin" (10 rounds) – pre-computed to avoid runtime bcrypt dependency
+const ADMIN_PASSWORD_HASH =
+  "$2a$10$9aE.ODJU.nWyAVpLuNSnS.j2Kz5X1g27dZM6ycAb0xzUyf0/fw3bO";
+const ADMIN_ID = "1aa00cc2af0225000c5c114df3eebb69";
 
-// Remove stale PGlite lock file to prevent Aborted() crash
-const pidFile = join(DATA_DIR, "postmaster.pid");
-if (existsSync(pidFile)) { rmSync(pidFile); console.log("Removed stale postmaster.pid"); }
+// bcrypt hash of "nlquery" (10 rounds)
+const NLQUERY_PASSWORD_HASH =
+  "$2a$10$1UDYFHzn1PDgcNfKbTpX2O7aykAUkAL.tgWGm6aGEuXG3pnMCTH3S";
+const NLQUERY_USER_ID = "nlquery0user00000000000000000000";
+const NLQUERY_ROLE_ID = "nlquery0role00000000000000000000";
 
-const ADMIN_USER = {
-  id: "1aa00cc2af0225000c5c114df3eebb69",
-  email: "admin@admin.com",
-  password_hash: "$2a$10$9aE.ODJU.nWyAVpLuNSnS.j2Kz5X1g27dZM6ycAb0xzUyf0/fw3bO",
-  display_name: "Admin",
-};
-
-// Initialize PGLite
-const pglite = new PGlite(DATA_DIR);
-await pglite.waitReady;
-
-console.log("Rebuilding database:", DATA_DIR);
-
-// Drop all tables (one at a time - PGLite doesn't support multi-statement queries)
-const tablesToDrop = [
-  "logs", "app_settings", "audit_log", "resource_permissions", "job_executions", "job_definitions",
-  "dashboard_widgets", "dashboard_layouts", "chart_filters", "chart_definitions",
-  "report_filters", "report_definitions", "filter_definitions", "saved_queries",
-  "ds_entity_permissions", "data_source_entity_permissions", "ds_user_roles",
-  "ds_roles", "data_sources", "user_roles", "roles", "notifications",
-  "email_templates", "nl_query_history", "error_messages", "warning_configs", "error_occurrences",
-  "metadata_entity_fields", "metadata_entity_registry", "data_source_filters",
-  "filters", "jobs", "reports", "charts", "dashboards", "users", "_migrations",
-  "schema_field_instructions", "schema_table_instructions",
-  "nl_query_context", "nl_query_role_stats", "nl_query_feedback", "ds_schema_cache"
-];
-
-for (const table of tablesToDrop) {
-  try {
-    await pglite.query(`DROP TABLE IF EXISTS ${table} CASCADE`);
-  } catch (e) {
-    // Ignore errors if table doesn't exist
-  }
-}
-
-console.log("Creating tables...");
-
-// Create each table separately (PGLite doesn't support multi-statement queries)
-const tables = [
-  `CREATE TABLE users (
+const SCHEMA_SQL = [
+  `CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
@@ -63,20 +27,20 @@ const tables = [
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
   )`,
-  `CREATE TABLE roles (
+  `CREATE TABLE IF NOT EXISTS roles (
     id TEXT PRIMARY KEY,
     name TEXT UNIQUE NOT NULL,
     description TEXT,
     permissions TEXT NOT NULL,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
   )`,
-  `CREATE TABLE user_roles (
+  `CREATE TABLE IF NOT EXISTS user_roles (
     user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
     role_id TEXT REFERENCES roles(id) ON DELETE CASCADE,
     assigned_at TEXT DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, role_id)
   )`,
-  `CREATE TABLE data_sources (
+  `CREATE TABLE IF NOT EXISTS data_sources (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     description TEXT,
@@ -92,7 +56,7 @@ const tables = [
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
   )`,
-  `CREATE TABLE saved_queries (
+  `CREATE TABLE IF NOT EXISTS saved_queries (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     description TEXT,
@@ -108,7 +72,7 @@ const tables = [
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
   )`,
-  `CREATE TABLE report_definitions (
+  `CREATE TABLE IF NOT EXISTS report_definitions (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     description TEXT,
@@ -127,7 +91,7 @@ const tables = [
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
   )`,
-  `CREATE TABLE chart_definitions (
+  `CREATE TABLE IF NOT EXISTS chart_definitions (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     description TEXT,
@@ -145,7 +109,7 @@ const tables = [
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
   )`,
-  `CREATE TABLE dashboard_layouts (
+  `CREATE TABLE IF NOT EXISTS dashboard_layouts (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     description TEXT,
@@ -160,7 +124,7 @@ const tables = [
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
   )`,
-  `CREATE TABLE dashboard_widgets (
+  `CREATE TABLE IF NOT EXISTS dashboard_widgets (
     id TEXT PRIMARY KEY,
     dashboard_id TEXT REFERENCES dashboard_layouts(id) ON DELETE CASCADE,
     widget_type TEXT NOT NULL,
@@ -171,7 +135,7 @@ const tables = [
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
   )`,
-  `CREATE TABLE filter_definitions (
+  `CREATE TABLE IF NOT EXISTS filter_definitions (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     description TEXT,
@@ -186,7 +150,7 @@ const tables = [
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
   )`,
-  `CREATE TABLE report_filters (
+  `CREATE TABLE IF NOT EXISTS report_filters (
     id TEXT PRIMARY KEY,
     report_id TEXT REFERENCES report_definitions(id) ON DELETE CASCADE,
     filter_id TEXT REFERENCES filter_definitions(id) ON DELETE CASCADE,
@@ -194,7 +158,7 @@ const tables = [
     filter_order INTEGER,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
   )`,
-  `CREATE TABLE chart_filters (
+  `CREATE TABLE IF NOT EXISTS chart_filters (
     id TEXT PRIMARY KEY,
     chart_id TEXT REFERENCES chart_definitions(id) ON DELETE CASCADE,
     filter_id TEXT REFERENCES filter_definitions(id) ON DELETE CASCADE,
@@ -202,7 +166,7 @@ const tables = [
     filter_order INTEGER,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
   )`,
-  `CREATE TABLE job_definitions (
+  `CREATE TABLE IF NOT EXISTS job_definitions (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     job_type TEXT NOT NULL,
@@ -218,7 +182,7 @@ const tables = [
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
   )`,
-  `CREATE TABLE job_executions (
+  `CREATE TABLE IF NOT EXISTS job_executions (
     id TEXT PRIMARY KEY,
     job_definition_id TEXT REFERENCES job_definitions(id) ON DELETE CASCADE,
     status TEXT NOT NULL,
@@ -229,7 +193,7 @@ const tables = [
     execution_metadata TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
   )`,
-  `CREATE TABLE audit_log (
+  `CREATE TABLE IF NOT EXISTS audit_log (
     id TEXT PRIMARY KEY,
     user_id TEXT REFERENCES users(id),
     action TEXT NOT NULL,
@@ -240,7 +204,7 @@ const tables = [
     user_agent TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
   )`,
-  `CREATE TABLE email_templates (
+  `CREATE TABLE IF NOT EXISTS email_templates (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     subject TEXT NOT NULL,
@@ -248,7 +212,7 @@ const tables = [
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
   )`,
-  `CREATE TABLE resource_permissions (
+  `CREATE TABLE IF NOT EXISTS resource_permissions (
     id TEXT PRIMARY KEY,
     resource_type TEXT NOT NULL,
     resource_id TEXT NOT NULL,
@@ -256,7 +220,7 @@ const tables = [
     permission_level TEXT NOT NULL,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
   )`,
-  `CREATE TABLE logs (
+  `CREATE TABLE IF NOT EXISTS logs (
     id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
     timestamp TEXT DEFAULT CURRENT_TIMESTAMP,
     level TEXT NOT NULL,
@@ -269,7 +233,7 @@ const tables = [
     request_id TEXT,
     message_vector TEXT
   )`,
-  `CREATE TABLE notifications (
+  `CREATE TABLE IF NOT EXISTS notifications (
     id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
@@ -279,7 +243,80 @@ const tables = [
     metadata TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
   )`,
-  `CREATE TABLE nl_query_history (
+  `CREATE TABLE IF NOT EXISTS app_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  )`,
+  `CREATE TABLE IF NOT EXISTS ds_roles (
+    id TEXT PRIMARY KEY,
+    data_source_id TEXT REFERENCES data_sources(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    description TEXT,
+    is_active BOOLEAN DEFAULT true,
+    created_by TEXT REFERENCES users(id),
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  )`,
+  `CREATE TABLE IF NOT EXISTS ds_user_roles (
+    data_source_id TEXT,
+    user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+    ds_role_id TEXT REFERENCES ds_roles(id) ON DELETE CASCADE,
+    assigned_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (data_source_id, user_id, ds_role_id)
+  )`,
+  `CREATE TABLE IF NOT EXISTS ds_entity_permissions (
+    id TEXT PRIMARY KEY,
+    data_source_id TEXT REFERENCES data_sources(id) ON DELETE CASCADE,
+    ds_role_id TEXT REFERENCES ds_roles(id) ON DELETE CASCADE,
+    entity_name TEXT NOT NULL,
+    entity_type TEXT NOT NULL,
+    entity_schema TEXT,
+    permission_level TEXT NOT NULL,
+    column_restrictions TEXT,
+    row_filter TEXT,
+    created_by TEXT REFERENCES users(id),
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  )`,
+  `CREATE TABLE IF NOT EXISTS schema_field_instructions (
+    id TEXT PRIMARY KEY,
+    data_source_id TEXT REFERENCES data_sources(id) ON DELETE CASCADE NOT NULL,
+    table_name TEXT NOT NULL,
+    field_name TEXT NOT NULL,
+    field_type TEXT NOT NULL,
+    is_nullable BOOLEAN DEFAULT true,
+    is_primary_key BOOLEAN DEFAULT false,
+    is_foreign_key BOOLEAN DEFAULT false,
+    foreign_key_table TEXT,
+    foreign_key_field TEXT,
+    description TEXT,
+    llm_instructions TEXT,
+    example_values TEXT,
+    constraints TEXT,
+    business_meaning TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    created_by TEXT REFERENCES users(id) ON DELETE SET NULL,
+    updated_by TEXT REFERENCES users(id) ON DELETE SET NULL,
+    UNIQUE(data_source_id, table_name, field_name)
+  )`,
+  `CREATE TABLE IF NOT EXISTS schema_table_instructions (
+    id TEXT PRIMARY KEY,
+    data_source_id TEXT REFERENCES data_sources(id) ON DELETE CASCADE NOT NULL,
+    table_name TEXT NOT NULL,
+    description TEXT,
+    llm_instructions TEXT,
+    example_queries TEXT,
+    business_domain TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    created_by TEXT REFERENCES users(id) ON DELETE SET NULL,
+    updated_by TEXT REFERENCES users(id) ON DELETE SET NULL,
+    UNIQUE(data_source_id, table_name)
+  )`,
+  `CREATE TABLE IF NOT EXISTS nl_query_history (
     id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
     data_source_id TEXT REFERENCES data_sources(id) ON DELETE CASCADE,
     user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
@@ -293,7 +330,7 @@ const tables = [
     execution_time_ms INTEGER,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
   )`,
-  `CREATE TABLE nl_query_context (
+  `CREATE TABLE IF NOT EXISTS nl_query_context (
     id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
     data_source_id TEXT REFERENCES data_sources(id) ON DELETE CASCADE,
     user_id TEXT REFERENCES users(id),
@@ -318,7 +355,7 @@ const tables = [
     created_by TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
   )`,
-  `CREATE TABLE nl_query_role_stats (
+  `CREATE TABLE IF NOT EXISTS nl_query_role_stats (
     id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
     role_name TEXT,
     data_source_id TEXT REFERENCES data_sources(id) ON DELETE CASCADE,
@@ -334,7 +371,7 @@ const tables = [
     common_joins TEXT,
     updated_at TEXT
   )`,
-  `CREATE TABLE nl_query_feedback (
+  `CREATE TABLE IF NOT EXISTS nl_query_feedback (
     id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
     nl_query_context_id TEXT REFERENCES nl_query_context(id),
     feedback_type TEXT,
@@ -343,7 +380,7 @@ const tables = [
     feedback_by TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
   )`,
-  `CREATE TABLE ds_schema_cache (
+  `CREATE TABLE IF NOT EXISTS ds_schema_cache (
     id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
     data_source_id TEXT REFERENCES data_sources(id) ON DELETE CASCADE,
     schema_metadata TEXT,
@@ -354,123 +391,7 @@ const tables = [
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(data_source_id)
   )`,
-  `CREATE TABLE error_messages (
-    id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
-    error_code TEXT NOT NULL UNIQUE,
-    severity TEXT DEFAULT 'error',
-    title TEXT NOT NULL,
-    message TEXT NOT NULL,
-    user_message TEXT,
-    suggestions TEXT,
-    documentation_url TEXT,
-    is_active BOOLEAN DEFAULT true,
-    category TEXT,
-    metadata TEXT,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-  )`,
-  `CREATE TABLE warning_configs (
-    id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
-    warning_code TEXT NOT NULL UNIQUE,
-    name TEXT NOT NULL,
-    description TEXT,
-    trigger_type TEXT NOT NULL,
-    trigger_config TEXT,
-    severity TEXT DEFAULT 'warning',
-    message_template TEXT NOT NULL,
-    suggestions_template TEXT,
-    is_active BOOLEAN DEFAULT true,
-    display_duration INTEGER DEFAULT 5000,
-    require_dismissal BOOLEAN DEFAULT false,
-    enable_auto_resolve BOOLEAN DEFAULT true,
-    auto_resolve_after INTEGER DEFAULT 30000,
-    metadata TEXT,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-  )`,
-  `CREATE TABLE error_occurrences (
-    id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
-    error_message_id TEXT REFERENCES error_messages(id) ON DELETE CASCADE,
-    user_id TEXT REFERENCES users(id),
-    session_id TEXT,
-    context_data TEXT,
-    resolved_at TEXT,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP
-  )`,
-  `CREATE TABLE app_settings (
-    key TEXT PRIMARY KEY,
-    value TEXT NOT NULL,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-  )`,
-  `CREATE TABLE ds_roles (
-    id TEXT PRIMARY KEY,
-    data_source_id TEXT REFERENCES data_sources(id) ON DELETE CASCADE,
-    name TEXT NOT NULL,
-    description TEXT,
-    is_active BOOLEAN DEFAULT true,
-    created_by TEXT REFERENCES users(id),
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-  )`,
-  `CREATE TABLE ds_user_roles (
-    data_source_id TEXT,
-    user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
-    ds_role_id TEXT REFERENCES ds_roles(id) ON DELETE CASCADE,
-    assigned_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (data_source_id, user_id, ds_role_id)
-  )`,
-  `CREATE TABLE ds_entity_permissions (
-    id TEXT PRIMARY KEY,
-    data_source_id TEXT REFERENCES data_sources(id) ON DELETE CASCADE,
-    ds_role_id TEXT REFERENCES ds_roles(id) ON DELETE CASCADE,
-    entity_name TEXT NOT NULL,
-    entity_type TEXT NOT NULL,
-    entity_schema TEXT,
-    permission_level TEXT NOT NULL,
-    column_restrictions TEXT,
-    row_filter TEXT,
-    created_by TEXT REFERENCES users(id),
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-  )`,
-  `CREATE TABLE schema_field_instructions (
-    id TEXT PRIMARY KEY,
-    data_source_id TEXT REFERENCES data_sources(id) ON DELETE CASCADE NOT NULL,
-    table_name TEXT NOT NULL,
-    field_name TEXT NOT NULL,
-    field_type TEXT NOT NULL,
-    is_nullable BOOLEAN DEFAULT true,
-    is_primary_key BOOLEAN DEFAULT false,
-    is_foreign_key BOOLEAN DEFAULT false,
-    foreign_key_table TEXT,
-    foreign_key_field TEXT,
-    description TEXT,
-    llm_instructions TEXT,
-    example_values TEXT,
-    constraints TEXT,
-    business_meaning TEXT,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    created_by TEXT REFERENCES users(id) ON DELETE SET NULL,
-    updated_by TEXT REFERENCES users(id) ON DELETE SET NULL,
-    UNIQUE(data_source_id, table_name, field_name)
-  )`,
-  `CREATE TABLE schema_table_instructions (
-    id TEXT PRIMARY KEY,
-    data_source_id TEXT REFERENCES data_sources(id) ON DELETE CASCADE NOT NULL,
-    table_name TEXT NOT NULL,
-    description TEXT,
-    llm_instructions TEXT,
-    example_queries TEXT,
-    business_domain TEXT,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    created_by TEXT REFERENCES users(id) ON DELETE SET NULL,
-    updated_by TEXT REFERENCES users(id) ON DELETE SET NULL,
-    UNIQUE(data_source_id, table_name)
-  )`,
-  `CREATE TABLE metadata_entity_header (
+  `CREATE TABLE IF NOT EXISTS metadata_entity_header (
     id TEXT PRIMARY KEY,
     data_source_id TEXT REFERENCES data_sources(id) ON DELETE CASCADE NOT NULL,
     entity_name TEXT NOT NULL,
@@ -486,7 +407,7 @@ const tables = [
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(data_source_id, entity_name, entity_schema)
   )`,
-  `CREATE TABLE metadata_entity_field (
+  `CREATE TABLE IF NOT EXISTS metadata_entity_field (
     id TEXT PRIMARY KEY,
     entity_header_id TEXT REFERENCES metadata_entity_header(id) ON DELETE CASCADE NOT NULL,
     field_name TEXT NOT NULL,
@@ -509,49 +430,96 @@ const tables = [
   )`,
 ];
 
-for (const table of tables) {
-  await pglite.query(table);
-}
+const ADMIN_PERMISSIONS = JSON.stringify([
+  "*:*", "admin:*",
+  "data_source:read", "data_source:write", "data_source:edit", "data_source:delete",
+  "data_source:view", "data_source:execute", "data_source:*",
+  "query:read", "query:write", "query:edit", "query:delete", "query:view", "query:execute", "query:*",
+  "report:read", "report:write", "report:edit", "report:delete", "report:view", "report:export", "report:*",
+  "chart:read", "chart:write", "chart:edit", "chart:delete", "chart:view", "chart:*",
+  "dashboard:read", "dashboard:write", "dashboard:edit", "dashboard:delete", "dashboard:view", "dashboard:*",
+  "job:read", "job:write", "job:edit", "job:delete", "job:view", "job:execute", "job:*",
+  "user:read", "user:write", "user:edit", "user:delete", "user:view", "user:*",
+  "role:read", "role:write", "role:edit", "role:delete", "role:view", "role:*",
+  "queue:*", "filter:*",
+  "metadata:read", "metadata:write", "metadata:edit", "metadata:delete", "metadata:view", "metadata:*",
+  "log:read", "log:view", "log:*",
+  "notification:read", "notification:write", "notification:view", "notification:*",
+  "setting:read", "setting:write", "setting:edit", "setting:view", "setting:*",
+  "email_template:read", "email_template:write", "email_template:edit",
+  "email_template:delete", "email_template:view", "email_template:*",
+  "dataset:read", "dataset:write", "dataset:edit", "dataset:delete", "dataset:view", "dataset:*",
+]);
 
-// Create indexes for logs table, schema instructions, and metadata
-const indexes = [
-  `CREATE INDEX idx_logs_timestamp ON logs(timestamp)`,
-  `CREATE INDEX idx_logs_level ON logs(level)`,
-  `CREATE INDEX idx_logs_user_id ON logs(user_id)`,
-  `CREATE INDEX idx_logs_component ON logs(component)`,
-  `CREATE INDEX idx_schema_field_instructions_ds_table ON schema_field_instructions(data_source_id, table_name)`,
-  `CREATE INDEX idx_schema_table_instructions_ds ON schema_table_instructions(data_source_id)`,
-  `CREATE INDEX idx_metadata_entity_header_ds ON metadata_entity_header(data_source_id)`,
-  `CREATE INDEX idx_metadata_entity_header_entity ON metadata_entity_header(entity_name)`,
-  `CREATE INDEX idx_metadata_entity_header_type ON metadata_entity_header(entity_type)`,
-  `CREATE INDEX idx_metadata_entity_header_active ON metadata_entity_header(is_active, is_hidden)`,
-  `CREATE INDEX idx_metadata_entity_field_header ON metadata_entity_field(entity_header_id)`,
-  `CREATE INDEX idx_metadata_entity_field_name ON metadata_entity_field(field_name)`,
-  `CREATE INDEX idx_metadata_entity_field_display ON metadata_entity_field(is_display_field)`,
-  `CREATE INDEX idx_metadata_entity_field_searchable ON metadata_entity_field(is_searchable)`,
-  `CREATE INDEX idx_metadata_entity_field_fk ON metadata_entity_field(is_foreign_key, foreign_key_table)`,
-  `CREATE INDEX idx_metadata_entity_field_section ON metadata_entity_field(entity_header_id, section_name, display_order)`,
-];
-
-for (const index of indexes) {
-  try {
-    await pglite.query(index);
-  } catch (e) {
-    // Ignore if index already exists
+export async function bootstrapSchema(pglite: PGlite): Promise<void> {
+  // Run all CREATE TABLE IF NOT EXISTS statements
+  for (const sql of SCHEMA_SQL) {
+    try {
+      await pglite.query(sql);
+    } catch (err) {
+      // Log but don't crash on individual table errors (e.g. already exists with different schema)
+      console.warn("[bootstrap] table create warning:", (err as Error).message?.slice(0, 120));
+    }
   }
+
+  // Seed admin user only if the users table is empty
+  const { rows } = await pglite.query<{ count: string }>("SELECT COUNT(*) as count FROM users");
+  const count = Number(rows[0]?.count ?? 0);
+  if (count === 0) {
+    console.log("[bootstrap] Seeding admin user...");
+    const adminRoleId = "admin-role-id-000000000000000000000000";
+    const now = new Date().toISOString();
+
+    await pglite.query(
+      `INSERT INTO roles (id, name, description, permissions, created_at)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (name) DO NOTHING`,
+      [adminRoleId, "Admin", "Full system administrator", ADMIN_PERMISSIONS, now]
+    );
+
+    await pglite.query(
+      `INSERT INTO users (id, email, password_hash, display_name, is_active, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       ON CONFLICT (email) DO NOTHING`,
+      [ADMIN_ID, "admin@admin.com", ADMIN_PASSWORD_HASH, "System Administrator", true, now, now]
+    );
+
+    await pglite.query(
+      `INSERT INTO user_roles (user_id, role_id, assigned_at)
+       VALUES ($1, $2, $3)
+       ON CONFLICT DO NOTHING`,
+      [ADMIN_ID, adminRoleId, now]
+    );
+
+    console.log("[bootstrap] Admin created: admin@admin.com / admin");
+  }
+
+  // Always ensure NL Query role and user exist (upsert — safe to run every boot)
+  const nlQueryPermissions = JSON.stringify([
+    "nl_query:*",
+  ]);
+  const now2 = new Date().toISOString();
+
+  await pglite.query(
+    `INSERT INTO roles (id, name, description, permissions, created_at)
+     VALUES ($1, $2, $3, $4, $5)
+     ON CONFLICT (name) DO UPDATE SET permissions = EXCLUDED.permissions`,
+    [NLQUERY_ROLE_ID, "NLQueryUser", "Access limited to natural language query only", nlQueryPermissions, now2]
+  );
+
+  await pglite.query(
+    `INSERT INTO users (id, email, password_hash, display_name, is_active, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
+     ON CONFLICT (email) DO NOTHING`,
+    [NLQUERY_USER_ID, "nlquery@nlquery.com", NLQUERY_PASSWORD_HASH, "nlquery", true, now2, now2]
+  );
+
+  await pglite.query(
+    `INSERT INTO user_roles (user_id, role_id, assigned_at)
+     VALUES ($1, $2, $3)
+     ON CONFLICT DO NOTHING`,
+    [NLQUERY_USER_ID, NLQUERY_ROLE_ID, now2]
+  );
+
+  console.log("[bootstrap] NL Query user ensured: nlquery@nlquery.com / nlquery");
 }
-
-console.log("Inserting admin user...");
-
-// Insert admin user
-await pglite.query(
-  `INSERT INTO users (id, email, password_hash, display_name, is_active, created_at, updated_at)
-   VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-  [ADMIN_USER.id, ADMIN_USER.email, ADMIN_USER.password_hash, ADMIN_USER.display_name, true]
-);
-
-console.log("Database rebuild complete.");
-console.log(`✓ Admin user: ${ADMIN_USER.email}`);
-console.log(`✓ Data directory: ${DATA_DIR}`);
-
-process.exit(0);

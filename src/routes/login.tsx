@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import { setResponseHeader, getRequestHeader } from "@tanstack/react-start/server";
 import { BarChart3, Loader2 } from "lucide-react";
@@ -90,6 +91,7 @@ function LoginPage() {
   const [serverError, setServerError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
 
@@ -103,6 +105,8 @@ function LoginPage() {
     setIsSubmitting(true);
     try {
       await loginFn({ data: { email, password } });
+      // Clear all cached queries so the new user gets fresh data (permissions, etc.)
+      queryClient.clear();
       await navigate({ to: "/dashboard" });
     } catch (err: unknown) {
       setServerError(err instanceof Error ? err.message : "An error occurred. Please try again.");

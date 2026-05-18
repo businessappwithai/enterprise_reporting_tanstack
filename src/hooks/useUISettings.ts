@@ -5,7 +5,7 @@ interface UISettings {
 }
 
 const DEFAULT_SETTINGS: UISettings = {
-  tableRowStripeColor: "#f5f5f5",
+  tableRowStripeColor: "var(--muted)",
 };
 
 export function useUISettings(): UISettings {

@@ -22,6 +22,7 @@ function EmailSettingsPage() {
     queryKey: ["email-config"],
     queryFn: async () => {
       const res = await fetch("/api/settings/email");
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to load email config`);
       const data = await res.json();
       return data.data;
     },

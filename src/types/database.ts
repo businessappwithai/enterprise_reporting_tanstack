@@ -451,7 +451,9 @@ export type ResourceType =
   | "ds_role"
   | "ds_entity_permission"
   | "nl_query"
-  | "metadata_entity"; // NEW - Entity metadata management
+  | "metadata_entity"
+  | "log"
+  | "setting";
 
 export type PermissionLevel = "view" | "edit" | "execute" | "admin";
 

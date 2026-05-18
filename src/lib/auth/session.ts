@@ -35,8 +35,21 @@ export async function createSession(user: SessionUser): Promise<string> {
 export async function verifySession(token: string): Promise<Session | null> {
   try {
     const { payload } = await jwtVerify(token, SECRET);
+    const sessionUser = payload.user as SessionUser;
+
+    // Confirm the user still exists — guards against stale sessions after DB reseed
+    const db = getDb();
+    const user = await db
+      .selectFrom("users")
+      .select("id")
+      .where("id", "=", sessionUser.id)
+      .where("is_active", "=", true)
+      .executeTakeFirst();
+
+    if (!user) return null;
+
     return {
-      user: payload.user as SessionUser,
+      user: sessionUser,
       expires: new Date((payload.exp ?? 0) * 1000).toISOString(),
     };
   } catch {

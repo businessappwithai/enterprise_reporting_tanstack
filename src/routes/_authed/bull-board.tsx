@@ -1,170 +1,231 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Activity, CheckCircle2, Clock, RefreshCw, Trash2, XCircle } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
+import {
+  Activity,
+  CheckCircle2,
+  Clock,
+  ExternalLink,
+  FileText,
+  Mail,
+  RefreshCw,
+  Zap,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const Route = createFileRoute("/_authed/bull-board")({
-  component: BullBoardPage,
+  component: QueueManagementPage,
 });
 
-function BullBoardPage() {
-  const queryClient = useQueryClient();
-  const [activeQueue, _setActiveQueue] = useState("default");
+const TRIGGER_TASKS = [
+  {
+    id: "report:generate",
+    label: "Report Generation",
+    description: "Generates CSV, XLSX, and PDF reports",
+    icon: FileText,
+    color: "text-blue-500",
+  },
+  {
+    id: "data:export",
+    label: "Data Export",
+    description: "Exports query results to files",
+    icon: Activity,
+    color: "text-green-500",
+  },
+  {
+    id: "email:batch",
+    label: "Email Batch",
+    description: "Sends batch emails with attachments",
+    icon: Mail,
+    color: "text-purple-500",
+  },
+  {
+    id: "scheduled:refresh",
+    label: "Scheduled Refresh",
+    description: "Refreshes reports, charts, and dashboards on schedule",
+    icon: Clock,
+    color: "text-orange-500",
+  },
+];
 
-  const {
-    data: stats,
-    isLoading,
-    refetch,
-  } = useQuery({
-    queryKey: ["bull-stats", activeQueue],
+function QueueManagementPage() {
+  const triggerApiUrl = typeof window !== "undefined"
+    ? undefined
+    : process.env.TRIGGER_API_URL;
+
+  const { data: jobs = [], isLoading, refetch } = useQuery({
+    queryKey: ["job-definitions"],
     queryFn: async () => {
-      const res = await fetch(`/api/admin/queues/stats?queue=${activeQueue}`);
+      const res = await fetch("/api/jobs?pageSize=50");
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to load jobs`);
       const data = await res.json();
-      return data.data || {};
+      return data.data?.items || [];
     },
-    refetchInterval: 10000,
+    refetchInterval: 30000,
   });
 
-  const { data: jobs = [], isLoading: isLoadingJobs } = useQuery({
-    queryKey: ["bull-jobs", activeQueue],
-    queryFn: async () => {
-      const res = await fetch(`/api/admin/queues?queue=${activeQueue}`);
-      const data = await res.json();
-      return data.data || [];
-    },
-    refetchInterval: 10000,
-  });
-
-  const cleanMutation = useMutation({
-    mutationFn: async (status: string) => {
-      await fetch(`/api/admin/queues`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ queue: activeQueue, status }),
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["bull-stats"] });
-      queryClient.invalidateQueries({ queryKey: ["bull-jobs"] });
-      toast.success("Queue cleaned successfully");
-    },
-  });
-
-  const statCards = [
-    { label: "Waiting", value: stats?.waiting ?? 0, icon: Clock, color: "text-yellow-500" },
-    { label: "Active", value: stats?.active ?? 0, icon: Activity, color: "text-blue-500" },
-    {
-      label: "Completed",
-      value: stats?.completed ?? 0,
-      icon: CheckCircle2,
-      color: "text-green-500",
-    },
-    { label: "Failed", value: stats?.failed ?? 0, icon: XCircle, color: "text-red-500" },
-  ];
+  const activeJobs = jobs.filter((j: any) => j.is_active && !j.is_deleted);
+  const scheduledJobs = activeJobs.filter((j: any) => j.schedule_cron);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Queue Management</h1>
-          <p className="text-sm text-muted-foreground">Monitor and manage background job queues</p>
+          <p className="text-sm text-muted-foreground">
+            Background jobs powered by Trigger.dev
+          </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => refetch()}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => refetch()}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+          {process.env.TRIGGER_API_URL && (
+            <Button variant="outline" size="sm" asChild>
+              <a
+                href={process.env.TRIGGER_API_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Trigger.dev Dashboard
+              </a>
+            </Button>
+          )}
+        </div>
       </div>
 
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-        {statCards.map((stat) => (
-          <Card key={stat.label}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">{stat.label}</CardTitle>
-              <stat.icon className={`h-4 w-4 ${stat.color}`} />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{isLoading ? "—" : stat.value}</div>
-            </CardContent>
-          </Card>
-        ))}
+      {/* Registered Tasks */}
+      <div>
+        <h2 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wider">
+          Registered Tasks
+        </h2>
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+          {TRIGGER_TASKS.map((task) => {
+            const Icon = task.icon;
+            return (
+              <Card key={task.id}>
+                <CardHeader className="flex flex-row items-center gap-3 pb-2">
+                  <div className={`rounded-md p-2 bg-muted`}>
+                    <Icon className={`h-4 w-4 ${task.color}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-sm font-medium leading-tight">
+                      {task.label}
+                    </CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-xs text-muted-foreground">{task.description}</p>
+                  <div className="mt-2">
+                    <Badge variant="secondary" className="text-xs font-mono">
+                      {task.id}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       </div>
 
+      {/* Job Definitions */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Jobs</CardTitle>
-              <CardDescription>Recent job executions in the queue</CardDescription>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => cleanMutation.mutate("completed")}>
-                <Trash2 className="h-4 w-4 mr-2" />
-                Clean Completed
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => cleanMutation.mutate("failed")}>
-                <Trash2 className="h-4 w-4 mr-2" />
-                Clean Failed
-              </Button>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="h-4 w-4" />
+                Scheduled Jobs
+              </CardTitle>
+              <CardDescription>
+                Job definitions with recurring schedules ({scheduledJobs.length} active)
+              </CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          {isLoadingJobs ? (
-            <div className="text-center py-8 text-muted-foreground">Loading jobs...</div>
-          ) : jobs.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">No jobs in queue</div>
+          {isLoading ? (
+            <div className="text-center py-8 text-muted-foreground text-sm">
+              Loading jobs...
+            </div>
+          ) : scheduledJobs.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground text-sm">
+              No scheduled jobs configured. Create one from the Jobs page.
+            </div>
           ) : (
             <div className="space-y-2">
-              {jobs.map(
-                (job: {
-                  id: string;
-                  name: string;
-                  status: string;
-                  progress?: number;
-                  failedReason?: string;
-                  timestamp?: number;
-                }) => (
-                  <div
-                    key={job.id}
-                    className="flex items-center justify-between p-3 border rounded-lg"
-                  >
-                    <div className="flex items-center gap-3">
-                      {job.status === "completed" && (
-                        <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      )}
-                      {job.status === "failed" && <XCircle className="h-4 w-4 text-red-500" />}
-                      {job.status === "active" && <Activity className="h-4 w-4 text-blue-500" />}
-                      {job.status === "waiting" && <Clock className="h-4 w-4 text-yellow-500" />}
-                      <div>
-                        <p className="text-sm font-medium">{job.name}</p>
-                        <p className="text-xs text-muted-foreground">ID: {job.id}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {job.status === "active" && job.progress !== undefined && (
-                        <span className="text-xs text-muted-foreground">{job.progress}%</span>
-                      )}
-                      <Badge
-                        variant={
-                          job.status === "completed"
-                            ? "default"
-                            : job.status === "failed"
-                              ? "destructive"
-                              : "secondary"
-                        }
-                      >
-                        {job.status}
-                      </Badge>
+              {scheduledJobs.map((job: any) => (
+                <div
+                  key={job.id}
+                  className="flex items-center justify-between p-3 border rounded-lg"
+                >
+                  <div className="flex items-center gap-3">
+                    <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium">{job.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {job.job_type} · cron: <span className="font-mono">{job.schedule_cron}</span>
+                      </p>
                     </div>
                   </div>
-                )
-              )}
+                  <Badge variant="outline" className="text-xs">
+                    active
+                  </Badge>
+                </div>
+              ))}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* All Job Definitions */}
+      {activeJobs.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">All Job Definitions</CardTitle>
+            <CardDescription>{activeJobs.length} active job definition{activeJobs.length !== 1 ? "s" : ""}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {activeJobs.map((job: any) => (
+                <div
+                  key={job.id}
+                  className="flex items-center justify-between p-3 border rounded-lg"
+                >
+                  <div>
+                    <p className="text-sm font-medium">{job.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Type: {job.job_type}
+                      {job.schedule_cron ? ` · ${job.schedule_cron}` : " · on-demand"}
+                    </p>
+                  </div>
+                  <Badge variant={job.schedule_cron ? "default" : "secondary"} className="text-xs">
+                    {job.schedule_cron ? "scheduled" : "on-demand"}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card className="border-dashed">
+        <CardContent className="py-4">
+          <p className="text-xs text-muted-foreground text-center">
+            Live run status and logs are available in the{" "}
+            <a
+              href="https://dashboard.trigger.dev"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-foreground"
+            >
+              Trigger.dev dashboard
+            </a>
+            . For local development, set <span className="font-mono">TRIGGER_API_URL</span> to your Mastra.ai server.
+          </p>
         </CardContent>
       </Card>
     </div>

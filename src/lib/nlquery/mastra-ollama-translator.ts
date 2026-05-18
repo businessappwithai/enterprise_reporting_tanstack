@@ -92,7 +92,8 @@ export async function translateNLToSQLViaMastra(
 }
 
 /**
- * Generate SQL using Ollama via Mastra-style prompting
+ * Generate SQL using Ollama via Mastra-style prompting.
+ * Uses sqlcoder's expected instruction format for best results.
  */
 async function generateSQLViaOllama(
   nlQuestion: string,
@@ -100,17 +101,36 @@ async function generateSQLViaOllama(
   ollamaUrl: string,
   model: string
 ): Promise<string | null> {
-  const systemPrompt = `You are an expert SQL query generator for Mastra.ai workflows.
-Your task is to convert natural language questions into precise SQL SELECT statements.
+  // sqlcoder:7b was trained on this specific prompt template
+  const isSqlcoder = model.toLowerCase().includes("sqlcoder");
+  const prompt = isSqlcoder
+    ? `### Instructions:
+Your task is to convert a question into a SQL query, given a database schema.
+Adhere to these rules:
+- Deliberately use only the schemas provided.
+- Do not use any other tables or columns.
+- Generate only a SELECT query with no mutations.
+- Do not use SELECT * unless explicitly asked.
 
-DATABASE SCHEMA:
+### Input:
+Generate a SQL query that answers the question: \`${nlQuestion}\`
+
+This query will run on a database whose schema is represented in this string:
 ${schemaContext}
 
-REQUIREMENTS:
-- Generate ONLY SELECT queries
-- Use only tables and columns from the schema
-- Return just the SQL query, no explanation
-- If the question cannot be answered, respond with "NULL"`;
+### Response:
+Based on your instructions, here is the SQL query I have generated to answer the question \`${nlQuestion}\`:
+\`\`\`sql`
+    : `You are an expert SQL query generator.
+Convert the following question into a SQL SELECT query using ONLY the provided schema.
+Return ONLY the SQL query, nothing else.
+
+SCHEMA:
+${schemaContext}
+
+Question: ${nlQuestion}
+
+SQL:`;
 
   try {
     const response = await fetch(`${ollamaUrl}/api/generate`, {
@@ -118,21 +138,30 @@ REQUIREMENTS:
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         model,
-        prompt: `${systemPrompt}\n\nQuestion: ${nlQuestion}\n\nGenerate SQL:`,
+        prompt,
         stream: false,
-        temperature: 0.3,
+        options: {
+          temperature: 0.1,
+          num_predict: 512,
+          stop: isSqlcoder ? ["```", ";", "\n\n"] : [";", "\n\n"],
+        },
       }),
+      signal: AbortSignal.timeout(60000),
     });
 
     if (!response.ok) {
+      console.error("[Mastra] Ollama generate returned:", response.status);
       return null;
     }
 
     const data = (await response.json()) as { response: string };
-    const sql = data.response.trim();
+    const raw = data.response.trim();
 
-    // Extract SQL from response (handle various formats)
-    const sqlMatch = sql.match(/SELECT.+/is);
+    // Strip markdown code fences if present
+    const stripped = raw.replace(/^```sql\s*/i, "").replace(/```$/, "").trim();
+
+    // Extract SELECT statement (handles leading whitespace, CTEs, etc.)
+    const sqlMatch = stripped.match(/(WITH\s+.+?SELECT.+|SELECT.+)/is);
     return sqlMatch ? sqlMatch[0].trim() : null;
   } catch (error) {
     console.error("[Mastra] Ollama generation failed:", error);
@@ -157,10 +186,10 @@ Original question: "${nlQuestion}"
 Previous SQL: ${previousSQL}
 Errors found: ${errors.join(", ")}
 
-DATABASE SCHEMA:
+SCHEMA:
 ${schemaContext}
 
-Generate a corrected SQL SELECT query:`;
+Generate a corrected SQL SELECT query (SELECT only, no mutations):`;
 
   try {
     const response = await fetch(`${ollamaUrl}/api/generate`, {
@@ -170,8 +199,9 @@ Generate a corrected SQL SELECT query:`;
         model,
         prompt: refinementPrompt,
         stream: false,
-        temperature: 0.3,
+        options: { temperature: 0.1, num_predict: 512 },
       }),
+      signal: AbortSignal.timeout(60000),
     });
 
     if (!response.ok) {
@@ -179,10 +209,8 @@ Generate a corrected SQL SELECT query:`;
     }
 
     const data = (await response.json()) as { response: string };
-    const sql = data.response.trim();
-
-    // Extract SQL from response
-    const sqlMatch = sql.match(/SELECT.+/is);
+    const raw = data.response.trim().replace(/^```sql\s*/i, "").replace(/```$/, "").trim();
+    const sqlMatch = raw.match(/(WITH\s+.+?SELECT.+|SELECT.+)/is);
     return sqlMatch ? sqlMatch[0].trim() : null;
   } catch (error) {
     console.error("[Mastra] Ollama refinement failed:", error);
@@ -231,52 +259,40 @@ function validateGeneratedSQL(
 }
 
 /**
- * Build comprehensive schema context string with field instructions
+ * Build schema context as CREATE TABLE statements — the format sqlcoder:7b was trained on.
+ * Limits to MAX_TABLES to avoid overflowing model context.
  */
+const MAX_TABLES = 40;
+
 function buildSchemaContext(schema: EnhancedSchemaMetadata): string {
   if (!schema.tables || schema.tables.length === 0) {
-    return "No tables available in schema.";
+    return "-- No tables available in schema.";
   }
 
-  const enhancedSchema = schema.tables
+  const tables = schema.tables.slice(0, MAX_TABLES);
+
+  return tables
     .map((table) => {
-      let tableContext = "";
-
-      // Add table-level instruction if available
       const tableInstr = schema.tableInstructions?.[table.name];
-      if (tableInstr?.description) {
-        tableContext += `\n[TABLE CONTEXT] ${tableInstr.description}`;
-      }
-      if (tableInstr?.domain) {
-        tableContext += `\n[DOMAIN] ${tableInstr.domain}`;
-      }
-      if (tableInstr?.instructions) {
-        tableContext += `\n[INSTRUCTIONS] ${tableInstr.instructions}`;
-      }
+      const comment = tableInstr?.description ? `-- ${tableInstr.description}\n` : "";
 
-      // Add columns with detailed instructions
-      const columnsDetail = table.columns
-        ? table.columns
-            .map((col) => {
-              const fieldInstr = schema.fieldInstructions?.[table.name]?.[col];
-              if (fieldInstr?.instructions) {
-                return `${col} - ${fieldInstr.instructions}${
-                  fieldInstr.examples ? ` (e.g., ${fieldInstr.examples.join(", ")})` : ""
-                }`;
-              }
-              if (fieldInstr?.description) {
-                return `${col} - ${fieldInstr.description}`;
-              }
-              return col;
-            })
-            .join("\n    ")
-        : "";
+      const cols = (table.columns ?? [])
+        .map((col) => {
+          // col is always {name: string, type: string} — never a plain string
+          const colName = typeof col === "object" && col !== null ? col.name : String(col);
+          const colType = typeof col === "object" && col !== null && "type" in col
+            ? (col as { name: string; type: string }).type
+            : "text";
 
-      return `\nTable: ${table.name}${tableContext}\nColumns:\n    ${columnsDetail}`;
+          const fieldInstr = schema.fieldInstructions?.[table.name]?.[colName];
+          const inlineComment = fieldInstr?.description ? ` -- ${fieldInstr.description}` : "";
+          return `  ${colName} ${colType}${inlineComment}`;
+        })
+        .join(",\n");
+
+      return `${comment}CREATE TABLE ${table.name} (\n${cols}\n);`;
     })
-    .join("\n");
-
-  return enhancedSchema;
+    .join("\n\n");
 }
 
 /**

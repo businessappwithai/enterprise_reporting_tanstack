@@ -1,5 +1,5 @@
+import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { mkdirSync } from "node:fs";
 import { Kysely, MssqlDialect, MysqlDialect, PostgresDialect, sql } from "kysely";
 import { Pool } from "pg";
 import { PGlite } from "@electric-sql/pglite";
@@ -32,7 +32,8 @@ async function buildKyselyConnection(
 ): Promise<AnyKysely> {
   switch (clientType) {
     case "sqlite3": {
-      // Use PGLite for SQLite-compatible in-process database
+      // SQLite data sources use PGlite (in-process PostgreSQL).
+      // PGlite stores data in its own PostgreSQL-compatible format at dataDir.
       const filename = connectionConfig.filename || ":memory:";
       let dataDir: string;
       if (filename === ":memory:") {
@@ -46,6 +47,8 @@ async function buildKyselyConnection(
       }
 
       mkdirSync(dataDir, { recursive: true });
+      const pid = join(dataDir, "postmaster.pid");
+      if (existsSync(pid)) rmSync(pid);
       const pglite = new PGlite(dataDir);
       await pglite.waitReady;
 

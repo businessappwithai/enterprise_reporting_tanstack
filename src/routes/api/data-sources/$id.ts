@@ -14,8 +14,8 @@ async function getSession(request: Request) {
 }
 
 function checkPermission(session: any, createdBy: string): boolean {
-  const userRoles = session.user.roles || [];
-  const isAdmin = userRoles.includes("admin");
+  const userRoles: string[] = session.user.roles || [];
+  const isAdmin = userRoles.some((r) => r.toLowerCase() === "admin");
   const isOwner = createdBy === session.user.id;
   return isAdmin || isOwner;
 }

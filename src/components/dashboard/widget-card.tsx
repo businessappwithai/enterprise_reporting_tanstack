@@ -35,6 +35,7 @@ export function WidgetCard({ widget, onFilterApply }: WidgetCardProps) {
     queryFn: async () => {
       if (!widget.chart_id) return null;
       const res = await fetch(`/api/charts/${widget.chart_id}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to load chart`);
       const data = await res.json();
       return data.data;
     },
@@ -48,6 +49,7 @@ export function WidgetCard({ widget, onFilterApply }: WidgetCardProps) {
     queryFn: async () => {
       if (!widget.report_id) return null;
       const res = await fetch(`/api/reports/${widget.report_id}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to load report`);
       const data = await res.json();
       return data.data;
     },
@@ -84,6 +86,7 @@ export function WidgetCard({ widget, onFilterApply }: WidgetCardProps) {
 
       // Fallback to server-side
       const res = await fetch(`/api/reports/${widget.report_id}/data?pageSize=100`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to load report data`);
       const data = await res.json();
       return data;
     },
@@ -105,6 +108,7 @@ export function WidgetCard({ widget, onFilterApply }: WidgetCardProps) {
 
       // Fallback to server-side
       const res = await fetch(`/api/charts/${widget.chart_id}/data`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to load chart data`);
       const data = await res.json();
       return data;
     },
@@ -147,7 +151,7 @@ export function WidgetCard({ widget, onFilterApply }: WidgetCardProps) {
 
         return (
           <ChartRenderer
-            data={chartData.data ?? chartData.rows ?? []}
+            data={chartData.data?.rows ?? (Array.isArray(chartData.data) ? chartData.data : null) ?? chartData.rows ?? []}
             chartType={chartDef.chart_type as ChartType}
             chartConfig={chartConfig}
             dataMapping={dataMapping}

@@ -4,9 +4,12 @@
  * Uses PGLite for in-process PostgreSQL
  */
 
+import { existsSync, rmSync } from "node:fs";
+import { join } from "node:path";
 import { Kysely, PostgresDialect } from "kysely";
 import { Pool } from "pg";
 import { PGlite } from "@electric-sql/pglite";
+import { bootstrapSchema } from "./bootstrap";
 
 // Database schema type definition
 // This is the most important part - defines all tables and their columns
@@ -428,8 +431,13 @@ const DATA_DIR = process.env.DATA_DIR || "./data";
  */
 async function initPGlite(): Promise<PGlite> {
   if (!pglite) {
+    // Remove stale lock file before opening to prevent Aborted() WASM crash
+    const pidFile = join(DATA_DIR, "postmaster.pid");
+    if (existsSync(pidFile)) rmSync(pidFile);
     pglite = new PGlite(DATA_DIR);
     await pglite.waitReady;
+    // Auto-create tables and seed admin on first run (safe to call every time)
+    await bootstrapSchema(pglite);
   }
   return pglite;
 }

@@ -88,6 +88,7 @@ import { Route as AuthedChartsViewerIdRouteImport } from './routes/_authed/chart
 import { Route as AuthedChartsEditorIdRouteImport } from './routes/_authed/charts/editor/$id'
 import { Route as AuthedMetadataEntitiesIdIndexRouteImport } from './routes/_authed/metadata/entities/$id/index'
 import { Route as ApiReportsIdFiltersFilterLinkIdRouteImport } from './routes/api/reports/$id/filters/$filterLinkId'
+import { Route as ApiDashboardsIdWidgetsWidgetIdRouteImport } from './routes/api/dashboards/$id/widgets/$widgetId'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -492,6 +493,12 @@ const ApiReportsIdFiltersFilterLinkIdRoute =
     path: '/$filterLinkId',
     getParentRoute: () => ApiReportsIdFiltersRoute,
   } as any)
+const ApiDashboardsIdWidgetsWidgetIdRoute =
+  ApiDashboardsIdWidgetsWidgetIdRouteImport.update({
+    id: '/$widgetId',
+    path: '/$widgetId',
+    getParentRoute: () => ApiDashboardsIdWidgetsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -556,7 +563,7 @@ export interface FileRoutesByFullPath {
   '/reports/$id/viewer': typeof AuthedReportsIdViewerRoute
   '/api/charts/$id/data': typeof ApiChartsIdDataRoute
   '/api/charts/$id/filters': typeof ApiChartsIdFiltersRoute
-  '/api/dashboards/$id/widgets': typeof ApiDashboardsIdWidgetsRoute
+  '/api/dashboards/$id/widgets': typeof ApiDashboardsIdWidgetsRouteWithChildren
   '/api/data-sources/$id/inspect': typeof ApiDataSourcesIdInspectRoute
   '/api/data-sources/$id/usage': typeof ApiDataSourcesIdUsageRoute
   '/api/reports/$id/data': typeof ApiReportsIdDataRoute
@@ -570,6 +577,7 @@ export interface FileRoutesByFullPath {
   '/dashboards/$id/': typeof AuthedDashboardsIdIndexRoute
   '/metadata/entities/': typeof AuthedMetadataEntitiesIndexRoute
   '/settings/email/': typeof AuthedSettingsEmailIndexRoute
+  '/api/dashboards/$id/widgets/$widgetId': typeof ApiDashboardsIdWidgetsWidgetIdRoute
   '/api/reports/$id/filters/$filterLinkId': typeof ApiReportsIdFiltersFilterLinkIdRoute
   '/metadata/entities/$id/': typeof AuthedMetadataEntitiesIdIndexRoute
 }
@@ -636,7 +644,7 @@ export interface FileRoutesByTo {
   '/reports/$id/viewer': typeof AuthedReportsIdViewerRoute
   '/api/charts/$id/data': typeof ApiChartsIdDataRoute
   '/api/charts/$id/filters': typeof ApiChartsIdFiltersRoute
-  '/api/dashboards/$id/widgets': typeof ApiDashboardsIdWidgetsRoute
+  '/api/dashboards/$id/widgets': typeof ApiDashboardsIdWidgetsRouteWithChildren
   '/api/data-sources/$id/inspect': typeof ApiDataSourcesIdInspectRoute
   '/api/data-sources/$id/usage': typeof ApiDataSourcesIdUsageRoute
   '/api/reports/$id/data': typeof ApiReportsIdDataRoute
@@ -650,6 +658,7 @@ export interface FileRoutesByTo {
   '/dashboards/$id': typeof AuthedDashboardsIdIndexRoute
   '/metadata/entities': typeof AuthedMetadataEntitiesIndexRoute
   '/settings/email': typeof AuthedSettingsEmailIndexRoute
+  '/api/dashboards/$id/widgets/$widgetId': typeof ApiDashboardsIdWidgetsWidgetIdRoute
   '/api/reports/$id/filters/$filterLinkId': typeof ApiReportsIdFiltersFilterLinkIdRoute
   '/metadata/entities/$id': typeof AuthedMetadataEntitiesIdIndexRoute
 }
@@ -718,7 +727,7 @@ export interface FileRoutesById {
   '/_authed/reports/$id/viewer': typeof AuthedReportsIdViewerRoute
   '/api/charts/$id/data': typeof ApiChartsIdDataRoute
   '/api/charts/$id/filters': typeof ApiChartsIdFiltersRoute
-  '/api/dashboards/$id/widgets': typeof ApiDashboardsIdWidgetsRoute
+  '/api/dashboards/$id/widgets': typeof ApiDashboardsIdWidgetsRouteWithChildren
   '/api/data-sources/$id/inspect': typeof ApiDataSourcesIdInspectRoute
   '/api/data-sources/$id/usage': typeof ApiDataSourcesIdUsageRoute
   '/api/reports/$id/data': typeof ApiReportsIdDataRoute
@@ -732,6 +741,7 @@ export interface FileRoutesById {
   '/_authed/dashboards/$id/': typeof AuthedDashboardsIdIndexRoute
   '/_authed/metadata/entities/': typeof AuthedMetadataEntitiesIndexRoute
   '/_authed/settings/email/': typeof AuthedSettingsEmailIndexRoute
+  '/api/dashboards/$id/widgets/$widgetId': typeof ApiDashboardsIdWidgetsWidgetIdRoute
   '/api/reports/$id/filters/$filterLinkId': typeof ApiReportsIdFiltersFilterLinkIdRoute
   '/_authed/metadata/entities/$id/': typeof AuthedMetadataEntitiesIdIndexRoute
 }
@@ -814,6 +824,7 @@ export interface FileRouteTypes {
     | '/dashboards/$id/'
     | '/metadata/entities/'
     | '/settings/email/'
+    | '/api/dashboards/$id/widgets/$widgetId'
     | '/api/reports/$id/filters/$filterLinkId'
     | '/metadata/entities/$id/'
   fileRoutesByTo: FileRoutesByTo
@@ -894,6 +905,7 @@ export interface FileRouteTypes {
     | '/dashboards/$id'
     | '/metadata/entities'
     | '/settings/email'
+    | '/api/dashboards/$id/widgets/$widgetId'
     | '/api/reports/$id/filters/$filterLinkId'
     | '/metadata/entities/$id'
   id:
@@ -975,6 +987,7 @@ export interface FileRouteTypes {
     | '/_authed/dashboards/$id/'
     | '/_authed/metadata/entities/'
     | '/_authed/settings/email/'
+    | '/api/dashboards/$id/widgets/$widgetId'
     | '/api/reports/$id/filters/$filterLinkId'
     | '/_authed/metadata/entities/$id/'
   fileRoutesById: FileRoutesById
@@ -1575,6 +1588,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiReportsIdFiltersFilterLinkIdRouteImport
       parentRoute: typeof ApiReportsIdFiltersRoute
     }
+    '/api/dashboards/$id/widgets/$widgetId': {
+      id: '/api/dashboards/$id/widgets/$widgetId'
+      path: '/$widgetId'
+      fullPath: '/api/dashboards/$id/widgets/$widgetId'
+      preLoaderRoute: typeof ApiDashboardsIdWidgetsWidgetIdRouteImport
+      parentRoute: typeof ApiDashboardsIdWidgetsRoute
+    }
   }
 }
 
@@ -1723,12 +1743,26 @@ const ApiChartsIdRouteWithChildren = ApiChartsIdRoute._addFileChildren(
   ApiChartsIdRouteChildren,
 )
 
+interface ApiDashboardsIdWidgetsRouteChildren {
+  ApiDashboardsIdWidgetsWidgetIdRoute: typeof ApiDashboardsIdWidgetsWidgetIdRoute
+}
+
+const ApiDashboardsIdWidgetsRouteChildren: ApiDashboardsIdWidgetsRouteChildren =
+  {
+    ApiDashboardsIdWidgetsWidgetIdRoute: ApiDashboardsIdWidgetsWidgetIdRoute,
+  }
+
+const ApiDashboardsIdWidgetsRouteWithChildren =
+  ApiDashboardsIdWidgetsRoute._addFileChildren(
+    ApiDashboardsIdWidgetsRouteChildren,
+  )
+
 interface ApiDashboardsIdRouteChildren {
-  ApiDashboardsIdWidgetsRoute: typeof ApiDashboardsIdWidgetsRoute
+  ApiDashboardsIdWidgetsRoute: typeof ApiDashboardsIdWidgetsRouteWithChildren
 }
 
 const ApiDashboardsIdRouteChildren: ApiDashboardsIdRouteChildren = {
-  ApiDashboardsIdWidgetsRoute: ApiDashboardsIdWidgetsRoute,
+  ApiDashboardsIdWidgetsRoute: ApiDashboardsIdWidgetsRouteWithChildren,
 }
 
 const ApiDashboardsIdRouteWithChildren = ApiDashboardsIdRoute._addFileChildren(

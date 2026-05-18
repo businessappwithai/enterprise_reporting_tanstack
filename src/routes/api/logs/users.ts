@@ -26,14 +26,8 @@ export const Route = createFileRoute("/api/logs/users")({
 
           const db = getDb();
 
-          // Check if user is admin
-          const userWithRoles = await db
-            .selectFrom("users")
-            .selectAll()
-            .where("id", "=", session.user.id as any)
-            .executeTakeFirst();
-
-          const isAdmin = userWithRoles?.is_admin || false;
+          const sessionRoles: string[] = (session.user as any).roles ?? [];
+          const isAdmin = sessionRoles.some((r: string) => r.toLowerCase() === "admin");
 
           // Only return user list for admins; return empty for non-admins
           if (!isAdmin) {

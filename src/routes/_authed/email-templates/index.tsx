@@ -43,6 +43,7 @@ function EmailTemplatesPage() {
     queryKey: ["email-templates"],
     queryFn: async () => {
       const res = await fetch("/api/email-templates");
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to load email templates`);
       const data = await res.json();
       return data.data?.items || [];
     },

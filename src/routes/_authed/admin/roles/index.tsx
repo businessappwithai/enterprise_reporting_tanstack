@@ -107,6 +107,7 @@ function RolesManagementPage() {
     queryKey: ["roles"],
     queryFn: async () => {
       const res = await fetch("/api/admin/roles");
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to load roles`);
       const data = await res.json();
       return data.data || [];
     },
@@ -118,6 +119,7 @@ function RolesManagementPage() {
     queryFn: async () => {
       if (!selectedRole) return null;
       const res = await fetch(`/api/admin/roles/${selectedRole.id}/permissions`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to load role permissions`);
       const data = await res.json();
       return data.data;
     },
@@ -240,6 +242,7 @@ function RolesManagementPage() {
     // Fetch resource permissions for this role
     try {
       const res = await fetch(`/api/admin/roles/${role.id}/permissions`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       if (data.success && data.data?.resourcePermissions) {
         setResourcePermissions(data.data.resourcePermissions);

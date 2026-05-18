@@ -87,6 +87,7 @@ function PermissionsManagementPage() {
     queryKey: ["admin-permissions"],
     queryFn: async () => {
       const res = await fetch("/api/admin/permissions");
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to load permissions`);
       const data = await res.json();
       return data.data || [];
     },
@@ -97,6 +98,7 @@ function PermissionsManagementPage() {
     queryKey: ["roles"],
     queryFn: async () => {
       const res = await fetch("/api/admin/roles");
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to load roles`);
       const data = await res.json();
       return data.data || [];
     },
@@ -127,6 +129,7 @@ function PermissionsManagementPage() {
 
       try {
         const res = await fetch(endpoint);
+        if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to load resources`);
         const data = await res.json();
         // Handle different response formats:
         // - Paginated: { data: { items: [...] } }

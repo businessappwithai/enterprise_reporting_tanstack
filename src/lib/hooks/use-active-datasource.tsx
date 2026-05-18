@@ -36,6 +36,10 @@ export function ActiveDataSourceProvider({ children }: { children: ReactNode }) 
     try {
       setIsLoading(true);
       const response = await fetch("/api/data-sources/active");
+      if (!response.ok) {
+        setActiveDataSourceState(null);
+        return;
+      }
       const data = await response.json();
 
       if (data.success && data.data.activeDataSource) {
@@ -64,6 +68,7 @@ export function ActiveDataSourceProvider({ children }: { children: ReactNode }) 
         body: JSON.stringify({ dataSourceId: dataSource.id }),
       });
 
+      if (!response.ok) throw new Error(`HTTP ${response.status}: Failed to set active data source`);
       const data = await response.json();
 
       if (data.success) {

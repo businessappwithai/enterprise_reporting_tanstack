@@ -49,7 +49,7 @@ export const Route = createFileRoute('/api/queries/$id')({
 
           const db = getDb()
 
-          // Verify ownership
+          // Verify ownership (admin can edit any query)
           const existingQuery = await db.selectFrom('saved_queries')
             .select('created_by')
             .where('id', '=', params.id)
@@ -59,7 +59,9 @@ export const Route = createFileRoute('/api/queries/$id')({
             return json({ success: false, error: { message: 'Query not found' } }, { status: 404 })
           }
 
-          if (existingQuery.created_by !== session.user.id) {
+          const sessionRoles: string[] = (session.user as any).roles ?? [];
+          const isAdmin = sessionRoles.some((r: string) => r.toLowerCase() === 'admin');
+          if (!isAdmin && existingQuery.created_by !== session.user.id) {
             return json({ success: false, error: { message: 'Unauthorized' } }, { status: 403 })
           }
 
@@ -102,7 +104,9 @@ export const Route = createFileRoute('/api/queries/$id')({
             return json({ success: false, error: { message: 'Query not found' } }, { status: 404 })
           }
 
-          if (existingQuery.created_by !== session.user.id) {
+          const deleteRoles: string[] = (session.user as any).roles ?? [];
+          const isDeleteAdmin = deleteRoles.some((r: string) => r.toLowerCase() === 'admin');
+          if (!isDeleteAdmin && existingQuery.created_by !== session.user.id) {
             return json({ success: false, error: { message: 'Unauthorized' } }, { status: 403 })
           }
 
