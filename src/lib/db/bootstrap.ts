@@ -49,6 +49,7 @@ const SCHEMA_SQL = [
     is_active BOOLEAN DEFAULT true,
     is_editable BOOLEAN DEFAULT false,
     is_inspected BOOLEAN DEFAULT false,
+    last_inspected_at TEXT,
     is_deleted BOOLEAN DEFAULT false,
     deleted_at TEXT,
     deleted_by TEXT REFERENCES users(id),
@@ -459,6 +460,18 @@ export async function bootstrapSchema(pglite: PGlite): Promise<void> {
     } catch (err) {
       // Log but don't crash on individual table errors (e.g. already exists with different schema)
       console.warn("[bootstrap] table create warning:", (err as Error).message?.slice(0, 120));
+    }
+  }
+
+  // Column migrations — idempotent ADD COLUMN IF NOT EXISTS for existing databases
+  const columnMigrations = [
+    "ALTER TABLE data_sources ADD COLUMN IF NOT EXISTS last_inspected_at TEXT",
+  ];
+  for (const sql of columnMigrations) {
+    try {
+      await pglite.query(sql);
+    } catch (err) {
+      console.warn("[bootstrap] column migration warning:", (err as Error).message?.slice(0, 120));
     }
   }
 

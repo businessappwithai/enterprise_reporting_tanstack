@@ -168,10 +168,12 @@ export const Route = createFileRoute("/api/copilotkit")({
 
               const schema = { tables: schemaTablesList };
 
-              // Translate NL to SQL using Ollama
+              // Translate NL to SQL using Ollama with RBAC validation
               const result = await translateNLToSQLViaMastra(
                 nlQuestion,
-                schema as any
+                schema as any,
+                session.user.id,
+                dataSourceId
               );
 
               if (!result) {

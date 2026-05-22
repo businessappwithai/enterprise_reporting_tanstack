@@ -641,7 +641,7 @@ function DataSourcesPage() {
                           </Button>
                         )}
                         {ds.is_active && (
-                          <Link to="/metadata/entities/" search={{ data_source_id: ds.id }}>
+                          <Link to="/metadata/entities" search={{ data_source_id: ds.id }}>
                             <Button
                               variant="ghost"
                               size="sm"

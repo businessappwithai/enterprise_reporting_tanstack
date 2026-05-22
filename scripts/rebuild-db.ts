@@ -85,6 +85,7 @@ const tables = [
     is_active BOOLEAN DEFAULT true,
     is_editable BOOLEAN DEFAULT false,
     is_inspected BOOLEAN DEFAULT false,
+    last_inspected_at TEXT,
     is_deleted BOOLEAN DEFAULT false,
     deleted_at TEXT,
     deleted_by TEXT REFERENCES users(id),

@@ -41,7 +41,7 @@ interface ConnectionFormFieldsProps {
   onChange: (patch: Partial<ConnectionFormState>) => void;
   disableType?: boolean;
   passwordPlaceholder?: string;
-  fileInputRef: React.RefObject<HTMLInputElement>;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
   uploading: boolean;
   onFileSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onDragOver: (e: React.DragEvent) => void;

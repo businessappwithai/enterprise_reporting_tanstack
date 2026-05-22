@@ -4,6 +4,8 @@
  * React Query queries for fetching entity and field metadata.
  */
 
+import { useQuery } from "@tanstack/react-query";
+
 interface ApiResponse<T> {
   success: boolean;
   data?: T;

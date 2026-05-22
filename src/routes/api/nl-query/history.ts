@@ -35,17 +35,19 @@ export const Route = createFileRoute("/api/nl-query/history")({
 
           let query = db
             .selectFrom("nl_query_context")
+            .leftJoin("data_sources", "data_sources.id", "nl_query_context.data_source_id")
             .select([
-              "id",
-              "nl_question",
-              "generated_sql",
-              "data_source_id",
-              "role_name",
-              "user_id",
-              "was_successful",
-              "row_count",
-              "execution_time_ms",
-              "created_at",
+              "nl_query_context.id",
+              "nl_query_context.nl_question",
+              "nl_query_context.generated_sql",
+              "nl_query_context.data_source_id",
+              "data_sources.name as data_source_name",
+              "nl_query_context.role_name",
+              "nl_query_context.user_id",
+              "nl_query_context.was_successful",
+              "nl_query_context.row_count",
+              "nl_query_context.execution_time_ms",
+              "nl_query_context.created_at",
             ])
             .where("was_successful", "=", true)
             .orderBy("created_at", "desc")
@@ -53,15 +55,13 @@ export const Route = createFileRoute("/api/nl-query/history")({
             .offset(offset);
 
           if (dataSourceId) {
-            query = query.where("data_source_id", "=", dataSourceId);
+            query = query.where("nl_query_context.data_source_id", "=", dataSourceId);
           }
 
           if (scope === "role") {
-            // Show all successful queries for the same role (shared history)
-            query = query.where("role_name", "=", primaryRole);
+            query = query.where("nl_query_context.role_name", "=", primaryRole);
           } else {
-            // Personal history: only the current user's queries
-            query = query.where("user_id", "=", session.user.id);
+            query = query.where("nl_query_context.user_id", "=", session.user.id);
           }
 
           const results = await query.execute();

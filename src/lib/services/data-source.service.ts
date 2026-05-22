@@ -34,16 +34,21 @@ export interface DataSourceOutput {
 }
 
 export class DataSourceService {
-  static async list(): Promise<Omit<DataSource, "connection_config">[]> {
+  static async list(options?: { inspectedOnly?: boolean }): Promise<Omit<DataSource, "connection_config">[]> {
     const db = getDb();
-    const dataSources = await db
+    let query = db
       .selectFrom("data_sources")
       .selectAll()
-      .where("is_deleted", "=", false)
-      .orderBy("name", "asc")
-      .execute();
+      .where("is_deleted", "=", false);
 
-    return dataSources.map(({ connection_config: _cc, ...rest }) => rest);
+    if (options?.inspectedOnly) {
+      // biome-ignore lint/suspicious/noExplicitAny: is_inspected not in generated Kysely types
+      query = (query as any).where("is_inspected", "=", true);
+    }
+
+    const dataSources = await (query as any).orderBy("name", "asc").execute();
+    // biome-ignore lint/suspicious/noExplicitAny: returning runtime shape
+    return (dataSources as any[]).map(({ connection_config: _cc, ...rest }) => rest);
   }
 
   static async getById(id: string, includeConfig = false): Promise<DataSourceOutput | null> {
@@ -63,11 +68,11 @@ export class DataSourceService {
       description: dataSource.description,
       client_type: dataSource.client_type,
       is_active: dataSource.is_active,
-      is_editable: dataSource.is_editable,
-      is_deleted: dataSource.is_deleted,
+      is_editable: dataSource.is_editable ?? false,
+      is_deleted: dataSource.is_deleted ?? false,
       created_at: dataSource.created_at,
       updated_at: dataSource.updated_at,
-      created_by: dataSource.created_by,
+      created_by: dataSource.created_by ?? "",
     };
 
     if (includeConfig) {
@@ -147,7 +152,7 @@ export class DataSourceService {
 
     const existing = await db
       .selectFrom("data_sources")
-      .select("id", "created_by")
+      .select(["id", "created_by"])
       .where("id", "=", id)
       .where("is_deleted", "=", false)
       .executeTakeFirst();

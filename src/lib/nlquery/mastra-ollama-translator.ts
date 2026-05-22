@@ -6,6 +6,7 @@
  */
 
 import type { SchemaMetadata } from "@/lib/validation/translation-validator";
+import { validateSQLRBACAccess } from "@/lib/nlquery/sql-ast-validator";
 
 /**
  * Enhanced schema metadata with LLM instructions
@@ -22,11 +23,14 @@ export interface EnhancedSchemaMetadata extends SchemaMetadata {
  * 1. Route to Ollama for SQL generation with complete schema context
  * 2. Include field-level instructions for better accuracy
  * 3. Validate generated SQL
- * 4. Retry with refined prompts if needed
+ * 4. Check RBAC permissions using AST parser
+ * 5. Retry with refined prompts if needed
  */
 export async function translateNLToSQLViaMastra(
   nlQuestion: string,
-  schema: EnhancedSchemaMetadata
+  schema: EnhancedSchemaMetadata,
+  userId?: string,
+  dataSourceId?: string
 ): Promise<{ sql: string; explanation: string; warnings?: string[] } | null> {
   const ollamaUrl = process.env.OLLAMA_URL || "http://localhost:11434";
   const ollamaModel = process.env.OLLAMA_MODEL || "sqlcoder:7b";
@@ -34,7 +38,7 @@ export async function translateNLToSQLViaMastra(
   try {
     // Check if Ollama is available
     const tagsResponse = await fetch(`${ollamaUrl}/api/tags`, {
-      timeout: 5000,
+      signal: AbortSignal.timeout(5000),
     }).catch(() => null);
 
     if (!tagsResponse?.ok) {
@@ -74,6 +78,22 @@ export async function translateNLToSQLViaMastra(
         return null;
       }
 
+      // Also validate RBAC on refined SQL if user context provided
+      if (userId && dataSourceId) {
+        const rbacValidation = await validateSQLRBACAccess(userId, dataSourceId, refinedSQL);
+        if (!rbacValidation.accessAllowed) {
+          console.warn("[Mastra] RBAC validation failed for refined SQL:", rbacValidation.error);
+          return {
+            sql: refinedSQL,
+            explanation: `Refined SQL after validation: ${validationResult.errors.join(", ")}`,
+            warnings: [
+              ...["SQL was refined due to initial validation errors"],
+              ...(rbacValidation.warnings || []),
+            ],
+          };
+        }
+      }
+
       return {
         sql: refinedSQL,
         explanation: `Refined SQL after validation: ${validationResult.errors.join(", ")}`,
@@ -81,9 +101,22 @@ export async function translateNLToSQLViaMastra(
       };
     }
 
+    // Step 3: Validate RBAC access if user context provided
+    const warnings: string[] = [];
+    if (userId && dataSourceId) {
+      const rbacValidation = await validateSQLRBACAccess(userId, dataSourceId, initialSQL);
+      if (!rbacValidation.accessAllowed) {
+        console.warn("[Mastra] RBAC validation failed:", rbacValidation.error);
+        if (rbacValidation.warnings) {
+          warnings.push(...rbacValidation.warnings);
+        }
+      }
+    }
+
     return {
       sql: initialSQL,
       explanation: "SQL generated via Ollama + Mastra.ai workflow",
+      warnings: warnings.length > 0 ? warnings : undefined,
     };
   } catch (error) {
     console.error("[Mastra] Ollama translation failed:", error);
@@ -301,7 +334,9 @@ function buildSchemaContext(schema: EnhancedSchemaMetadata): string {
 export async function isOllamaAvailable(): Promise<boolean> {
   const ollamaUrl = process.env.OLLAMA_URL || "http://localhost:11434";
   try {
-    const response = await fetch(`${ollamaUrl}/api/tags`, { timeout: 5000 });
+    const response = await fetch(`${ollamaUrl}/api/tags`, {
+      signal: AbortSignal.timeout(5000),
+    });
     return response.ok;
   } catch (error) {
     console.debug("[Mastra] Ollama not available:", error);

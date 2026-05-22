@@ -75,7 +75,11 @@ export const Route = createFileRoute("/api/data-sources/$id/inspect")({
               .select("id")
               .where("data_source_id", "=", params.id)
               .where("entity_name", "=", entity.name)
-              .where("entity_schema", "is", entity.schema || null)
+              .where((eb) =>
+                entity.schema
+                  ? eb("entity_schema", "=", entity.schema)
+                  : eb("entity_schema", "is", null)
+              )
               .executeTakeFirst();
 
             if (!existing) {
@@ -127,13 +131,15 @@ export const Route = createFileRoute("/api/data-sources/$id/inspect")({
             }
           }
 
-          // Mark as inspected
+          // Mark as inspected with timestamp
+          const inspectedAt = new Date().toISOString();
           await db
             .updateTable("data_sources")
             .set({
               is_inspected: true,
-              updated_at: now,
-            })
+              last_inspected_at: inspectedAt,
+              updated_at: inspectedAt,
+            } as any)
             .where("id", "=", params.id)
             .execute();
 

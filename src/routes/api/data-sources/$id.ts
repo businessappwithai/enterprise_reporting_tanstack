@@ -13,7 +13,7 @@ async function getSession(request: Request) {
   return verifySession(token);
 }
 
-function checkPermission(session: any, createdBy: string): boolean {
+function checkPermission(session: any, createdBy: string | null): boolean {
   const userRoles: string[] = session.user.roles || [];
   const isAdmin = userRoles.some((r) => r.toLowerCase() === "admin");
   const isOwner = createdBy === session.user.id;
@@ -41,7 +41,7 @@ export const Route = createFileRoute("/api/data-sources/$id")({
 
           logAudit({
             userId: session.user.id,
-            action: "read",
+            action: "view",
             resourceType: "data_source",
             resourceId: params.id,
             details: { operation: "getDataSource", name: dataSource.name },
@@ -73,7 +73,7 @@ export const Route = createFileRoute("/api/data-sources/$id")({
           const db = getDb();
           const existing = await db
             .selectFrom("data_sources")
-            .select("id", "created_by")
+            .select(["id", "created_by"])
             .where("id", "=", params.id)
             .where("is_deleted", "=", false)
             .executeTakeFirst();
@@ -120,7 +120,7 @@ export const Route = createFileRoute("/api/data-sources/$id")({
           const db = getDb();
           const existing = await db
             .selectFrom("data_sources")
-            .select("id", "created_by")
+            .select(["id", "created_by"])
             .where("id", "=", params.id)
             .where("is_deleted", "=", false)
             .executeTakeFirst();
@@ -167,7 +167,7 @@ export const Route = createFileRoute("/api/data-sources/$id")({
           const db = getDb();
           const existing = await db
             .selectFrom("data_sources")
-            .select("id", "created_by")
+            .select(["id", "created_by"])
             .where("id", "=", params.id)
             .where("is_deleted", "=", false)
             .executeTakeFirst();

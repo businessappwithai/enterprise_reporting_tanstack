@@ -32,7 +32,7 @@ export function AppShell({ children, user }: AppShellProps) {
              style={{ opacity: mobileMenuOpen ? 1 : 0, pointerEvents: mobileMenuOpen ? 'auto' : 'none' }}
              onClick={() => setMobileMenuOpen(false)} />
 
-        <div className="lg:hidden fixed left-0 top-0 h-screen z-50 transition-transform duration-300"
+        <div className="lg:hidden fixed left-0 top-0 h-screen z-50 w-64 transition-transform duration-300"
              style={{ transform: mobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)' }}>
           <Sidebar collapsed={false} onCollapse={() => setMobileMenuOpen(false)} />
         </div>

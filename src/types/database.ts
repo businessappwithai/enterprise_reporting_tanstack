@@ -34,8 +34,10 @@ export interface DataSource {
   client_type: DatabaseClientType;
   connection_config: string;
   is_active: boolean;
-  is_editable?: boolean; // Allow CRUD operations on entity data
-  is_inspected?: boolean; // Whether schema has been inspected
+  is_deleted?: boolean | null;
+  is_editable?: boolean | null;
+  is_inspected?: boolean | null;
+  last_inspected_at?: string | null;
   created_by?: string;
   created_at: string;
   updated_at: string;

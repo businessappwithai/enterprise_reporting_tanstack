@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Database, Settings } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { BatchFieldEditForm } from "@/components/metadata/forms/BatchFieldEditForm";
 import { EntityMetadataForm } from "@/components/metadata/forms/EntityMetadataForm";
 
@@ -106,14 +107,16 @@ function EntityDetailPage() {
       // Return context with the previous value
       return { previousEntity };
     },
+    onSuccess: () => {
+      toast.success("Entity metadata saved successfully");
+    },
     onError: (_err, _newData, context) => {
-      // Rollback to the previous value
       if (context?.previousEntity) {
         queryClient.setQueryData(["metadata-entity", entityId], context.previousEntity);
       }
+      toast.error(_err instanceof Error ? _err.message : "Failed to save entity metadata");
     },
     onSettled: () => {
-      // Refetch to ensure server state is correct
       queryClient.invalidateQueries({ queryKey: ["metadata-entity", entityId] });
       queryClient.invalidateQueries({ queryKey: ["metadata-entities"] });
     },
@@ -154,14 +157,16 @@ function EntityDetailPage() {
       // Return context with the previous value
       return { previousFields };
     },
+    onSuccess: (_data, fields) => {
+      toast.success(`${fields.length} field${fields.length !== 1 ? "s" : ""} saved successfully`);
+    },
     onError: (_err, _newFields, context) => {
-      // Rollback to the previous value
       if (context?.previousFields) {
         queryClient.setQueryData(["metadata-entity-fields", entityId], context.previousFields);
       }
+      toast.error(_err instanceof Error ? _err.message : "Failed to save field changes");
     },
     onSettled: () => {
-      // Refetch to ensure server state is correct
       queryClient.invalidateQueries({ queryKey: ["metadata-entity-fields", entityId] });
       queryClient.invalidateQueries({ queryKey: ["metadata-entity", entityId] });
     },

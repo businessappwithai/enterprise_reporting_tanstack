@@ -25,11 +25,13 @@ export const Route = createFileRoute("/api/data-sources/")({
             );
           }
 
-          const dataSources = await DataSourceService.list();
+          const url = new URL(request.url);
+          const inspectedOnly = url.searchParams.get("inspected") === "true";
+          const dataSources = await DataSourceService.list({ inspectedOnly });
 
           logAudit({
             userId: session.user.id,
-            action: "read",
+            action: "view",
             resourceType: "data_source",
             details: { operation: "listDataSources", count: dataSources.length },
           }).catch((err) => {

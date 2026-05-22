@@ -8,7 +8,7 @@ import {
   type SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { useVirtualizer } from "@tanstack/react-virtual";
+import { type Virtualizer, useVirtualizer } from "@tanstack/react-virtual";
 import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -29,14 +29,18 @@ interface QueryResultsProps {
   isLoading?: boolean;
   error?: string | null;
   onPageChange?: (offset: number) => void;
+  /** Called when the user clicks/taps a drillable cell */
+  onCellClick?: (row: Record<string, unknown>, columnName: string) => void;
+  /** Set of column names that support drill-down (cursor + click) */
+  drillableColumns?: Set<string>;
 }
 
 const ROW_HEIGHT = 40; // Height of each row in pixels
 
-export function QueryResults({ result, isLoading, error, onPageChange }: QueryResultsProps) {
+export function QueryResults({ result, isLoading, error, onPageChange, onCellClick, drillableColumns }: QueryResultsProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const tableContainerRef = useRef<HTMLDivElement>(null);
-  const virtualizerRef = useRef<ReturnType<typeof useVirtualizer> | null>(null);
+  const virtualizerRef = useRef<Virtualizer<HTMLDivElement, Element> | null>(null);
   const uiSettings = useUISettings();
 
   // MEMORY LEAK FIX: Cleanup on unmount
@@ -105,7 +109,7 @@ export function QueryResults({ result, isLoading, error, onPageChange }: QueryRe
   // Store virtualizer reference for cleanup
   virtualizerRef.current = virtualizer;
 
-  const { pagination } = result;
+  const pagination = result?.pagination;
   const currentPage = pagination ? Math.floor(pagination.offset / pagination.limit) + 1 : 1;
   const hasNextPage = pagination?.hasMore || false;
   const hasPrevPage = pagination ? pagination.offset > 0 : false;
@@ -158,99 +162,95 @@ export function QueryResults({ result, isLoading, error, onPageChange }: QueryRe
     ? Math.ceil((pagination.totalRows || result?.rowCount || 0) / pagination.limit)
     : Math.ceil((result?.rowCount || 0) / 100);
 
+  // Minimum table width so it scrolls horizontally on small screens rather than wrapping
+  const minTableWidth = Math.max(columns.length * 120, 480);
+
   return (
     <div className="space-y-2 flex flex-col h-full">
-      {/* Performance Metrics Header - Above Column Headers */}
-      <div className="bg-muted/50 rounded-lg p-3 flex-shrink-0">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          {/* Left Side: Row Counts */}
-          <div className="flex items-center gap-3">
-            <Badge variant="secondary" className="text-sm py-1">
-              {pagination?.totalRows || result.rowCount} total row
-              {(pagination?.totalRows || result.rowCount) !== 1 ? "s" : ""}
-            </Badge>
-            <Badge variant="outline" className="text-sm py-1">
-              {rowModel.rows.length} row{rowModel.rows.length !== 1 ? "s" : ""} displayed
+      {/* Performance Metrics Header */}
+      <div className="bg-muted/50 rounded-lg p-2 sm:p-3 flex-shrink-0">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+          {/* Row counts */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <Badge variant="secondary" className="text-xs sm:text-sm py-0.5 sm:py-1">
+              {pagination?.totalRows || result.rowCount} row{(pagination?.totalRows || result.rowCount) !== 1 ? "s" : ""}
             </Badge>
             {pagination?.serverSide && (
-              <Badge
-                variant="outline"
-                className="text-xs py-1"
-                title="Data fetched from server in pages"
-              >
-                Server-Side Pagination
+              <Badge variant="outline" className="text-xs py-0.5" title="Data fetched from server in pages">
+                Paginated
               </Badge>
             )}
           </div>
 
-          {/* Center: Performance Metrics */}
-          <div className="flex items-center gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold">Execution Time:</span>
-              <span
-                className={
-                  result.executionTime > 1000
-                    ? "text-yellow-600 dark:text-yellow-400"
-                    : "text-green-600 dark:text-green-400"
-                }
-              >
-                {result.executionTime}ms
-              </span>
-            </div>
-            {pagination?.limit && (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <span>Page Size:</span>
-                <span className="font-medium">{pagination.limit} rows</span>
-              </div>
-            )}
+          {/* Execution time */}
+          <div className="flex items-center gap-1 text-xs sm:text-sm">
+            <span className="text-muted-foreground">Time:</span>
+            <span
+              className={
+                result.executionTime > 1000
+                  ? "text-yellow-600 dark:text-yellow-400 font-medium"
+                  : "text-green-600 dark:text-green-400 font-medium"
+              }
+            >
+              {result.executionTime}ms
+            </span>
           </div>
 
-          {/* Right Side: Pagination Controls */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
-              Page {currentPage} of {totalPages}
+          {/* Pagination controls */}
+          <div className="flex items-center gap-1.5 ml-auto">
+            <span className="text-xs text-muted-foreground whitespace-nowrap">
+              {currentPage}/{totalPages}
             </span>
             <Button
               variant="outline"
               size="sm"
               onClick={handlePreviousPage}
               disabled={!hasPrevPage}
-              className="h-8 px-2"
+              className="h-7 w-7 p-0"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-3.5 w-3.5" />
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={handleNextPage}
               disabled={!hasNextPage}
-              className="h-8 px-2"
+              className="h-7 w-7 p-0"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>
 
-        {/* Warnings/Info */}
         {result.truncated && (
-          <div className="mt-2">
-            <Badge variant="warning" className="text-xs">
-              Results truncated at limit
-            </Badge>
+          <div className="mt-1.5">
+            <Badge variant="warning" className="text-xs">Results truncated at limit</Badge>
           </div>
         )}
       </div>
 
-      {/* Virtualized Table with Fixed Header */}
+      {/* Table — horizontally scrollable on mobile */}
       <div className="flex flex-col flex-1 min-h-0 rounded-md border overflow-hidden">
-        {/* Fixed Header */}
-        <div className="flex-shrink-0 overflow-hidden bg-background">
-          <Table style={{ borderCollapse: "separate", borderSpacing: "0", width: "100%" }}>
-            <TableHeader className="bg-background shadow-sm">
+        {/* Fixed Header — synced scroll via JS not needed; we use a single overflow-x container */}
+        <div
+          className="flex-shrink-0 bg-background border-b overflow-x-auto"
+          style={{ scrollbarWidth: "none" }}
+          ref={(el) => {
+            // Sync header scroll with body scroll
+            if (!el) return;
+            const body = el.parentElement?.querySelector<HTMLDivElement>(".table-body-scroll");
+            if (!body) return;
+            const syncHeader = () => { el.scrollLeft = body.scrollLeft; };
+            body.addEventListener("scroll", syncHeader, { passive: true });
+            return () => body.removeEventListener("scroll", syncHeader);
+          }}
+        >
+          <Table style={{ borderCollapse: "separate", borderSpacing: "0", minWidth: `${minTableWidth}px` }}>
+            <TableHeader className="bg-background">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id} className="whitespace-nowrap bg-background h-10">
+                    <TableHead key={header.id} className="whitespace-nowrap bg-background h-9 text-xs sm:text-sm">
                       {header.isPlaceholder
                         ? null
                         : flexRender(header.column.columnDef.header, header.getContext())}
@@ -263,9 +263,9 @@ export function QueryResults({ result, isLoading, error, onPageChange }: QueryRe
         </div>
 
         {/* Scrollable Body */}
-        <div ref={tableContainerRef} className="flex-1 overflow-auto min-h-0">
+        <div ref={tableContainerRef} className="table-body-scroll flex-1 overflow-auto min-h-0">
           {rowModel.rows.length === 0 ? (
-            <Table style={{ borderCollapse: "separate", borderSpacing: "0", width: "100%" }}>
+            <Table style={{ borderCollapse: "separate", borderSpacing: "0", minWidth: `${minTableWidth}px` }}>
               <TableBody>
                 <TableRow>
                   <TableCell colSpan={columns.length} className="text-center text-muted-foreground py-8">
@@ -278,7 +278,7 @@ export function QueryResults({ result, isLoading, error, onPageChange }: QueryRe
             <div
               style={{
                 height: `${virtualizer.getTotalSize()}px`,
-                width: "100%",
+                minWidth: `${minTableWidth}px`,
                 position: "relative",
               }}
             >
@@ -288,11 +288,12 @@ export function QueryResults({ result, isLoading, error, onPageChange }: QueryRe
                   top: 0,
                   left: 0,
                   width: "100%",
+                  minWidth: `${minTableWidth}px`,
                   borderCollapse: "separate",
                   borderSpacing: "0",
                   transform: `translateY(${virtualizer.getVirtualItems()[0]?.start ?? 0}px)`,
                 }}
-                className="w-full caption-bottom text-sm"
+                className="caption-bottom text-xs sm:text-sm"
               >
                 <tbody>
                   {virtualizer.getVirtualItems().map((virtualRow) => {
@@ -308,17 +309,21 @@ export function QueryResults({ result, isLoading, error, onPageChange }: QueryRe
                           backgroundColor: isEven ? "transparent" : uiSettings.tableRowStripeColor,
                         }}
                       >
-                        {row.getVisibleCells().map((cell) => (
-                          <TableCell
-                            key={cell.id}
-                            className="font-mono text-sm border-b py-2"
-                            style={{
-                              boxSizing: "border-box",
-                            }}
-                          >
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </TableCell>
-                        ))}
+                        {row.getVisibleCells().map((cell) => {
+                          const colName = cell.column.id;
+                          const isDrillable = drillableColumns?.has(colName) ?? false;
+                          return (
+                            <TableCell
+                              key={cell.id}
+                              className={`font-mono text-xs sm:text-sm border-b py-1.5 sm:py-2 whitespace-nowrap${isDrillable ? " cursor-pointer hover:bg-accent/60 hover:underline decoration-dotted underline-offset-2 select-none active:bg-accent" : ""}`}
+                              style={{ boxSizing: "border-box" }}
+                              onClick={isDrillable && onCellClick ? () => onCellClick(row.original, colName) : undefined}
+                              title={isDrillable ? "Tap to view record" : undefined}
+                            >
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </TableCell>
+                          );
+                        })}
                       </TableRow>
                     );
                   })}

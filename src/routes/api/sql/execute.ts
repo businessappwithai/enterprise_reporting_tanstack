@@ -192,9 +192,23 @@ export const Route = createFileRoute("/api/sql/execute")({
           const executionTime = Date.now() - executionStartTime;
 
           const rows = rawRows as Record<string, unknown>[];
+
+          // pglite returns all values as strings from the wire protocol;
+          // infer numeric columns by checking if every non-null value in
+          // the first row (and a few sample rows) looks like a finite number.
+          function inferType(colName: string): string {
+            const samples = rows.slice(0, 5);
+            const nonNull = samples.map((r) => r[colName]).filter((v) => v !== null && v !== undefined && v !== "");
+            if (nonNull.length === 0) return "string";
+            const allNumeric = nonNull.every((v) => typeof v === "number" || (typeof v === "string" && !Number.isNaN(Number(v)) && v.trim() !== ""));
+            if (allNumeric) return "number";
+            if (nonNull.every((v) => typeof v === "boolean")) return "boolean";
+            return "string";
+          }
+
           const columns: { name: string; type: string }[] =
             rows.length > 0
-              ? Object.keys(rows[0]).map((name) => ({ name, type: typeof rows[0][name] }))
+              ? Object.keys(rows[0]).map((name) => ({ name, type: inferType(name) }))
               : [];
 
           logger.info("SQL query executed successfully", {

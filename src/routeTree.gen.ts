@@ -46,6 +46,7 @@ import { Route as ApiSqlValidateRouteImport } from './routes/api/sql/validate'
 import { Route as ApiSqlExecuteRouteImport } from './routes/api/sql/execute'
 import { Route as ApiReportsIdRouteImport } from './routes/api/reports/$id'
 import { Route as ApiQueriesIdRouteImport } from './routes/api/queries/$id'
+import { Route as ApiNlQueryVoiceRouteImport } from './routes/api/nl-query/voice'
 import { Route as ApiNlQuerySchemaRouteImport } from './routes/api/nl-query/schema'
 import { Route as ApiNlQueryHistoryRouteImport } from './routes/api/nl-query/history'
 import { Route as ApiNlQueryExecuteRouteImport } from './routes/api/nl-query/execute'
@@ -76,8 +77,10 @@ import { Route as ApiSqlSchemaDataSourceIdRouteImport } from './routes/api/sql/s
 import { Route as ApiReportsIdFiltersRouteImport } from './routes/api/reports/$id/filters'
 import { Route as ApiReportsIdExportRouteImport } from './routes/api/reports/$id/export'
 import { Route as ApiReportsIdDataRouteImport } from './routes/api/reports/$id/data'
+import { Route as ApiMetadataEntitiesIdRouteImport } from './routes/api/metadata/entities/$id'
 import { Route as ApiDataSourcesIdUsageRouteImport } from './routes/api/data-sources/$id/usage'
 import { Route as ApiDataSourcesIdInspectRouteImport } from './routes/api/data-sources/$id/inspect'
+import { Route as ApiDataSourcesIdEntitiesRouteImport } from './routes/api/data-sources/$id/entities'
 import { Route as ApiDashboardsIdWidgetsRouteImport } from './routes/api/dashboards/$id/widgets'
 import { Route as ApiChartsIdFiltersRouteImport } from './routes/api/charts/$id/filters'
 import { Route as ApiChartsIdDataRouteImport } from './routes/api/charts/$id/data'
@@ -88,7 +91,10 @@ import { Route as AuthedChartsViewerIdRouteImport } from './routes/_authed/chart
 import { Route as AuthedChartsEditorIdRouteImport } from './routes/_authed/charts/editor/$id'
 import { Route as AuthedMetadataEntitiesIdIndexRouteImport } from './routes/_authed/metadata/entities/$id/index'
 import { Route as ApiReportsIdFiltersFilterLinkIdRouteImport } from './routes/api/reports/$id/filters/$filterLinkId'
+import { Route as ApiMetadataEntitiesIdFieldsRouteImport } from './routes/api/metadata/entities/$id/fields'
 import { Route as ApiDashboardsIdWidgetsWidgetIdRouteImport } from './routes/api/dashboards/$id/widgets/$widgetId'
+import { Route as ApiMetadataEntitiesIdFieldsBatchRouteImport } from './routes/api/metadata/entities/$id/fields/batch'
+import { Route as ApiMetadataEntitiesIdFieldsFieldIdRouteImport } from './routes/api/metadata/entities/$id/fields/$fieldId'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -275,6 +281,11 @@ const ApiQueriesIdRoute = ApiQueriesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ApiQueriesRoute,
 } as any)
+const ApiNlQueryVoiceRoute = ApiNlQueryVoiceRouteImport.update({
+  id: '/api/nl-query/voice',
+  path: '/api/nl-query/voice',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiNlQuerySchemaRoute = ApiNlQuerySchemaRouteImport.update({
   id: '/api/nl-query/schema',
   path: '/api/nl-query/schema',
@@ -430,6 +441,11 @@ const ApiReportsIdDataRoute = ApiReportsIdDataRouteImport.update({
   path: '/data',
   getParentRoute: () => ApiReportsIdRoute,
 } as any)
+const ApiMetadataEntitiesIdRoute = ApiMetadataEntitiesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiMetadataEntitiesRoute,
+} as any)
 const ApiDataSourcesIdUsageRoute = ApiDataSourcesIdUsageRouteImport.update({
   id: '/usage',
   path: '/usage',
@@ -440,6 +456,12 @@ const ApiDataSourcesIdInspectRoute = ApiDataSourcesIdInspectRouteImport.update({
   path: '/inspect',
   getParentRoute: () => ApiDataSourcesIdRoute,
 } as any)
+const ApiDataSourcesIdEntitiesRoute =
+  ApiDataSourcesIdEntitiesRouteImport.update({
+    id: '/entities',
+    path: '/entities',
+    getParentRoute: () => ApiDataSourcesIdRoute,
+  } as any)
 const ApiDashboardsIdWidgetsRoute = ApiDashboardsIdWidgetsRouteImport.update({
   id: '/widgets',
   path: '/widgets',
@@ -493,11 +515,29 @@ const ApiReportsIdFiltersFilterLinkIdRoute =
     path: '/$filterLinkId',
     getParentRoute: () => ApiReportsIdFiltersRoute,
   } as any)
+const ApiMetadataEntitiesIdFieldsRoute =
+  ApiMetadataEntitiesIdFieldsRouteImport.update({
+    id: '/fields',
+    path: '/fields',
+    getParentRoute: () => ApiMetadataEntitiesIdRoute,
+  } as any)
 const ApiDashboardsIdWidgetsWidgetIdRoute =
   ApiDashboardsIdWidgetsWidgetIdRouteImport.update({
     id: '/$widgetId',
     path: '/$widgetId',
     getParentRoute: () => ApiDashboardsIdWidgetsRoute,
+  } as any)
+const ApiMetadataEntitiesIdFieldsBatchRoute =
+  ApiMetadataEntitiesIdFieldsBatchRouteImport.update({
+    id: '/batch',
+    path: '/batch',
+    getParentRoute: () => ApiMetadataEntitiesIdFieldsRoute,
+  } as any)
+const ApiMetadataEntitiesIdFieldsFieldIdRoute =
+  ApiMetadataEntitiesIdFieldsFieldIdRouteImport.update({
+    id: '/$fieldId',
+    path: '/$fieldId',
+    getParentRoute: () => ApiMetadataEntitiesIdFieldsRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -530,10 +570,11 @@ export interface FileRoutesByFullPath {
   '/api/logs/components': typeof ApiLogsComponentsRoute
   '/api/logs/search': typeof ApiLogsSearchRoute
   '/api/logs/users': typeof ApiLogsUsersRoute
-  '/api/metadata/entities': typeof ApiMetadataEntitiesRoute
+  '/api/metadata/entities': typeof ApiMetadataEntitiesRouteWithChildren
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
   '/api/nl-query/history': typeof ApiNlQueryHistoryRoute
   '/api/nl-query/schema': typeof ApiNlQuerySchemaRoute
+  '/api/nl-query/voice': typeof ApiNlQueryVoiceRoute
   '/api/queries/$id': typeof ApiQueriesIdRoute
   '/api/reports/$id': typeof ApiReportsIdRouteWithChildren
   '/api/sql/execute': typeof ApiSqlExecuteRoute
@@ -564,8 +605,10 @@ export interface FileRoutesByFullPath {
   '/api/charts/$id/data': typeof ApiChartsIdDataRoute
   '/api/charts/$id/filters': typeof ApiChartsIdFiltersRoute
   '/api/dashboards/$id/widgets': typeof ApiDashboardsIdWidgetsRouteWithChildren
+  '/api/data-sources/$id/entities': typeof ApiDataSourcesIdEntitiesRoute
   '/api/data-sources/$id/inspect': typeof ApiDataSourcesIdInspectRoute
   '/api/data-sources/$id/usage': typeof ApiDataSourcesIdUsageRoute
+  '/api/metadata/entities/$id': typeof ApiMetadataEntitiesIdRouteWithChildren
   '/api/reports/$id/data': typeof ApiReportsIdDataRoute
   '/api/reports/$id/export': typeof ApiReportsIdExportRoute
   '/api/reports/$id/filters': typeof ApiReportsIdFiltersRouteWithChildren
@@ -578,8 +621,11 @@ export interface FileRoutesByFullPath {
   '/metadata/entities/': typeof AuthedMetadataEntitiesIndexRoute
   '/settings/email/': typeof AuthedSettingsEmailIndexRoute
   '/api/dashboards/$id/widgets/$widgetId': typeof ApiDashboardsIdWidgetsWidgetIdRoute
+  '/api/metadata/entities/$id/fields': typeof ApiMetadataEntitiesIdFieldsRouteWithChildren
   '/api/reports/$id/filters/$filterLinkId': typeof ApiReportsIdFiltersFilterLinkIdRoute
   '/metadata/entities/$id/': typeof AuthedMetadataEntitiesIdIndexRoute
+  '/api/metadata/entities/$id/fields/$fieldId': typeof ApiMetadataEntitiesIdFieldsFieldIdRoute
+  '/api/metadata/entities/$id/fields/batch': typeof ApiMetadataEntitiesIdFieldsBatchRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -611,10 +657,11 @@ export interface FileRoutesByTo {
   '/api/logs/components': typeof ApiLogsComponentsRoute
   '/api/logs/search': typeof ApiLogsSearchRoute
   '/api/logs/users': typeof ApiLogsUsersRoute
-  '/api/metadata/entities': typeof ApiMetadataEntitiesRoute
+  '/api/metadata/entities': typeof ApiMetadataEntitiesRouteWithChildren
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
   '/api/nl-query/history': typeof ApiNlQueryHistoryRoute
   '/api/nl-query/schema': typeof ApiNlQuerySchemaRoute
+  '/api/nl-query/voice': typeof ApiNlQueryVoiceRoute
   '/api/queries/$id': typeof ApiQueriesIdRoute
   '/api/reports/$id': typeof ApiReportsIdRouteWithChildren
   '/api/sql/execute': typeof ApiSqlExecuteRoute
@@ -645,8 +692,10 @@ export interface FileRoutesByTo {
   '/api/charts/$id/data': typeof ApiChartsIdDataRoute
   '/api/charts/$id/filters': typeof ApiChartsIdFiltersRoute
   '/api/dashboards/$id/widgets': typeof ApiDashboardsIdWidgetsRouteWithChildren
+  '/api/data-sources/$id/entities': typeof ApiDataSourcesIdEntitiesRoute
   '/api/data-sources/$id/inspect': typeof ApiDataSourcesIdInspectRoute
   '/api/data-sources/$id/usage': typeof ApiDataSourcesIdUsageRoute
+  '/api/metadata/entities/$id': typeof ApiMetadataEntitiesIdRouteWithChildren
   '/api/reports/$id/data': typeof ApiReportsIdDataRoute
   '/api/reports/$id/export': typeof ApiReportsIdExportRoute
   '/api/reports/$id/filters': typeof ApiReportsIdFiltersRouteWithChildren
@@ -659,8 +708,11 @@ export interface FileRoutesByTo {
   '/metadata/entities': typeof AuthedMetadataEntitiesIndexRoute
   '/settings/email': typeof AuthedSettingsEmailIndexRoute
   '/api/dashboards/$id/widgets/$widgetId': typeof ApiDashboardsIdWidgetsWidgetIdRoute
+  '/api/metadata/entities/$id/fields': typeof ApiMetadataEntitiesIdFieldsRouteWithChildren
   '/api/reports/$id/filters/$filterLinkId': typeof ApiReportsIdFiltersFilterLinkIdRoute
   '/metadata/entities/$id': typeof AuthedMetadataEntitiesIdIndexRoute
+  '/api/metadata/entities/$id/fields/$fieldId': typeof ApiMetadataEntitiesIdFieldsFieldIdRoute
+  '/api/metadata/entities/$id/fields/batch': typeof ApiMetadataEntitiesIdFieldsBatchRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -694,10 +746,11 @@ export interface FileRoutesById {
   '/api/logs/components': typeof ApiLogsComponentsRoute
   '/api/logs/search': typeof ApiLogsSearchRoute
   '/api/logs/users': typeof ApiLogsUsersRoute
-  '/api/metadata/entities': typeof ApiMetadataEntitiesRoute
+  '/api/metadata/entities': typeof ApiMetadataEntitiesRouteWithChildren
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
   '/api/nl-query/history': typeof ApiNlQueryHistoryRoute
   '/api/nl-query/schema': typeof ApiNlQuerySchemaRoute
+  '/api/nl-query/voice': typeof ApiNlQueryVoiceRoute
   '/api/queries/$id': typeof ApiQueriesIdRoute
   '/api/reports/$id': typeof ApiReportsIdRouteWithChildren
   '/api/sql/execute': typeof ApiSqlExecuteRoute
@@ -728,8 +781,10 @@ export interface FileRoutesById {
   '/api/charts/$id/data': typeof ApiChartsIdDataRoute
   '/api/charts/$id/filters': typeof ApiChartsIdFiltersRoute
   '/api/dashboards/$id/widgets': typeof ApiDashboardsIdWidgetsRouteWithChildren
+  '/api/data-sources/$id/entities': typeof ApiDataSourcesIdEntitiesRoute
   '/api/data-sources/$id/inspect': typeof ApiDataSourcesIdInspectRoute
   '/api/data-sources/$id/usage': typeof ApiDataSourcesIdUsageRoute
+  '/api/metadata/entities/$id': typeof ApiMetadataEntitiesIdRouteWithChildren
   '/api/reports/$id/data': typeof ApiReportsIdDataRoute
   '/api/reports/$id/export': typeof ApiReportsIdExportRoute
   '/api/reports/$id/filters': typeof ApiReportsIdFiltersRouteWithChildren
@@ -742,8 +797,11 @@ export interface FileRoutesById {
   '/_authed/metadata/entities/': typeof AuthedMetadataEntitiesIndexRoute
   '/_authed/settings/email/': typeof AuthedSettingsEmailIndexRoute
   '/api/dashboards/$id/widgets/$widgetId': typeof ApiDashboardsIdWidgetsWidgetIdRoute
+  '/api/metadata/entities/$id/fields': typeof ApiMetadataEntitiesIdFieldsRouteWithChildren
   '/api/reports/$id/filters/$filterLinkId': typeof ApiReportsIdFiltersFilterLinkIdRoute
   '/_authed/metadata/entities/$id/': typeof AuthedMetadataEntitiesIdIndexRoute
+  '/api/metadata/entities/$id/fields/$fieldId': typeof ApiMetadataEntitiesIdFieldsFieldIdRoute
+  '/api/metadata/entities/$id/fields/batch': typeof ApiMetadataEntitiesIdFieldsBatchRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -781,6 +839,7 @@ export interface FileRouteTypes {
     | '/api/nl-query/execute'
     | '/api/nl-query/history'
     | '/api/nl-query/schema'
+    | '/api/nl-query/voice'
     | '/api/queries/$id'
     | '/api/reports/$id'
     | '/api/sql/execute'
@@ -811,8 +870,10 @@ export interface FileRouteTypes {
     | '/api/charts/$id/data'
     | '/api/charts/$id/filters'
     | '/api/dashboards/$id/widgets'
+    | '/api/data-sources/$id/entities'
     | '/api/data-sources/$id/inspect'
     | '/api/data-sources/$id/usage'
+    | '/api/metadata/entities/$id'
     | '/api/reports/$id/data'
     | '/api/reports/$id/export'
     | '/api/reports/$id/filters'
@@ -825,8 +886,11 @@ export interface FileRouteTypes {
     | '/metadata/entities/'
     | '/settings/email/'
     | '/api/dashboards/$id/widgets/$widgetId'
+    | '/api/metadata/entities/$id/fields'
     | '/api/reports/$id/filters/$filterLinkId'
     | '/metadata/entities/$id/'
+    | '/api/metadata/entities/$id/fields/$fieldId'
+    | '/api/metadata/entities/$id/fields/batch'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -862,6 +926,7 @@ export interface FileRouteTypes {
     | '/api/nl-query/execute'
     | '/api/nl-query/history'
     | '/api/nl-query/schema'
+    | '/api/nl-query/voice'
     | '/api/queries/$id'
     | '/api/reports/$id'
     | '/api/sql/execute'
@@ -892,8 +957,10 @@ export interface FileRouteTypes {
     | '/api/charts/$id/data'
     | '/api/charts/$id/filters'
     | '/api/dashboards/$id/widgets'
+    | '/api/data-sources/$id/entities'
     | '/api/data-sources/$id/inspect'
     | '/api/data-sources/$id/usage'
+    | '/api/metadata/entities/$id'
     | '/api/reports/$id/data'
     | '/api/reports/$id/export'
     | '/api/reports/$id/filters'
@@ -906,8 +973,11 @@ export interface FileRouteTypes {
     | '/metadata/entities'
     | '/settings/email'
     | '/api/dashboards/$id/widgets/$widgetId'
+    | '/api/metadata/entities/$id/fields'
     | '/api/reports/$id/filters/$filterLinkId'
     | '/metadata/entities/$id'
+    | '/api/metadata/entities/$id/fields/$fieldId'
+    | '/api/metadata/entities/$id/fields/batch'
   id:
     | '__root__'
     | '/'
@@ -944,6 +1014,7 @@ export interface FileRouteTypes {
     | '/api/nl-query/execute'
     | '/api/nl-query/history'
     | '/api/nl-query/schema'
+    | '/api/nl-query/voice'
     | '/api/queries/$id'
     | '/api/reports/$id'
     | '/api/sql/execute'
@@ -974,8 +1045,10 @@ export interface FileRouteTypes {
     | '/api/charts/$id/data'
     | '/api/charts/$id/filters'
     | '/api/dashboards/$id/widgets'
+    | '/api/data-sources/$id/entities'
     | '/api/data-sources/$id/inspect'
     | '/api/data-sources/$id/usage'
+    | '/api/metadata/entities/$id'
     | '/api/reports/$id/data'
     | '/api/reports/$id/export'
     | '/api/reports/$id/filters'
@@ -988,8 +1061,11 @@ export interface FileRouteTypes {
     | '/_authed/metadata/entities/'
     | '/_authed/settings/email/'
     | '/api/dashboards/$id/widgets/$widgetId'
+    | '/api/metadata/entities/$id/fields'
     | '/api/reports/$id/filters/$filterLinkId'
     | '/_authed/metadata/entities/$id/'
+    | '/api/metadata/entities/$id/fields/$fieldId'
+    | '/api/metadata/entities/$id/fields/batch'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1017,10 +1093,11 @@ export interface RootRouteChildren {
   ApiLogsComponentsRoute: typeof ApiLogsComponentsRoute
   ApiLogsSearchRoute: typeof ApiLogsSearchRoute
   ApiLogsUsersRoute: typeof ApiLogsUsersRoute
-  ApiMetadataEntitiesRoute: typeof ApiMetadataEntitiesRoute
+  ApiMetadataEntitiesRoute: typeof ApiMetadataEntitiesRouteWithChildren
   ApiNlQueryExecuteRoute: typeof ApiNlQueryExecuteRoute
   ApiNlQueryHistoryRoute: typeof ApiNlQueryHistoryRoute
   ApiNlQuerySchemaRoute: typeof ApiNlQuerySchemaRoute
+  ApiNlQueryVoiceRoute: typeof ApiNlQueryVoiceRoute
   ApiSqlExecuteRoute: typeof ApiSqlExecuteRoute
   ApiSqlValidateRoute: typeof ApiSqlValidateRoute
   ShareChartIdRoute: typeof ShareChartIdRoute
@@ -1294,6 +1371,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiQueriesIdRouteImport
       parentRoute: typeof ApiQueriesRoute
     }
+    '/api/nl-query/voice': {
+      id: '/api/nl-query/voice'
+      path: '/api/nl-query/voice'
+      fullPath: '/api/nl-query/voice'
+      preLoaderRoute: typeof ApiNlQueryVoiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/nl-query/schema': {
       id: '/api/nl-query/schema'
       path: '/api/nl-query/schema'
@@ -1504,6 +1588,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiReportsIdDataRouteImport
       parentRoute: typeof ApiReportsIdRoute
     }
+    '/api/metadata/entities/$id': {
+      id: '/api/metadata/entities/$id'
+      path: '/$id'
+      fullPath: '/api/metadata/entities/$id'
+      preLoaderRoute: typeof ApiMetadataEntitiesIdRouteImport
+      parentRoute: typeof ApiMetadataEntitiesRoute
+    }
     '/api/data-sources/$id/usage': {
       id: '/api/data-sources/$id/usage'
       path: '/usage'
@@ -1516,6 +1607,13 @@ declare module '@tanstack/react-router' {
       path: '/inspect'
       fullPath: '/api/data-sources/$id/inspect'
       preLoaderRoute: typeof ApiDataSourcesIdInspectRouteImport
+      parentRoute: typeof ApiDataSourcesIdRoute
+    }
+    '/api/data-sources/$id/entities': {
+      id: '/api/data-sources/$id/entities'
+      path: '/entities'
+      fullPath: '/api/data-sources/$id/entities'
+      preLoaderRoute: typeof ApiDataSourcesIdEntitiesRouteImport
       parentRoute: typeof ApiDataSourcesIdRoute
     }
     '/api/dashboards/$id/widgets': {
@@ -1588,12 +1686,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiReportsIdFiltersFilterLinkIdRouteImport
       parentRoute: typeof ApiReportsIdFiltersRoute
     }
+    '/api/metadata/entities/$id/fields': {
+      id: '/api/metadata/entities/$id/fields'
+      path: '/fields'
+      fullPath: '/api/metadata/entities/$id/fields'
+      preLoaderRoute: typeof ApiMetadataEntitiesIdFieldsRouteImport
+      parentRoute: typeof ApiMetadataEntitiesIdRoute
+    }
     '/api/dashboards/$id/widgets/$widgetId': {
       id: '/api/dashboards/$id/widgets/$widgetId'
       path: '/$widgetId'
       fullPath: '/api/dashboards/$id/widgets/$widgetId'
       preLoaderRoute: typeof ApiDashboardsIdWidgetsWidgetIdRouteImport
       parentRoute: typeof ApiDashboardsIdWidgetsRoute
+    }
+    '/api/metadata/entities/$id/fields/batch': {
+      id: '/api/metadata/entities/$id/fields/batch'
+      path: '/batch'
+      fullPath: '/api/metadata/entities/$id/fields/batch'
+      preLoaderRoute: typeof ApiMetadataEntitiesIdFieldsBatchRouteImport
+      parentRoute: typeof ApiMetadataEntitiesIdFieldsRoute
+    }
+    '/api/metadata/entities/$id/fields/$fieldId': {
+      id: '/api/metadata/entities/$id/fields/$fieldId'
+      path: '/$fieldId'
+      fullPath: '/api/metadata/entities/$id/fields/$fieldId'
+      preLoaderRoute: typeof ApiMetadataEntitiesIdFieldsFieldIdRouteImport
+      parentRoute: typeof ApiMetadataEntitiesIdFieldsRoute
     }
   }
 }
@@ -1770,17 +1889,62 @@ const ApiDashboardsIdRouteWithChildren = ApiDashboardsIdRoute._addFileChildren(
 )
 
 interface ApiDataSourcesIdRouteChildren {
+  ApiDataSourcesIdEntitiesRoute: typeof ApiDataSourcesIdEntitiesRoute
   ApiDataSourcesIdInspectRoute: typeof ApiDataSourcesIdInspectRoute
   ApiDataSourcesIdUsageRoute: typeof ApiDataSourcesIdUsageRoute
 }
 
 const ApiDataSourcesIdRouteChildren: ApiDataSourcesIdRouteChildren = {
+  ApiDataSourcesIdEntitiesRoute: ApiDataSourcesIdEntitiesRoute,
   ApiDataSourcesIdInspectRoute: ApiDataSourcesIdInspectRoute,
   ApiDataSourcesIdUsageRoute: ApiDataSourcesIdUsageRoute,
 }
 
 const ApiDataSourcesIdRouteWithChildren =
   ApiDataSourcesIdRoute._addFileChildren(ApiDataSourcesIdRouteChildren)
+
+interface ApiMetadataEntitiesIdFieldsRouteChildren {
+  ApiMetadataEntitiesIdFieldsFieldIdRoute: typeof ApiMetadataEntitiesIdFieldsFieldIdRoute
+  ApiMetadataEntitiesIdFieldsBatchRoute: typeof ApiMetadataEntitiesIdFieldsBatchRoute
+}
+
+const ApiMetadataEntitiesIdFieldsRouteChildren: ApiMetadataEntitiesIdFieldsRouteChildren =
+  {
+    ApiMetadataEntitiesIdFieldsFieldIdRoute:
+      ApiMetadataEntitiesIdFieldsFieldIdRoute,
+    ApiMetadataEntitiesIdFieldsBatchRoute:
+      ApiMetadataEntitiesIdFieldsBatchRoute,
+  }
+
+const ApiMetadataEntitiesIdFieldsRouteWithChildren =
+  ApiMetadataEntitiesIdFieldsRoute._addFileChildren(
+    ApiMetadataEntitiesIdFieldsRouteChildren,
+  )
+
+interface ApiMetadataEntitiesIdRouteChildren {
+  ApiMetadataEntitiesIdFieldsRoute: typeof ApiMetadataEntitiesIdFieldsRouteWithChildren
+}
+
+const ApiMetadataEntitiesIdRouteChildren: ApiMetadataEntitiesIdRouteChildren = {
+  ApiMetadataEntitiesIdFieldsRoute:
+    ApiMetadataEntitiesIdFieldsRouteWithChildren,
+}
+
+const ApiMetadataEntitiesIdRouteWithChildren =
+  ApiMetadataEntitiesIdRoute._addFileChildren(
+    ApiMetadataEntitiesIdRouteChildren,
+  )
+
+interface ApiMetadataEntitiesRouteChildren {
+  ApiMetadataEntitiesIdRoute: typeof ApiMetadataEntitiesIdRouteWithChildren
+}
+
+const ApiMetadataEntitiesRouteChildren: ApiMetadataEntitiesRouteChildren = {
+  ApiMetadataEntitiesIdRoute: ApiMetadataEntitiesIdRouteWithChildren,
+}
+
+const ApiMetadataEntitiesRouteWithChildren =
+  ApiMetadataEntitiesRoute._addFileChildren(ApiMetadataEntitiesRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -1807,10 +1971,11 @@ const rootRouteChildren: RootRouteChildren = {
   ApiLogsComponentsRoute: ApiLogsComponentsRoute,
   ApiLogsSearchRoute: ApiLogsSearchRoute,
   ApiLogsUsersRoute: ApiLogsUsersRoute,
-  ApiMetadataEntitiesRoute: ApiMetadataEntitiesRoute,
+  ApiMetadataEntitiesRoute: ApiMetadataEntitiesRouteWithChildren,
   ApiNlQueryExecuteRoute: ApiNlQueryExecuteRoute,
   ApiNlQueryHistoryRoute: ApiNlQueryHistoryRoute,
   ApiNlQuerySchemaRoute: ApiNlQuerySchemaRoute,
+  ApiNlQueryVoiceRoute: ApiNlQueryVoiceRoute,
   ApiSqlExecuteRoute: ApiSqlExecuteRoute,
   ApiSqlValidateRoute: ApiSqlValidateRoute,
   ShareChartIdRoute: ShareChartIdRoute,
