@@ -165,7 +165,10 @@ function ChartEditorPage() {
   }, [queryResults]);
 
   useEffect(() => {
-    if (selectedQueryId && chart) {
+    // Only reset axes when the user picks a *different* query than the saved one.
+    // Without this guard, saving the chart re-fetches `chart`, fires this effect,
+    // and wipes the axis configuration the user just configured.
+    if (selectedQueryId && chart && selectedQueryId !== chart.saved_query_id) {
       setDataMapping({ xAxis: { field: "", label: "" }, yAxis: [], groupBy: "", colorBy: "" });
     }
   }, [selectedQueryId, chart]);
