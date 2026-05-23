@@ -180,10 +180,10 @@ function ChartEditorPage() {
       const payload = {
         name: chartName,
         description: chartDescription,
-        chartType,
-        savedQueryId: selectedQueryId || undefined,
-        chartConfig: JSON.stringify(chartConfig),
-        dataMapping: JSON.stringify(dataMapping),
+        chart_type: chartType,
+        saved_query_id: selectedQueryId || undefined,
+        chart_config: JSON.stringify(chartConfig),
+        data_mapping: JSON.stringify(dataMapping),
       };
       const url = chartId === "new" ? "/api/charts" : `/api/charts/${chartId}`;
       const method = chartId === "new" ? "POST" : "PUT";
