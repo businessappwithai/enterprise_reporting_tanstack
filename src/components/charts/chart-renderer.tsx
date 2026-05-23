@@ -26,20 +26,6 @@ export function ChartRenderer({
   height = 400,
   onDataClick,
 }: ChartRendererProps) {
-  console.log("[ChartRenderer] Props:", {
-    dataLength: data?.length,
-    chartType,
-    chartConfig,
-    dataMapping,
-    height,
-  });
-  console.log(
-    "[ChartRenderer] Stacked config:",
-    chartConfig?.stacked,
-    "Type:",
-    typeof chartConfig?.stacked
-  );
-
   // Convert Recharts-style config to ECharts config
   const echartsConfig = convertRechartsToECharts(chartType, chartConfig, dataMapping);
 

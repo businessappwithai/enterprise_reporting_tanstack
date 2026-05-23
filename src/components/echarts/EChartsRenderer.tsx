@@ -109,25 +109,6 @@ export function EChartsRenderer({
     // Merge base theme, chart config, and user customOptions
     const merged = deepMerge(base, chart);
 
-    console.log(
-      "[EChartsRenderer] Merged option series:",
-      merged.series?.map((s: Record<string, unknown>) => ({
-        name: s.name,
-        type: s.type,
-        hasStack: "stack" in s,
-        stackValue: s.stack,
-        allKeys: Object.keys(s),
-      }))
-    );
-    console.log(
-      "[EChartsRenderer] First merged series:",
-      JSON.stringify(merged.series?.[0], null, 2)
-    );
-    console.log(
-      "[EChartsRenderer] Second merged series:",
-      JSON.stringify(merged.series?.[1], null, 2)
-    );
-
     // Apply title
     if (config.title) {
       merged.title = { ...(merged.title as object), text: config.title, subtext: config.subtitle };

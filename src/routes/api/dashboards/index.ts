@@ -69,15 +69,23 @@ export const Route = createFileRoute('/api/dashboards/')({
           const body = (await request.json()) as {
             name: string
             description?: string
-            layout: object
+            layout?: object
+            layoutConfig?: object
+            isPublic?: boolean
+            is_public?: boolean
           }
 
-          if (!body.name || !body.layout) {
+          // Accept both layout and layoutConfig from clients
+          const resolvedLayout = body.layout ?? body.layoutConfig
+
+          if (!body.name || !resolvedLayout) {
             return json(
               { success: false, error: { message: 'Missing required fields' } },
               { status: 400 }
             )
           }
+
+          const resolvedIsPublic = body.is_public ?? body.isPublic ?? false
 
           const { randomUUID } = await import('node:crypto')
           const db = getDb()
@@ -90,7 +98,8 @@ export const Route = createFileRoute('/api/dashboards/')({
               id,
               name: body.name,
               description: body.description || null,
-              layout_config: JSON.stringify(body.layout),
+              layout_config: JSON.stringify(resolvedLayout),
+              is_public: resolvedIsPublic,
               created_by: session.user.id,
               created_at: now,
               updated_at: now,
