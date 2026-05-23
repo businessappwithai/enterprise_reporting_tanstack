@@ -66,6 +66,7 @@ export const Route = createFileRoute("/api/reports/$id")({
             sortConfig,
             paginationConfig,
             exportFormats,
+            colorTheme,
           } = body;
 
           const { getDb } = await import("@/lib/db/config");
@@ -99,6 +100,9 @@ export const Route = createFileRoute("/api/reports/$id")({
               export_formats: exportFormats
                 ? JSON.stringify(exportFormats)
                 : existing.export_formats,
+              color_theme: colorTheme
+                ? JSON.stringify(colorTheme)
+                : existing.color_theme,
               updated_at: new Date().toISOString(),
             })
             .where("id", "=", id)

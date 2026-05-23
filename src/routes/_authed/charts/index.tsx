@@ -105,10 +105,10 @@ function ChartsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: newChartName,
-          chartType: newChartType,
-          savedQueryId: selectedQueryId || undefined,
-          chartConfig: { legend: { show: true }, tooltip: { enabled: true } },
-          dataMapping: { xAxis: { field: "" }, yAxis: [] },
+          chart_type: newChartType,
+          saved_query_id: selectedQueryId || undefined,
+          chart_config: { legend: { show: true }, tooltip: { enabled: true } },
+          data_mapping: { xAxis: { field: "" }, yAxis: [] },
         }),
       });
       return res.json();

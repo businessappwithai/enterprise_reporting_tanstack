@@ -114,7 +114,8 @@ function ReportEditorPage() {
     queryFn: async () => {
       const res = await fetch("/api/filters");
       if (!res.ok) return [];
-      return res.json();
+      const json = await res.json();
+      return Array.isArray(json) ? json : (json?.data ?? []);
     },
   });
 

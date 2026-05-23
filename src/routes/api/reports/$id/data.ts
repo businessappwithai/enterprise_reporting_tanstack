@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { sql as kyselySql } from "kysely";
 import { json } from "@/lib/server/response";
+import type { DataSource } from "@/types/database";
 
 async function getSession(request: Request) {
   const { auth } = await import("@/lib/auth/config");
@@ -22,13 +24,11 @@ export const Route = createFileRoute("/api/reports/$id/data")({
           const { id: reportId } = params;
           const url = new URL(request.url);
           const page = parseInt(url.searchParams.get("page") || "0");
-          const pageSize = parseInt(url.searchParams.get("pageSize") || "50");
+          const pageSize = Math.min(parseInt(url.searchParams.get("pageSize") || "50"), 1000);
 
           const { getDb } = await import("@/lib/db/config");
-          const { getConnection } = await import("@/lib/db/connection-manager");
           const db = getDb();
 
-          // Get report definition
           const report = await db
             .selectFrom("report_definitions")
             .selectAll()
@@ -42,29 +42,69 @@ export const Route = createFileRoute("/api/reports/$id/data")({
             );
           }
 
-          // Generate sample data for demonstration
-          const sampleData = [
-            { region: "North America", revenue: 125000, products_sold: 850, customers: 320 },
-            { region: "Europe West", revenue: 98500, products_sold: 680, customers: 210 },
-            { region: "Asia Pacific", revenue: 156200, products_sold: 920, customers: 450 },
-            { region: "Latin America", revenue: 67300, products_sold: 380, customers: 140 },
-            { region: "Middle East", revenue: 45600, products_sold: 250, customers: 95 },
-            { region: "Africa", revenue: 32100, products_sold: 180, customers: 65 },
-            { region: "East Asia", revenue: 189500, products_sold: 1100, customers: 520 },
-            { region: "South Asia", revenue: 54900, products_sold: 310, customers: 125 },
-            { region: "Oceania", revenue: 38700, products_sold: 220, customers: 80 },
-          ];
+          if (!report.saved_query_id) {
+            return json({
+              success: true,
+              data: { rows: [], totalRows: 0, pageIndex: page, pageSize },
+            });
+          }
 
-          // Apply pagination
-          const start = page * pageSize;
-          const end = start + pageSize;
-          const paginatedData = sampleData.slice(start, end);
+          const savedQuery = await db
+            .selectFrom("saved_queries")
+            .selectAll()
+            .where("id", "=", report.saved_query_id)
+            .executeTakeFirst();
+
+          if (!savedQuery) {
+            return json(
+              { success: false, error: { code: "NOT_FOUND", message: "Saved query not found" } },
+              { status: 404 }
+            );
+          }
+
+          const dataSource = await db
+            .selectFrom("data_sources")
+            .selectAll()
+            .where("id", "=", savedQuery.data_source_id)
+            .where("is_active", "=", true)
+            .executeTakeFirst();
+
+          if (!dataSource) {
+            return json(
+              { success: false, error: { code: "NOT_FOUND", message: "Data source not found or inactive" } },
+              { status: 404 }
+            );
+          }
+
+          const { getConnection } = await import("@/lib/db/connection-manager");
+          const connection = await getConnection(dataSource as unknown as DataSource);
+
+          // Get total row count
+          let totalRows = 0;
+          try {
+            const cleanSql = savedQuery.sql_content.trim().replace(/;$/, "");
+            const { rows: countRows } = await kyselySql
+              .raw(`SELECT COUNT(*) as total FROM (${cleanSql}) as count_query`)
+              .execute(connection);
+            totalRows = Number((countRows[0] as Record<string, unknown>)?.total) || 0;
+          } catch {
+            // count failed, continue without total
+          }
+
+          // Execute with pagination
+          let querySql = savedQuery.sql_content.trim().replace(/;$/, "");
+          const offset = page * pageSize;
+          if (!/\bLIMIT\s+\d+/i.test(querySql)) {
+            querySql = `${querySql} LIMIT ${pageSize} OFFSET ${offset}`;
+          }
+
+          const { rows } = await kyselySql.raw(querySql).execute(connection);
 
           return json({
             success: true,
             data: {
-              rows: paginatedData,
-              totalRows: sampleData.length,
+              rows: rows as Record<string, unknown>[],
+              totalRows,
               pageIndex: page,
               pageSize,
             },

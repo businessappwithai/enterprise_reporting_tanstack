@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ColumnDef } from "@tanstack/react-table";
-import type { ReportDefinition } from "@/types/database";
+import type { ColumnDefinition, ReportDefinition } from "@/types/database";
 
 export const Route = createFileRoute("/_authed/reports/$id/viewer")({
   component: ReportViewerPage,
@@ -72,10 +72,11 @@ function ReportViewerPage() {
     try {
       const columnConfig = JSON.parse(report.column_config || "[]");
       return columnConfig
-        .filter((col: { visible: boolean }) => col.visible)
-        .map((col: { key: string; label: string }) => ({
-          accessorKey: col.key,
-          header: col.label || col.key,
+        .filter((col: ColumnDefinition) => col.visible)
+        .map((col: ColumnDefinition) => ({
+          id: col.id || col.field,
+          accessorKey: col.field,
+          header: col.header || col.field || col.id,
           cell: (info: { getValue: () => unknown }) => {
             const value = info.getValue();
             if (value === null || value === undefined) return "-";

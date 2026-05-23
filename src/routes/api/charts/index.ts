@@ -71,12 +71,13 @@ export const Route = createFileRoute('/api/charts/')({
             description?: string
             chart_type: string
             chart_config: object
-            data_source_id?: string
+            saved_query_id?: string
+            data_mapping?: object
           }
 
           if (!body.name || !body.chart_type || !body.chart_config) {
             return json(
-              { success: false, error: { message: 'Missing required fields' } },
+              { success: false, error: { message: 'Missing required fields: name, chart_type, chart_config' } },
               { status: 400 }
             )
           }
@@ -94,6 +95,8 @@ export const Route = createFileRoute('/api/charts/')({
               description: body.description || null,
               chart_type: body.chart_type,
               chart_config: JSON.stringify(body.chart_config),
+              saved_query_id: body.saved_query_id || null,
+              data_mapping: body.data_mapping ? JSON.stringify(body.data_mapping) : JSON.stringify({ xAxis: { field: '' }, yAxis: [] }),
               created_by: session.user.id,
               created_at: now,
               updated_at: now,

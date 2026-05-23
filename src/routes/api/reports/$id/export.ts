@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { sql as kyselySql } from "kysely";
 import { json } from "@/lib/server/response";
 import type { ColumnDefinition, DataSource, ReportColorTheme } from "@/types/database";
 
@@ -174,15 +175,14 @@ export const Route = createFileRoute("/api/reports/$id/export")({
 
           const connection = await getConnection(dataSource as unknown as DataSource);
 
-          const maxExportRows = parseInt(process.env.EXPORT_PAGE_SIZE || "1000", 10);
+          const maxExportRows = parseInt(process.env.EXPORT_PAGE_SIZE || "10000", 10);
           const sqlToRun = query.sql_content.replace(/;$/, "").trim();
-          const result = await connection.raw(`${sqlToRun} LIMIT ${maxExportRows}`);
+          const limitedSql = /\bLIMIT\s+\d+/i.test(sqlToRun)
+            ? sqlToRun
+            : `${sqlToRun} LIMIT ${maxExportRows}`;
+          const { rows } = await kyselySql.raw(limitedSql).execute(connection);
 
-          let rows: Record<string, unknown>[] = [];
-          if (Array.isArray(result)) rows = result;
-          else if (result.rows) rows = result.rows;
-          else if (result[0]) rows = Array.isArray(result[0]) ? result[0] : [result[0]];
-
+          const typedRows = rows as Record<string, unknown>[];
           let columnConfig: ColumnDefinition[] = [];
           if (report.column_config) {
             try {
@@ -192,13 +192,13 @@ export const Route = createFileRoute("/api/reports/$id/export")({
             }
           }
 
-          let filteredRows = rows;
+          let filteredRows = typedRows;
           let headers: string[] = [];
 
           if (columnConfig.length > 0) {
             const visibleColumns = columnConfig.filter((col) => col.visible);
             headers = visibleColumns.map((col) => col.header);
-            filteredRows = rows.map((row) => {
+            filteredRows = typedRows.map((row) => {
               const filteredRow: Record<string, unknown> = {};
               visibleColumns.forEach((col) => {
                 if (col.field in row) filteredRow[col.field] = row[col.field];
@@ -206,7 +206,7 @@ export const Route = createFileRoute("/api/reports/$id/export")({
               return filteredRow;
             });
           } else {
-            if (rows.length > 0) headers = Object.keys(rows[0]);
+            if (typedRows.length > 0) headers = Object.keys(typedRows[0]);
           }
 
           if (format === "csv") {
@@ -303,8 +303,9 @@ export const Route = createFileRoute("/api/reports/$id/export")({
             });
 
             worksheet.columns.forEach((column) => {
+              if (!column) return;
               let maxLength = 0;
-              column.eachCell({ includeEmpty: true }, (cell) => {
+              column.eachCell?.({ includeEmpty: true }, (cell) => {
                 const length = cell.value ? String(cell.value).length : 10;
                 if (length > maxLength) maxLength = length;
               });
@@ -435,7 +436,7 @@ export const Route = createFileRoute("/api/reports/$id/export")({
               yPosition += rowHeight;
             });
 
-            const totalPages = doc.internal.getNumberOfPages();
+            const totalPages = doc.getNumberOfPages();
             for (let i = 1; i <= totalPages; i++) {
               doc.setPage(i);
               doc.setFontSize(8);

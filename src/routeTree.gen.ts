@@ -77,6 +77,7 @@ import { Route as ApiSqlSchemaDataSourceIdRouteImport } from './routes/api/sql/s
 import { Route as ApiReportsIdFiltersRouteImport } from './routes/api/reports/$id/filters'
 import { Route as ApiReportsIdExportRouteImport } from './routes/api/reports/$id/export'
 import { Route as ApiReportsIdDataRouteImport } from './routes/api/reports/$id/data'
+import { Route as ApiQueriesIdExecuteRouteImport } from './routes/api/queries/$id/execute'
 import { Route as ApiMetadataEntitiesIdRouteImport } from './routes/api/metadata/entities/$id'
 import { Route as ApiDataSourcesIdUsageRouteImport } from './routes/api/data-sources/$id/usage'
 import { Route as ApiDataSourcesIdInspectRouteImport } from './routes/api/data-sources/$id/inspect'
@@ -441,6 +442,11 @@ const ApiReportsIdDataRoute = ApiReportsIdDataRouteImport.update({
   path: '/data',
   getParentRoute: () => ApiReportsIdRoute,
 } as any)
+const ApiQueriesIdExecuteRoute = ApiQueriesIdExecuteRouteImport.update({
+  id: '/execute',
+  path: '/execute',
+  getParentRoute: () => ApiQueriesIdRoute,
+} as any)
 const ApiMetadataEntitiesIdRoute = ApiMetadataEntitiesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -575,7 +581,7 @@ export interface FileRoutesByFullPath {
   '/api/nl-query/history': typeof ApiNlQueryHistoryRoute
   '/api/nl-query/schema': typeof ApiNlQuerySchemaRoute
   '/api/nl-query/voice': typeof ApiNlQueryVoiceRoute
-  '/api/queries/$id': typeof ApiQueriesIdRoute
+  '/api/queries/$id': typeof ApiQueriesIdRouteWithChildren
   '/api/reports/$id': typeof ApiReportsIdRouteWithChildren
   '/api/sql/execute': typeof ApiSqlExecuteRoute
   '/api/sql/validate': typeof ApiSqlValidateRoute
@@ -609,6 +615,7 @@ export interface FileRoutesByFullPath {
   '/api/data-sources/$id/inspect': typeof ApiDataSourcesIdInspectRoute
   '/api/data-sources/$id/usage': typeof ApiDataSourcesIdUsageRoute
   '/api/metadata/entities/$id': typeof ApiMetadataEntitiesIdRouteWithChildren
+  '/api/queries/$id/execute': typeof ApiQueriesIdExecuteRoute
   '/api/reports/$id/data': typeof ApiReportsIdDataRoute
   '/api/reports/$id/export': typeof ApiReportsIdExportRoute
   '/api/reports/$id/filters': typeof ApiReportsIdFiltersRouteWithChildren
@@ -662,7 +669,7 @@ export interface FileRoutesByTo {
   '/api/nl-query/history': typeof ApiNlQueryHistoryRoute
   '/api/nl-query/schema': typeof ApiNlQuerySchemaRoute
   '/api/nl-query/voice': typeof ApiNlQueryVoiceRoute
-  '/api/queries/$id': typeof ApiQueriesIdRoute
+  '/api/queries/$id': typeof ApiQueriesIdRouteWithChildren
   '/api/reports/$id': typeof ApiReportsIdRouteWithChildren
   '/api/sql/execute': typeof ApiSqlExecuteRoute
   '/api/sql/validate': typeof ApiSqlValidateRoute
@@ -696,6 +703,7 @@ export interface FileRoutesByTo {
   '/api/data-sources/$id/inspect': typeof ApiDataSourcesIdInspectRoute
   '/api/data-sources/$id/usage': typeof ApiDataSourcesIdUsageRoute
   '/api/metadata/entities/$id': typeof ApiMetadataEntitiesIdRouteWithChildren
+  '/api/queries/$id/execute': typeof ApiQueriesIdExecuteRoute
   '/api/reports/$id/data': typeof ApiReportsIdDataRoute
   '/api/reports/$id/export': typeof ApiReportsIdExportRoute
   '/api/reports/$id/filters': typeof ApiReportsIdFiltersRouteWithChildren
@@ -751,7 +759,7 @@ export interface FileRoutesById {
   '/api/nl-query/history': typeof ApiNlQueryHistoryRoute
   '/api/nl-query/schema': typeof ApiNlQuerySchemaRoute
   '/api/nl-query/voice': typeof ApiNlQueryVoiceRoute
-  '/api/queries/$id': typeof ApiQueriesIdRoute
+  '/api/queries/$id': typeof ApiQueriesIdRouteWithChildren
   '/api/reports/$id': typeof ApiReportsIdRouteWithChildren
   '/api/sql/execute': typeof ApiSqlExecuteRoute
   '/api/sql/validate': typeof ApiSqlValidateRoute
@@ -785,6 +793,7 @@ export interface FileRoutesById {
   '/api/data-sources/$id/inspect': typeof ApiDataSourcesIdInspectRoute
   '/api/data-sources/$id/usage': typeof ApiDataSourcesIdUsageRoute
   '/api/metadata/entities/$id': typeof ApiMetadataEntitiesIdRouteWithChildren
+  '/api/queries/$id/execute': typeof ApiQueriesIdExecuteRoute
   '/api/reports/$id/data': typeof ApiReportsIdDataRoute
   '/api/reports/$id/export': typeof ApiReportsIdExportRoute
   '/api/reports/$id/filters': typeof ApiReportsIdFiltersRouteWithChildren
@@ -874,6 +883,7 @@ export interface FileRouteTypes {
     | '/api/data-sources/$id/inspect'
     | '/api/data-sources/$id/usage'
     | '/api/metadata/entities/$id'
+    | '/api/queries/$id/execute'
     | '/api/reports/$id/data'
     | '/api/reports/$id/export'
     | '/api/reports/$id/filters'
@@ -961,6 +971,7 @@ export interface FileRouteTypes {
     | '/api/data-sources/$id/inspect'
     | '/api/data-sources/$id/usage'
     | '/api/metadata/entities/$id'
+    | '/api/queries/$id/execute'
     | '/api/reports/$id/data'
     | '/api/reports/$id/export'
     | '/api/reports/$id/filters'
@@ -1049,6 +1060,7 @@ export interface FileRouteTypes {
     | '/api/data-sources/$id/inspect'
     | '/api/data-sources/$id/usage'
     | '/api/metadata/entities/$id'
+    | '/api/queries/$id/execute'
     | '/api/reports/$id/data'
     | '/api/reports/$id/export'
     | '/api/reports/$id/filters'
@@ -1588,6 +1600,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiReportsIdDataRouteImport
       parentRoute: typeof ApiReportsIdRoute
     }
+    '/api/queries/$id/execute': {
+      id: '/api/queries/$id/execute'
+      path: '/execute'
+      fullPath: '/api/queries/$id/execute'
+      preLoaderRoute: typeof ApiQueriesIdExecuteRouteImport
+      parentRoute: typeof ApiQueriesIdRoute
+    }
     '/api/metadata/entities/$id': {
       id: '/api/metadata/entities/$id'
       path: '/$id'
@@ -1797,12 +1816,24 @@ const AuthedRouteChildren: AuthedRouteChildren = {
 const AuthedRouteWithChildren =
   AuthedRoute._addFileChildren(AuthedRouteChildren)
 
+interface ApiQueriesIdRouteChildren {
+  ApiQueriesIdExecuteRoute: typeof ApiQueriesIdExecuteRoute
+}
+
+const ApiQueriesIdRouteChildren: ApiQueriesIdRouteChildren = {
+  ApiQueriesIdExecuteRoute: ApiQueriesIdExecuteRoute,
+}
+
+const ApiQueriesIdRouteWithChildren = ApiQueriesIdRoute._addFileChildren(
+  ApiQueriesIdRouteChildren,
+)
+
 interface ApiQueriesRouteChildren {
-  ApiQueriesIdRoute: typeof ApiQueriesIdRoute
+  ApiQueriesIdRoute: typeof ApiQueriesIdRouteWithChildren
 }
 
 const ApiQueriesRouteChildren: ApiQueriesRouteChildren = {
-  ApiQueriesIdRoute: ApiQueriesIdRoute,
+  ApiQueriesIdRoute: ApiQueriesIdRouteWithChildren,
 }
 
 const ApiQueriesRouteWithChildren = ApiQueriesRoute._addFileChildren(
