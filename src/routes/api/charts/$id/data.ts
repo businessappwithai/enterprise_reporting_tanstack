@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { sql as kyselySql } from "kysely";
 import { json } from "@/lib/server/response";
+import type { DataSource } from "@/types/database";
 
 async function getSession(request: Request) {
   const { auth } = await import("@/lib/auth/config");
@@ -36,37 +38,60 @@ export const Route = createFileRoute("/api/charts/$id/data")({
             );
           }
 
+          if (!chart.saved_query_id) {
+            return json({
+              success: true,
+              data: { rows: [], totalRows: 0, pageIndex: 0, pageSize: 1000 },
+            });
+          }
+
+          const savedQuery = await db
+            .selectFrom("saved_queries")
+            .selectAll()
+            .where("id", "=", chart.saved_query_id)
+            .executeTakeFirst();
+
+          if (!savedQuery) {
+            return json(
+              { success: false, error: { code: "NOT_FOUND", message: "Saved query not found" } },
+              { status: 404 }
+            );
+          }
+
+          const dataSource = await db
+            .selectFrom("data_sources")
+            .selectAll()
+            .where("id", "=", savedQuery.data_source_id)
+            .where("is_active", "=", true)
+            .executeTakeFirst();
+
+          if (!dataSource) {
+            return json(
+              { success: false, error: { code: "NOT_FOUND", message: "Data source not found or inactive" } },
+              { status: 404 }
+            );
+          }
+
+          const { getConnection } = await import("@/lib/db/connection-manager");
+          const connection = await getConnection(dataSource as unknown as DataSource);
+
           const url = new URL(request.url);
-          const page = parseInt(url.searchParams.get("page") || "0");
-          const pageSize = parseInt(url.searchParams.get("pageSize") || "50");
+          const pageSize = parseInt(url.searchParams.get("pageSize") || "1000");
 
-          // Generate sample chart data
-          const sampleData = [
-            { month: "January", sales: 4000, expenses: 2400, profit: 1600 },
-            { month: "February", sales: 3000, expenses: 1398, profit: 1602 },
-            { month: "March", sales: 2000, expenses: 9800, profit: -7800 },
-            { month: "April", sales: 2780, expenses: 3908, profit: -1128 },
-            { month: "May", sales: 1890, expenses: 4800, profit: -2910 },
-            { month: "June", sales: 2390, expenses: 3800, profit: -1410 },
-            { month: "July", sales: 3490, expenses: 4300, profit: -810 },
-            { month: "August", sales: 4200, expenses: 3000, profit: 1200 },
-            { month: "September", sales: 3800, expenses: 2700, profit: 1100 },
-            { month: "October", sales: 4500, expenses: 3200, profit: 1300 },
-            { month: "November", sales: 5100, expenses: 3800, profit: 1300 },
-            { month: "December", sales: 6200, expenses: 4200, profit: 2000 },
-          ];
+          const rawSql = savedQuery.sql_content.trim().replace(/;$/, "");
+          const limitedSql = /\bLIMIT\s+\d+/i.test(rawSql)
+            ? rawSql
+            : `${rawSql} LIMIT ${pageSize}`;
 
-          // Apply pagination
-          const start = page * pageSize;
-          const end = start + pageSize;
-          const paginatedData = sampleData.slice(start, end);
+          const { rows } = await kyselySql.raw(limitedSql).execute(connection);
+          const typedRows = rows as Record<string, unknown>[];
 
           return json({
             success: true,
             data: {
-              rows: paginatedData,
-              totalRows: sampleData.length,
-              pageIndex: page,
+              rows: typedRows,
+              totalRows: typedRows.length,
+              pageIndex: 0,
               pageSize,
             },
           });
