@@ -66,7 +66,8 @@ function ReportEditorPage() {
   });
   const [exportFormats, setExportFormats] = useState({
     csv: true,
-    excel: true,
+    xlsx: true,
+    html: false,
     pdf: false,
   });
   const [colorTheme, setColorTheme] = useState<ReportColorTheme>({
@@ -181,10 +182,10 @@ function ReportEditorPage() {
       }
       try {
         setExportFormats(
-          JSON.parse(report.export_formats || '{"csv":true,"excel":true,"pdf":true}')
+          JSON.parse(report.export_formats || '{"csv":true,"xlsx":true,"html":false,"pdf":true}')
         );
       } catch {
-        setExportFormats({ csv: true, excel: true, pdf: true });
+        setExportFormats({ csv: true, xlsx: true, html: false, pdf: true });
       }
       try {
         const parsedColorTheme = JSON.parse(
@@ -648,14 +649,27 @@ function ReportEditorPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label htmlFor="export-excel">Excel Export</Label>
+                    <Label htmlFor="export-xlsx">Excel Export</Label>
                     <p className="text-xs text-muted-foreground">Native Excel format</p>
                   </div>
                   <Switch
-                    id="export-excel"
-                    checked={exportFormats.excel}
+                    id="export-xlsx"
+                    checked={exportFormats.xlsx}
                     onCheckedChange={(checked) =>
-                      setExportFormats((prev) => ({ ...prev, excel: checked }))
+                      setExportFormats((prev) => ({ ...prev, xlsx: checked }))
+                    }
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="export-html">HTML Export</Label>
+                    <p className="text-xs text-muted-foreground">Interactive HTML with search and pagination</p>
+                  </div>
+                  <Switch
+                    id="export-html"
+                    checked={exportFormats.html}
+                    onCheckedChange={(checked) =>
+                      setExportFormats((prev) => ({ ...prev, html: checked }))
                     }
                   />
                 </div>

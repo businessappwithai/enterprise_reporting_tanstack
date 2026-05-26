@@ -46,7 +46,7 @@ function ReportViewerPage() {
   });
 
   const exportMutation = useMutation({
-    mutationFn: async (format: "csv" | "xlsx" | "pdf") => {
+    mutationFn: async (format: "csv" | "xlsx" | "html" | "pdf") => {
       const res = await fetch(`/api/reports/${reportId}/export`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -169,6 +169,17 @@ function ReportViewerPage() {
                   >
                     <Download className="h-4 w-4 mr-2" />
                     Excel
+                  </Button>
+                )}
+                {formats.html && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => exportMutation.mutate("html")}
+                    disabled={exportMutation.isPending}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    HTML
                   </Button>
                 )}
                 {formats.pdf && (
