@@ -214,6 +214,7 @@ function ReportViewerPage() {
               totalRows={reportData?.totalRows}
               pageSize={pageSize}
               pageIndex={pageIndex}
+              serverSide={true}
               onPaginationChange={(pagination) => {
                 setPageIndex(pagination.pageIndex);
                 setPageSize(pagination.pageSize);
