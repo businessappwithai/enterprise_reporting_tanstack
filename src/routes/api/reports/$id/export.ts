@@ -56,6 +56,24 @@ function parseColorTheme(colorThemeStr: string | null): ReportColorTheme | null 
   }
 }
 
+function buildFilename(reportName: string, templateStr: string | null, firstRow: Record<string, unknown> | undefined, ext: string): string {
+  let filename = reportName;
+  if (templateStr && firstRow) {
+    try {
+      const template = JSON.parse(templateStr);
+      if (template.field1 && firstRow[template.field1]) {
+        filename += "_" + String(firstRow[template.field1]);
+      }
+      if (template.field2 && firstRow[template.field2]) {
+        filename += "_" + String(firstRow[template.field2]);
+      }
+    } catch {
+      // Fall back to just report name
+    }
+  }
+  return `${filename}.${ext}`;
+}
+
 export const Route = createFileRoute("/api/reports/$id/export")({
   server: {
     handlers: {
@@ -229,10 +247,11 @@ export const Route = createFileRoute("/api/reports/$id/export")({
                   .join(",")
               ),
             ];
+            const csvFilename = buildFilename(report.name || "report", report.filename_template, typedRows[0], "csv");
             return new Response(csvRows.join("\n"), {
               headers: {
                 "Content-Type": "text/csv",
-                "Content-Disposition": `attachment; filename="${report.name || "report"}.csv"`,
+                "Content-Disposition": `attachment; filename="${csvFilename}"`,
               },
             });
           }
@@ -311,10 +330,11 @@ export const Route = createFileRoute("/api/reports/$id/export")({
             });
 
             const buffer = await workbook.xlsx.writeBuffer();
+            const xlsxFilename = buildFilename(report.name || "report", report.filename_template, filteredRows[0], "xlsx");
             return new Response(Buffer.from(buffer), {
               headers: {
                 "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                "Content-Disposition": `attachment; filename="${report.name || "report"}.xlsx"`,
+                "Content-Disposition": `attachment; filename="${xlsxFilename}"`,
               },
             });
           }
@@ -449,10 +469,11 @@ export const Route = createFileRoute("/api/reports/$id/export")({
             }
 
             const pdfBytes = doc.output("arraybuffer");
+            const pdfFilename = buildFilename(report.name || "report", report.filename_template, filteredRows[0], "pdf");
             return new Response(Buffer.from(pdfBytes), {
               headers: {
                 "Content-Type": "application/pdf",
-                "Content-Disposition": `attachment; filename="${report.name || "report"}.pdf"`,
+                "Content-Disposition": `attachment; filename="${pdfFilename}"`,
               },
             });
           }
@@ -628,10 +649,11 @@ export const Route = createFileRoute("/api/reports/$id/export")({
 </body>
 </html>`;
 
+            const htmlFilename = buildFilename(report.name || "report", report.filename_template, data[0], "html");
             return new Response(html, {
               headers: {
                 "Content-Type": "text/html; charset=utf-8",
-                "Content-Disposition": `attachment; filename="${report.name || "report"}.html"`,
+                "Content-Disposition": `attachment; filename="${htmlFilename}"`,
               },
             });
           }

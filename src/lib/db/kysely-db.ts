@@ -113,6 +113,7 @@ export interface ReportDefinitionsTable {
   sort_config: string | null; // JSON
   pagination_config: string | null; // JSON
   export_formats: string; // JSON array, default '["csv","xlsx","pdf"]'
+  filename_template: string | null; // JSON {field1: "", field2: ""}
   color_theme: string | null; // JSON
   is_public: boolean | null;
   is_deleted: boolean | null;

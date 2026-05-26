@@ -70,6 +70,10 @@ function ReportEditorPage() {
     html: false,
     pdf: false,
   });
+  const [filenameTemplate, setFilenameTemplate] = useState({
+    field1: "",
+    field2: "",
+  });
   const [colorTheme, setColorTheme] = useState<ReportColorTheme>({
     headerBackgroundColor: "#1e293b",
     headerTextColor: "#ffffff",
@@ -188,6 +192,13 @@ function ReportEditorPage() {
         setExportFormats({ csv: true, xlsx: true, html: false, pdf: true });
       }
       try {
+        setFilenameTemplate(
+          JSON.parse(report.filename_template || '{"field1":"","field2":""}')
+        );
+      } catch {
+        setFilenameTemplate({ field1: "", field2: "" });
+      }
+      try {
         const parsedColorTheme = JSON.parse(
           report.color_theme ||
             '{"headerBackgroundColor":"#1e293b","headerTextColor":"#ffffff","headerFontWeight":"600","rowBackgroundColor":"#ffffff","rowTextColor":"#334155","alternatingRowBackgroundColor":"#f8fafc","alternatingRowTextColor":"#334155","borderColor":"#e2e8f0"}'
@@ -231,6 +242,7 @@ function ReportEditorPage() {
           filterConfig: filters,
           exportConfig: exportFormats,
           exportFormats: exportFormats,
+          filenameTemplate: filenameTemplate,
           colorTheme: colorTheme,
         }),
       });
@@ -260,6 +272,7 @@ function ReportEditorPage() {
           filterConfig: filters,
           exportConfig: exportFormats,
           exportFormats: exportFormats,
+          filenameTemplate: filenameTemplate,
           colorTheme: colorTheme,
         }),
       });
@@ -685,6 +698,65 @@ function ReportEditorPage() {
                       setExportFormats((prev) => ({ ...prev, pdf: checked }))
                     }
                   />
+                </div>
+              </div>
+
+              <div className="border-t pt-6">
+                <h4 className="text-sm font-semibold mb-4">Filename Template</h4>
+                <p className="text-xs text-muted-foreground mb-4">
+                  Customize export filenames by selecting fields to concatenate with the report name
+                </p>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="field1">First Additional Field (optional)</Label>
+                    <Select
+                      value={filenameTemplate.field1}
+                      onValueChange={(value) =>
+                        setFilenameTemplate((prev) => ({ ...prev, field1: value }))
+                      }
+                    >
+                      <SelectTrigger id="field1">
+                        <SelectValue placeholder="Select a field..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">None</SelectItem>
+                        {columns.map((col) => (
+                          <SelectItem key={col.id || col.field} value={col.field}>
+                            {col.header || col.field}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="field2">Second Additional Field (optional)</Label>
+                    <Select
+                      value={filenameTemplate.field2}
+                      onValueChange={(value) =>
+                        setFilenameTemplate((prev) => ({ ...prev, field2: value }))
+                      }
+                    >
+                      <SelectTrigger id="field2">
+                        <SelectValue placeholder="Select a field..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">None</SelectItem>
+                        {columns.map((col) => (
+                          <SelectItem key={col.id || col.field} value={col.field}>
+                            {col.header || col.field}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="p-3 bg-muted rounded-md">
+                    <p className="text-xs text-muted-foreground">
+                      Example: {reportName || "Report"}
+                      {filenameTemplate.field1 ? " + [" + filenameTemplate.field1 + "]" : ""}
+                      {filenameTemplate.field2 ? " + [" + filenameTemplate.field2 + "]" : ""}
+                      {" "}.pdf
+                    </p>
+                  </div>
                 </div>
               </div>
 

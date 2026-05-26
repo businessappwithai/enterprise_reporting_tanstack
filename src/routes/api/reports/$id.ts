@@ -66,6 +66,7 @@ export const Route = createFileRoute("/api/reports/$id")({
             sortConfig,
             paginationConfig,
             exportFormats,
+            filenameTemplate,
             colorTheme,
           } = body;
 
@@ -100,6 +101,9 @@ export const Route = createFileRoute("/api/reports/$id")({
               export_formats: exportFormats
                 ? JSON.stringify(exportFormats)
                 : existing.export_formats,
+              filename_template: filenameTemplate
+                ? JSON.stringify(filenameTemplate)
+                : existing.filename_template,
               color_theme: colorTheme
                 ? JSON.stringify(colorTheme)
                 : existing.color_theme,
