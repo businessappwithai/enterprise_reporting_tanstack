@@ -71,8 +71,8 @@ function ReportEditorPage() {
     pdf: false,
   });
   const [filenameTemplate, setFilenameTemplate] = useState({
-    field1: "",
-    field2: "",
+    field1: null as string | null,
+    field2: null as string | null,
   });
   const [colorTheme, setColorTheme] = useState<ReportColorTheme>({
     headerBackgroundColor: "#1e293b",
@@ -193,10 +193,10 @@ function ReportEditorPage() {
       }
       try {
         setFilenameTemplate(
-          JSON.parse(report.filename_template || '{"field1":"","field2":""}')
+          JSON.parse(report.filename_template || '{"field1":null,"field2":null}')
         );
       } catch {
-        setFilenameTemplate({ field1: "", field2: "" });
+        setFilenameTemplate({ field1: null, field2: null });
       }
       try {
         const parsedColorTheme = JSON.parse(
@@ -710,16 +710,15 @@ function ReportEditorPage() {
                   <div>
                     <Label htmlFor="field1">First Additional Field (optional)</Label>
                     <Select
-                      value={filenameTemplate.field1}
+                      value={filenameTemplate.field1 || ""}
                       onValueChange={(value) =>
-                        setFilenameTemplate((prev) => ({ ...prev, field1: value }))
+                        setFilenameTemplate((prev) => ({ ...prev, field1: value || null }))
                       }
                     >
                       <SelectTrigger id="field1">
                         <SelectValue placeholder="Select a field..." />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
                         {columns.map((col) => (
                           <SelectItem key={col.id || col.field} value={col.field}>
                             {col.header || col.field}
@@ -731,16 +730,15 @@ function ReportEditorPage() {
                   <div>
                     <Label htmlFor="field2">Second Additional Field (optional)</Label>
                     <Select
-                      value={filenameTemplate.field2}
+                      value={filenameTemplate.field2 || ""}
                       onValueChange={(value) =>
-                        setFilenameTemplate((prev) => ({ ...prev, field2: value }))
+                        setFilenameTemplate((prev) => ({ ...prev, field2: value || null }))
                       }
                     >
                       <SelectTrigger id="field2">
                         <SelectValue placeholder="Select a field..." />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
                         {columns.map((col) => (
                           <SelectItem key={col.id || col.field} value={col.field}>
                             {col.header || col.field}
@@ -752,8 +750,8 @@ function ReportEditorPage() {
                   <div className="p-3 bg-muted rounded-md">
                     <p className="text-xs text-muted-foreground">
                       Example: {reportName || "Report"}
-                      {filenameTemplate.field1 ? " + [" + filenameTemplate.field1 + "]" : ""}
-                      {filenameTemplate.field2 ? " + [" + filenameTemplate.field2 + "]" : ""}
+                      {filenameTemplate.field1 ? "[" + filenameTemplate.field1 + "]" : ""}
+                      {filenameTemplate.field2 ? "[" + filenameTemplate.field2 + "]" : ""}
                       {" "}.pdf
                     </p>
                   </div>
