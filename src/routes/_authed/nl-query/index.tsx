@@ -20,7 +20,10 @@ import {
   Save,
   ScatterChart,
   Send,
+  Speaker,
   Table2,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -41,6 +44,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { AgentStepsDisplay } from "@/components/nl-query/AgentStepsDisplay";
 import { RecordViewDialog } from "@/components/nl-query/RecordViewDialog";
 import { useAgentStreaming } from "@/hooks/useAgentStreaming";
+import { useTTS } from "@/hooks/useTTS";
 import { useVoiceRecording } from "@/hooks/useVoiceRecording";
 import { useDatasourceEntities } from "@/hooks/metadata/use-metadata-queries";
 import { drillableColumnSet, parseColumnTableMap } from "@/lib/utils/sql-column-map";
@@ -167,6 +171,9 @@ function NlQueryPage() {
     clearSteps,
   } = useAgentStreaming();
 
+  // Text-to-speech
+  const { isSpeaking, error: ttsError, speak, stop } = useTTS();
+
   // Voice input
   const { mode: voiceMode, isRecording, isTranscribing, interimText, error: voiceError, startRecording, stopAndTranscribe, cancelRecording } =
     useVoiceRecording({
@@ -180,10 +187,24 @@ function NlQueryPage() {
   const { data: dataSources = [], isLoading: isLoadingDs } = useQuery({
     queryKey: ["nl-query-data-sources"],
     queryFn: async () => {
+      // First try to get inspected data sources
       const res = await fetch("/api/data-sources?inspected=true");
       if (!res.ok) return [];
       const json = await res.json();
-      const items = json.data?.items || json.items || [];
+      let items = json.data?.items || json.items || [];
+
+      // If no inspected data sources found, get all data sources that have metadata entities
+      // (even if not yet marked as inspected in the database)
+      if (items.length === 0) {
+        const allRes = await fetch("/api/data-sources");
+        if (allRes.ok) {
+          const allJson = await allRes.json();
+          const allItems = allJson.data?.items || allJson.items || [];
+          // Filter to those with metadata (we'll check via entities endpoint if needed)
+          items = allItems;
+        }
+      }
+
       return items as { id: string; name: string; client_type: string; last_inspected_at?: string | null }[];
     },
   });
@@ -454,11 +475,11 @@ function NlQueryPage() {
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                A data source must be configured and inspected before using NL Query. Go to{" "}
+                No inspected data sources found. Go to{" "}
                 <Button variant="link" className="p-0 h-auto" onClick={() => (window.location.href = "/data-sources")}>
                   Data Sources
                 </Button>
-                {" "}to add a data source and run Inspect Schema on it.
+                {" "}and click <strong>Inspect Schema</strong> on a configured data source to use it here.
               </AlertDescription>
             </Alert>
           </CardContent>
@@ -545,7 +566,7 @@ function NlQueryPage() {
                           ? "Tap to stop and confirm"
                           : voiceMode === "web-speech"
                             ? "Voice input (browser speech recognition)"
-                            : "Voice input (Ollama Whisper)"
+                            : "Voice input (llama.cpp Qwen3-ASR)"
                       }
                       disabled={isGenerating || isTranscribing}
                       onClick={isRecording ? stopAndTranscribe : startRecording}
@@ -587,7 +608,7 @@ function NlQueryPage() {
                           ? "Listening — tap mic to confirm, right-tap to cancel"
                           : isRecording
                             ? "Recording — tap mic to stop, right-tap to cancel"
-                            : "Transcribing audio via Ollama Whisper…"}
+                            : "Transcribing audio via llama.cpp…"}
                     </span>
                   </div>
                 )}
@@ -664,7 +685,23 @@ function NlQueryPage() {
                       )}
 
                       {explanation && !isEditingSQL && (
-                        <p className="text-xs text-green-800 dark:text-green-300 mt-2">{explanation}</p>
+                        <div className="flex items-start gap-2 mt-2">
+                          <p className="text-xs text-green-800 dark:text-green-300 flex-1">{explanation}</p>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 shrink-0"
+                            onClick={() => speak(explanation)}
+                            disabled={isSpeaking}
+                            title={isSpeaking ? "Stop" : "Read explanation aloud"}
+                          >
+                            {isSpeaking ? (
+                              <VolumeX className="h-3.5 w-3.5" />
+                            ) : (
+                              <Speaker className="h-3.5 w-3.5" />
+                            )}
+                          </Button>
+                        </div>
                       )}
 
                       {warnings && warnings.length > 0 && (
@@ -920,7 +957,7 @@ function NlQueryPage() {
               <Alert className="mt-3">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription className="text-xs">
-                  Requires Ollama running with <code className="bg-muted px-1 py-0.5 rounded">sqlcoder:7b</code> on port 11434.
+                  Requires llama.cpp running with <code className="bg-muted px-1 py-0.5 rounded">Qwen3.6</code> on port 8082.
                   Press <kbd className="bg-muted border rounded px-1">⌘ Enter</kbd> to generate.
                 </AlertDescription>
               </Alert>

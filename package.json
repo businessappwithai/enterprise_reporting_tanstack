@@ -12,6 +12,7 @@
     "lint:fix": "biome lint src --write",
     "format": "biome format src --write",
     "format:check": "biome format src --check",
+    "setup": "bun scripts/setup.ts",
     "db:migrate": "bun scripts/rebuild-db.ts",
     "db:seed": "bun src/lib/db/seeds/001_initial_data.ts",
     "db:seed-sakila": "bun scripts/seed-sakila-pglite.ts",

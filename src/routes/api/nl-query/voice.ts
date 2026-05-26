@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
 import { verifySession } from "@/lib/auth/session";
+import { transcribeAudio } from "@/lib/voice/qwen-asr";
 
 async function getSession(request: Request) {
   const cookie = request.headers.get("cookie") || "";
@@ -20,9 +21,6 @@ export const Route = createFileRoute("/api/nl-query/voice")({
             return json({ success: false, error: "Unauthorized" }, { status: 401 });
           }
 
-          const ollamaUrl = process.env.OLLAMA_URL || "http://localhost:11434";
-          const whisperModel = process.env.OLLAMA_WHISPER_MODEL || "dimavz/whisper-tiny";
-
           // Parse audio from the incoming multipart/form-data
           let formData: FormData;
           try {
@@ -36,29 +34,16 @@ export const Route = createFileRoute("/api/nl-query/voice")({
             return json({ success: false, error: "No audio data in request" });
           }
 
-          // Forward to Ollama's OpenAI-compatible transcription endpoint
-          const ollamaForm = new FormData();
-          ollamaForm.append("file", audioEntry, (audioEntry as File).name || "recording.webm");
-          ollamaForm.append("model", whisperModel);
-          ollamaForm.append("response_format", "json");
+          // Transcribe using llama.cpp Qwen3-ASR
+          const text = await transcribeAudio(audioEntry);
 
-          const ollamaResponse = await fetch(`${ollamaUrl}/v1/audio/transcriptions`, {
-            method: "POST",
-            body: ollamaForm,
-            signal: AbortSignal.timeout(30000),
-          });
-
-          if (!ollamaResponse.ok) {
-            const errText = await ollamaResponse.text().catch(() => "");
-            console.error("[Voice] Ollama transcription error:", ollamaResponse.status, errText);
+          if (!text) {
+            console.error("[Voice] Transcription returned empty result");
             return json({
               success: false,
-              error: `Transcription failed (${ollamaResponse.status}). Ensure dimavz/whisper-tiny is installed: ollama pull dimavz/whisper-tiny`,
+              error: "Transcription failed. Ensure Qwen3-ASR is available on llama.cpp server.",
             });
           }
-
-          const data = (await ollamaResponse.json()) as { text?: string };
-          const text = (data.text ?? "").trim();
 
           if (!text) {
             return json({ success: false, error: "No speech detected — try speaking more clearly" });

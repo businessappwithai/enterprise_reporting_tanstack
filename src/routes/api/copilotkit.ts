@@ -3,13 +3,13 @@ import { json } from "@/lib/server/response";
 import { verifySession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
-import { translateNLToSQLViaMastra } from "@/lib/nlquery/mastra-ollama-translator";
+import { translateNLToSQLViaLlama } from "@/lib/nlquery/llama-translator";
 import { sql } from "kysely";
 
 /**
  * CopilotKit Runtime Endpoint
  * Provides agent and action configuration for CopilotKit client
- * Handles NL→SQL translation for Hospital Management System with Ollama
+ * Handles NL→SQL translation for Hospital Management System with llama.cpp
  */
 
 async function getSession(request: Request) {
@@ -168,8 +168,8 @@ export const Route = createFileRoute("/api/copilotkit")({
 
               const schema = { tables: schemaTablesList };
 
-              // Translate NL to SQL using Ollama with RBAC validation
-              const result = await translateNLToSQLViaMastra(
+              // Translate NL to SQL using llama.cpp with RBAC validation
+              const result = await translateNLToSQLViaLlama(
                 nlQuestion,
                 schema as any,
                 session.user.id,
@@ -178,12 +178,12 @@ export const Route = createFileRoute("/api/copilotkit")({
 
               if (!result) {
                 console.error(
-                  "[CopilotKit] Failed to translate query - Ollama unavailable"
+                  "[CopilotKit] Failed to translate query - llama.cpp reasoning server unavailable"
                 );
                 return json({
                   success: false,
                   error:
-                    "Failed to translate query. Ensure Ollama is running locally with sqlcoder model.",
+                    "Failed to translate query. Ensure llama.cpp reasoning server is running on port 8082 with Qwen3.6 model.",
                 });
               }
 
@@ -193,7 +193,7 @@ export const Route = createFileRoute("/api/copilotkit")({
                 success: true,
                 result: {
                   sql: result.sql,
-                  explanation: result.explanation || "SQL generated via Ollama",
+                  explanation: result.explanation || "SQL generated via Qwen3.6",
                   warnings: result.warnings || [],
                 },
               });

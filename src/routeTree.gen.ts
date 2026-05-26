@@ -42,6 +42,9 @@ import { Route as AuthedChartsIndexRouteImport } from './routes/_authed/charts/i
 import { Route as ShareReportIdRouteImport } from './routes/share/report/$id'
 import { Route as ShareDashboardIdRouteImport } from './routes/share/dashboard/$id'
 import { Route as ShareChartIdRouteImport } from './routes/share/chart/$id'
+import { Route as ApiVoiceWsRouteImport } from './routes/api/voice/ws'
+import { Route as ApiVoiceTranscribeRouteImport } from './routes/api/voice/transcribe'
+import { Route as ApiVoiceSynthesizeRouteImport } from './routes/api/voice/synthesize'
 import { Route as ApiSqlValidateRouteImport } from './routes/api/sql/validate'
 import { Route as ApiSqlExecuteRouteImport } from './routes/api/sql/execute'
 import { Route as ApiReportsIdRouteImport } from './routes/api/reports/$id'
@@ -260,6 +263,21 @@ const ShareDashboardIdRoute = ShareDashboardIdRouteImport.update({
 const ShareChartIdRoute = ShareChartIdRouteImport.update({
   id: '/share/chart/$id',
   path: '/share/chart/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiVoiceWsRoute = ApiVoiceWsRouteImport.update({
+  id: '/api/voice/ws',
+  path: '/api/voice/ws',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiVoiceTranscribeRoute = ApiVoiceTranscribeRouteImport.update({
+  id: '/api/voice/transcribe',
+  path: '/api/voice/transcribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiVoiceSynthesizeRoute = ApiVoiceSynthesizeRouteImport.update({
+  id: '/api/voice/synthesize',
+  path: '/api/voice/synthesize',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiSqlValidateRoute = ApiSqlValidateRouteImport.update({
@@ -585,6 +603,9 @@ export interface FileRoutesByFullPath {
   '/api/reports/$id': typeof ApiReportsIdRouteWithChildren
   '/api/sql/execute': typeof ApiSqlExecuteRoute
   '/api/sql/validate': typeof ApiSqlValidateRoute
+  '/api/voice/synthesize': typeof ApiVoiceSynthesizeRoute
+  '/api/voice/transcribe': typeof ApiVoiceTranscribeRoute
+  '/api/voice/ws': typeof ApiVoiceWsRoute
   '/share/chart/$id': typeof ShareChartIdRoute
   '/share/dashboard/$id': typeof ShareDashboardIdRoute
   '/share/report/$id': typeof ShareReportIdRoute
@@ -673,6 +694,9 @@ export interface FileRoutesByTo {
   '/api/reports/$id': typeof ApiReportsIdRouteWithChildren
   '/api/sql/execute': typeof ApiSqlExecuteRoute
   '/api/sql/validate': typeof ApiSqlValidateRoute
+  '/api/voice/synthesize': typeof ApiVoiceSynthesizeRoute
+  '/api/voice/transcribe': typeof ApiVoiceTranscribeRoute
+  '/api/voice/ws': typeof ApiVoiceWsRoute
   '/share/chart/$id': typeof ShareChartIdRoute
   '/share/dashboard/$id': typeof ShareDashboardIdRoute
   '/share/report/$id': typeof ShareReportIdRoute
@@ -763,6 +787,9 @@ export interface FileRoutesById {
   '/api/reports/$id': typeof ApiReportsIdRouteWithChildren
   '/api/sql/execute': typeof ApiSqlExecuteRoute
   '/api/sql/validate': typeof ApiSqlValidateRoute
+  '/api/voice/synthesize': typeof ApiVoiceSynthesizeRoute
+  '/api/voice/transcribe': typeof ApiVoiceTranscribeRoute
+  '/api/voice/ws': typeof ApiVoiceWsRoute
   '/share/chart/$id': typeof ShareChartIdRoute
   '/share/dashboard/$id': typeof ShareDashboardIdRoute
   '/share/report/$id': typeof ShareReportIdRoute
@@ -853,6 +880,9 @@ export interface FileRouteTypes {
     | '/api/reports/$id'
     | '/api/sql/execute'
     | '/api/sql/validate'
+    | '/api/voice/synthesize'
+    | '/api/voice/transcribe'
+    | '/api/voice/ws'
     | '/share/chart/$id'
     | '/share/dashboard/$id'
     | '/share/report/$id'
@@ -941,6 +971,9 @@ export interface FileRouteTypes {
     | '/api/reports/$id'
     | '/api/sql/execute'
     | '/api/sql/validate'
+    | '/api/voice/synthesize'
+    | '/api/voice/transcribe'
+    | '/api/voice/ws'
     | '/share/chart/$id'
     | '/share/dashboard/$id'
     | '/share/report/$id'
@@ -1030,6 +1063,9 @@ export interface FileRouteTypes {
     | '/api/reports/$id'
     | '/api/sql/execute'
     | '/api/sql/validate'
+    | '/api/voice/synthesize'
+    | '/api/voice/transcribe'
+    | '/api/voice/ws'
     | '/share/chart/$id'
     | '/share/dashboard/$id'
     | '/share/report/$id'
@@ -1112,6 +1148,9 @@ export interface RootRouteChildren {
   ApiNlQueryVoiceRoute: typeof ApiNlQueryVoiceRoute
   ApiSqlExecuteRoute: typeof ApiSqlExecuteRoute
   ApiSqlValidateRoute: typeof ApiSqlValidateRoute
+  ApiVoiceSynthesizeRoute: typeof ApiVoiceSynthesizeRoute
+  ApiVoiceTranscribeRoute: typeof ApiVoiceTranscribeRoute
+  ApiVoiceWsRoute: typeof ApiVoiceWsRoute
   ShareChartIdRoute: typeof ShareChartIdRoute
   ShareDashboardIdRoute: typeof ShareDashboardIdRoute
   ShareReportIdRoute: typeof ShareReportIdRoute
@@ -1353,6 +1392,27 @@ declare module '@tanstack/react-router' {
       path: '/share/chart/$id'
       fullPath: '/share/chart/$id'
       preLoaderRoute: typeof ShareChartIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/voice/ws': {
+      id: '/api/voice/ws'
+      path: '/api/voice/ws'
+      fullPath: '/api/voice/ws'
+      preLoaderRoute: typeof ApiVoiceWsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/voice/transcribe': {
+      id: '/api/voice/transcribe'
+      path: '/api/voice/transcribe'
+      fullPath: '/api/voice/transcribe'
+      preLoaderRoute: typeof ApiVoiceTranscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/voice/synthesize': {
+      id: '/api/voice/synthesize'
+      path: '/api/voice/synthesize'
+      fullPath: '/api/voice/synthesize'
+      preLoaderRoute: typeof ApiVoiceSynthesizeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/sql/validate': {
@@ -2009,6 +2069,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiNlQueryVoiceRoute: ApiNlQueryVoiceRoute,
   ApiSqlExecuteRoute: ApiSqlExecuteRoute,
   ApiSqlValidateRoute: ApiSqlValidateRoute,
+  ApiVoiceSynthesizeRoute: ApiVoiceSynthesizeRoute,
+  ApiVoiceTranscribeRoute: ApiVoiceTranscribeRoute,
+  ApiVoiceWsRoute: ApiVoiceWsRoute,
   ShareChartIdRoute: ShareChartIdRoute,
   ShareDashboardIdRoute: ShareDashboardIdRoute,
   ShareReportIdRoute: ShareReportIdRoute,

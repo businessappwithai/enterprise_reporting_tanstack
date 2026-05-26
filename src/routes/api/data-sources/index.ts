@@ -42,8 +42,8 @@ export const Route = createFileRoute("/api/data-sources/")({
             success: true,
             data: {
               items: dataSources,
-              meta: { total: dataSources.length }
-            }
+              meta: { total: dataSources.length },
+            },
           });
         } catch (error) {
           console.error("Data sources list error:", error);

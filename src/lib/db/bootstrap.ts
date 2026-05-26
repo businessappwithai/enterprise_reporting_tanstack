@@ -83,6 +83,7 @@ const SCHEMA_SQL = [
     sort_config TEXT,
     pagination_config TEXT,
     export_formats TEXT,
+    filename_template TEXT,
     color_theme TEXT,
     is_public BOOLEAN DEFAULT false,
     is_deleted BOOLEAN DEFAULT false,
@@ -466,6 +467,7 @@ export async function bootstrapSchema(pglite: PGlite): Promise<void> {
   // Column migrations — idempotent ADD COLUMN IF NOT EXISTS for existing databases
   const columnMigrations = [
     "ALTER TABLE data_sources ADD COLUMN IF NOT EXISTS last_inspected_at TEXT",
+    "ALTER TABLE report_definitions ADD COLUMN IF NOT EXISTS filename_template TEXT",
   ];
   for (const sql of columnMigrations) {
     try {

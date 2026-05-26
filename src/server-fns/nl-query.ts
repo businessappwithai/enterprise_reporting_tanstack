@@ -12,7 +12,7 @@ import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
 import type { DataSource, User } from "@/types/database";
 import { isSafeSelectQuery } from "@/lib/nlquery/openai-translator";
-import { translateNLToSQLViaMastra as translateViaOllama, isOllamaAvailable } from "@/lib/nlquery/mastra-ollama-translator";
+import { translateNLToSQLViaLlama, isLlamaReasoningAvailable } from "@/lib/nlquery/llama-translator";
 import { translateNLToSQLViaMastra as translateViaMastra, isMastraAvailable } from "@/lib/nlquery/mastra-connector";
 import { getSchemaMetadata } from "@/lib/nlquery/schema-metadata";
 import { validateQueryAccess } from "@/lib/permissions/query-access-validator";
@@ -170,7 +170,7 @@ export const executeNLQuery = createServerFn({
       console.log("[NLQuery] Built enhanced context from similar role queries");
     }
 
-    // [Step 1.6] Translate NL to SQL using Mastra.ai agent (primary) or Ollama (fallback)
+    // [Step 1.6] Translate NL to SQL using Mastra.ai agent (primary) or llama.cpp (fallback)
     let translation: any = null;
     let translationSource = "";
     if (mastraAvailable) {
@@ -190,17 +190,17 @@ export const executeNLQuery = createServerFn({
       );
     }
 
-    // Fall back to Ollama if Mastra is not available
-    if (!translation && (await isOllamaAvailable())) {
-      console.log("[NLQuery] Mastra not available, falling back to Ollama");
-      translationSource = "mastra-ollama";
-      translation = await translateViaOllama(nlQuestion, enhancedSchema);
+    // Fall back to llama.cpp if Mastra is not available
+    if (!translation && (await isLlamaReasoningAvailable())) {
+      console.log("[NLQuery] Mastra not available, falling back to llama.cpp");
+      translationSource = "llama-reasoning";
+      translation = await translateNLToSQLViaLlama(nlQuestion, enhancedSchema);
     }
 
     // If neither is available, return error
     if (!translation) {
       const mastraUrl = process.env.MASTRA_URL || "http://localhost:4111";
-      const ollamaUrl = process.env.OLLAMA_URL || "http://localhost:11434";
+      const llamaUrl = process.env.LLAMA_REASONING_URL || "http://localhost:8082";
 
       await logAudit({
         userId: session.user.id,
@@ -209,15 +209,15 @@ export const executeNLQuery = createServerFn({
         resourceId: dataSourceId,
         details: {
           nlQuestion,
-          error: "Neither Mastra agent nor Ollama is available",
+          error: "Neither Mastra agent nor llama.cpp is available",
           mastraUrl,
-          ollamaUrl,
+          llamaUrl,
         },
       });
 
       return {
         success: false,
-        error: `Natural language queries require either Mastra.ai (${mastraUrl}) or Ollama (${ollamaUrl}) to be running.`,
+        error: `Natural language queries require either Mastra.ai (${mastraUrl}) or llama.cpp (${llamaUrl}) to be running.`,
       };
     }
 

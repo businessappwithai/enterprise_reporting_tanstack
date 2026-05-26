@@ -435,8 +435,10 @@ async function initPGlite(): Promise<PGlite> {
     // Remove stale lock file before opening to prevent Aborted() WASM crash
     const pidFile = join(DATA_DIR, "postmaster.pid");
     if (existsSync(pidFile)) rmSync(pidFile);
+    console.log(`[db] Initializing PGLite at: ${DATA_DIR}`);
     pglite = new PGlite(DATA_DIR);
     await pglite.waitReady;
+    console.log(`[db] PGLite ready, bootstrap schema...`);
     // Auto-create tables and seed admin on first run (safe to call every time)
     await bootstrapSchema(pglite);
   }
@@ -492,6 +494,10 @@ export async function closeDb(): Promise<void> {
   if (db) {
     await db.destroy();
     db = null;
+  }
+  if (pglite) {
+    await pglite.close();
+    pglite = null;
   }
 }
 

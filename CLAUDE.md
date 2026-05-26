@@ -14,16 +14,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - ✅ `bun <script>` - Run any package.json script
 
 ### Module Usage
-- ✅ ALWAYS use `bun:*` modules (bun:sqlite, bun:test, etc.)
-- ✅ Database MUST use `bun:sqlite` exclusively via Kysely
+- ✅ ALWAYS use `bun:*` modules (bun:test, etc.)
+- ✅ Database MUST use PGLite (in-process PostgreSQL) via Kysely
+- ✅ Configuration database uses PGLite for unified data storage
 - ✅ Leverage Bun's built-in APIs for maximum performance
 
-### Why Bun-Only
-Bun is the runtime. It provides native SQLite support (`bun:sqlite`), fast dependency resolution, and TypeScript support out of the box. Using Bun across all layers eliminates compatibility issues and maximizes performance.
+### Why PGLite
+PGLite is an in-process PostgreSQL database that provides:
+- ✅ Full SQL compatibility and ACID transactions
+- ✅ Persistent file-based storage (survives application restarts)
+- ✅ Instant commits - data written to disk immediately (no buffering)
+- ✅ No external database dependencies
+- ✅ Enterprise-grade reliability and durability
+
+Using PGLite across all data layers ensures consistency, leverages PostgreSQL's powerful query capabilities, and guarantees data safety with instant persistence.
 
 ## Project Overview - Enterprise Reporting System
 
-Enterprise Reporting and Dashboard System built with **TanStack Start** (full-stack React), **Bun runtime**, **PostgreSQL** (via Kysely) with **TanStack DB** for reactive client-side collections, and **shadcn/ui**. Provides data visualization, SQL querying, role-based access control, job scheduling, and multi-format export capabilities.
+Enterprise Reporting and Dashboard System built with **TanStack Start** (full-stack React), **Bun runtime**, **PGLite** (in-process PostgreSQL via Kysely) for persistent data storage, **TanStack DB** for reactive client-side collections, and **shadcn/ui**. Provides data visualization, SQL querying, role-based access control, job scheduling, and multi-format export capabilities.
 
 ## Tech Stack
 
@@ -36,7 +44,7 @@ Enterprise Reporting and Dashboard System built with **TanStack Start** (full-st
 | UI Components | shadcn/ui (Radix UI + Tailwind CSS 3) |
 | State/Data | TanStack Query v5, TanStack Table v8, TanStack Form v1 |
 | Reactive DB | TanStack DB v0.6 (client-side collections, PostgreSQL sync) |
-| Database | PostgreSQL (Kysely) or SQLite (bun:sqlite via Kysely) |
+| Database | PGLite (in-process PostgreSQL via Kysely) - persistent file-based |
 | Auth | Custom JWT (jose) with HTTP-only cookies |
 | Charts | Recharts, ECharts |
 | Job Queue | Trigger.dev (Cloud-based job processing with local Mastra.ai API) |
@@ -164,8 +172,8 @@ enterprise-reporting-system/
 │   │   │   ├── config.ts             # Kysely connection (getDb(), getConfigDB())
 
 │   │   │   ├── connection-manager.ts # Connection management
-│   │   │   ├── bun-sqlite-wrapper.ts # Bun SQLite wrapper
-│   │   │   ├── migrations/           # Legacy migrations (timestamped .ts files)
+│   │   │   ├── kysely-db.ts          # PGLite + Kysely configuration
+│   │   │   ├── migrations/           # PGLite migrations (timestamped .ts files)
 │   │   │   ├── seeds/                # Seed data (001_initial_data.ts)
 │   │   │   └── sample-data/          # Sample schema and seed scripts
 │   │   ├── auth/                     # Authentication (JWT session, RBAC)
@@ -234,7 +242,7 @@ enterprise-reporting-system/
 │   ├── create-admin.ts               # Admin user creation
 │   ├── seed-sakila-analytics.ts      # Sakila demo data seeder
 │   └── deploy-*.sh                   # Deployment scripts
-├── database/                         # Database files (SQLite)
+├── data/                             # PGLite database directory (persistent)
 ├── docs/                             # Project documentation
 ├── nginx/                            # Nginx config (reverse proxy)
 ├── .claude/                          # Claude Code configuration
@@ -345,9 +353,12 @@ import { requireAuth } from '@/lib/auth/middleware'
 
 - **Kysely**: All database queries use Kysely (type-safe SQL query builder)
 - **Instance**: Get via `getDb()` from `@/lib/db/config`
-- **Database**: SQLite with foreign keys enabled via PRAGMA
+- **Database**: PGLite (in-process PostgreSQL) with persistent file-based storage at `./data/`
+- **Persistence**: Instant commits - all data written to disk immediately (ACID guaranteed)
+- **Durability**: Data survives application restarts, crashes, and system reboots
 - **Migrations**: `src/lib/db/migrations/YYYYMMDDHHMMSS_description.ts`
 - **Querying**: Always use LIMIT/OFFSET for server-side pagination
+- **Configuration**: Unified persistent storage using PGLite for both main and config data
 
 ### Component Patterns
 
@@ -542,7 +553,8 @@ Multi-stage build using `oven/bun:1.3-alpine`:
 
 | Variable | Purpose |
 |----------|---------|
-| `DATABASE_PATH` | SQLite database file path |
+| `DATA_DIR` | PGLite database directory path (default: `./data`) |
+| `CONFIG_DB_PATH` | Configuration database path (default: `./config.db`) |
 | `AUTH_SECRET` | JWT session secret (min 32 chars) |
 | `ENCRYPTION_KEY` | AES-256 key for credential encryption |
 | `OPENAI_API_KEY` | OpenAI API key for NL query feature |

@@ -42,8 +42,13 @@ export class DataSourceService {
       .where("is_deleted", "=", false);
 
     if (options?.inspectedOnly) {
-      // biome-ignore lint/suspicious/noExplicitAny: is_inspected not in generated Kysely types
-      query = (query as any).where("is_inspected", "=", true);
+      try {
+        // biome-ignore lint/suspicious/noExplicitAny: is_inspected not in generated Kysely types
+        query = (query as any).where("is_inspected", "=", true);
+      } catch (err) {
+        console.error("Error filtering by is_inspected:", err);
+        // If error, just return all data sources (fall back)
+      }
     }
 
     const dataSources = await (query as any).orderBy("name", "asc").execute();

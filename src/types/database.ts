@@ -104,6 +104,7 @@ export interface ReportDefinition {
   sort_config?: string;
   pagination_config?: string;
   export_formats: string;
+  filename_template?: string;
   color_theme?: string;
   created_by?: string;
   created_at: string;
