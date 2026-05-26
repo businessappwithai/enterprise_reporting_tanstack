@@ -57,7 +57,26 @@ function ReportViewerPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${report?.name || "report"}.${format === "xlsx" ? "xlsx" : format}`;
+
+      // Build filename: matches server-side buildFilename logic
+      let filename = report?.name || "report";
+      if (report?.filename_template && reportData?.rows && reportData.rows.length > 0) {
+        try {
+          const template = JSON.parse(report.filename_template);
+          const firstRow = reportData.rows[0];
+          if (template.field1 && firstRow[template.field1]) {
+            filename += String(firstRow[template.field1]);
+          }
+          if (template.field2 && firstRow[template.field2]) {
+            filename += String(firstRow[template.field2]);
+          }
+        } catch {
+          // Use default filename if template parsing fails
+        }
+      }
+
+      const ext = format === "xlsx" ? "xlsx" : format;
+      a.download = `${filename}.${ext}`;
       a.click();
       URL.revokeObjectURL(url);
     },
