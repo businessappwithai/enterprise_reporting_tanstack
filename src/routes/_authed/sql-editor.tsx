@@ -694,11 +694,10 @@ function SQLEditorPage() {
 
       {saveQueryModal && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center"
+          className="fixed inset-0 bg-black/50 flex items-center justify-center"
           style={{ zIndex: 99999 }}
         >
-          {/* Sheet-style on mobile (slides up), centered dialog on sm+ */}
-          <div className="bg-background rounded-t-2xl sm:rounded-lg p-5 sm:p-6 w-full sm:max-w-md sm:mx-4 shadow-lg max-h-[85vh] overflow-y-auto">
+          <div className="bg-background p-6 w-full max-w-md mx-4 max-h-[85vh] overflow-y-auto border">
             <h2 className="text-xl font-bold mb-4">
               {editingQueryId ? "Update Query" : "Save Query"}
             </h2>
@@ -712,7 +711,7 @@ function SQLEditorPage() {
                   type="text"
                   value={queryName}
                   onChange={(e) => setQueryName(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border"
                   placeholder="Enter query name"
                 />
                 {queryName.trim().length === 0 && (
@@ -727,12 +726,12 @@ function SQLEditorPage() {
                   id="queryDescription"
                   value={queryDescription}
                   onChange={(e) => setQueryDescription(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border"
                   placeholder="Enter a description for this query"
                   rows={3}
                 />
               </div>
-              <div className="text-xs text-muted-foreground bg-gray-50 dark:bg-gray-800 p-2 rounded">
+              <div className="text-xs text-muted-foreground bg-background p-2 border">
                 <p>
                   Data Source:{" "}
                   <strong>
@@ -752,7 +751,7 @@ function SQLEditorPage() {
                   setQueryName("");
                   setQueryDescription("");
                 }}
-                className="flex-1 px-4 py-2 border rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-sm font-medium"
+                className="flex-1 px-4 py-2 border hover:bg-gray-100 dark:hover:bg-gray-800 text-sm font-medium"
               >
                 Cancel
               </button>
@@ -760,7 +759,7 @@ function SQLEditorPage() {
                 type="button"
                 onClick={handleSaveQuery}
                 disabled={saveQueryMutation.isPending || !queryName.trim()}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                className="flex-1 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
               >
                 {saveQueryMutation.isPending ? "Saving..." : editingQueryId ? "Update" : "Save"}
               </button>
