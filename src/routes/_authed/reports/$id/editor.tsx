@@ -681,7 +681,9 @@ function ReportEditorPage() {
                     { key: "headerBackgroundColor", label: "Header Background" },
                     { key: "headerTextColor", label: "Header Text" },
                     { key: "rowBackgroundColor", label: "Row Background" },
+                    { key: "rowTextColor", label: "Row Text" },
                     { key: "alternatingRowBackgroundColor", label: "Alternating Row Background" },
+                    { key: "alternatingRowTextColor", label: "Alternating Row Text" },
                     { key: "borderColor", label: "Border Color" },
                   ].map(({ key, label }) => (
                     <div key={key} className="space-y-2">
