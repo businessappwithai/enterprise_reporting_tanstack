@@ -50,10 +50,16 @@ function hexToRGB(hex: string | undefined): { r: number; g: number; b: number } 
 function parseColorTheme(colorThemeStr: string | null): ReportColorTheme | null {
   if (!colorThemeStr) return null;
   try {
-    return JSON.parse(colorThemeStr) as ReportColorTheme;
+    const theme = JSON.parse(colorThemeStr) as ReportColorTheme;
+    return theme;
   } catch {
     return null;
   }
+}
+
+function isValidHexColor(color: string | undefined): boolean {
+  if (!color) return false;
+  return /^#([0-9A-F]{3}){1,2}$/i.test(color);
 }
 
 function buildFilename(reportName: string, templateStr: string | null, firstRow: Record<string, unknown> | undefined, ext: string): string {
@@ -62,10 +68,10 @@ function buildFilename(reportName: string, templateStr: string | null, firstRow:
     try {
       const template = JSON.parse(templateStr);
       if (template.field1 && firstRow[template.field1]) {
-        filename += "_" + String(firstRow[template.field1]);
+        filename += String(firstRow[template.field1]);
       }
       if (template.field2 && firstRow[template.field2]) {
-        filename += "_" + String(firstRow[template.field2]);
+        filename += String(firstRow[template.field2]);
       }
     } catch {
       // Fall back to just report name
@@ -480,13 +486,13 @@ export const Route = createFileRoute("/api/reports/$id/export")({
 
           if (format === "html") {
             const colorTheme = parseColorTheme(report.color_theme ?? null);
-            const headerBg = colorTheme?.headerBackgroundColor || "#1e293b";
-            const headerText = colorTheme?.headerTextColor || "#ffffff";
-            const rowBg = colorTheme?.rowBackgroundColor || "#ffffff";
-            const rowText = colorTheme?.rowTextColor || "#334155";
-            const altRowBg = colorTheme?.alternatingRowBackgroundColor || "#f8fafc";
-            const altRowText = colorTheme?.alternatingRowTextColor || "#334155";
-            const borderColor = colorTheme?.borderColor || "#e2e8f0";
+            const headerBg = isValidHexColor(colorTheme?.headerBackgroundColor) ? colorTheme.headerBackgroundColor : "#1e293b";
+            const headerText = isValidHexColor(colorTheme?.headerTextColor) ? colorTheme.headerTextColor : "#ffffff";
+            const rowBg = isValidHexColor(colorTheme?.rowBackgroundColor) ? colorTheme.rowBackgroundColor : "#ffffff";
+            const rowText = isValidHexColor(colorTheme?.rowTextColor) ? colorTheme.rowTextColor : "#334155";
+            const altRowBg = isValidHexColor(colorTheme?.alternatingRowBackgroundColor) ? colorTheme.alternatingRowBackgroundColor : "#f8fafc";
+            const altRowText = isValidHexColor(colorTheme?.alternatingRowTextColor) ? colorTheme.alternatingRowTextColor : "#334155";
+            const borderColor = isValidHexColor(colorTheme?.borderColor) ? colorTheme.borderColor : "#e2e8f0";
 
             const dataJson = JSON.stringify(filteredRows).replace(/</g, "\\u003c").replace(/>/g, "\\u003e");
             const headersJson = JSON.stringify(headers).replace(/</g, "\\u003c").replace(/>/g, "\\u003e");
@@ -516,10 +522,12 @@ export const Route = createFileRoute("/api/reports/$id/export")({
     .table-wrapper { overflow-x: auto; border: 1px solid ${borderColor}; border-radius: 4px; }
     table { width: 100%; border-collapse: collapse; }
     thead { background-color: ${headerBg}; color: ${headerText}; }
-    th { padding: 12px; text-align: left; font-weight: 600; border: 1px solid ${borderColor}; }
+    th { padding: 12px; text-align: left; font-weight: 600; border: 1px solid ${borderColor}; color: ${headerText}; }
     tbody tr { border-bottom: 1px solid ${borderColor}; }
-    tbody tr:nth-child(odd) { background-color: ${rowBg}; color: ${rowText}; }
-    tbody tr:nth-child(even) { background-color: ${altRowBg}; color: ${altRowText}; }
+    tbody tr:nth-child(odd) { background-color: ${rowBg}; }
+    tbody tr:nth-child(odd) td { color: ${rowText}; }
+    tbody tr:nth-child(even) { background-color: ${altRowBg}; }
+    tbody tr:nth-child(even) td { color: ${altRowText}; }
     td { padding: 12px; border: 1px solid ${borderColor}; }
     .pagination { display: flex; gap: 8px; margin-top: 20px; align-items: center; }
     .pagination button { padding: 6px 12px; min-width: 40px; }
@@ -649,7 +657,7 @@ export const Route = createFileRoute("/api/reports/$id/export")({
 </body>
 </html>`;
 
-            const htmlFilename = buildFilename(report.name || "report", report.filename_template, data[0], "html");
+            const htmlFilename = buildFilename(report.name || "report", report.filename_template, filteredRows[0], "html");
             return new Response(html, {
               headers: {
                 "Content-Type": "text/html; charset=utf-8",
