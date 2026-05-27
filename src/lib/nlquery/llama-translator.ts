@@ -130,11 +130,14 @@ Question: ${nlQuestion}
 Generate a SQL SELECT query that answers this question:`;
 
   try {
-    const response = await client.messages.create({
+    const response = await client.chat.completions.create({
       model: LLAMA_REASONING_MODEL,
       max_tokens: 512,
-      system: systemPrompt,
       messages: [
+        {
+          role: "system",
+          content: systemPrompt,
+        },
         {
           role: "user",
           content: userPrompt,
@@ -142,12 +145,12 @@ Generate a SQL SELECT query that answers this question:`;
       ],
     });
 
-    const content = response.content[0];
-    if (content.type !== "text") {
+    const content = response.choices[0];
+    if (content.message.content === null) {
       return null;
     }
 
-    const raw = content.text.trim();
+    const raw = content.message.content.trim();
 
     // Check for inability to generate
     if (raw.includes("UNABLE_TO_GENERATE")) {
@@ -191,11 +194,14 @@ ${schemaContext}
 Generate a corrected SQL SELECT query (SELECT only, no mutations):`;
 
   try {
-    const response = await client.messages.create({
+    const response = await client.chat.completions.create({
       model: LLAMA_REASONING_MODEL,
       max_tokens: 512,
-      system: systemPrompt,
       messages: [
+        {
+          role: "system",
+          content: systemPrompt,
+        },
         {
           role: "user",
           content: userPrompt,
@@ -203,12 +209,12 @@ Generate a corrected SQL SELECT query (SELECT only, no mutations):`;
       ],
     });
 
-    const content = response.content[0];
-    if (content.type !== "text") {
+    const content = response.choices[0];
+    if (content.message.content === null) {
       return null;
     }
 
-    const raw = content.text.trim().replace(/^```sql\s*/i, "").replace(/```$/, "").trim();
+    const raw = content.message.content.trim().replace(/^```sql\s*/i, "").replace(/```$/, "").trim();
     const sqlMatch = raw.match(/(WITH\s+.+?SELECT.+|SELECT.+)/is);
     return sqlMatch ? sqlMatch[0].trim() : null;
   } catch (error) {
