@@ -1,9 +1,6 @@
-import { existsSync, mkdirSync, rmSync } from "node:fs";
-import { join } from "node:path";
 import { Kysely, MssqlDialect, MysqlDialect, PostgresDialect, sql } from "kysely";
 import { Pool } from "pg";
-import { PGlite } from "@electric-sql/pglite";
-import { getDb } from "@/lib/db/config";
+import { getDb } from "@/lib/db/config"; // biome-ignore lint/suspicious/noExplicitAny: external DB schema unknown
 import { decrypt } from "@/lib/security/encryption";
 import type { DatabaseClientType, DataSource } from "@/types/database";
 
@@ -32,40 +29,9 @@ async function buildKyselyConnection(
 ): Promise<AnyKysely> {
   switch (clientType) {
     case "sqlite3": {
-      // SQLite data sources use PGlite (in-process PostgreSQL).
-      // PGlite stores data in its own PostgreSQL-compatible format at dataDir.
-      const filename = connectionConfig.filename || ":memory:";
-      let dataDir: string;
-      if (filename === ":memory:") {
-        dataDir = "./data/in-memory";
-      } else if (filename.startsWith("/")) {
-        dataDir = join(filename, "..");
-      } else if (filename.startsWith("./data/") || filename.startsWith("data/")) {
-        dataDir = join(process.cwd(), filename.replace(/^\.\//, ""));
-      } else {
-        dataDir = join(process.cwd(), "data", "uploads");
-      }
-
-      mkdirSync(dataDir, { recursive: true });
-      const pid = join(dataDir, "postmaster.pid");
-      if (existsSync(pid)) rmSync(pid);
-      const pglite = new PGlite(dataDir);
-      await pglite.waitReady;
-
-      class PGlitePool {
-        async connect() {
-          return {
-            query: (sql: string, values?: unknown[]) => pglite.query(sql, values),
-            release: () => Promise.resolve(),
-          };
-        }
-      }
-
-      return new Kysely({
-        dialect: new PostgresDialect({
-          pool: new PGlitePool() as any,
-        }),
-      });
+      throw new Error(
+        "SQLite data sources are no longer supported. Please use PostgreSQL, MySQL, or SQL Server instead."
+      );
     }
 
     case "pg": {

@@ -1,5 +1,3 @@
-import { PGlite } from "@electric-sql/pglite";
-
 export interface ConnectionConfig {
   host?: string;
   port?: number;
@@ -87,24 +85,6 @@ export class ConnectionTestService {
         connected: false,
         message: `Missing required fields: ${missing.join(", ")}`,
       };
-    }
-
-    if (config.host === "localhost" && config.database === "testdb") {
-      try {
-        const dataDir = process.env.DATA_DIR || "./data";
-        const pglite = new PGlite(dataDir);
-        await pglite.waitReady;
-        await pglite.query("SELECT 1");
-        return {
-          connected: true,
-          message: "PostgreSQL connection successful",
-        };
-      } catch (error) {
-        return {
-          connected: false,
-          message: error instanceof Error ? error.message : "Failed to connect to PostgreSQL",
-        };
-      }
     }
 
     return {

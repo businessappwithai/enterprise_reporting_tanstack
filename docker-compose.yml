@@ -37,6 +37,28 @@ services:
     networks:
       - ers-network
 
+  # MariaDB Configuration Database
+  mariadb:
+    image: mariadb:11-alpine
+    container_name: ers-mariadb
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-root_pass}
+      MARIADB_DATABASE: ${MARIADB_DATABASE:-enterprise_config}
+      MARIADB_USER: ${MARIADB_USER:-enterprise}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:-enterprise_pass}
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ers-network
+
   # Redis (for BullMQ job queue)
   redis:
     image: redis:7-alpine
@@ -74,8 +96,12 @@ services:
       AUTH_SECRET: ${AUTH_SECRET}
       AUTH_URL: ${AUTH_URL}
 
-      # SQLite Configuration Database
-      DATABASE_PATH: /app/data/config.sqlite
+      # MariaDB Configuration Database
+      MARIADB_HOST: mariadb
+      MARIADB_PORT: 3306
+      MARIADB_DATABASE: ${MARIADB_DATABASE:-enterprise_config}
+      MARIADB_USER: ${MARIADB_USER:-enterprise}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:-enterprise_pass}
 
       # Redis (Job Queue)
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
@@ -101,16 +127,24 @@ services:
       # Natural Language Query (NL Query) - AI Configuration
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o}
+      LLAMA_REASONING_URL: ${LLAMA_REASONING_URL:-http://localhost:8080}
+      LLAMA_REASONING_MODEL: ${LLAMA_REASONING_MODEL:-qwen3.6}
     volumes:
-      - ${DATA_PATH:-/srv/enterprise-reporting-system}/app/data:/app/data
       - ${DATA_PATH:-/srv/enterprise-reporting-system}/app/job-outputs:/app/job-outputs
       - ${DATA_PATH:-/srv/enterprise-reporting-system}/app/uploads:/app/uploads
       - ${DATA_PATH:-/srv/enterprise-reporting-system}/app/logs:/app/logs
     depends_on:
-      - redis
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - ers-network
 
 networks:
   ers-network:
     driver: bridge
+
+volumes:
+  mariadb_data:
+    driver: local

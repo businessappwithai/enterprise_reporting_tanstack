@@ -1,7 +1,7 @@
 import type { Register } from "@tanstack/react-router";
 import type { RequestHandler } from "@tanstack/react-start/server";
 import { createStartHandler, defaultStreamHandler } from "@tanstack/react-start/server";
-import { closeDb } from "@/lib/db/config";
+import { closeDb, waitForDatabaseReady } from "@/lib/db/config";
 
 // Persistent config store will be imported and initialized on first use
 
@@ -18,6 +18,7 @@ const SECURITY_HEADERS: Record<string, string> = {
 const handler = createStartHandler(defaultStreamHandler);
 
 const fetch: RequestHandler<Register> = async (request, opts) => {
+  await waitForDatabaseReady();
   const response = await handler(request, opts);
 
   const headers = new Headers(response.headers);
@@ -37,15 +38,6 @@ if (typeof process !== "undefined" && process.versions?.node) {
   const shutdown = async () => {
     console.log("[server] Closing database connections...");
     await closeDb();
-
-    // Close config database
-    try {
-      const { closeConfigDb } = await import("@/lib/config/persistent-config");
-      closeConfigDb();
-    } catch (e) {
-      // Config store might not be initialized yet
-    }
-
     process.exit(0);
   };
 

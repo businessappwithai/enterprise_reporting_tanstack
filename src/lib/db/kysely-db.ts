@@ -1,19 +1,18 @@
 /**
- * Kysely Database Configuration with PGLite
+ * Kysely Database Configuration
  * Type-safe SQL query builder using Kysely (https://kysely.dev/)
- * Uses PGLite for in-process PostgreSQL
+ * Primary: MariaDB for configuration database
+ * Fallback: PostgreSQL if DATABASE_URL is set
  */
 
-import { existsSync, rmSync } from "node:fs";
-import { join } from "node:path";
-import { Kysely, PostgresDialect } from "kysely";
-import { Pool } from "pg";
-import { PGlite } from "@electric-sql/pglite";
+import { Kysely, MysqlDialect, PostgresDialect } from "kysely";
+import { Pool as PostgresPool } from "pg";
+import { createPool as createMysqlPool } from "mysql2";
 import { bootstrapSchema } from "./bootstrap";
 
 // Database schema type definition
 // This is the most important part - defines all tables and their columns
-// Column names match the actual SQLite schema created by migrations.
+// Column names match the actual database schema
 export interface Database {
   users: UsersTable;
   roles: RolesTable;
@@ -43,7 +42,7 @@ export interface Database {
   nl_query_feedback: NLQueryFeedbackTable;
 }
 
-// Table type definitions — column names match actual DB schema from migrations
+// Table type definitions — column names match actual DB schema
 
 export interface UsersTable {
   id: string;
@@ -78,6 +77,8 @@ export interface DataSourcesTable {
   connection_config: string; // Encrypted JSON
   is_active: boolean;
   is_editable: boolean | null;
+  is_inspected: boolean | null;
+  last_inspected_at: string | null;
   is_deleted: boolean | null;
   deleted_at: string | null;
   deleted_by: string | null;
@@ -237,7 +238,7 @@ export interface LogsTable {
   metadata: string | null; // JSON
   error_stack: string | null;
   request_id: string | null;
-  message_vector: string | null; // pgvector type or JSON array of numbers for PGLite
+  message_vector: string | null; // JSON array of numbers (MariaDB JSON)
 }
 
 export interface EmailTemplatesTable {
@@ -363,7 +364,7 @@ export interface SchemaTableInstructionsTable {
   updated_by: string | null;
 }
 
-// NL Query Context Tables (pgvector-based learning system)
+// NL Query Context Tables (learning system)
 
 export interface NLQueryContextTable {
   id: string;
@@ -372,7 +373,7 @@ export interface NLQueryContextTable {
   role_name: string;
   nl_question: string;
   generated_sql: string;
-  nl_question_embedding: string | null; // JSON array or pgvector
+  nl_question_embedding: string | null; // JSON array
   schema_context: string; // JSON
   rbac_context: string; // JSON
   field_instructions: string | null; // JSON
@@ -422,66 +423,86 @@ export interface NLQueryFeedbackTable {
 export type KyselyDB = Kysely<Database>;
 
 let db: KyselyDB | null = null;
-let pglite: PGlite | null = null;
 
 const DATABASE_URL = process.env.DATABASE_URL || "";
-const DATA_DIR = process.env.DATA_DIR || "./data";
 
 /**
- * Initialize PGLite database (async)
+ * Build MariaDB connection using mysql2
  */
-async function initPGlite(): Promise<PGlite> {
-  if (!pglite) {
-    // Remove stale lock file before opening to prevent Aborted() WASM crash
-    const pidFile = join(DATA_DIR, "postmaster.pid");
-    if (existsSync(pidFile)) rmSync(pidFile);
-    console.log(`[db] Initializing PGLite at: ${DATA_DIR}`);
-    pglite = new PGlite(DATA_DIR);
-    await pglite.waitReady;
-    console.log(`[db] PGLite ready, bootstrap schema...`);
-    // Auto-create tables and seed admin on first run (safe to call every time)
-    await bootstrapSchema(pglite);
-  }
-  return pglite;
+function buildMariaDBConnection(): KyselyDB {
+  const pool = createMysqlPool({
+    host: process.env.MARIADB_HOST || "localhost",
+    port: Number(process.env.MARIADB_PORT) || 3306,
+    database: process.env.MARIADB_DATABASE || "enterprise_config",
+    user: process.env.MARIADB_USER || "enterprise",
+    password: process.env.MARIADB_PASSWORD || "",
+    connectionLimit: 10,
+    waitForConnections: true,
+    enableKeepAlive: true,
+    keepAliveInitialDelayMs: 0,
+  });
+
+  return new Kysely<Database>({
+    dialect: new MysqlDialect({ pool }),
+  });
 }
 
 /**
- * Get or create Kysely database instance
+ * Build PostgreSQL connection (fallback)
+ */
+function buildPostgresConnection(): KyselyDB {
+  const pool = new PostgresPool({ connectionString: DATABASE_URL });
+  return new Kysely<Database>({
+    dialect: new PostgresDialect({ pool }),
+  });
+}
+
+/**
+ * Initialize database connection (synchronous, bootstrap happens lazily on first query)
+ */
+function initializeDatabase(): KyselyDB {
+  console.log(`[db] Initializing database: ${DATABASE_URL ? "PostgreSQL (via DATABASE_URL)" : "MariaDB"}`);
+  return DATABASE_URL ? buildPostgresConnection() : buildMariaDBConnection();
+}
+
+let bootstrapPromise: Promise<void> | null = null;
+
+/**
+ * Get or create Kysely database instance (synchronous)
+ * Bootstrap happens on first initialization
  */
 export function getDb(): KyselyDB {
   if (!db) {
-    if (DATABASE_URL) {
-      // PostgreSQL remote
-      const pool = new Pool({ connectionString: DATABASE_URL });
-      db = new Kysely<Database>({
-        dialect: new PostgresDialect({ pool }),
-      });
-    } else {
-      // PGLite (in-process PostgreSQL)
-      // Use a pool-like interface
-      class PGlitePool {
-        async connect() {
-          const pg = await initPGlite();
-          return {
-            query: (sql: string, values?: unknown[]) => pg.query(sql, values),
-            release: () => Promise.resolve(),
-          };
-        }
-      }
+    db = initializeDatabase();
 
-      // biome-ignore lint/suspicious/noExplicitAny: PGlite pool adapter
-      db = new Kysely<Database>({
-        dialect: new PostgresDialect({
-          pool: new PGlitePool() as any,
-        }),
+    // Initialize bootstrap promise on first use
+    bootstrapPromise = bootstrapSchema(db)
+      .then(() => {
+        console.log(`[db] Database ready: ${DATABASE_URL ? "PostgreSQL (via DATABASE_URL)" : "MariaDB"}`);
+      })
+      .catch((err) => {
+        console.error("[db] Bootstrap failed:", err);
       });
-    }
+
+    // Store the bootstrap promise so we can wait for it if needed
+    (db as any).__bootstrapPromise = bootstrapPromise;
   }
   return db;
 }
 
 /**
- * Get config database (same as main for now)
+ * Wait for database bootstrap to complete
+ * Should be called before executing queries
+ */
+export async function waitForDatabaseReady(): Promise<void> {
+  getDb(); // Ensure db is initialized
+  if (bootstrapPromise) {
+    await bootstrapPromise;
+  }
+}
+
+/**
+ * Get config database (same as main database)
  */
 export function getConfigDB(): KyselyDB {
   return getDb();
@@ -492,12 +513,12 @@ export function getConfigDB(): KyselyDB {
  */
 export async function closeDb(): Promise<void> {
   if (db) {
-    await db.destroy();
+    try {
+      await db.destroy();
+    } catch (err) {
+      console.error("[db] Error closing database:", err);
+    }
     db = null;
-  }
-  if (pglite) {
-    await pglite.close();
-    pglite = null;
   }
 }
 
@@ -506,4 +527,11 @@ export async function closeDb(): Promise<void> {
  */
 export function isPostgres(): boolean {
   return !!DATABASE_URL;
+}
+
+/**
+ * Check if using MariaDB
+ */
+export function isMariaDB(): boolean {
+  return !DATABASE_URL;
 }
