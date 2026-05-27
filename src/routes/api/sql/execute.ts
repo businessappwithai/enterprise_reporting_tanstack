@@ -193,9 +193,9 @@ export const Route = createFileRoute("/api/sql/execute")({
 
           const rows = rawRows as Record<string, unknown>[];
 
-          // pglite returns all values as strings from the wire protocol;
-          // infer numeric columns by checking if every non-null value in
-          // the first row (and a few sample rows) looks like a finite number.
+          // Database drivers may return values as strings from the wire protocol;
+          // infer numeric/boolean columns by checking if every non-null value
+          // in the first row (and a few sample rows) looks like a number/boolean.
           function inferType(colName: string): string {
             const samples = rows.slice(0, 5);
             const nonNull = samples.map((r) => r[colName]).filter((v) => v !== null && v !== undefined && v !== "");

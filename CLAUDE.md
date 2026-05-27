@@ -15,23 +15,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Module Usage
 - ✅ ALWAYS use `bun:*` modules (bun:test, etc.)
-- ✅ Database MUST use PGLite (in-process PostgreSQL) via Kysely
-- ✅ Configuration database uses PGLite for unified data storage
+- ✅ Configuration database MUST use MariaDB via Kysely (or PostgreSQL if DATABASE_URL is set)
+- ✅ External data sources connect directly via connection strings
 - ✅ Leverage Bun's built-in APIs for maximum performance
 
-### Why PGLite
-PGLite is an in-process PostgreSQL database that provides:
-- ✅ Full SQL compatibility and ACID transactions
-- ✅ Persistent file-based storage (survives application restarts)
-- ✅ Instant commits - data written to disk immediately (no buffering)
-- ✅ No external database dependencies
-- ✅ Enterprise-grade reliability and durability
+### Database Architecture
+**Configuration Database**: MariaDB (persistent, multi-process-safe)
+- Stores: users, roles, permissions, data sources, reports, dashboards, jobs, audit logs, NL Query history
+- Runs as Docker container (`mariadb:latest`) in development and production
+- Fallback to PostgreSQL if `DATABASE_URL` environment variable is set
+- Environment variables: `MARIADB_HOST`, `MARIADB_PORT`, `MARIADB_DATABASE`, `MARIADB_USER`, `MARIADB_PASSWORD`
 
-Using PGLite across all data layers ensures consistency, leverages PostgreSQL's powerful query capabilities, and guarantees data safety with instant persistence.
+**External Data Sources**: Direct connections via Kysely (unaffected by config DB choice)
+- Supports: PostgreSQL, MySQL, SQL Server, Oracle, SQLite
+- Connection strings supported: `postgresql://`, `mysql://`, `mssql://`, `oracle://`
+- Examples: Neon, AWS RDS, Azure SQL, Google Cloud SQL, self-hosted databases
+- Credentials encrypted with AES-256-GCM before storage
 
 ## Project Overview - Enterprise Reporting System
 
-Enterprise Reporting and Dashboard System built with **TanStack Start** (full-stack React), **Bun runtime**, **PGLite** (in-process PostgreSQL via Kysely) for persistent data storage, **TanStack DB** for reactive client-side collections, and **shadcn/ui**. Provides data visualization, SQL querying, role-based access control, job scheduling, and multi-format export capabilities.
+Enterprise Reporting and Dashboard System built with **TanStack Start** (full-stack React), **Bun runtime**, **MariaDB** for configuration storage, **Kysely** for type-safe queries, **TanStack DB** for reactive client-side collections, and **shadcn/ui**. Provides data visualization, SQL querying, role-based access control, job scheduling, multi-format export, and natural language query capabilities.
 
 ## Tech Stack
 
@@ -44,14 +47,15 @@ Enterprise Reporting and Dashboard System built with **TanStack Start** (full-st
 | UI Components | shadcn/ui (Radix UI + Tailwind CSS 3) |
 | State/Data | TanStack Query v5, TanStack Table v8, TanStack Form v1 |
 | Reactive DB | TanStack DB v0.6 (client-side collections, PostgreSQL sync) |
-| Database | PGLite (in-process PostgreSQL via Kysely) - persistent file-based |
+| Config Database | MariaDB (via Kysely MysqlDialect) - persistent, multi-process-safe |
+| Data Source Connections | Kysely (PostgreSQL, MySQL, SQL Server, Oracle, SQLite) |
 | Auth | Custom JWT (jose) with HTTP-only cookies |
 | Charts | Recharts, ECharts |
 | Job Queue | Trigger.dev (Cloud-based job processing with local Mastra.ai API) |
-| AI/NL Query | OpenAI (via @ai-sdk/openai), CopilotKit |
+| AI/NL Query | OpenAI (via @ai-sdk/openai), CopilotKit, Ollama (local) |
 | Testing | Playwright (E2E only) |
 | Styling | Tailwind CSS with CSS variables (HSL color system) |
-| Deployment | Docker (Bun Alpine), Nginx reverse proxy |
+| Deployment | Docker (Bun Alpine), MariaDB, Redis, Nginx reverse proxy |
 
 ## Quick Reference Commands
 
@@ -171,9 +175,10 @@ enterprise-reporting-system/
 │   │   ├── db/                       # Database layer
 │   │   │   ├── config.ts             # Kysely connection (getDb(), getConfigDB())
 
-│   │   │   ├── connection-manager.ts # Connection management
-│   │   │   ├── kysely-db.ts          # PGLite + Kysely configuration
-│   │   │   ├── migrations/           # PGLite migrations (timestamped .ts files)
+│   │   │   ├── connection-manager.ts # External data source connection management
+│   │   │   ├── kysely-db.ts          # MariaDB (config DB) + Kysely configuration
+│   │   │   ├── bootstrap.ts          # Schema initialization (MariaDB DDL)
+│   │   │   ├── migrations/           # Migrations (timestamped .ts files)
 │   │   │   ├── seeds/                # Seed data (001_initial_data.ts)
 │   │   │   └── sample-data/          # Sample schema and seed scripts
 │   │   ├── auth/                     # Authentication (JWT session, RBAC)
@@ -242,7 +247,7 @@ enterprise-reporting-system/
 │   ├── create-admin.ts               # Admin user creation
 │   ├── seed-sakila-analytics.ts      # Sakila demo data seeder
 │   └── deploy-*.sh                   # Deployment scripts
-├── data/                             # PGLite database directory (persistent)
+├── data/                             # MariaDB volume mount (development Docker)
 ├── docs/                             # Project documentation
 ├── nginx/                            # Nginx config (reverse proxy)
 ├── .claude/                          # Claude Code configuration
@@ -352,13 +357,16 @@ import { requireAuth } from '@/lib/auth/middleware'
 ### Database Access
 
 - **Kysely**: All database queries use Kysely (type-safe SQL query builder)
-- **Instance**: Get via `getDb()` from `@/lib/db/config`
-- **Database**: PGLite (in-process PostgreSQL) with persistent file-based storage at `./data/`
-- **Persistence**: Instant commits - all data written to disk immediately (ACID guaranteed)
-- **Durability**: Data survives application restarts, crashes, and system reboots
+- **Config DB Instance**: Get via `getDb()` from `@/lib/db/config`
+- **Configuration Database**: MariaDB (multi-process-safe, persistent)
+  - Environment variables: `MARIADB_HOST`, `MARIADB_PORT`, `MARIADB_DATABASE`, `MARIADB_USER`, `MARIADB_PASSWORD`
+  - Fallback: PostgreSQL if `DATABASE_URL` is set (for flexibility)
+- **External Data Sources**: Connect directly via Kysely (PostgreSQL, MySQL, SQL Server, Oracle, SQLite)
+  - Support for connection strings: `postgresql://`, `mysql://`, `mssql://`, `oracle://`
+  - Examples: Neon, AWS RDS, Azure SQL, Google Cloud SQL
 - **Migrations**: `src/lib/db/migrations/YYYYMMDDHHMMSS_description.ts`
 - **Querying**: Always use LIMIT/OFFSET for server-side pagination
-- **Configuration**: Unified persistent storage using PGLite for both main and config data
+- **Bootstrap**: Schema initialized automatically on first run via `bootstrapSchema()` in `src/lib/db/bootstrap.ts`
 
 ### Component Patterns
 
@@ -551,13 +559,25 @@ Multi-stage build using `oven/bun:1.3-alpine`:
 
 ### Key Environment Variables
 
+**Configuration Database (MariaDB)**
 | Variable | Purpose |
 |----------|---------|
-| `DATA_DIR` | PGLite database directory path (default: `./data`) |
-| `CONFIG_DB_PATH` | Configuration database path (default: `./config.db`) |
+| `MARIADB_HOST` | MariaDB server hostname (default: `localhost`) |
+| `MARIADB_PORT` | MariaDB server port (default: `3306`) |
+| `MARIADB_DATABASE` | Database name (default: `enterprise_config`) |
+| `MARIADB_USER` | Database user (default: `enterprise`) |
+| `MARIADB_PASSWORD` | Database password (required) |
+| `MARIADB_ROOT_PASSWORD` | Root password (Docker only) |
+| `DATABASE_URL` | PostgreSQL connection string (optional fallback) |
+
+**Application Configuration**
+| Variable | Purpose |
+|----------|---------|
 | `AUTH_SECRET` | JWT session secret (min 32 chars) |
 | `ENCRYPTION_KEY` | AES-256 key for credential encryption |
 | `OPENAI_API_KEY` | OpenAI API key for NL query feature |
+| `OLLAMA_URL` | Local Ollama server URL (for NL Query) |
+| `OLLAMA_MODEL` | Ollama model name (e.g., `sqlcoder:7b`) |
 | `TRIGGER_API_KEY` | Trigger.dev or Mastra.ai API key |
 | `TRIGGER_API_URL` | Trigger.dev base URL or local Mastra.ai (`http://localhost:3030`) |
 | `WORKER_CONCURRENCY` | Job worker concurrency (default: 5) |

@@ -4,7 +4,7 @@
  * This migration updates the logs table to use pgvector type for message_vector
  * when running on PostgreSQL with pgvector extension installed.
  *
- * For PGLite, vectors remain as TEXT (JSON arrays).
+ * For MariaDB or other databases without pgvector, vectors remain as TEXT (JSON arrays).
  *
  * Run: bun run db:migrate
  */
@@ -50,7 +50,7 @@ export async function up(db: Kysely<Database>): Promise<void> {
       WITH (lists = 100)
     `);
   } catch (error) {
-    // If pgvector is not available (e.g., PGLite), keep the TEXT type
+    // If pgvector is not available (MariaDB, etc.), keep the TEXT type
     console.log("pgvector extension not available, keeping message_vector as TEXT (JSON arrays)");
   }
 }

@@ -17,7 +17,7 @@ export interface ElectricSyncConfig {
 
 /**
  * Creates a sync function for TanStack DB that uses ElectricSQL
- * Works with both local PGLite and server synchronization
+ * Provides real-time synchronization with server state
  */
 export function createElectricSyncAdapter(config: ElectricSyncConfig) {
   const { collectionName, tableName, primaryKey } = config
@@ -103,7 +103,7 @@ export async function configureElectricSQL(options: {
   replicationUrl?: string
 }): Promise<void> {
   // ElectricSQL configuration would happen here:
-  // 1. Initialize PGLite for local SQLite
+  // 1. Initialize local SQLite for client-side collections
   // 2. Connect to ElectricSQL sync server
   // 3. Configure replication rules
   // 4. Start background sync process

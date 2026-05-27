@@ -46,7 +46,7 @@ export const Route = createFileRoute("/api/logs/search")({
           const queryVector = generateLogEmbedding(body.query, "search", "info");
 
           // Get all logs and calculate similarity on the client side
-          // (PGLite doesn't have vector similarity functions)
+          // (MariaDB doesn't have native vector similarity functions)
           const allLogs = await db
             .selectFrom("logs")
             .select([
