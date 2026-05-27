@@ -527,7 +527,6 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
       created_at: now2,
       updated_at: now2,
     })
-    .ignoreDuplicates()
     .execute()
     .catch((err) => {
       console.warn("[bootstrap] nlquery user insert warning:", (err as Error).message?.slice(0, 120));
@@ -540,7 +539,6 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
       role_id: NLQUERY_ROLE_ID,
       assigned_at: now2,
     })
-    .ignoreDuplicates()
     .execute()
     .catch((err) => {
       console.warn("[bootstrap] nlquery user_roles insert warning:", (err as Error).message?.slice(0, 120));

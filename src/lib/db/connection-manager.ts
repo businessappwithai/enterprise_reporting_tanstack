@@ -20,7 +20,35 @@ interface ConnectionConfig {
   user?: string;
   password?: string;
   filename?: string;
+  connectionString?: string;
   ssl?: boolean | { rejectUnauthorized: boolean };
+}
+
+/**
+ * Parse PostgreSQL connection string into individual config fields
+ * Supports: postgresql://user:password@host:port/database?ssl=require
+ */
+function parsePostgresConnectionString(connStr: string): Partial<ConnectionConfig> {
+  try {
+    const url = new URL(connStr);
+    const config: Partial<ConnectionConfig> = {
+      host: url.hostname,
+      port: url.port ? parseInt(url.port, 10) : 5432,
+      database: url.pathname.replace(/^\//, ""),
+      user: url.username,
+      password: url.password,
+    };
+
+    // Handle SSL parameter
+    const sslParam = url.searchParams.get("ssl");
+    if (sslParam) {
+      config.ssl = sslParam === "require" || sslParam === "true";
+    }
+
+    return config;
+  } catch (error) {
+    throw new Error(`Invalid PostgreSQL connection string: ${(error as Error).message}`);
+  }
 }
 
 async function buildKyselyConnection(
@@ -35,17 +63,32 @@ async function buildKyselyConnection(
     }
 
     case "pg": {
-      const pool = new Pool({
-        host: connectionConfig.host,
-        port: connectionConfig.port || 5432,
-        database: connectionConfig.database,
-        user: connectionConfig.user,
-        password: connectionConfig.password,
-        ssl: connectionConfig.ssl ? { rejectUnauthorized: false } : undefined,
+      let poolConfig: any = {
         min: 0,
         max: 10,
         idleTimeoutMillis: 600000,
-      });
+      };
+
+      // Use connection string if provided, otherwise use individual config fields
+      if (connectionConfig.connectionString) {
+        poolConfig.connectionString = connectionConfig.connectionString;
+        // If SSL isn't explicitly set in the config, enable it for Neon (which requires SSL)
+        if (connectionConfig.ssl === undefined && connectionConfig.connectionString.includes("neon")) {
+          poolConfig.ssl = { rejectUnauthorized: false };
+        }
+      } else {
+        poolConfig.host = connectionConfig.host;
+        poolConfig.port = connectionConfig.port || 5432;
+        poolConfig.database = connectionConfig.database;
+        poolConfig.user = connectionConfig.user;
+        poolConfig.password = connectionConfig.password;
+      }
+
+      if (connectionConfig.ssl) {
+        poolConfig.ssl = { rejectUnauthorized: false };
+      }
+
+      const pool = new Pool(poolConfig);
       return new Kysely({ dialect: new PostgresDialect({ pool }) });
     }
 

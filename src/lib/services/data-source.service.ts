@@ -4,6 +4,34 @@ import { encrypt, decrypt } from "@/lib/security/encryption";
 import { logAudit } from "@/lib/security/audit";
 import type { DataSource } from "@/types/database";
 
+/**
+ * Parse PostgreSQL connection string into config object
+ * Supports: postgresql://user:password@host:port/database?ssl=require&...
+ */
+function parsePostgresConnectionString(
+  connStr: string
+): Record<string, unknown> {
+  try {
+    const url = new URL(connStr);
+    const config: Record<string, unknown> = {
+      host: url.hostname,
+      port: url.port ? parseInt(url.port, 10) : 5432,
+      database: url.pathname.replace(/^\//, ""),
+      user: url.username,
+      password: url.password,
+    };
+
+    const sslParam = url.searchParams.get("ssl");
+    if (sslParam) {
+      config.ssl = sslParam === "require" || sslParam === "true";
+    }
+
+    return config;
+  } catch (error) {
+    throw new Error(`Invalid PostgreSQL connection string: ${(error as Error).message}`);
+  }
+}
+
 export interface CreateDataSourceInput {
   name: string;
   description?: string;
@@ -106,10 +134,22 @@ export class DataSourceService {
       throw new Error("Connection configuration is required");
     }
 
+    // Parse connection string if provided (PostgreSQL URLs)
+    let finalConfig = connectionConfig;
+    if (
+      typeof connectionConfig === "object" &&
+      "connectionString" in connectionConfig &&
+      typeof connectionConfig.connectionString === "string"
+    ) {
+      if (clientType === "pg" || clientType === "postgres" || clientType === "postgresql") {
+        finalConfig = parsePostgresConnectionString(connectionConfig.connectionString);
+      }
+    }
+
     const db = getDb();
     const id = randomUUID();
     const now = new Date().toISOString();
-    const encryptedConfig = encrypt(JSON.stringify(connectionConfig));
+    const encryptedConfig = encrypt(JSON.stringify(finalConfig));
 
     await db
       .insertInto("data_sources")
@@ -157,7 +197,7 @@ export class DataSourceService {
 
     const existing = await db
       .selectFrom("data_sources")
-      .select(["id", "created_by"])
+      .select(["id", "created_by", "client_type"])
       .where("id", "=", id)
       .where("is_deleted", "=", false)
       .executeTakeFirst();
@@ -190,7 +230,23 @@ export class DataSourceService {
       if (typeof input.connectionConfig !== "object") {
         throw new Error("Invalid connection configuration");
       }
-      updateData.connection_config = encrypt(JSON.stringify(input.connectionConfig));
+
+      // Parse connection string if provided (PostgreSQL URLs)
+      let finalConfig = input.connectionConfig;
+      if (
+        "connectionString" in input.connectionConfig &&
+        typeof input.connectionConfig.connectionString === "string"
+      ) {
+        if (
+          existing.client_type === "pg" ||
+          existing.client_type === "postgres" ||
+          existing.client_type === "postgresql"
+        ) {
+          finalConfig = parsePostgresConnectionString(input.connectionConfig.connectionString);
+        }
+      }
+
+      updateData.connection_config = encrypt(JSON.stringify(finalConfig));
     }
 
     await db
