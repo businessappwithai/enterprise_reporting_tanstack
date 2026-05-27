@@ -1,92 +1,78 @@
 # ==========================================
 # Enterprise Reporting System
-# Production Dockerfile - Powered by Bun
+# Production Dockerfile - Bun + TanStack Start + MariaDB
 # ==========================================
 
-# Build stage - Pure Bun, no Node.js
+# Build stage - Pure Bun
 FROM oven/bun:1.3-alpine AS builder
 
 WORKDIR /app
 
-# Install build dependencies for SQLite native module
+# Install build dependencies
 RUN apk add --no-cache \
     python3 \
-    py3-pip \
     make \
-    g++ \
-    sqlite-dev
+    g++
 
-# Copy package files and application files
+# Copy package files and source
 COPY package.json bun.lock ./
 COPY . .
 
-# Install dependencies with Bun
-RUN bun install --frozen-lockfile --no-verify && \
-    bun pm cache rm
+# Install dependencies with Bun (frozen lockfile)
+RUN bun install --frozen-lockfile && bun pm cache rm
 
-# Initialize database during build using Kysely + bun:sqlite
-# This creates the database schema that will be copied to the runner
-RUN bun run /app/scripts/rebuild-db.ts
-
-# Build application
-ENV NEXT_TELEMETRY_DISABLED=1 \
-    NEXT_PRIVATE_SKIP_FONT_OPTIMIZATION=1
+# Build application with TanStack Start
 RUN bun run build
 
-# Production stage
-FROM oven/bun:1.3-alpine AS runner
+# Production stage - Runtime only
+FROM oven/bun:1.3-alpine
 
 WORKDIR /app
 
-# Install runtime dependencies (bun:sqlite is built-in, no need for better-sqlite3)
+# Install runtime dependencies (curl for health checks, ca-certs for HTTPS)
 RUN apk add --no-cache \
-    wget \
-    openssl \
-    sqlite \
-    su-exec
+    curl \
+    ca-certificates
 
 # Create non-root user for security
 RUN adduser --system --uid 1001 bunuser || true && \
     addgroup -g 1001 bunuser || true && \
-    adduser bunuser bunuser || true
+    adduser bunuser bunuser 2>/dev/null || true
 
-# Copy necessary files from builder
-COPY --from=builder /app/public ./public
+# Copy package files
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/bun.lock ./bun.lock
 
-# Copy built application
-COPY --from=builder --chown=bunuser:bunuser /app/.next/standalone ./
-COPY --from=builder --chown=bunuser:bunuser /app/.next/static ./.next/static
-
-# Copy all dependencies from builder
+# Copy built application (TanStack Start output structure)
+COPY --from=builder --chown=bunuser:bunuser /app/dist ./dist
+COPY --from=builder --chown=bunuser:bunuser /app/public ./public
 COPY --from=builder --chown=bunuser:bunuser /app/node_modules ./node_modules
 
-# Copy initialized database from builder (schema created during build)
-COPY --from=builder --chown=bunuser:bunuser /app/data/config.sqlite /app/data/config.sqlite
-
-# Copy entrypoint script
-COPY --from=builder --chown=bunuser:bunuser /app/docker-entrypoint.sh /app/docker-entrypoint.sh
+# Copy database migration scripts (needed for runtime initialization)
+COPY --chown=bunuser:bunuser scripts ./scripts
+COPY --chown=bunuser:bunuser src/lib/db ./src/lib/db
 
 # Create required directories with correct permissions
-RUN mkdir -p /app/data /app/job-outputs /app/uploads /app/logs /app/data/uploads && \
-    chown -R bunuser:bunuser /app/data /app/job-outputs /app/uploads /app/logs && \
-    chmod +x /app/docker-entrypoint.sh
-
-# Copy Sakila demo database (if exists)
-COPY data/uploads/sakila.db /app/data/uploads/sakila.db
+RUN mkdir -p /app/data /app/logs && \
+    chown -R bunuser:bunuser /app/data /app/logs
 
 # Expose application port
 EXPOSE 3000
 
 # Set environment to production
 ENV NODE_ENV=production \
-    NEXT_TELEMETRY_DISABLED=1 \
-    PORT=3000
+    PORT=3000 \
+    MARIADB_HOST=mariadb \
+    MARIADB_PORT=3306 \
+    MARIADB_DATABASE=enterprise_config \
+    MARIADB_USER=enterprise
 
-# Use entrypoint script to handle database initialization
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
+# Switch to non-root user
+USER bunuser
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
+# Health check (wait for MariaDB initialization)
+HEALTHCHECK --interval=10s --timeout=5s --start-period=45s --retries=10 \
+    CMD curl -f http://localhost:3000/api/health || exit 1
+
+# Start the application
+CMD ["bun", "run", "dist/server/server.js"]
