@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import type { DatabaseClientType } from "@/types/database";
 import { SqliteFileUpload } from "./sqlite-file-upload";
 
@@ -29,6 +30,8 @@ export interface ConnectionFormState {
   user: string;
   password: string;
   fileName: string;
+  connectionString?: string;
+  useConnectionString?: boolean;
 }
 
 interface ConnectionTestResult {
@@ -123,60 +126,109 @@ export function ConnectionFormFields({
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2 col-span-2">
-              <Label htmlFor={`${idPrefix}ds-host`}>Host</Label>
-              <Input
-                id={`${idPrefix}ds-host`}
-                value={state.host}
-                onChange={(e) => set({ host: e.target.value })}
-                placeholder="localhost"
-              />
+          <div className="flex gap-2 items-center">
+            <div className="flex-1">
+              <Button
+                type="button"
+                variant={state.useConnectionString ? "default" : "outline"}
+                className="w-full"
+                onClick={() => set({ useConnectionString: true, host: "", port: "", database: "", user: "", password: "" })}
+              >
+                Connection String
+              </Button>
             </div>
+            <div className="flex-1">
+              <Button
+                type="button"
+                variant={!state.useConnectionString ? "default" : "outline"}
+                className="w-full"
+                onClick={() => set({ useConnectionString: false, connectionString: "" })}
+              >
+                Individual Fields
+              </Button>
+            </div>
+          </div>
+
+          {state.useConnectionString ? (
             <div className="space-y-2">
-              <Label htmlFor={`${idPrefix}ds-port`}>Port</Label>
+              <Label htmlFor={`${idPrefix}ds-connection-string`}>Connection String</Label>
               <Input
-                id={`${idPrefix}ds-port`}
-                value={state.port}
-                onChange={(e) => set({ port: e.target.value })}
+                id={`${idPrefix}ds-connection-string`}
+                value={state.connectionString || ""}
+                onChange={(e) => set({ connectionString: e.target.value })}
                 placeholder={
-                  state.clientType === "pg" ? "5432" : state.clientType === "mysql" ? "3306" : ""
+                  state.clientType === "pg"
+                    ? "postgresql://user:password@host:5432/database?ssl=require"
+                    : state.clientType === "mysql"
+                      ? "mysql://user:password@host:3306/database"
+                      : "server connection string"
                 }
               />
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {state.clientType === "pg" && "Example: postgresql://user:pass@localhost:5432/mydb?ssl=require"}
+                {state.clientType === "mysql" && "Example: mysql://user:pass@localhost:3306/mydb"}
+                {state.clientType === "mssql" && "Example: mssql://user:pass@localhost:1433/mydb"}
+                {state.clientType === "oracledb" && "Example: oracle://user:pass@localhost:1521/mydb"}
+              </p>
             </div>
-          </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2 col-span-2">
+                  <Label htmlFor={`${idPrefix}ds-host`}>Host</Label>
+                  <Input
+                    id={`${idPrefix}ds-host`}
+                    value={state.host}
+                    onChange={(e) => set({ host: e.target.value })}
+                    placeholder="localhost"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor={`${idPrefix}ds-port`}>Port</Label>
+                  <Input
+                    id={`${idPrefix}ds-port`}
+                    value={state.port}
+                    onChange={(e) => set({ port: e.target.value })}
+                    placeholder={
+                      state.clientType === "pg" ? "5432" : state.clientType === "mysql" ? "3306" : ""
+                    }
+                  />
+                </div>
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor={`${idPrefix}ds-database`}>Database</Label>
-            <Input
-              id={`${idPrefix}ds-database`}
-              value={state.database}
-              onChange={(e) => set({ database: e.target.value })}
-              placeholder="mydb"
-            />
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor={`${idPrefix}ds-database`}>Database</Label>
+                <Input
+                  id={`${idPrefix}ds-database`}
+                  value={state.database}
+                  onChange={(e) => set({ database: e.target.value })}
+                  placeholder="mydb"
+                />
+              </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor={`${idPrefix}ds-user`}>Username</Label>
-              <Input
-                id={`${idPrefix}ds-user`}
-                value={state.user}
-                onChange={(e) => set({ user: e.target.value })}
-                placeholder="dbuser"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor={`${idPrefix}ds-password`}>Password</Label>
-              <Input
-                id={`${idPrefix}ds-password`}
-                type="password"
-                value={state.password}
-                onChange={(e) => set({ password: e.target.value })}
-                placeholder={passwordPlaceholder}
-              />
-            </div>
-          </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor={`${idPrefix}ds-user`}>Username</Label>
+                  <Input
+                    id={`${idPrefix}ds-user`}
+                    value={state.user}
+                    onChange={(e) => set({ user: e.target.value })}
+                    placeholder="dbuser"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor={`${idPrefix}ds-password`}>Password</Label>
+                  <Input
+                    id={`${idPrefix}ds-password`}
+                    type="password"
+                    value={state.password}
+                    onChange={(e) => set({ password: e.target.value })}
+                    placeholder={passwordPlaceholder}
+                  />
+                </div>
+              </div>
+            </>
+          )}
         </>
       )}
 
@@ -209,6 +261,7 @@ interface TestConnectionButtonProps {
 export function isTestConnectionDisabled({ state, testing }: TestConnectionButtonProps) {
   if (testing) return true;
   if (state.clientType === "sqlite3") return !state.fileName;
+  if (state.useConnectionString) return !state.connectionString;
   return !state.host || !state.database || !state.user;
 }
 

@@ -56,11 +56,16 @@ const DEFAULT_FORM: ConnectionFormState = {
   user: "",
   password: "",
   fileName: "",
+  connectionString: "",
+  useConnectionString: false,
 };
 
 function buildConnectionConfig(state: ConnectionFormState) {
   if (state.clientType === "sqlite3") {
     return { filename: state.fileName };
+  }
+  if (state.useConnectionString && state.connectionString) {
+    return { connectionString: state.connectionString };
   }
   return {
     host: state.host,
@@ -174,15 +179,21 @@ function DataSourcesPage() {
         });
         return;
       }
-      if (
-        formState.clientType !== "sqlite3" &&
-        (!formState.host || !formState.database || !formState.user)
-      ) {
-        setConnectionTestResult({
-          success: false,
-          message: "Please fill in Host, Database, and Username fields",
-        });
-        return;
+      if (formState.clientType !== "sqlite3") {
+        if (formState.useConnectionString && !formState.connectionString) {
+          setConnectionTestResult({
+            success: false,
+            message: "Please provide a connection string",
+          });
+          return;
+        }
+        if (!formState.useConnectionString && (!formState.host || !formState.database || !formState.user)) {
+          setConnectionTestResult({
+            success: false,
+            message: "Please fill in Host, Database, and Username fields",
+          });
+          return;
+        }
       }
       const res = await fetch("/api/data-sources/test", {
         method: "POST",
@@ -242,6 +253,7 @@ function DataSourcesPage() {
       /* ignore */
     }
     const fullPath = (config.filename as string) || "";
+    const hasConnectionString = "connectionString" in config;
     setFormState({
       name: ds.name,
       description: ds.description || "",
@@ -252,6 +264,8 @@ function DataSourcesPage() {
       user: (config.user as string) || "",
       password: "",
       fileName: fullPath.split("/").pop() || fullPath,
+      connectionString: (config.connectionString as string) || "",
+      useConnectionString: hasConnectionString,
     });
     setConnectionTestResult(null);
     setEditDialogOpen(true);
