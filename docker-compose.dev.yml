@@ -104,14 +104,12 @@ services:
       MARIADB_PASSWORD: ${MARIADB_PASSWORD:-enterprise_pass}
       LLAMA_REASONING_URL: http://llama-server:8080
       LLAMA_REASONING_MODEL: slm-sql-base-0.6b
-      AUTH_SECRET: ${AUTH_SECRET}
-      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      AUTH_SECRET: ${AUTH_SECRET:-u+xA6iwkg5BuouPQ50O4tN+cbGpB0uDk/p0ZNt17k4A=}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-d2b33b537501f585cc6a16949fc1fb6086394a348e1330ce855c1816a613a0a3}
     depends_on:
       mariadb:
         condition: service_healthy
       redis:
-        condition: service_healthy
-      llama-server:
         condition: service_healthy
     ports:
       - "3000:3000"

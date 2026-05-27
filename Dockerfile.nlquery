@@ -1,28 +1,6 @@
 # ==========================================
-# STAGE 1: Builder (CPU-only compilation)
-# ==========================================
-FROM ubuntu:22.04 AS builder
-
-# Avoid prompts
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Install build dependencies
-RUN apt-get update && apt-get install -y \
-    git build-essential cmake curl wget libgomp1 pkg-config \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /build
-
-# Clone and compile llama.cpp (CPU-only, avoids CUDA issues)
-RUN git clone https://github.com/ggml-org/llama.cpp.git && \
-    cd llama.cpp && \
-    mkdir build && cd build && \
-    cmake -DGGML_CPU=ON .. && \
-    cmake --build . --config Release -j4 && \
-    cp bin/llama-server /build/llama-server || true
-
-# ==========================================
-# STAGE 2: Runtime (minimal base)
+# Llama.cpp Server - Text-to-SQL Engine
+# Using pre-built binaries to avoid compilation issues
 # ==========================================
 FROM ubuntu:22.04
 
@@ -37,8 +15,22 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Copy llama-server from builder
-COPY --from=builder /build/llama-server /app/llama-server
+# Download and extract pre-built llama-server binary for Ubuntu 22.04
+# Using a known working build
+RUN mkdir -p /app && \
+    curl -L -o /tmp/llama-server-ubuntu.tar.gz "https://github.com/ggml-org/llama.cpp/releases/download/b4016/llama-server-b4016-ubuntu-x86_64.tar.gz" && \
+    tar -xzf /tmp/llama-server-ubuntu.tar.gz -C /app && \
+    chmod +x /app/llama-server && \
+    rm /tmp/llama-server-ubuntu.tar.gz || \
+    echo "Using fallback: building from source" && \
+    apt-get update && apt-get install -y git build-essential cmake && \
+    git clone https://github.com/ggml-org/llama.cpp.git /tmp/llama.cpp && \
+    cd /tmp/llama.cpp && \
+    mkdir build && cd build && \
+    cmake -DGGML_CPU=ON .. && \
+    cmake --build . --config Release -j2 && \
+    cp bin/llama-server /app/llama-server && \
+    rm -rf /tmp/llama.cpp
 
 # Create models directory
 RUN mkdir -p /app/models
