@@ -7,26 +7,23 @@ import type { DataSource } from "@/types/database";
 /**
  * Parse PostgreSQL connection string into config object
  * Supports: postgresql://user:password@host:port/database?ssl=require&...
+ *
+ * For Neon and other cloud databases with complex query parameters,
+ * we pass the full connection string as-is rather than parsing it,
+ * since the pg driver handles all parameters correctly.
  */
 function parsePostgresConnectionString(
   connStr: string
 ): Record<string, unknown> {
   try {
-    const url = new URL(connStr);
-    const config: Record<string, unknown> = {
-      host: url.hostname,
-      port: url.port ? parseInt(url.port, 10) : 5432,
-      database: url.pathname.replace(/^\//, ""),
-      user: url.username,
-      password: url.password,
+    // Validate it's a proper PostgreSQL URL
+    new URL(connStr);
+
+    // Return the connection string as-is
+    // The pg driver will handle all parameters (sslmode, channel_binding, etc.)
+    return {
+      connectionString: connStr
     };
-
-    const sslParam = url.searchParams.get("ssl");
-    if (sslParam) {
-      config.ssl = sslParam === "require" || sslParam === "true";
-    }
-
-    return config;
   } catch (error) {
     throw new Error(`Invalid PostgreSQL connection string: ${(error as Error).message}`);
   }
