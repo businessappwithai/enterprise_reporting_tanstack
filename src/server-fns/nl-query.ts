@@ -200,7 +200,7 @@ export const executeNLQuery = createServerFn({
     // If neither is available, return error
     if (!translation) {
       const mastraUrl = process.env.MASTRA_URL || "http://localhost:4111";
-      const llamaUrl = process.env.LLAMA_REASONING_URL || "http://localhost:8082";
+      const llamaUrl = process.env.LLAMA_REASONING_URL || "http://localhost:8080";
 
       await logAudit({
         userId: session.user.id,

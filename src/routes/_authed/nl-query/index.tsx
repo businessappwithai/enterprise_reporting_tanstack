@@ -957,7 +957,7 @@ function NlQueryPage() {
               <Alert className="mt-3">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription className="text-xs">
-                  Requires llama.cpp running with <code className="bg-muted px-1 py-0.5 rounded">Qwen3.6</code> on port 8082.
+                  Requires llama.cpp running with <code className="bg-muted px-1 py-0.5 rounded">Qwen3.6</code> on port 8080.
                   Press <kbd className="bg-muted border rounded px-1">⌘ Enter</kbd> to generate.
                 </AlertDescription>
               </Alert>

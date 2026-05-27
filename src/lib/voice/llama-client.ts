@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 
 const LLAMA_STT_URL = process.env.LLAMA_STT_URL || "http://localhost:8081";
-const LLAMA_REASONING_URL = process.env.LLAMA_REASONING_URL || "http://localhost:8082";
+const LLAMA_REASONING_URL = process.env.LLAMA_REASONING_URL || "http://localhost:8080";
 const LLAMA_TTS_URL = process.env.LLAMA_TTS_URL || "http://localhost:8083";
 
 export function createSttClient() {

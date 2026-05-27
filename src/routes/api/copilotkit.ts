@@ -183,7 +183,7 @@ export const Route = createFileRoute("/api/copilotkit")({
                 return json({
                   success: false,
                   error:
-                    "Failed to translate query. Ensure llama.cpp reasoning server is running on port 8082 with Qwen3.6 model.",
+                    "Failed to translate query. Ensure llama.cpp reasoning server is running (set LLAMA_REASONING_URL environment variable if not on default port 8080) with Qwen3.6 model.",
                 });
               }
 
