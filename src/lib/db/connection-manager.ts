@@ -134,15 +134,15 @@ async function buildKyselyConnection(
 
         console.log(`[BUILD_CONN:${buildId}] Connection details: host=${poolConfig.host}:${poolConfig.port}, db=${poolConfig.database}, user=${poolConfig.user}`);
 
-        // Apply SSL for individual component connections
-        if (connectionConfig.ssl !== false) {
+        // Apply SSL for individual component connections only if explicitly requested
+        if (connectionConfig.ssl === true) {
           poolConfig.ssl = {
             rejectUnauthorized: false,
             minVersion: 'TLSv1.2',
           };
           console.log(`[BUILD_CONN:${buildId}] SSL enabled`);
         } else {
-          console.log(`[BUILD_CONN:${buildId}] SSL disabled`);
+          console.log(`[BUILD_CONN:${buildId}] SSL disabled (default for local connections)`);
         }
       }
 

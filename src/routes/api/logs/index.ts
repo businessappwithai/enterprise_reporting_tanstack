@@ -3,6 +3,7 @@ import { verifySession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/config";
 import { json } from "@/lib/server/response";
 import { sqlEditorConfig, validatePageSize } from "@/lib/config/pagination";
+import { generateId } from "@/lib/utils";
 
 async function getSession(request: Request) {
   const cookie = request.headers.get("cookie") || "";
@@ -38,6 +39,7 @@ export const Route = createFileRoute("/api/logs/")({
           await db
             .insertInto("logs")
             .values({
+              id: generateId(),
               timestamp: new Date().toISOString(),
               level: body.level,
               message: body.message,

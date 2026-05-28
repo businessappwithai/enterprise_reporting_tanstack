@@ -410,6 +410,47 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
       feedback_by VARCHAR(255),
       created_at VARCHAR(255) DEFAULT CURRENT_TIMESTAMP
     )`,
+
+    // Metadata entity header
+    sql`CREATE TABLE IF NOT EXISTS metadata_entity_header (
+      id VARCHAR(255) PRIMARY KEY,
+      data_source_id VARCHAR(255) NOT NULL,
+      entity_name VARCHAR(255) NOT NULL,
+      entity_schema VARCHAR(255),
+      entity_type VARCHAR(50) NOT NULL DEFAULT 'table',
+      schema_metadata LONGTEXT NOT NULL,
+      last_introspected_at VARCHAR(255) DEFAULT CURRENT_TIMESTAMP,
+      description LONGTEXT,
+      is_active TINYINT(1) DEFAULT 0,
+      is_hidden TINYINT(1) DEFAULT 1,
+      created_by VARCHAR(255),
+      created_at VARCHAR(255) DEFAULT CURRENT_TIMESTAMP,
+      updated_at VARCHAR(255) DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE KEY unique_entity (data_source_id, entity_name, entity_schema)
+    )`,
+
+    // Metadata entity field
+    sql`CREATE TABLE IF NOT EXISTS metadata_entity_field (
+      id VARCHAR(255) PRIMARY KEY,
+      entity_header_id VARCHAR(255) NOT NULL,
+      field_name VARCHAR(255) NOT NULL,
+      data_type VARCHAR(255) NOT NULL,
+      is_nullable TINYINT(1),
+      is_primary_key TINYINT(1) DEFAULT 0,
+      is_foreign_key TINYINT(1) DEFAULT 0,
+      foreign_key_table VARCHAR(255),
+      foreign_key_column VARCHAR(255),
+      default_value LONGTEXT,
+      description LONGTEXT,
+      is_display_field TINYINT(1) DEFAULT 0,
+      is_searchable TINYINT(1) DEFAULT 1,
+      display_order INT,
+      section_name VARCHAR(255),
+      relationship_ui_type VARCHAR(50),
+      created_at VARCHAR(255) DEFAULT CURRENT_TIMESTAMP,
+      updated_at VARCHAR(255) DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE KEY unique_field (entity_header_id, field_name)
+    )`,
   ];
 
   console.log("[bootstrap] Creating tables...");

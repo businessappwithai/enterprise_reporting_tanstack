@@ -1,5 +1,6 @@
 import pino from "pino";
 import { getDb } from "@/lib/db/config";
+import { generateId } from "@/lib/utils";
 import { generateLogEmbedding } from "@/lib/embeddings/vector-embeddings";
 
 export interface LogContext {
@@ -71,6 +72,7 @@ async function flushLogsToDatabase() {
       await db
         .insertInto("logs")
         .values({
+          id: generateId(),
           timestamp: log.timestamp,
           level: log.level,
           message: log.message,

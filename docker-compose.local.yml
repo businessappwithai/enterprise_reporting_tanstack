@@ -24,6 +24,26 @@ services:
     networks:
       - ers-local-network
 
+  postgres:
+    image: postgres:15-alpine
+    container_name: ers-local-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: test_database
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - ${DATA_PATH:-./.docker-data}/postgres/data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "test_user", "-d", "test_database"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ers-local-network
+
   redis:
     image: redis:7-alpine
     container_name: ers-local-redis
@@ -90,6 +110,8 @@ services:
     depends_on:
       mariadb:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck:
@@ -109,6 +131,10 @@ services:
 networks:
   ers-local-network:
     driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_icc: "true"
+      com.docker.network.bridge.enable_ip_masquerade: "true"
+      com.docker.network.driver.mtu: "1500"
 
 volumes:
   mariadb_local_data:
