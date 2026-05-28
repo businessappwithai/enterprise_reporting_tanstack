@@ -1,8 +1,24 @@
 import { Kysely, MssqlDialect, MysqlDialect, PostgresDialect, sql } from "kysely";
 import { Pool } from "pg";
+import { resolve4 } from "node:dns/promises";
 import { getDb } from "@/lib/db/config"; // biome-ignore lint/suspicious/noExplicitAny: external DB schema unknown
 import { decrypt } from "@/lib/security/encryption";
 import type { DatabaseClientType, DataSource } from "@/types/database";
+
+/**
+ * Resolve a hostname to its first IPv4 address.
+ * Docker's DNS may return IPv6 first; the pg library connects to the first
+ * address it gets, and the IPv6 path fails on Neon pooler endpoints.
+ * Passing ssl.servername preserves SNI so Neon can route the connection.
+ */
+async function resolveIPv4(hostname: string): Promise<string | null> {
+  try {
+    const addrs = await resolve4(hostname);
+    return addrs[0] ?? null;
+  } catch {
+    return null;
+  }
+}
 
 // biome-ignore lint/suspicious/noExplicitAny: external DB schema is unknown at compile time
 type AnyKysely = Kysely<any>;
@@ -85,44 +101,50 @@ async function buildKyselyConnection(
       // Use connection string if provided (Neon uses this)
       if (connectionConfig.connectionString) {
         console.log(`[BUILD_CONN:${buildId}] Using connection string mode`);
-        let connStr = connectionConfig.connectionString;
-        const originalConnStr = connStr;
+        const connStr = connectionConfig.connectionString;
 
-        // Fix common connection string errors
-        // Fix: Replace first & with ? if no ? exists (query parameter separator)
-        if (!connStr.includes('?') && connStr.includes('&')) {
-          connStr = connStr.replace('&', '?');
-          console.log(`[BUILD_CONN:${buildId}] Fixed connection string format: & → ?`);
+        // Parse the connection string to extract individual components.
+        // We build the pool from individual fields (not connectionString) so we can:
+        //  1. Force IPv4 DNS (Docker resolves IPv6 first; pg picks the first address and fails)
+        //  2. Pass ssl.servername for SNI (Neon requires the hostname in the TLS handshake to route the connection)
+        let parsedUrl: URL;
+        try {
+          parsedUrl = new URL(connStr);
+        } catch {
+          throw new Error(`Invalid connection string: cannot parse URL`);
         }
 
-        // Fix: Ensure sslmode=require for Neon connections
-        if (connStr.includes('neon') && !connStr.includes('sslmode=')) {
-          if (connStr.includes('?')) {
-            connStr += '&sslmode=require';
-          } else {
-            connStr += '?sslmode=require';
-          }
-          console.log(`[BUILD_CONN:${buildId}] Added sslmode=require to Neon connection string`);
+        const hostname = parsedUrl.hostname;
+        const port = parsedUrl.port ? parseInt(parsedUrl.port, 10) : 5432;
+        const database = parsedUrl.pathname.replace(/^\//, "");
+        const user = decodeURIComponent(parsedUrl.username);
+        const password = decodeURIComponent(parsedUrl.password);
+
+        console.log(`[BUILD_CONN:${buildId}] Parsed: host=${hostname}, port=${port}, db=${database}, user=${user}`);
+
+        // Resolve to IPv4 to avoid Docker/IPv6 routing failures on external hosts (e.g. Neon)
+        const ipv4 = await resolveIPv4(hostname);
+        if (ipv4) {
+          poolConfig.host = ipv4;
+          console.log(`[BUILD_CONN:${buildId}] Resolved ${hostname} → IPv4 ${ipv4}`);
+        } else {
+          poolConfig.host = hostname;
+          console.log(`[BUILD_CONN:${buildId}] IPv4 resolution failed, using hostname directly`);
         }
 
-        poolConfig.connectionString = connStr;
+        poolConfig.port = port;
+        poolConfig.database = database;
+        poolConfig.user = user;
+        poolConfig.password = password;
 
-        // Check if connection string contains Neon or explicit SSL requirements
-        const isNeon = connStr.includes('neon');
-        const hasSSLMode = connStr.includes('sslmode=');
-        const hasChannelBinding = connStr.includes('channel_binding=');
-        const host = connStr.split('@')[1]?.split(':')[0] || 'unknown';
-
-        console.log(`[BUILD_CONN:${buildId}] Connection string details: host=${host}, isNeon=${isNeon}, hasSSLMode=${hasSSLMode}, hasChannelBinding=${hasChannelBinding}`);
-
-        // For Neon and other external databases requiring SSL, use permissive SSL config
-        // The connection string parameters (sslmode=require, channel_binding=require) will be honored
+        // Always enable SSL for external connections; pass servername so SNI works even when connecting by IP
         poolConfig.ssl = {
-          rejectUnauthorized: false, // Neon uses strict SSL, allow self-signed verification workaround
-          minVersion: 'TLSv1.2', // Require modern TLS
+          rejectUnauthorized: false,
+          minVersion: 'TLSv1.2',
+          servername: hostname,
         };
 
-        console.log(`[BUILD_CONN:${buildId}] SSL config: rejectUnauthorized=false, minVersion=TLSv1.2`);
+        console.log(`[BUILD_CONN:${buildId}] SSL config: rejectUnauthorized=false, servername=${hostname}`);
       } else {
         // Otherwise build from individual components
         console.log(`[BUILD_CONN:${buildId}] Using individual field mode`);
