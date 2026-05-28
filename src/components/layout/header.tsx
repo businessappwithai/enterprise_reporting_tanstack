@@ -27,6 +27,12 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ThemeSelector } from "@/components/theme/theme-selector";
 import { logoutFn } from "@/server-fns/auth";
+import {
+  fetchNotificationsFn,
+  markNotificationAsReadFn,
+  markAllNotificationsAsReadFn,
+  deleteNotificationFn,
+} from "@/server-fns/notifications";
 
 interface AppUser {
   name?: string | null;
@@ -58,11 +64,17 @@ export function Header({ user, onMobileMenuToggle, mobileMenuOpen }: HeaderProps
   const { data: notifications = [], isLoading: isLoadingNotifications } = useQuery({
     queryKey: ["notifications", showReadNotifications],
     queryFn: async () => {
-      const includeRead = showReadNotifications ? "true" : "false";
-      const res = await fetch(`/api/notifications?includeRead=${includeRead}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to load notifications`);
-      const data = await res.json();
-      return data.data || [];
+      try {
+        const result = await fetchNotificationsFn({ includeRead: showReadNotifications });
+        if (!result.success) {
+          console.warn("Failed to fetch notifications:", result.error);
+          return [];
+        }
+        return result.data || [];
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+        return [];
+      }
     },
     refetchInterval: 30000, // Refetch every 30 seconds
   });
@@ -74,45 +86,50 @@ export function Header({ user, onMobileMenuToggle, mobileMenuOpen }: HeaderProps
   // Mark as read mutation
   const markAsReadMutation = useMutation({
     mutationFn: async (id: string) => {
-      await fetch(`/api/notifications/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isRead: true }),
-      });
+      const result = await markNotificationAsReadFn({ id });
+      if (!result.success) {
+        throw new Error(result.error || "Failed to mark notification as read");
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
+    onError: (error) => {
+      console.error("Error marking notification as read:", error);
     },
   });
 
   // Mark all as read mutation
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
-      const unread = safeNotifications.filter((n: any) => !n.is_read);
-      await Promise.all(
-        unread.map((n: any) =>
-          fetch(`/api/notifications/${n.id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ isRead: true }),
-          })
-        )
-      );
+      const result = await markAllNotificationsAsReadFn();
+      if (!result.success) {
+        throw new Error(result.error || "Failed to mark all notifications as read");
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
       toast.success("All notifications marked as read");
+    },
+    onError: (error) => {
+      console.error("Error marking all notifications as read:", error);
     },
   });
 
   // Delete notification mutation
   const deleteNotificationMutation = useMutation({
     mutationFn: async (id: string) => {
-      await fetch(`/api/notifications/${id}`, { method: "DELETE" });
+      const result = await deleteNotificationFn({ id });
+      if (!result.success) {
+        throw new Error(result.error || "Failed to delete notification");
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
       toast.success("Notification deleted");
+    },
+    onError: (error) => {
+      console.error("Error deleting notification:", error);
     },
   });
 

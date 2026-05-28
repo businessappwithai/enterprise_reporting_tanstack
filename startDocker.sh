@@ -84,7 +84,7 @@ echo ""
 # Check health
 echo -e "${YELLOW}Checking application health...${NC}"
 sleep 3
-if curl -s http://localhost:4050/api/health > /dev/null 2>&1; then
+if curl -s http://localhost:5050/api/health > /dev/null 2>&1; then
     echo -e "${GREEN}Application is healthy!${NC}"
 else
     echo -e "${YELLOW}Application may still be starting...${NC}"
@@ -98,7 +98,7 @@ echo "  Started Successfully!"
 echo -e "========================================${NC}"
 echo ""
 echo -e "${BLUE}Access the application:${NC}"
-echo "  URL:  http://localhost:4050"
+echo "  URL:  http://localhost:5050"
 echo ""
 echo -e "${BLUE}Default credentials:${NC}"
 echo "  Email:    admin@admin.com"

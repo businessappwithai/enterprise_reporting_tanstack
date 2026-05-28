@@ -43,7 +43,7 @@ RUN adduser --system --uid 1001 bunuser || true && \
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/bun.lock ./bun.lock
 
-# Copy built application (TanStack Start output structure)
+# Copy built application (Vite output structure)
 COPY --from=builder --chown=bunuser:bunuser /app/dist ./dist
 COPY --from=builder --chown=bunuser:bunuser /app/public ./public
 COPY --from=builder --chown=bunuser:bunuser /app/node_modules ./node_modules
@@ -52,9 +52,14 @@ COPY --from=builder --chown=bunuser:bunuser /app/node_modules ./node_modules
 COPY --chown=bunuser:bunuser scripts ./scripts
 COPY --chown=bunuser:bunuser src/lib/db ./src/lib/db
 
+# Copy server wrapper for static file serving
+COPY --chown=bunuser:bunuser server-static-wrapper.mjs ./server-static-wrapper.mjs
+
 # Create required directories with correct permissions
 RUN mkdir -p /app/data /app/logs && \
-    chown -R bunuser:bunuser /app/data /app/logs
+    chown -R bunuser:bunuser /app/data /app/logs && \
+    chmod -R 755 /app/dist/client && \
+    chmod -R 755 /app/public
 
 # Expose application port
 EXPOSE 3000
@@ -65,7 +70,8 @@ ENV NODE_ENV=production \
     MARIADB_HOST=mariadb \
     MARIADB_PORT=3306 \
     MARIADB_DATABASE=enterprise_config \
-    MARIADB_USER=enterprise
+    MARIADB_USER=enterprise \
+    PUBLIC_DIR=/app/dist/client
 
 # Switch to non-root user
 USER bunuser
@@ -74,5 +80,5 @@ USER bunuser
 HEALTHCHECK --interval=10s --timeout=5s --start-period=45s --retries=10 \
     CMD curl -f http://localhost:3000/api/health || exit 1
 
-# Start the application
-CMD ["bun", "run", "dist/server/server.js"]
+# Start the application with static file serving
+CMD ["bun", "server-static-wrapper.mjs"]

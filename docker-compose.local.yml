@@ -2,6 +2,28 @@
 # Simplified setup without Nginx/Certbot for local testing
 
 services:
+  # MariaDB Configuration Database
+  mariadb:
+    image: mariadb:latest
+    container_name: ers-local-mariadb
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-root_pass}
+      MARIADB_DATABASE: ${MARIADB_DATABASE:-enterprise_config}
+      MARIADB_USER: ${MARIADB_USER:-enterprise}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:-enterprise_pass}
+    volumes:
+      - mariadb_local_data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ers-local-network
+
   redis:
     image: redis:7-alpine
     container_name: ers-local-redis
@@ -20,35 +42,54 @@ services:
       - ers-local-network
 
   app:
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: enterprise-reporting-system:latest
     container_name: ers-local-app
     restart: unless-stopped
     ports:
-      - "4050:3000"
+      - "5050:3000"
     environment:
       NODE_ENV: production
-      NEXT_PUBLIC_APP_URL: http://localhost:4050
+      NEXT_PUBLIC_APP_URL: http://localhost:5050
       PORT: 3000
       AUTH_SECRET: ${AUTH_SECRET:-local-dev-secret-change-in-production}
-      AUTH_URL: http://localhost:4050
-      DATABASE_PATH: /app/data/config.sqlite
-      REDIS_URL: redis://redis:6379
+      AUTH_URL: http://localhost:5050
+
+      # MariaDB Configuration Database
+      MARIADB_HOST: mariadb
+      MARIADB_PORT: 3306
+      MARIADB_DATABASE: ${MARIADB_DATABASE:-enterprise_config}
+      MARIADB_USER: ${MARIADB_USER:-enterprise}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:-enterprise_pass}
+
+      # Encryption and Jobs
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
+      REDIS_URL: redis://redis:6379
       JOB_OUTPUT_PATH: /app/job-outputs
       MAX_CONCURRENT_JOBS: 5
-      NEXT_PUBLIC_ERROR_REPORTING_EMAIL: admin@localhost
+
+      # Pagination and UI
       DEFAULT_PAGE_SIZE: 50
       MAX_PAGE_SIZE: 1000
       DATA_TABLE_PAGE_SIZE: 100
       EXPORT_PAGE_SIZE: 1000
       VIRTUAL_SCROLL_THRESHOLD: 500
       ENABLE_VIRTUAL_SCROLLING: true
+      NEXT_PUBLIC_ERROR_REPORTING_EMAIL: admin@localhost
+
+      # External Database Connection Settings
+      # Increase timeouts for external databases
+      PGCONNECT_TIMEOUT: 30000
+      PGIDLE_IN_TRANSACTION_SESSION_TIMEOUT: 60000
     volumes:
-      - ${DATA_PATH:-./.docker-data}/app/data:/app/data
       - ${DATA_PATH:-./.docker-data}/app/job-outputs:/app/job-outputs
       - ${DATA_PATH:-./.docker-data}/app/uploads:/app/uploads
       - ${DATA_PATH:-./.docker-data}/app/logs:/app/logs
     depends_on:
+      mariadb:
+        condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck:
@@ -59,7 +100,16 @@ services:
       start_period: 40s
     networks:
       - ers-local-network
+    # Use host DNS for better external network access
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      - 1.1.1.1
 
 networks:
   ers-local-network:
     driver: bridge
+
+volumes:
+  mariadb_local_data:
+    driver: local

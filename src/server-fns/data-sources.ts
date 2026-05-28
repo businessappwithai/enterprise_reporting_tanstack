@@ -313,3 +313,74 @@ export const deleteDataSource = createServerFn({ method: "DELETE" })
       }
     );
   });
+
+export const inspectDataSource = createServerFn({ method: "POST" }).handler(
+  async ({ id }: { id: string }) => {
+    return withErrorHandler(
+      async () => {
+        const session = await requireAuth();
+        const db = getDb();
+
+        // Verify data source exists
+        const dataSource = await db
+          .selectFrom("data_sources")
+          .selectAll()
+          .where("id", "=", id)
+          .where("is_deleted", "=", false)
+          .executeTakeFirst();
+
+        if (!dataSource) {
+          throw new Error("NOT_FOUND");
+        }
+
+        try {
+          // Call the internal API endpoint with proper authentication
+          const response = await fetch(
+            `http://localhost:3000/api/data-sources/${id}/inspect`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Cookie: `session_token=${(await requireAuth()).sessionToken || ""}`,
+              },
+            }
+          );
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({
+              error: { message: `HTTP ${response.status}` },
+            }));
+            const errorMessage =
+              errorData.error?.message || `Failed to inspect schema (HTTP ${response.status})`;
+            throw new Error(errorMessage);
+          }
+
+          const result = await response.json();
+          if (!result.success) {
+            throw new Error(result.error?.message || "Failed to inspect schema");
+          }
+
+          await logAudit({
+            userId: session.user.id,
+            action: "inspect",
+            resourceType: "data_source",
+            resourceId: id,
+            details: { entities_count: result.data?.entities_count || 0 },
+          });
+
+          return result;
+        } catch (error) {
+          const message =
+            error instanceof Error ? error.message : "Failed to inspect schema";
+          console.error("[inspectDataSource] Error:", message, { dataSourceId: id });
+          throw error;
+        }
+      },
+      {
+        userId: (await requireAuth()).user.id,
+        action: "execute",
+        details: { operation: "inspectDataSource", dataSourceId: id },
+      }
+    );
+  }
+);

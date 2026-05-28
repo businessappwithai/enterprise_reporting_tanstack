@@ -22,7 +22,11 @@ export class ConnectionTestService {
     clientType: string,
     config: ConnectionConfig
   ): Promise<ConnectionTestResult> {
+    const serviceId = Math.random().toString(36).substring(7);
+    const startTime = Date.now();
+
     if (!clientType?.trim()) {
+      console.warn(`[SERVICE:${serviceId}] Database type is required`);
       return {
         connected: false,
         message: "Database type is required",
@@ -30,20 +34,33 @@ export class ConnectionTestService {
     }
 
     try {
+      console.log(`[SERVICE:${serviceId}] Starting connection test`);
+      console.log(`[SERVICE:${serviceId}] Client type: ${clientType}`);
+
       // First validate the config
+      console.log(`[SERVICE:${serviceId}] Step 1: Validating configuration...`);
       const validationResult = this.validateConfig(clientType, config);
       if (!validationResult.valid) {
+        const duration = Date.now() - startTime;
+        console.warn(`[SERVICE:${serviceId}] Config validation FAILED after ${duration}ms: ${validationResult.message}`);
         return {
           connected: false,
           message: validationResult.message,
         };
       }
+      console.log(`[SERVICE:${serviceId}] Step 1: Config validation OK`);
 
       // Then actually test the connection (real database connectivity)
+      console.log(`[SERVICE:${serviceId}] Step 2: Testing actual database connection...`);
       const result = await testDatabaseConnection(
         clientType.toLowerCase() as DatabaseClientType,
         config
       );
+
+      const duration = Date.now() - startTime;
+      console.log(`[SERVICE:${serviceId}] Step 2: Connection test completed in ${duration}ms`);
+      console.log(`[SERVICE:${serviceId}] Result: success=${result.success}, latency=${result.latency}ms`);
+      console.log(`[SERVICE:${serviceId}] Message: ${result.message}`);
 
       return {
         connected: result.success,
@@ -51,7 +68,18 @@ export class ConnectionTestService {
         latency: result.latency,
       };
     } catch (error) {
+      const duration = Date.now() - startTime;
       const message = error instanceof Error ? error.message : "Connection test failed";
+      const errorCode = error instanceof Error ? (error as any).code : "UNKNOWN";
+      const errorStack = error instanceof Error ? error.stack : "";
+
+      console.error(`[SERVICE:${serviceId}] EXCEPTION after ${duration}ms`);
+      console.error(`[SERVICE:${serviceId}] Error Code: ${errorCode}`);
+      console.error(`[SERVICE:${serviceId}] Error Message: ${message}`);
+      if (errorStack) {
+        console.error(`[SERVICE:${serviceId}] Stack Trace:\n${errorStack}`);
+      }
+
       return {
         connected: false,
         message,

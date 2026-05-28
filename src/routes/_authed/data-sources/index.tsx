@@ -338,6 +338,14 @@ function DataSourcesPage() {
   const inspectMutation = useMutation({
     mutationFn: async (dsId: string) => {
       const res = await fetch(`/api/data-sources/${dsId}/inspect`, { method: "POST" });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({
+          error: { message: `HTTP ${res.status}` },
+        }));
+        throw new Error(
+          errorData.error?.message || `Failed to inspect schema (HTTP ${res.status})`
+        );
+      }
       return res.json();
     },
     onSuccess: (data) => {
@@ -351,8 +359,11 @@ function DataSourcesPage() {
       }
       setInspectingDs(null);
     },
-    onError: () => {
-      toast.error("Failed to inspect schema");
+    onError: (error) => {
+      const message =
+        error instanceof Error ? error.message : "Failed to inspect schema";
+      toast.error(message);
+      console.error("Inspect error:", message);
       setInspectingDs(null);
     },
   });
