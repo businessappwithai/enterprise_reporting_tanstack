@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-export type VoiceMode = "web-speech" | "ollama-whisper" | "llama-asr" | "unavailable";
+export type VoiceMode = "web-speech" | "llama-asr" | "unavailable";
 
 export interface UseVoiceRecordingOptions {
   onTranscription: (text: string) => void;
@@ -64,7 +64,6 @@ declare global {
 function detectMode(): VoiceMode {
   if (typeof window === "undefined") return "unavailable";
   if (window.SpeechRecognition || window.webkitSpeechRecognition) return "web-speech";
-  // Check for llama.cpp or fall back to ollama-whisper if mediaDevices available
   if (typeof navigator !== "undefined" && typeof navigator.mediaDevices !== "undefined" && typeof navigator.mediaDevices.getUserMedia === "function") return "llama-asr";
   return "unavailable";
 }
@@ -79,16 +78,13 @@ export function useVoiceRecording({
   const [interimText, setInterimText] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  // Web Speech API refs
   const recognitionRef = useRef<ISpeechRecognition | null>(null);
   const finalTranscriptRef = useRef("");
 
-  // MediaRecorder refs (Ollama path)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       recognitionRef.current?.abort();
@@ -164,39 +160,7 @@ export function useVoiceRecording({
     setError(null);
   }, []);
 
-  // ── Ollama Whisper path ──────────────────────────────────────────────────────
-
-  const transcribeBlob = useCallback(
-    async (blob: Blob) => {
-      setIsTranscribing(true);
-      setError(null);
-      try {
-        const ext = blob.type.includes("webm") ? "webm" : blob.type.includes("ogg") ? "ogg" : "wav";
-        const form = new FormData();
-        form.append("audio", blob, `recording.${ext}`);
-
-        const res = await fetch("/api/nl-query/voice", {
-          method: "POST",
-          body: form,
-        });
-        const data = (await res.json()) as { success: boolean; text?: string; error?: string };
-        if (data.success && data.text) {
-          onTranscription(data.text);
-        } else {
-          const msg = data.error ?? "Transcription returned no text";
-          setError(msg);
-          onError?.(msg);
-        }
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : "Transcription request failed";
-        setError(msg);
-        onError?.(msg);
-      } finally {
-        setIsTranscribing(false);
-      }
-    },
-    [onTranscription, onError],
-  );
+  // ── Llama ASR path ──────────────────────────────────────────────────────────
 
   const transcribeBlobLlama = useCallback(
     async (blob: Blob) => {
@@ -228,66 +192,6 @@ export function useVoiceRecording({
     },
     [onTranscription, onError],
   );
-
-  const startOllamaRecording = useCallback(async () => {
-    setError(null);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-      streamRef.current = stream;
-
-      const mimeType =
-        ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", "audio/ogg"].find((t) =>
-          MediaRecorder.isTypeSupported(t),
-        ) ?? "";
-
-      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
-      chunksRef.current = [];
-
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
-      };
-
-      recorder.onstop = () => {
-        stream.getTracks().forEach((t) => t.stop());
-        streamRef.current = null;
-        const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
-        transcribeBlob(blob);
-      };
-
-      mediaRecorderRef.current = recorder;
-      recorder.start();
-      setIsRecording(true);
-    } catch (err) {
-      const raw = err instanceof Error ? err.message : String(err);
-      const msg =
-        raw.toLowerCase().includes("permission") || raw.toLowerCase().includes("denied")
-          ? "Microphone access denied — please allow microphone in browser settings"
-          : `Could not start recording: ${raw}`;
-      setError(msg);
-      onError?.(msg);
-    }
-  }, [transcribeBlob, onError]);
-
-  const stopOllamaRecording = useCallback(() => {
-    const rec = mediaRecorderRef.current;
-    if (rec && rec.state !== "inactive") rec.stop();
-    setIsRecording(false);
-  }, []);
-
-  const cancelOllamaRecording = useCallback(() => {
-    const rec = mediaRecorderRef.current;
-    if (rec && rec.state !== "inactive") {
-      rec.onstop = null;
-      rec.stop();
-    }
-    streamRef.current?.getTracks().forEach((t) => t.stop());
-    streamRef.current = null;
-    chunksRef.current = [];
-    setIsRecording(false);
-    setError(null);
-  }, []);
-
-  // ── Llama ASR path ──────────────────────────────────────────────────────────
 
   const startLlamaRecording = useCallback(async () => {
     setError(null);
@@ -349,9 +253,9 @@ export function useVoiceRecording({
 
   // ── Unified API ─────────────────────────────────────────────────────────────
 
-  const startRecording = mode === "web-speech" ? startWebSpeech : mode === "llama-asr" ? startLlamaRecording : startOllamaRecording;
-  const stopAndTranscribe = mode === "web-speech" ? stopWebSpeech : mode === "llama-asr" ? stopLlamaRecording : stopOllamaRecording;
-  const cancelRecording = mode === "web-speech" ? cancelWebSpeech : mode === "llama-asr" ? cancelLlamaRecording : cancelOllamaRecording;
+  const startRecording = mode === "web-speech" ? startWebSpeech : startLlamaRecording;
+  const stopAndTranscribe = mode === "web-speech" ? stopWebSpeech : stopLlamaRecording;
+  const cancelRecording = mode === "web-speech" ? cancelWebSpeech : cancelLlamaRecording;
 
   return { mode, isRecording, isTranscribing, interimText, error, startRecording, stopAndTranscribe, cancelRecording };
 }

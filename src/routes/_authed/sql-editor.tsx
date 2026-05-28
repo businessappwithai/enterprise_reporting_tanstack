@@ -139,7 +139,8 @@ function SQLEditorPage() {
       return data.data;
     },
     enabled: !!selectedDataSource,
-    retry: false,
+    retry: 2,
+    retryDelay: (attempt: number) => Math.min(1000 * 2 ** attempt, 8000),
     staleTime: 300000,
     gcTime: 600000,
   });

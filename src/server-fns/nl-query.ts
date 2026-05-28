@@ -25,7 +25,6 @@ import {
 import {
   storeNLQueryContext,
   buildMastraContextPrompt,
-  getRoleQueryStats,
 } from "@/lib/nlquery/nl-query-context-service";
 
 export interface ExecuteNLQueryInput {
@@ -152,14 +151,14 @@ export const executeNLQuery = createServerFn({
       tableInstructions: tableInstructionsMap,
     };
 
-    // [Step 1.5] Check if Mastra is available and build enhanced context with pgvector
-    let contextPrompt = "";
     const userRoles = session.user.roles || [];
     const primaryRole = userRoles[0] || "user";
+
+    // [Step 1.5] Build context from similar successful queries for this role
+    let contextPrompt = "";
     const mastraAvailable = await isMastraAvailable();
 
     if (mastraAvailable) {
-      // Build context from similar successful queries for this role
       const schemaContextStr = JSON.stringify(enhancedSchema);
       contextPrompt = await buildMastraContextPrompt(
         dataSourceId,
@@ -170,9 +169,10 @@ export const executeNLQuery = createServerFn({
       console.log("[NLQuery] Built enhanced context from similar role queries");
     }
 
-    // [Step 1.6] Translate NL to SQL using Mastra.ai agent (primary) or llama.cpp (fallback)
+    // [Step 1.6] Translate NL to SQL via Mastra.ai agent (primary) or llama.cpp direct (fallback)
     let translation: any = null;
     let translationSource = "";
+
     if (mastraAvailable) {
       console.log("[NLQuery] Using Mastra.ai agent for translation");
       translationSource = "mastra-agent";
@@ -190,14 +190,12 @@ export const executeNLQuery = createServerFn({
       );
     }
 
-    // Fall back to llama.cpp if Mastra is not available
     if (!translation && (await isLlamaReasoningAvailable())) {
-      console.log("[NLQuery] Mastra not available, falling back to llama.cpp");
+      console.log("[NLQuery] Mastra not available, using llama.cpp directly");
       translationSource = "llama-reasoning";
       translation = await translateNLToSQLViaLlama(nlQuestion, enhancedSchema);
     }
 
-    // If neither is available, return error
     if (!translation) {
       const mastraUrl = process.env.MASTRA_URL || "http://localhost:4111";
       const llamaUrl = process.env.LLAMA_REASONING_URL || "http://localhost:8080";
@@ -209,7 +207,7 @@ export const executeNLQuery = createServerFn({
         resourceId: dataSourceId,
         details: {
           nlQuestion,
-          error: "Neither Mastra agent nor llama.cpp is available",
+          error: "Neither Mastra agent nor llama.cpp reasoning server is available",
           mastraUrl,
           llamaUrl,
         },

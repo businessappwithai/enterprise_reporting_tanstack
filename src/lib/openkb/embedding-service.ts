@@ -1,61 +1,48 @@
 /**
- * Embedding Service: Generate vector embeddings using Ollama (D23)
+ * Embedding Service: Generate vector embeddings via llama.cpp (D23)
  *
- * Uses Ollama's embedding API to generate semantic embeddings for queries
+ * Uses llama.cpp's OpenAI-compatible /v1/embeddings endpoint.
  */
 
+import { createReasoningClient } from "@/lib/voice/llama-client";
+import { isLlamaReasoningAvailable } from "@/lib/voice/llama-client";
+
 export class EmbeddingService {
-  private ollamaUrl: string;
-  private model: string = "bge-small"; // Small, efficient model for semantic search
+  private model: string;
   private cache: Map<string, number[]> = new Map();
 
   constructor() {
-    this.ollamaUrl = process.env.OLLAMA_URL || "http://localhost:11434";
+    this.model = process.env.LLAMA_EMBEDDING_MODEL || "bge-small";
   }
 
   /**
-   * Generate embedding for text using Ollama (D23: self-hosted)
+   * Generate embedding for text via llama.cpp /v1/embeddings
    */
   async embed(text: string): Promise<number[]> {
     if (!text || text.trim().length === 0) {
       return [];
     }
 
-    // Check cache first
     const cacheKey = this.getCacheKey(text);
     if (this.cache.has(cacheKey)) {
       return this.cache.get(cacheKey) as number[];
     }
 
     try {
-      const response = await fetch(`${this.ollamaUrl}/api/embed`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: this.model,
-          input: text,
-        }),
+      const client = createReasoningClient();
+      const response = await client.embeddings.create({
+        model: this.model,
+        input: text,
       });
 
-      if (!response.ok) {
-        throw new Error(`Ollama API error: ${response.statusText}`);
-      }
-
-      const data = (await response.json()) as { embeddings?: number[][] };
-
-      if (!data.embeddings || data.embeddings.length === 0) {
-        console.warn("[Embedding] No embeddings returned from Ollama");
+      const embedding = response.data[0]?.embedding;
+      if (!embedding || embedding.length === 0) {
+        console.warn("[Embedding] No embedding returned from llama.cpp");
         return [];
       }
 
-      const embedding = data.embeddings[0];
-
-      // Cache the result
       this.cache.set(cacheKey, embedding);
 
-      // Limit cache size to 1000 entries
       if (this.cache.size > 1000) {
         const firstKey = this.cache.keys().next().value;
         this.cache.delete(firstKey);
@@ -64,7 +51,6 @@ export class EmbeddingService {
       return embedding;
     } catch (error) {
       console.error("[Embedding] Failed to generate embedding:", error);
-      // Return zero vector on error (similarity will be 0)
       return [];
     }
   }
@@ -75,75 +61,31 @@ export class EmbeddingService {
   async embedBatch(texts: string[]): Promise<number[][]> {
     const results: number[][] = [];
     for (const text of texts) {
-      const embedding = await this.embed(text);
-      results.push(embedding);
+      results.push(await this.embed(text));
     }
     return results;
   }
 
-  /**
-   * Clear cache (for memory management)
-   */
   clearCache(): void {
     this.cache.clear();
   }
 
-  /**
-   * Get cache key (hash text for normalization)
-   */
-  private getCacheKey(text: string): string {
-    // Simple hash: use text as-is if short, otherwise hash it
-    if (text.length < 200) {
-      return text;
-    }
+  async isAvailable(): Promise<boolean> {
+    return isLlamaReasoningAvailable();
+  }
 
+  async isModelLoaded(): Promise<boolean> {
+    return isLlamaReasoningAvailable();
+  }
+
+  private getCacheKey(text: string): string {
+    if (text.length < 200) return text;
     let hash = 0;
     for (let i = 0; i < text.length; i++) {
       const char = text.charCodeAt(i);
       hash = (hash << 5) - hash + char;
-      hash = hash & hash; // Convert to 32-bit integer
+      hash = hash & hash;
     }
     return `hash_${Math.abs(hash)}`;
-  }
-
-  /**
-   * Check if Ollama is available
-   */
-  async isAvailable(): Promise<boolean> {
-    try {
-      const response = await fetch(`${this.ollamaUrl}/api/tags`, {
-        method: "GET",
-      });
-      return response.ok;
-    } catch (error) {
-      console.warn("[Embedding] Ollama not available:", error);
-      return false;
-    }
-  }
-
-  /**
-   * Check if model is loaded in Ollama
-   */
-  async isModelLoaded(): Promise<boolean> {
-    try {
-      const response = await fetch(`${this.ollamaUrl}/api/tags`, {
-        method: "GET",
-      });
-
-      if (!response.ok) {
-        return false;
-      }
-
-      const data = (await response.json()) as { models?: Array<{ name: string }> };
-
-      if (!data.models) {
-        return false;
-      }
-
-      return data.models.some((m) => m.name.includes(this.model));
-    } catch (error) {
-      console.warn("[Embedding] Failed to check model status:", error);
-      return false;
-    }
   }
 }
