@@ -63,29 +63,76 @@ async function buildKyselyConnection(
     }
 
     case "pg": {
-      let poolConfig: any = {
-        min: 0,
+      // Build pool config with battle-tested SSL/TLS settings for Neon and other external databases
+      const poolConfig: any = {
+        // Connection pool configuration
         max: 10,
+        min: 0,
         idleTimeoutMillis: 600000,
+        // Extended timeout for external databases with SSL/TLS handshake and SASL channel binding
+        connectionTimeoutMillis: 120000, // 120 seconds for Neon's strict SSL/SASL
+        statement_timeout: 60000,
+        keepalives: 1,
+        keepalives_idle: 30,
       };
 
-      // Use connection string if provided, otherwise use individual config fields
+      // Use connection string if provided (Neon uses this)
       if (connectionConfig.connectionString) {
-        poolConfig.connectionString = connectionConfig.connectionString;
-        // If SSL isn't explicitly set in the config, enable it for Neon (which requires SSL)
-        if (connectionConfig.ssl === undefined && connectionConfig.connectionString.includes("neon")) {
-          poolConfig.ssl = { rejectUnauthorized: false };
+        let connStr = connectionConfig.connectionString;
+
+        // Fix common connection string errors
+        // Fix: Replace first & with ? if no ? exists (query parameter separator)
+        if (!connStr.includes('?') && connStr.includes('&')) {
+          connStr = connStr.replace('&', '?');
+          console.log('[Connection] Fixed connection string format: & → ?');
         }
+
+        // Fix: Ensure sslmode=require for Neon connections
+        if (connStr.includes('neon') && !connStr.includes('sslmode=')) {
+          if (connStr.includes('?')) {
+            connStr += '&sslmode=require';
+          } else {
+            connStr += '?sslmode=require';
+          }
+          console.log('[Connection] Added sslmode=require to Neon connection string');
+        }
+
+        poolConfig.connectionString = connStr;
+
+        // Check if connection string contains Neon or explicit SSL requirements
+        const isNeon = connStr.includes('neon');
+        const hasSSLMode = connStr.includes('sslmode=');
+        const hasChannelBinding = connStr.includes('channel_binding=');
+
+        // For Neon and other external databases requiring SSL, use permissive SSL config
+        // The connection string parameters (sslmode=require, channel_binding=require) will be honored
+        poolConfig.ssl = {
+          rejectUnauthorized: false, // Neon uses strict SSL, allow self-signed verification workaround
+          minVersion: 'TLSv1.2', // Require modern TLS
+        };
+
+        // Log connection attempt for debugging
+        console.log('[Connection] Connecting via connection string', {
+          isNeon,
+          hasSSLMode,
+          hasChannelBinding,
+          timeout: poolConfig.connectionTimeoutMillis,
+        });
       } else {
+        // Otherwise build from individual components
         poolConfig.host = connectionConfig.host;
         poolConfig.port = connectionConfig.port || 5432;
         poolConfig.database = connectionConfig.database;
         poolConfig.user = connectionConfig.user;
         poolConfig.password = connectionConfig.password;
-      }
 
-      if (connectionConfig.ssl) {
-        poolConfig.ssl = { rejectUnauthorized: false };
+        // Apply SSL for individual component connections
+        if (connectionConfig.ssl !== false) {
+          poolConfig.ssl = {
+            rejectUnauthorized: false,
+            minVersion: 'TLSv1.2',
+          };
+        }
       }
 
       const pool = new Pool(poolConfig);
@@ -201,30 +248,67 @@ export async function testConnection(
 
   try {
     connection = await buildKyselyConnection(clientType, connectionConfig);
+
+    // Test basic connectivity
     await sql`SELECT 1`.execute(connection);
+
+    // For PostgreSQL, also verify schema access (what inspect needs)
+    if (clientType === "pg") {
+      try {
+        await sql`
+          SELECT table_name
+          FROM information_schema.tables
+          WHERE table_schema = 'public'
+          LIMIT 1
+        `.execute(connection);
+      } catch (schemaError) {
+        throw new Error(
+          `Schema access failed: ${schemaError instanceof Error ? schemaError.message : String(schemaError)}. ` +
+          `The user may not have permissions to query information_schema.`
+        );
+      }
+    }
+
     const latency = Date.now() - startTime;
 
     if (clientType === "sqlite3") {
-      const tables = await sql`
-        SELECT tablename FROM pg_tables
-        WHERE schemaname = 'public'
-        LIMIT 1
-      `.execute(connection);
       return {
         success: true,
-        message:
-          tables.rows.length > 0
-            ? "Connection successful. Database contains tables."
-            : "Connected, but database appears to be empty (no tables found)",
+        message: "Connection successful (SQLite)",
         latency,
       };
     }
 
-    return { success: true, message: "Connection successful", latency };
+    return {
+      success: true,
+      message: `Connection successful (${latency}ms)`,
+      latency
+    };
   } catch (error) {
+    let message = "Unknown error";
+    if (error instanceof Error) {
+      message = error.message;
+    } else if (typeof error === "object" && error !== null) {
+      message = (error as any).message || String(error);
+    }
+
+    // Provide helpful error messages
+    let friendlyMessage = message;
+    if (message.includes("ETIMEDOUT") || message.includes("timeout")) {
+      friendlyMessage = `Connection timeout. The database server may be unreachable or the network is blocking the connection. This may indicate the server is too slow or the network is restricted.`;
+    } else if (message.includes("ECONNREFUSED")) {
+      friendlyMessage = `Connection refused. Check that the host and port are correct and the database server is running.`;
+    } else if (message.includes("authentication failed") || message.includes("password authentication failed")) {
+      friendlyMessage = `Authentication failed. Check your username and password.`;
+    } else if (message.includes("Schema access failed")) {
+      friendlyMessage = message; // Already formatted
+    } else if (message.includes("no such host") || message.includes("getaddrinfo")) {
+      friendlyMessage = `Host not found. Check that the hostname is correct and resolvable.`;
+    }
+
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Unknown error",
+      message: friendlyMessage,
     };
   } finally {
     if (connection) {
