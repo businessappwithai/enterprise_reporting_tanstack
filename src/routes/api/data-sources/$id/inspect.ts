@@ -53,9 +53,24 @@ export const Route = createFileRoute("/api/data-sources/$id/inspect")({
             );
           }
 
-          // Introspect the schema
+          // Introspect the schema with extended timeout for external databases
           const connection = await getConnection(dataSource);
-          const { schema } = await introspectSchema(connection, dataSource.client_type);
+
+          // Wrap introspection in a timeout promise (increased for external databases)
+          let schema;
+          try {
+            const introspectionPromise = introspectSchema(connection, dataSource.client_type);
+            const timeoutPromise = new Promise((_, reject) =>
+              setTimeout(() => reject(new Error('Schema introspection timeout (exceeded 300 seconds)')), 300000)
+            );
+            const result = await Promise.race([introspectionPromise, timeoutPromise]);
+            schema = (result as any).schema;
+          } catch (error) {
+            if (error instanceof Error && error.message.includes('timeout')) {
+              throw new Error(`Schema introspection timeout: ${error.message}. This may indicate the database is slow or unreachable.`);
+            }
+            throw error;
+          }
 
           let entitiesCreated = 0;
           const now = new Date().toISOString();
@@ -152,11 +167,52 @@ export const Route = createFileRoute("/api/data-sources/$id/inspect")({
             },
           });
         } catch (error) {
-          console.error("Data source inspect error:", error);
+          let errorCode = "";
+          let errorMessage = "Internal server error";
+
+          // Try to extract code and message from various error formats
+          try {
+            if (error instanceof Error) {
+              errorMessage = error.message || String(error);
+              // Check if Error object has code property (from pg)
+              errorCode = (error as any).code || "";
+            } else if (typeof error === 'object' && error !== null) {
+              // Try to access code property directly
+              errorCode = (error as any).code || (error as any).errno || "";
+              errorMessage = (error as any).message || errorCode || String(error);
+            } else {
+              errorMessage = String(error);
+            }
+
+            // Ensure we have some message
+            if (!errorMessage || errorMessage === "Unknown error" || errorMessage === "") {
+              errorMessage = errorCode || "Unknown error";
+            }
+          } catch (parseError) {
+            console.error("Error parsing error object:", parseError);
+            errorMessage = "Failed to inspect schema";
+          }
+
+          console.error("Data source inspect error - code:", errorCode, "message:", errorMessage);
+          console.error("Data source inspect error - full:", JSON.stringify(error));
+
+          // Provide helpful error messages for common issues
+          let userMessage = errorMessage;
+
+          if (errorCode === "ETIMEDOUT" || errorMessage.includes("ETIMEDOUT")) {
+            userMessage = "Connection timeout: The database server is not responding. This usually means the server is unreachable or the network is blocking the connection.";
+          } else if (errorCode === "ECONNREFUSED" || errorMessage.includes("ECONNREFUSED")) {
+            userMessage = "Connection refused: The database server rejected the connection. Verify the host, port, and credentials.";
+          } else if (errorMessage.includes("timeout")) {
+            userMessage = `Schema introspection timeout: The database took too long to respond.`;
+          } else if (errorMessage.includes("connect")) {
+            userMessage = "Failed to connect to the database. The server may be unreachable or the network may be restricted.";
+          }
+
           return json(
             {
               error: {
-                message: error instanceof Error ? error.message : "Internal server error",
+                message: userMessage || "Failed to inspect schema",
               },
             },
             { status: 500 }

@@ -70,7 +70,7 @@ async function buildKyselyConnection(
         min: 0,
         idleTimeoutMillis: 600000,
         // Extended timeout for external databases with SSL/TLS handshake and SASL channel binding
-        connectionTimeoutMillis: 120000, // 120 seconds for Neon's strict SSL/SASL
+        connectionTimeoutMillis: 180000, // 180 seconds for Neon's strict SSL/SASL
         statement_timeout: 60000,
         keepalives: 1,
         keepalives_idle: 30,
