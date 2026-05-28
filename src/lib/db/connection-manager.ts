@@ -365,16 +365,18 @@ export async function testConnection(
     })}`);
 
     // Provide helpful error messages
-    let friendlyMessage = message;
-    if (message.includes("ETIMEDOUT") || message.includes("timeout")) {
+    let friendlyMessage = message || "Unknown error";
+    const errorText = (message + " " + errorCode).toUpperCase();
+
+    if (errorCode === "ETIMEDOUT" || errorText.includes("ETIMEDOUT") || errorText.includes("TIMEOUT")) {
       friendlyMessage = `Connection timeout (${errorDuration}ms). The database server may be unreachable, the network may be blocking the connection, or the SSL/TLS handshake is taking too long. Check: (1) DNS resolution, (2) firewall rules, (3) network connectivity to the database host.`;
-    } else if (message.includes("ECONNREFUSED")) {
+    } else if (errorCode === "ECONNREFUSED" || errorText.includes("ECONNREFUSED")) {
       friendlyMessage = `Connection refused. The database server rejected the connection. Check: (1) host and port are correct, (2) database server is running and accepting connections.`;
-    } else if (message.includes("ENOTFOUND") || message.includes("getaddrinfo")) {
+    } else if (errorCode === "ENOTFOUND" || errorText.includes("ENOTFOUND") || errorText.includes("GETADDRINFO")) {
       friendlyMessage = `Host not found. DNS resolution failed for the database host. Check: (1) hostname is spelled correctly, (2) DNS resolution is working, (3) network connectivity to DNS servers.`;
-    } else if (message.includes("authentication failed") || message.includes("password authentication failed")) {
+    } else if (errorText.includes("AUTHENTICATION") || errorText.includes("PASSWORD")) {
       friendlyMessage = `Authentication failed. The database rejected the credentials. Check: (1) username and password are correct, (2) user has access to the specified database.`;
-    } else if (message.includes("Schema access failed")) {
+    } else if (errorText.includes("SCHEMA ACCESS")) {
       friendlyMessage = message; // Already formatted
     }
 
