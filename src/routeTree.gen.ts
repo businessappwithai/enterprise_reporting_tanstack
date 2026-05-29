@@ -19,7 +19,13 @@ import { Route as ApiJobsRouteImport } from './routes/api/jobs'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ApiFiltersRouteImport } from './routes/api/filters'
 import { Route as ApiCopilotkitRouteImport } from './routes/api/copilotkit'
+import { Route as AuthedUsersRouteImport } from './routes/_authed/users'
+import { Route as AuthedSystemLogsRouteImport } from './routes/_authed/system-logs'
 import { Route as AuthedSqlEditorRouteImport } from './routes/_authed/sql-editor'
+import { Route as AuthedSavedQueriesRouteImport } from './routes/_authed/saved-queries'
+import { Route as AuthedRolesRouteImport } from './routes/_authed/roles'
+import { Route as AuthedQueueManagementRouteImport } from './routes/_authed/queue-management'
+import { Route as AuthedPermissionsRouteImport } from './routes/_authed/permissions'
 import { Route as AuthedLogsRouteImport } from './routes/_authed/logs'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
 import { Route as AuthedBullBoardRouteImport } from './routes/_authed/bull-board'
@@ -149,9 +155,39 @@ const ApiCopilotkitRoute = ApiCopilotkitRouteImport.update({
   path: '/api/copilotkit',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthedUsersRoute = AuthedUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedSystemLogsRoute = AuthedSystemLogsRouteImport.update({
+  id: '/system-logs',
+  path: '/system-logs',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedSqlEditorRoute = AuthedSqlEditorRouteImport.update({
   id: '/sql-editor',
   path: '/sql-editor',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedSavedQueriesRoute = AuthedSavedQueriesRouteImport.update({
+  id: '/saved-queries',
+  path: '/saved-queries',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedRolesRoute = AuthedRolesRouteImport.update({
+  id: '/roles',
+  path: '/roles',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedQueueManagementRoute = AuthedQueueManagementRouteImport.update({
+  id: '/queue-management',
+  path: '/queue-management',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedPermissionsRoute = AuthedPermissionsRouteImport.update({
+  id: '/permissions',
+  path: '/permissions',
   getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedLogsRoute = AuthedLogsRouteImport.update({
@@ -571,7 +607,13 @@ export interface FileRoutesByFullPath {
   '/bull-board': typeof AuthedBullBoardRoute
   '/dashboard': typeof AuthedDashboardRoute
   '/logs': typeof AuthedLogsRoute
+  '/permissions': typeof AuthedPermissionsRoute
+  '/queue-management': typeof AuthedQueueManagementRoute
+  '/roles': typeof AuthedRolesRoute
+  '/saved-queries': typeof AuthedSavedQueriesRoute
   '/sql-editor': typeof AuthedSqlEditorRoute
+  '/system-logs': typeof AuthedSystemLogsRoute
+  '/users': typeof AuthedUsersRoute
   '/api/copilotkit': typeof ApiCopilotkitRoute
   '/api/filters': typeof ApiFiltersRoute
   '/api/health': typeof ApiHealthRoute
@@ -662,7 +704,13 @@ export interface FileRoutesByTo {
   '/bull-board': typeof AuthedBullBoardRoute
   '/dashboard': typeof AuthedDashboardRoute
   '/logs': typeof AuthedLogsRoute
+  '/permissions': typeof AuthedPermissionsRoute
+  '/queue-management': typeof AuthedQueueManagementRoute
+  '/roles': typeof AuthedRolesRoute
+  '/saved-queries': typeof AuthedSavedQueriesRoute
   '/sql-editor': typeof AuthedSqlEditorRoute
+  '/system-logs': typeof AuthedSystemLogsRoute
+  '/users': typeof AuthedUsersRoute
   '/api/copilotkit': typeof ApiCopilotkitRoute
   '/api/filters': typeof ApiFiltersRoute
   '/api/health': typeof ApiHealthRoute
@@ -755,7 +803,13 @@ export interface FileRoutesById {
   '/_authed/bull-board': typeof AuthedBullBoardRoute
   '/_authed/dashboard': typeof AuthedDashboardRoute
   '/_authed/logs': typeof AuthedLogsRoute
+  '/_authed/permissions': typeof AuthedPermissionsRoute
+  '/_authed/queue-management': typeof AuthedQueueManagementRoute
+  '/_authed/roles': typeof AuthedRolesRoute
+  '/_authed/saved-queries': typeof AuthedSavedQueriesRoute
   '/_authed/sql-editor': typeof AuthedSqlEditorRoute
+  '/_authed/system-logs': typeof AuthedSystemLogsRoute
+  '/_authed/users': typeof AuthedUsersRoute
   '/api/copilotkit': typeof ApiCopilotkitRoute
   '/api/filters': typeof ApiFiltersRoute
   '/api/health': typeof ApiHealthRoute
@@ -848,7 +902,13 @@ export interface FileRouteTypes {
     | '/bull-board'
     | '/dashboard'
     | '/logs'
+    | '/permissions'
+    | '/queue-management'
+    | '/roles'
+    | '/saved-queries'
     | '/sql-editor'
+    | '/system-logs'
+    | '/users'
     | '/api/copilotkit'
     | '/api/filters'
     | '/api/health'
@@ -939,7 +999,13 @@ export interface FileRouteTypes {
     | '/bull-board'
     | '/dashboard'
     | '/logs'
+    | '/permissions'
+    | '/queue-management'
+    | '/roles'
+    | '/saved-queries'
     | '/sql-editor'
+    | '/system-logs'
+    | '/users'
     | '/api/copilotkit'
     | '/api/filters'
     | '/api/health'
@@ -1031,7 +1097,13 @@ export interface FileRouteTypes {
     | '/_authed/bull-board'
     | '/_authed/dashboard'
     | '/_authed/logs'
+    | '/_authed/permissions'
+    | '/_authed/queue-management'
+    | '/_authed/roles'
+    | '/_authed/saved-queries'
     | '/_authed/sql-editor'
+    | '/_authed/system-logs'
+    | '/_authed/users'
     | '/api/copilotkit'
     | '/api/filters'
     | '/api/health'
@@ -1233,11 +1305,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCopilotkitRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authed/users': {
+      id: '/_authed/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof AuthedUsersRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/system-logs': {
+      id: '/_authed/system-logs'
+      path: '/system-logs'
+      fullPath: '/system-logs'
+      preLoaderRoute: typeof AuthedSystemLogsRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/sql-editor': {
       id: '/_authed/sql-editor'
       path: '/sql-editor'
       fullPath: '/sql-editor'
       preLoaderRoute: typeof AuthedSqlEditorRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/saved-queries': {
+      id: '/_authed/saved-queries'
+      path: '/saved-queries'
+      fullPath: '/saved-queries'
+      preLoaderRoute: typeof AuthedSavedQueriesRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/roles': {
+      id: '/_authed/roles'
+      path: '/roles'
+      fullPath: '/roles'
+      preLoaderRoute: typeof AuthedRolesRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/queue-management': {
+      id: '/_authed/queue-management'
+      path: '/queue-management'
+      fullPath: '/queue-management'
+      preLoaderRoute: typeof AuthedQueueManagementRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/permissions': {
+      id: '/_authed/permissions'
+      path: '/permissions'
+      fullPath: '/permissions'
+      preLoaderRoute: typeof AuthedPermissionsRouteImport
       parentRoute: typeof AuthedRoute
     }
     '/_authed/logs': {
@@ -1820,7 +1934,13 @@ interface AuthedRouteChildren {
   AuthedBullBoardRoute: typeof AuthedBullBoardRoute
   AuthedDashboardRoute: typeof AuthedDashboardRoute
   AuthedLogsRoute: typeof AuthedLogsRoute
+  AuthedPermissionsRoute: typeof AuthedPermissionsRoute
+  AuthedQueueManagementRoute: typeof AuthedQueueManagementRoute
+  AuthedRolesRoute: typeof AuthedRolesRoute
+  AuthedSavedQueriesRoute: typeof AuthedSavedQueriesRoute
   AuthedSqlEditorRoute: typeof AuthedSqlEditorRoute
+  AuthedSystemLogsRoute: typeof AuthedSystemLogsRoute
+  AuthedUsersRoute: typeof AuthedUsersRoute
   AuthedSettingsUiRoute: typeof AuthedSettingsUiRoute
   AuthedChartsIndexRoute: typeof AuthedChartsIndexRoute
   AuthedDashboardsIndexRoute: typeof AuthedDashboardsIndexRoute
@@ -1849,7 +1969,13 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedBullBoardRoute: AuthedBullBoardRoute,
   AuthedDashboardRoute: AuthedDashboardRoute,
   AuthedLogsRoute: AuthedLogsRoute,
+  AuthedPermissionsRoute: AuthedPermissionsRoute,
+  AuthedQueueManagementRoute: AuthedQueueManagementRoute,
+  AuthedRolesRoute: AuthedRolesRoute,
+  AuthedSavedQueriesRoute: AuthedSavedQueriesRoute,
   AuthedSqlEditorRoute: AuthedSqlEditorRoute,
+  AuthedSystemLogsRoute: AuthedSystemLogsRoute,
+  AuthedUsersRoute: AuthedUsersRoute,
   AuthedSettingsUiRoute: AuthedSettingsUiRoute,
   AuthedChartsIndexRoute: AuthedChartsIndexRoute,
   AuthedDashboardsIndexRoute: AuthedDashboardsIndexRoute,
