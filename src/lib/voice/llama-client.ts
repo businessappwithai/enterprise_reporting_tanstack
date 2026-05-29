@@ -1,27 +1,32 @@
 import OpenAI from "openai";
 
 const LLAMA_STT_URL = process.env.LLAMA_STT_URL || "http://localhost:8081";
+const LLAMA_STT_API_KEY = process.env.LLAMA_STT_API_KEY || "none";
+
 const LLAMA_REASONING_URL = process.env.LLAMA_REASONING_URL || "http://localhost:8080";
+const LLAMA_REASONING_API_KEY = process.env.LLAMA_REASONING_API_KEY || "none";
+
 const LLAMA_TTS_URL = process.env.LLAMA_TTS_URL || "http://localhost:8083";
+const LLAMA_TTS_API_KEY = process.env.LLAMA_TTS_API_KEY || "none";
 
 export function createSttClient() {
   return new OpenAI({
     baseURL: `${LLAMA_STT_URL}/v1`,
-    apiKey: "none",
+    apiKey: LLAMA_STT_API_KEY,
   });
 }
 
 export function createReasoningClient() {
   return new OpenAI({
     baseURL: `${LLAMA_REASONING_URL}/v1`,
-    apiKey: "none",
+    apiKey: LLAMA_REASONING_API_KEY,
   });
 }
 
 export function createTtsClient() {
   return new OpenAI({
     baseURL: `${LLAMA_TTS_URL}/v1`,
-    apiKey: "none",
+    apiKey: LLAMA_TTS_API_KEY,
   });
 }
 

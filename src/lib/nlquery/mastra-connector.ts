@@ -24,6 +24,27 @@ export interface MastraAgentResponse {
   executionReason?: string; // Why it can/can't be executed
 }
 
+function getMastraHeaders(): Record<string, string> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  const apiKey = process.env.MASTRA_API_KEY;
+  if (apiKey) headers["Authorization"] = `Bearer ${apiKey}`;
+  return headers;
+}
+
+function getModelConfig() {
+  return {
+    reasoningUrl: process.env.LLAMA_REASONING_URL || "http://localhost:8080",
+    reasoningModel: process.env.LLAMA_REASONING_MODEL || "qwen3.6",
+    reasoningApiKey: process.env.LLAMA_REASONING_API_KEY || "none",
+    sttUrl: process.env.LLAMA_STT_URL || "http://localhost:8081",
+    sttModel: process.env.LLAMA_STT_MODEL || "Qwen3-ASR",
+    sttApiKey: process.env.LLAMA_STT_API_KEY || "none",
+    ttsUrl: process.env.LLAMA_TTS_URL || "http://localhost:8083",
+    ttsModel: process.env.LLAMA_TTS_MODEL || "Qwen3-TTS",
+    ttsApiKey: process.env.LLAMA_TTS_API_KEY || "none",
+  };
+}
+
 /**
  * Check if Mastra agent is available
  */
@@ -33,6 +54,7 @@ export async function isMastraAvailable(): Promise<boolean> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
     const response = await fetch(`${mastraUrl}/health`, {
+      headers: getMastraHeaders(),
       signal: controller.signal,
     });
     clearTimeout(timeoutId);
@@ -67,13 +89,12 @@ export async function translateNLToSQLViaMastra(
 
     const response = await fetch(`${mastraUrl}/api/nl-to-sql`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: getMastraHeaders(),
       body: JSON.stringify({
         nlQuestion,
         schema,
         context: enhancedContext,
+        modelConfig: getModelConfig(),
       }),
       signal: controller.signal,
     });
@@ -105,9 +126,7 @@ export async function validateSQLViaMastra(sql: string): Promise<{ isValid: bool
 
     const response = await fetch(`${mastraUrl}/api/validate-sql`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: getMastraHeaders(),
       body: JSON.stringify({ sql }),
       signal: controller.signal,
     });
