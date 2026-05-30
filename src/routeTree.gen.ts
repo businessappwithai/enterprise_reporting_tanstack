@@ -57,6 +57,7 @@ import { Route as ApiReportsIdRouteImport } from './routes/api/reports/$id'
 import { Route as ApiQueriesIdRouteImport } from './routes/api/queries/$id'
 import { Route as ApiNlQueryVoiceRouteImport } from './routes/api/nl-query/voice'
 import { Route as ApiNlQuerySchemaRouteImport } from './routes/api/nl-query/schema'
+import { Route as ApiNlQueryRagStoreRouteImport } from './routes/api/nl-query/rag-store'
 import { Route as ApiNlQueryRagContextRouteImport } from './routes/api/nl-query/rag-context'
 import { Route as ApiNlQueryHistoryRouteImport } from './routes/api/nl-query/history'
 import { Route as ApiNlQueryExecuteRouteImport } from './routes/api/nl-query/execute'
@@ -346,6 +347,11 @@ const ApiNlQueryVoiceRoute = ApiNlQueryVoiceRouteImport.update({
 const ApiNlQuerySchemaRoute = ApiNlQuerySchemaRouteImport.update({
   id: '/api/nl-query/schema',
   path: '/api/nl-query/schema',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiNlQueryRagStoreRoute = ApiNlQueryRagStoreRouteImport.update({
+  id: '/api/nl-query/rag-store',
+  path: '/api/nl-query/rag-store',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiNlQueryRagContextRoute = ApiNlQueryRagContextRouteImport.update({
@@ -652,6 +658,7 @@ export interface FileRoutesByFullPath {
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
   '/api/nl-query/history': typeof ApiNlQueryHistoryRoute
   '/api/nl-query/rag-context': typeof ApiNlQueryRagContextRoute
+  '/api/nl-query/rag-store': typeof ApiNlQueryRagStoreRoute
   '/api/nl-query/schema': typeof ApiNlQuerySchemaRoute
   '/api/nl-query/voice': typeof ApiNlQueryVoiceRoute
   '/api/queries/$id': typeof ApiQueriesIdRouteWithChildren
@@ -751,6 +758,7 @@ export interface FileRoutesByTo {
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
   '/api/nl-query/history': typeof ApiNlQueryHistoryRoute
   '/api/nl-query/rag-context': typeof ApiNlQueryRagContextRoute
+  '/api/nl-query/rag-store': typeof ApiNlQueryRagStoreRoute
   '/api/nl-query/schema': typeof ApiNlQuerySchemaRoute
   '/api/nl-query/voice': typeof ApiNlQueryVoiceRoute
   '/api/queries/$id': typeof ApiQueriesIdRouteWithChildren
@@ -852,6 +860,7 @@ export interface FileRoutesById {
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
   '/api/nl-query/history': typeof ApiNlQueryHistoryRoute
   '/api/nl-query/rag-context': typeof ApiNlQueryRagContextRoute
+  '/api/nl-query/rag-store': typeof ApiNlQueryRagStoreRoute
   '/api/nl-query/schema': typeof ApiNlQuerySchemaRoute
   '/api/nl-query/voice': typeof ApiNlQueryVoiceRoute
   '/api/queries/$id': typeof ApiQueriesIdRouteWithChildren
@@ -953,6 +962,7 @@ export interface FileRouteTypes {
     | '/api/nl-query/execute'
     | '/api/nl-query/history'
     | '/api/nl-query/rag-context'
+    | '/api/nl-query/rag-store'
     | '/api/nl-query/schema'
     | '/api/nl-query/voice'
     | '/api/queries/$id'
@@ -1052,6 +1062,7 @@ export interface FileRouteTypes {
     | '/api/nl-query/execute'
     | '/api/nl-query/history'
     | '/api/nl-query/rag-context'
+    | '/api/nl-query/rag-store'
     | '/api/nl-query/schema'
     | '/api/nl-query/voice'
     | '/api/queries/$id'
@@ -1152,6 +1163,7 @@ export interface FileRouteTypes {
     | '/api/nl-query/execute'
     | '/api/nl-query/history'
     | '/api/nl-query/rag-context'
+    | '/api/nl-query/rag-store'
     | '/api/nl-query/schema'
     | '/api/nl-query/voice'
     | '/api/queries/$id'
@@ -1241,6 +1253,7 @@ export interface RootRouteChildren {
   ApiNlQueryExecuteRoute: typeof ApiNlQueryExecuteRoute
   ApiNlQueryHistoryRoute: typeof ApiNlQueryHistoryRoute
   ApiNlQueryRagContextRoute: typeof ApiNlQueryRagContextRoute
+  ApiNlQueryRagStoreRoute: typeof ApiNlQueryRagStoreRoute
   ApiNlQuerySchemaRoute: typeof ApiNlQuerySchemaRoute
   ApiNlQueryVoiceRoute: typeof ApiNlQueryVoiceRoute
   ApiSqlExecuteRoute: typeof ApiSqlExecuteRoute
@@ -1595,6 +1608,13 @@ declare module '@tanstack/react-router' {
       path: '/api/nl-query/schema'
       fullPath: '/api/nl-query/schema'
       preLoaderRoute: typeof ApiNlQuerySchemaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/nl-query/rag-store': {
+      id: '/api/nl-query/rag-store'
+      path: '/api/nl-query/rag-store'
+      fullPath: '/api/nl-query/rag-store'
+      preLoaderRoute: typeof ApiNlQueryRagStoreRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/nl-query/rag-context': {
@@ -2232,6 +2252,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiNlQueryExecuteRoute: ApiNlQueryExecuteRoute,
   ApiNlQueryHistoryRoute: ApiNlQueryHistoryRoute,
   ApiNlQueryRagContextRoute: ApiNlQueryRagContextRoute,
+  ApiNlQueryRagStoreRoute: ApiNlQueryRagStoreRoute,
   ApiNlQuerySchemaRoute: ApiNlQuerySchemaRoute,
   ApiNlQueryVoiceRoute: ApiNlQueryVoiceRoute,
   ApiSqlExecuteRoute: ApiSqlExecuteRoute,

@@ -213,15 +213,33 @@ export async function storeQueryEmbedding(
   const vecLiteral = `[${embedding.join(",")}]`;
 
   try {
-    await sql`
-      INSERT INTO nl_query_embeddings
-        (data_source_id, natural_language_query, generated_sql, explanation,
-         query_hash, embedding, row_count, execution_time_ms, success)
-      VALUES
-        (${dataSourceId}, ${naturalLanguageQuery}, ${generatedSql}, ${explanation},
-         ${hash}, ${sql.lit(vecLiteral)}::vector, ${rowCount}, ${executionTimeMs}, true)
-      ON CONFLICT (id) DO NOTHING
+    // Use query_hash + data_source_id for dedup — same question updates the stored SQL
+    const existing = await sql<{ id: string }>`
+      SELECT id FROM nl_query_embeddings
+      WHERE data_source_id = ${dataSourceId} AND query_hash = ${hash}
+      LIMIT 1
     `.execute(connection);
+
+    if (existing.rows.length > 0) {
+      await sql`
+        UPDATE nl_query_embeddings
+        SET generated_sql = ${generatedSql},
+            embedding = ${sql.lit(vecLiteral)}::vector,
+            row_count = ${rowCount},
+            execution_time_ms = ${executionTimeMs},
+            success = true
+        WHERE id = ${existing.rows[0].id}
+      `.execute(connection);
+    } else {
+      await sql`
+        INSERT INTO nl_query_embeddings
+          (data_source_id, natural_language_query, generated_sql, explanation,
+           query_hash, embedding, row_count, execution_time_ms, success)
+        VALUES
+          (${dataSourceId}, ${naturalLanguageQuery}, ${generatedSql}, ${explanation},
+           ${hash}, ${sql.lit(vecLiteral)}::vector, ${rowCount}, ${executionTimeMs}, true)
+      `.execute(connection);
+    }
   } catch (e) {
     console.warn("[RAG] storeQueryEmbedding failed:", e);
   }

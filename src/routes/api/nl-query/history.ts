@@ -23,8 +23,9 @@ export const Route = createFileRoute("/api/nl-query/history")({
 
           const url = new URL(request.url);
           const dataSourceId = url.searchParams.get("data_source_id");
-          const limit = Math.min(parseInt(url.searchParams.get("limit") || "50"), 200);
+          const limit = Math.min(parseInt(url.searchParams.get("limit") || "10"), 200);
           const offset = parseInt(url.searchParams.get("offset") || "0");
+          const search = url.searchParams.get("search")?.trim() || "";
           // scope=role returns all successful queries for the user's primary role
           const scope = url.searchParams.get("scope") || "role";
 
@@ -36,6 +37,7 @@ export const Route = createFileRoute("/api/nl-query/history")({
           let query = db
             .selectFrom("nl_query_context")
             .leftJoin("data_sources", "data_sources.id", "nl_query_context.data_source_id")
+            .leftJoin("users", "users.id", "nl_query_context.user_id")
             .select([
               "nl_query_context.id",
               "nl_query_context.nl_question",
@@ -44,6 +46,7 @@ export const Route = createFileRoute("/api/nl-query/history")({
               "data_sources.name as data_source_name",
               "nl_query_context.role_name",
               "nl_query_context.user_id",
+              "users.display_name as user_name",
               "nl_query_context.was_successful",
               "nl_query_context.row_count",
               "nl_query_context.execution_time_ms",
@@ -53,6 +56,16 @@ export const Route = createFileRoute("/api/nl-query/history")({
             .orderBy("created_at", "desc")
             .limit(limit)
             .offset(offset);
+
+          if (search) {
+            const pattern = `%${search}%`;
+            query = query.where((eb) =>
+              eb.or([
+                eb("nl_query_context.nl_question", "like", pattern),
+                eb("nl_query_context.generated_sql", "like", pattern),
+              ]),
+            );
+          }
 
           if (dataSourceId) {
             query = query.where("nl_query_context.data_source_id", "=", dataSourceId);

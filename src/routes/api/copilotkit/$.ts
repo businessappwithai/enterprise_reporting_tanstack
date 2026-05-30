@@ -39,6 +39,7 @@ function getHandler() {
     const openai = new OpenAI({
       baseURL: `${mastraUrl}/v1`,
       apiKey,
+      timeout: 120_000,
     });
 
     const runtime = new CopilotRuntime();
@@ -51,6 +52,32 @@ function getHandler() {
   return _handler;
 }
 
+async function convertToWav(inputBlob: Blob): Promise<Blob> {
+  const { join } = await import("node:path");
+  const { tmpdir } = await import("node:os");
+  const { unlink } = await import("node:fs/promises");
+
+  const id = crypto.randomUUID();
+  const inputPath = join(tmpdir(), `stt-in-${id}`);
+  const outputPath = join(tmpdir(), `stt-out-${id}.wav`);
+
+  await Bun.write(inputPath, inputBlob);
+  try {
+    const proc = Bun.spawn(
+      ["ffmpeg", "-y", "-i", inputPath, "-ar", "16000", "-ac", "1", "-f", "wav", outputPath],
+      { stdout: "ignore", stderr: "ignore" },
+    );
+    const code = await proc.exited;
+    if (code !== 0) throw new Error(`ffmpeg exited with code ${code}`);
+    const wavFile = Bun.file(outputPath);
+    const wavBlob = new Blob([await wavFile.arrayBuffer()], { type: "audio/wav" });
+    return wavBlob;
+  } finally {
+    unlink(inputPath).catch(() => {});
+    unlink(outputPath).catch(() => {});
+  }
+}
+
 async function handleTranscribe(request: Request): Promise<Response> {
   const mastraUrl = process.env.MASTRA_URL || "http://localhost:4111";
   try {
@@ -58,49 +85,54 @@ async function handleTranscribe(request: Request): Promise<Response> {
     const audioFile = formData.get("file") || formData.get("audio");
     if (!audioFile || !(audioFile instanceof Blob)) {
       return new Response(
-        JSON.stringify({ error: "No audio file provided" }),
-        { status: 400, headers: { "Content-Type": "application/json" } },
+        JSON.stringify({ text: "" }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
+    }
+
+    const originalName = audioFile instanceof File ? audioFile.name : "recording";
+    const isWav = originalName.endsWith(".wav") || audioFile.type === "audio/wav";
+    let wavBlob: Blob;
+    try {
+      wavBlob = isWav ? audioFile : await convertToWav(audioFile);
+    } catch (convErr) {
+      console.error("[CopilotKit Transcribe] Audio conversion failed:", convErr);
+      return new Response(
+        JSON.stringify({ text: "" }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
       );
     }
 
     const proxyForm = new FormData();
-    proxyForm.append("file", audioFile, "audio.wav");
+    proxyForm.append("file", wavBlob, "audio.wav");
     proxyForm.append("response_format", "json");
 
     const res = await fetch(`${mastraUrl}/v1/audio/transcriptions`, {
       method: "POST",
       body: proxyForm,
+      signal: AbortSignal.timeout(30_000),
     });
 
     if (!res.ok) {
-      const errText = await res.text();
-      console.error("[CopilotKit Transcribe] Mastra STT error:", errText);
+      console.error("[CopilotKit Transcribe] Mastra STT error:", await res.text().catch(() => ""));
       return new Response(
-        JSON.stringify({ error: `Transcription failed: ${errText}` }),
-        { status: res.status, headers: { "Content-Type": "application/json" } },
+        JSON.stringify({ text: "" }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
       );
     }
 
     const result = await res.json();
     const text = (result.text || "").trim();
 
-    if (!text) {
-      return new Response(
-        JSON.stringify({ error: "No speech detected" }),
-        { status: 200, headers: { "Content-Type": "application/json" } },
-      );
-    }
-
     return new Response(
-      JSON.stringify({ text }),
+      JSON.stringify({ text: text || "" }),
       { status: 200, headers: { "Content-Type": "application/json" } },
     );
   } catch (error) {
     console.error("[CopilotKit Transcribe] Error:", error);
-    const msg = error instanceof Error ? error.message : "Transcription failed";
     return new Response(
-      JSON.stringify({ error: msg }),
-      { status: 502, headers: { "Content-Type": "application/json" } },
+      JSON.stringify({ text: "" }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
     );
   }
 }

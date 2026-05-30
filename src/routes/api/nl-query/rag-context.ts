@@ -18,8 +18,8 @@ async function getSession(request: Request) {
 
 // Context budget tiers adapt to model capabilities
 const BUDGET_TIERS = {
-  small: { maxChars: 1500, maxQueries: 1, maxTables: 2, sampleRows: 0 },
-  medium: { maxChars: 4000, maxQueries: 2, maxTables: 3, sampleRows: 1 },
+  small: { maxChars: 1500, maxQueries: 2, maxTables: 2, sampleRows: 0 },
+  medium: { maxChars: 4000, maxQueries: 3, maxTables: 3, sampleRows: 1 },
   large: { maxChars: 8000, maxQueries: 3, maxTables: 5, sampleRows: 2 },
 } as const;
 
@@ -155,7 +155,7 @@ export const Route = createFileRoute("/api/nl-query/rag-context")({
           }
 
           const body = await request.json();
-          const { query, data_source_id, context_budget } = body;
+          const { query, data_source_id, context_budget, top_k_queries } = body;
 
           if (!query || !data_source_id) {
             return json(
@@ -165,6 +165,7 @@ export const Route = createFileRoute("/api/nl-query/rag-context")({
           }
 
           const tier = selectTier(context_budget);
+          const maxQueries = top_k_queries ?? BUDGET_TIERS[tier].maxQueries;
 
           const db = getDb();
           const dataSource = await db
@@ -185,7 +186,7 @@ export const Route = createFileRoute("/api/nl-query/rag-context")({
           const budget = BUDGET_TIERS[tier];
 
           const [similarQueries, relevantSchema] = await Promise.all([
-            findSimilarQueries(connection, data_source_id, query, budget.maxQueries),
+            findSimilarQueries(connection, data_source_id, query, maxQueries),
             findRelevantSchema(connection, data_source_id, query, budget.maxTables),
           ]);
 

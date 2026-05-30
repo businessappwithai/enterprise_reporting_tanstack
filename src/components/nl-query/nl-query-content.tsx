@@ -11,8 +11,10 @@ import {
   LineChart,
   Loader2,
   PieChart,
+  Play,
   Save,
   ScatterChart,
+  Search,
   Table2,
 } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
@@ -23,6 +25,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -31,6 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RecordViewDialog } from "@/components/nl-query/RecordViewDialog";
+import { VoiceInput } from "@/components/nl-query/VoiceInput";
 import { useDatasourceEntities } from "@/hooks/metadata/use-metadata-queries";
 import { drillableColumnSet, parseColumnTableMap } from "@/lib/utils/sql-column-map";
 import type { SQLExecutionResponse } from "@/types/api";
@@ -73,8 +77,10 @@ interface HistoryEntry {
   data_source_id: string;
   data_source_name?: string | null;
   role_name: string;
+  user_name?: string | null;
   was_successful: boolean;
   row_count: number | null;
+  execution_time_ms?: number | null;
   created_at: string;
 }
 
@@ -83,6 +89,8 @@ export function NlQueryContent() {
   const [generatedSql, setGeneratedSql] = useState<string | null>(null);
   const [queryResult, setQueryResult] = useState<SQLExecutionResponse | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [historySearch, setHistorySearch] = useState("");
+  const [historySearchInput, setHistorySearchInput] = useState("");
 
   const [resultView, setResultView] = useState<"table" | "chart">("table");
   const [sqlOffset, setSqlOffset] = useState(0);
@@ -171,10 +179,11 @@ export function NlQueryContent() {
   });
 
   const { data: historyData, refetch: refetchHistory } = useQuery({
-    queryKey: ["nl-query-history", dataSourceId],
+    queryKey: ["nl-query-history", dataSourceId, historySearch],
     queryFn: async () => {
-      const params = new URLSearchParams({ scope: "role", limit: "20" });
+      const params = new URLSearchParams({ scope: "role", limit: "10" });
       if (dataSourceId) params.set("data_source_id", dataSourceId);
+      if (historySearch) params.set("search", historySearch);
       const res = await fetch(`/api/nl-query/history?${params}`);
       if (!res.ok) return [];
       const json = await res.json();
@@ -206,6 +215,64 @@ export function NlQueryContent() {
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Save failed"),
   });
+
+  const [rerunningId, setRerunningId] = useState<string | null>(null);
+
+  const rerunSavedQuery = useCallback(async (entry: HistoryEntry) => {
+    if (!dataSourceId) {
+      toast.error("No data source selected");
+      return;
+    }
+    setRerunningId(entry.id);
+    try {
+      const res = await fetch("/api/nl-query/execute", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: entry.nl_question,
+          data_source_id: entry.data_source_id || dataSourceId,
+          generated_sql: entry.generated_sql,
+        }),
+      });
+      const json = await res.json();
+      if (!json.success) {
+        toast.error(json.error?.message || "Query execution failed");
+        return;
+      }
+      const pipelineResult = json.data;
+      if (pipelineResult?.accessGranted === false) {
+        toast.error("Access denied to one or more entities");
+        return;
+      }
+      if (pipelineResult?.queryResults) {
+        const cols = pipelineResult.queryResults.columns || [];
+        const rows = pipelineResult.queryResults.rows || [];
+        const totalRows = pipelineResult.queryResults.totalRows || rows.length;
+        const execTime = pipelineResult.queryResults.executionTimeMs || 0;
+        const sqlResult: SQLExecutionResponse = {
+          columns: cols.map((name: string) => ({ name, type: "text" })),
+          rows,
+          rowCount: totalRows,
+          executionTime: execTime,
+        };
+        setQuestion(entry.nl_question);
+        setGeneratedSql(entry.generated_sql);
+        setQueryResult(sqlResult);
+        const mapping = autoDetectMapping(sqlResult);
+        setXCol(mapping.x as string ?? "");
+        setYCol(typeof mapping.y === "string" ? mapping.y : Array.isArray(mapping.y) ? mapping.y[0] : "");
+        setResultView("table");
+        setSqlOffset(0);
+        toast.success(`Query re-executed: ${totalRows} rows in ${execTime}ms`);
+      } else if (pipelineResult?.error) {
+        toast.error(pipelineResult.error);
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to re-execute query");
+    } finally {
+      setRerunningId(null);
+    }
+  }, [dataSourceId]);
 
   const executeSQLFn = useCallback(async (sqlText: string, offset = 0): Promise<SQLExecutionResponse> => {
     const res = await fetch("/api/sql/execute", {
@@ -301,7 +368,7 @@ export function NlQueryContent() {
         const res = await fetch("/api/nl-query/rag-context", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query, data_source_id: dataSourceId, context_budget: 4000 }),
+          body: JSON.stringify({ query, data_source_id: dataSourceId, context_budget: 4000, top_k_queries: 3 }),
         });
         const data = await res.json();
         if (data.success && data.data) {
@@ -425,7 +492,29 @@ export function NlQueryContent() {
           setYCol(typeof mapping.y === "string" ? mapping.y : Array.isArray(mapping.y) ? mapping.y[0] : "");
           setResultView("table");
           setSqlOffset(0);
-          return { accessGranted: true, rowCount: totalRows, executionTimeMs: execTime };
+          const preview = rows.slice(0, 10);
+
+          // Auto-store successful query in RAG for future similarity matching
+          fetch("/api/nl-query/rag-store", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              data_source_id: dataSourceId,
+              natural_language_query: query,
+              generated_sql: sqlFromAI,
+              row_count: totalRows,
+              execution_time_ms: execTime,
+            }),
+          }).catch(() => {});
+
+          return {
+            accessGranted: true,
+            rowCount: totalRows,
+            executionTimeMs: execTime,
+            columns: cols,
+            data: preview,
+            STOP: "Query complete. Present ONLY these results to the user. Do NOT call any more actions. Do NOT generate charts unless the user explicitly asks. Say: 'Would you like to explore this data further or run another query?'",
+          };
         }
 
         if (pipelineResult?.error) {
@@ -576,41 +665,106 @@ export function NlQueryContent() {
         </Card>
       )}
 
+      {/* Voice Input — portals mic button into CopilotKit sidebar input */}
+      <VoiceInput />
+
       {/* Role History panel */}
       {showHistory && (
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <Clock className="h-4 w-4" />
               Saved SQL History (your role)
             </CardTitle>
+            <form
+              className="flex items-center gap-2 mt-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                setHistorySearch(historySearchInput);
+              }}
+            >
+              <div className="relative flex-1">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="Search queries... e.g. patient, gender"
+                  value={historySearchInput}
+                  onChange={(e) => setHistorySearchInput(e.target.value)}
+                  className="h-8 pl-8 text-sm"
+                />
+              </div>
+              <Button type="submit" variant="outline" size="sm" className="h-8 px-3">
+                Search
+              </Button>
+              {historySearch && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-2 text-xs"
+                  onClick={() => { setHistorySearch(""); setHistorySearchInput(""); }}
+                >
+                  Clear
+                </Button>
+              )}
+            </form>
+            {historySearch && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Showing results matching &quot;{historySearch}&quot;
+              </p>
+            )}
           </CardHeader>
           <CardContent className="p-0">
             {!historyData || historyData.length === 0 ? (
               <p className="px-6 pb-4 text-sm text-muted-foreground">
-                No history yet. Run and save a query to see it here.
+                {historySearch
+                  ? `No queries matching "${historySearch}". Try a different search term.`
+                  : "No history yet. Run and save a query to see it here."}
               </p>
             ) : (
-              <div className="divide-y max-h-64 overflow-y-auto">
+              <div className="divide-y max-h-72 overflow-y-auto">
                 {historyData.map((entry) => (
                   <div
                     key={entry.id}
-                    className="w-full text-left px-4 sm:px-6 py-3"
+                    className="w-full text-left px-4 sm:px-6 py-3 hover:bg-muted/50 transition-colors"
                   >
-                    <p className="text-sm font-medium truncate">{entry.nl_question}</p>
-                    <p className="text-xs text-muted-foreground font-mono truncate mt-0.5">
-                      {entry.generated_sql.slice(0, 60)}...
-                    </p>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate">{entry.nl_question}</p>
+                        <p className="text-xs text-muted-foreground font-mono truncate mt-0.5">
+                          {entry.generated_sql.slice(0, 80)}...
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 shrink-0"
+                        onClick={() => rerunSavedQuery(entry)}
+                        disabled={rerunningId === entry.id}
+                      >
+                        {rerunningId === entry.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Play className="h-3.5 w-3.5" />
+                        )}
+                        <span className="ml-1 text-xs">Run</span>
+                      </Button>
+                    </div>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <Badge variant="outline" className="text-xs">{entry.role_name}</Badge>
+                      {entry.user_name && (
+                        <Badge variant="secondary" className="text-xs">{entry.user_name}</Badge>
+                      )}
                       {entry.data_source_name && (
                         <Badge variant="secondary" className="text-xs">{entry.data_source_name}</Badge>
                       )}
                       {entry.row_count != null && (
                         <span className="text-xs text-muted-foreground">{entry.row_count} rows</span>
                       )}
+                      {entry.execution_time_ms != null && (
+                        <span className="text-xs text-muted-foreground">{entry.execution_time_ms}ms</span>
+                      )}
                       <span className="text-xs text-muted-foreground ml-auto">
-                        {new Date(entry.created_at).toLocaleDateString()}
+                        {new Date(entry.created_at).toLocaleString()}
                       </span>
                     </div>
                   </div>
