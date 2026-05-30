@@ -7,7 +7,7 @@ import { closeDb, waitForDatabaseReady } from "@/lib/db/config";
 
 const SECURITY_HEADERS: Record<string, string> = {
   "Content-Security-Policy":
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' ws: wss: http://localhost:4050 http://localhost:8080 http://localhost:8081 http://localhost:8083; worker-src 'self' blob:; frame-ancestors 'none';",
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' ws: wss: http://localhost:4050 http://localhost:8080 http://localhost:8081 http://localhost:8083 http://localhost:4111 https://api.cloud.copilotkit.ai https://cdn.copilotkit.ai https://telemetry.copilotkit.ai; worker-src 'self' blob:; frame-ancestors 'none';",
   "X-Content-Type-Options": "nosniff",
   "X-Frame-Options": "DENY",
   "Strict-Transport-Security": "max-age=31536000; includeSubDomains",

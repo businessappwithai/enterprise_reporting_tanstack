@@ -466,6 +466,7 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
   console.log("[bootstrap] Seeding admin user...");
   const adminRoleId = "admin-role-id";
   const ADMIN_PERMISSIONS = JSON.stringify([
+    "admin:*",
     "user:*",
     "role:*",
     "data_source:*",

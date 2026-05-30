@@ -2,7 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
 import { verifySession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/config";
-import { getConnectionManager } from "@/lib/db/connection-manager";
+import { getConnection } from "@/lib/db/connection-manager";
+import { executeNlQueryPipeline } from "@/lib/mastra/nl-query-pipeline";
+import { storeQueryEmbedding } from "@/lib/mastra/rag-store";
+import type { DataSource } from "@/types/database";
 
 async function getSession(request: Request) {
   const cookie = request.headers.get("cookie") || "";
@@ -37,7 +40,6 @@ export const Route = createFileRoute("/api/nl-query/execute")({
 
           const db = getDb();
 
-          // Get data source
           const dataSource = await db
             .selectFrom("data_sources")
             .selectAll()
@@ -52,52 +54,37 @@ export const Route = createFileRoute("/api/nl-query/execute")({
             );
           }
 
-          // For now, if generated_sql is provided, use it. Otherwise, return a placeholder
-          const sql = generated_sql || `SELECT * FROM information_schema.tables LIMIT 10;`;
+          const sql = generated_sql || `SELECT 1;`;
 
-          try {
-            // Execute the query against the target data source
-            const connManager = getConnectionManager();
-            const client = connManager.getConnection(data_source_id);
+          const result = await executeNlQueryPipeline(
+            query,
+            sql,
+            session.user.id,
+            dataSource as unknown as DataSource,
+          );
 
-            if (!client) {
-              return json(
-                {
-                  success: false,
-                  error: { message: "Failed to connect to data source" },
-                },
-                { status: 500 }
-              );
-            }
-
-            const result = await client.query(sql);
-
-            return json({
-              success: true,
-              data: {
-                query,
-                generated_sql: sql,
-                results: result.rows || [],
-                column_names: result.fields?.map((f: any) => f.name) || [],
-                row_count: (result.rows || []).length,
-                execution_time_ms: 0,
-              },
-            });
-          } catch (queryError) {
-            console.error("Query execution error:", queryError);
-            return json(
-              {
-                success: false,
-                error: {
-                  message:
-                    queryError instanceof Error
-                      ? queryError.message
-                      : "Failed to execute query",
-                },
-              },
-              { status: 500 }
-            );
+          // Store successful query in RAG for future similarity search
+          if (result.accessGranted && result.queryResults && !result.error) {
+            const ds = dataSource as unknown as DataSource;
+            getConnection(ds)
+              .then((conn) =>
+                storeQueryEmbedding(
+                  conn,
+                  ds.id,
+                  query,
+                  result.generatedSql,
+                  null,
+                  result.queryResults!.totalRows,
+                  result.queryResults!.executionTimeMs,
+                ),
+              )
+              .catch((e) => console.warn("[RAG] Failed to store query embedding:", e));
           }
+
+          return json({
+            success: true,
+            data: result,
+          });
         } catch (error) {
           console.error("NL Query execute error:", error);
           return json(

@@ -10,6 +10,7 @@
  * 6. Return results with metadata
  */
 
+import { sql } from "kysely";
 import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
 import type { DataSource, NlQueryPipelineResult } from "@/types/database";
@@ -142,7 +143,7 @@ export async function executeNlQueryPipeline(
     // Update history with denial
     await (db as any)
       .updateTable("nl_query_history")
-      .where("id", historyId)
+      .where("id", "=", historyId)
       .set({
         error_message: `Access denied to entities: ${deniedList}`,
       });
@@ -168,27 +169,17 @@ export async function executeNlQueryPipeline(
     }
 
     const queryStart = Date.now();
-    const rows = await connection.raw(executableSql);
+    const result = await sql.raw(executableSql).execute(connection);
     const executionTimeMs = Date.now() - queryStart;
 
-    // Handle different result formats
-    let resultRows: Record<string, unknown>[];
-    if (Array.isArray(rows)) {
-      resultRows = rows;
-    } else if (rows?.rows && Array.isArray(rows.rows)) {
-      resultRows = rows.rows;
-    } else if (rows?.[0] && Array.isArray(rows[0])) {
-      resultRows = rows[0];
-    } else {
-      resultRows = [];
-    }
+    const resultRows: Record<string, unknown>[] = result.rows as Record<string, unknown>[];
 
     const columns = resultRows.length > 0 ? Object.keys(resultRows[0]) : [];
 
     // Update history with success
     await (db as any)
       .updateTable("nl_query_history")
-      .where("id", historyId)
+      .where("id", "=", historyId)
       .set({
         execution_result: JSON.stringify({ rowCount: resultRows.length, columns }),
         execution_time_ms: executionTimeMs,
@@ -213,7 +204,7 @@ export async function executeNlQueryPipeline(
     // Update history with error
     await (db as any)
       .updateTable("nl_query_history")
-      .where("id", historyId)
+      .where("id", "=", historyId)
       .set({
         access_check_result: "error",
         error_message: errorMessage,

@@ -1,14 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { CopilotKit } from "@copilotkit/react-core";
 import { CopilotSidebar } from "@copilotkit/react-ui";
-import "@copilotkit/react-ui/styles.css";
 import { NlQueryContent } from "@/components/nl-query/nl-query-content";
 
-export const Route = createFileRoute("/_authed/nl-query/")({
-  component: NlQueryPage,
-});
-
-function NlQueryPage() {
+export default function CopilotNlQuery() {
   return (
     <CopilotKit
       runtimeUrl="/api/copilotkit"

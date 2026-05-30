@@ -3,6 +3,7 @@ import { json } from "@/lib/server/response";
 import { verifySession } from "@/lib/auth/session";
 import { DataSourceService } from "@/lib/services/data-source.service";
 import { getDb } from "@/lib/db/config";
+import { closeConnection } from "@/lib/db/connection-manager";
 import { logAudit } from "@/lib/security/audit";
 
 async function getSession(request: Request) {
@@ -93,8 +94,12 @@ export const Route = createFileRoute("/api/data-sources/$id")({
           }
 
           const body = await request.json();
+          if (body.connection_config && !body.connectionConfig) {
+            body.connectionConfig = body.connection_config;
+          }
 
           await DataSourceService.update(params.id, body, session.user.id);
+          await closeConnection(params.id);
 
           return json({ success: true });
         } catch (error) {

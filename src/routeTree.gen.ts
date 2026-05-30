@@ -18,7 +18,6 @@ import { Route as ApiNotificationsRouteImport } from './routes/api/notifications
 import { Route as ApiJobsRouteImport } from './routes/api/jobs'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ApiFiltersRouteImport } from './routes/api/filters'
-import { Route as ApiCopilotkitRouteImport } from './routes/api/copilotkit'
 import { Route as AuthedUsersRouteImport } from './routes/_authed/users'
 import { Route as AuthedSystemLogsRouteImport } from './routes/_authed/system-logs'
 import { Route as AuthedSqlEditorRouteImport } from './routes/_authed/sql-editor'
@@ -33,6 +32,7 @@ import { Route as AuthedAdminRouteImport } from './routes/_authed/admin'
 import { Route as ApiLogsIndexRouteImport } from './routes/api/logs/index'
 import { Route as ApiDataSourcesIndexRouteImport } from './routes/api/data-sources/index'
 import { Route as ApiDashboardsIndexRouteImport } from './routes/api/dashboards/index'
+import { Route as ApiCopilotkitIndexRouteImport } from './routes/api/copilotkit/index'
 import { Route as ApiChartsIndexRouteImport } from './routes/api/charts/index'
 import { Route as AuthedSettingsIndexRouteImport } from './routes/_authed/settings/index'
 import { Route as AuthedReportsIndexRouteImport } from './routes/_authed/reports/index'
@@ -57,6 +57,7 @@ import { Route as ApiReportsIdRouteImport } from './routes/api/reports/$id'
 import { Route as ApiQueriesIdRouteImport } from './routes/api/queries/$id'
 import { Route as ApiNlQueryVoiceRouteImport } from './routes/api/nl-query/voice'
 import { Route as ApiNlQuerySchemaRouteImport } from './routes/api/nl-query/schema'
+import { Route as ApiNlQueryRagContextRouteImport } from './routes/api/nl-query/rag-context'
 import { Route as ApiNlQueryHistoryRouteImport } from './routes/api/nl-query/history'
 import { Route as ApiNlQueryExecuteRouteImport } from './routes/api/nl-query/execute'
 import { Route as ApiMetadataEntitiesRouteImport } from './routes/api/metadata/entities'
@@ -68,6 +69,7 @@ import { Route as ApiDataSourcesTestRouteImport } from './routes/api/data-source
 import { Route as ApiDataSourcesActiveRouteImport } from './routes/api/data-sources/active'
 import { Route as ApiDataSourcesIdRouteImport } from './routes/api/data-sources/$id'
 import { Route as ApiDashboardsIdRouteImport } from './routes/api/dashboards/$id'
+import { Route as ApiCopilotkitSplatRouteImport } from './routes/api/copilotkit/$'
 import { Route as ApiChartsIdRouteImport } from './routes/api/charts/$id'
 import { Route as ApiAuthPermissionsRouteImport } from './routes/api/auth/permissions'
 import { Route as ApiAdminUsersRouteImport } from './routes/api/admin/users'
@@ -150,11 +152,6 @@ const ApiFiltersRoute = ApiFiltersRouteImport.update({
   path: '/api/filters',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiCopilotkitRoute = ApiCopilotkitRouteImport.update({
-  id: '/api/copilotkit',
-  path: '/api/copilotkit',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthedUsersRoute = AuthedUsersRouteImport.update({
   id: '/users',
   path: '/users',
@@ -223,6 +220,11 @@ const ApiDataSourcesIndexRoute = ApiDataSourcesIndexRouteImport.update({
 const ApiDashboardsIndexRoute = ApiDashboardsIndexRouteImport.update({
   id: '/api/dashboards/',
   path: '/api/dashboards/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCopilotkitIndexRoute = ApiCopilotkitIndexRouteImport.update({
+  id: '/api/copilotkit/',
+  path: '/api/copilotkit/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChartsIndexRoute = ApiChartsIndexRouteImport.update({
@@ -346,6 +348,11 @@ const ApiNlQuerySchemaRoute = ApiNlQuerySchemaRouteImport.update({
   path: '/api/nl-query/schema',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiNlQueryRagContextRoute = ApiNlQueryRagContextRouteImport.update({
+  id: '/api/nl-query/rag-context',
+  path: '/api/nl-query/rag-context',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiNlQueryHistoryRoute = ApiNlQueryHistoryRouteImport.update({
   id: '/api/nl-query/history',
   path: '/api/nl-query/history',
@@ -399,6 +406,11 @@ const ApiDataSourcesIdRoute = ApiDataSourcesIdRouteImport.update({
 const ApiDashboardsIdRoute = ApiDashboardsIdRouteImport.update({
   id: '/api/dashboards/$id',
   path: '/api/dashboards/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCopilotkitSplatRoute = ApiCopilotkitSplatRouteImport.update({
+  id: '/api/copilotkit/$',
+  path: '/api/copilotkit/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChartsIdRoute = ApiChartsIdRouteImport.update({
@@ -614,7 +626,6 @@ export interface FileRoutesByFullPath {
   '/sql-editor': typeof AuthedSqlEditorRoute
   '/system-logs': typeof AuthedSystemLogsRoute
   '/users': typeof AuthedUsersRoute
-  '/api/copilotkit': typeof ApiCopilotkitRoute
   '/api/filters': typeof ApiFiltersRoute
   '/api/health': typeof ApiHealthRoute
   '/api/jobs': typeof ApiJobsRoute
@@ -628,6 +639,7 @@ export interface FileRoutesByFullPath {
   '/api/admin/users': typeof ApiAdminUsersRoute
   '/api/auth/permissions': typeof ApiAuthPermissionsRoute
   '/api/charts/$id': typeof ApiChartsIdRouteWithChildren
+  '/api/copilotkit/$': typeof ApiCopilotkitSplatRoute
   '/api/dashboards/$id': typeof ApiDashboardsIdRouteWithChildren
   '/api/data-sources/$id': typeof ApiDataSourcesIdRouteWithChildren
   '/api/data-sources/active': typeof ApiDataSourcesActiveRoute
@@ -639,6 +651,7 @@ export interface FileRoutesByFullPath {
   '/api/metadata/entities': typeof ApiMetadataEntitiesRouteWithChildren
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
   '/api/nl-query/history': typeof ApiNlQueryHistoryRoute
+  '/api/nl-query/rag-context': typeof ApiNlQueryRagContextRoute
   '/api/nl-query/schema': typeof ApiNlQuerySchemaRoute
   '/api/nl-query/voice': typeof ApiNlQueryVoiceRoute
   '/api/queries/$id': typeof ApiQueriesIdRouteWithChildren
@@ -663,6 +676,7 @@ export interface FileRoutesByFullPath {
   '/reports/': typeof AuthedReportsIndexRoute
   '/settings/': typeof AuthedSettingsIndexRoute
   '/api/charts/': typeof ApiChartsIndexRoute
+  '/api/copilotkit/': typeof ApiCopilotkitIndexRoute
   '/api/dashboards/': typeof ApiDashboardsIndexRoute
   '/api/data-sources/': typeof ApiDataSourcesIndexRoute
   '/api/logs/': typeof ApiLogsIndexRoute
@@ -711,7 +725,6 @@ export interface FileRoutesByTo {
   '/sql-editor': typeof AuthedSqlEditorRoute
   '/system-logs': typeof AuthedSystemLogsRoute
   '/users': typeof AuthedUsersRoute
-  '/api/copilotkit': typeof ApiCopilotkitRoute
   '/api/filters': typeof ApiFiltersRoute
   '/api/health': typeof ApiHealthRoute
   '/api/jobs': typeof ApiJobsRoute
@@ -725,6 +738,7 @@ export interface FileRoutesByTo {
   '/api/admin/users': typeof ApiAdminUsersRoute
   '/api/auth/permissions': typeof ApiAuthPermissionsRoute
   '/api/charts/$id': typeof ApiChartsIdRouteWithChildren
+  '/api/copilotkit/$': typeof ApiCopilotkitSplatRoute
   '/api/dashboards/$id': typeof ApiDashboardsIdRouteWithChildren
   '/api/data-sources/$id': typeof ApiDataSourcesIdRouteWithChildren
   '/api/data-sources/active': typeof ApiDataSourcesActiveRoute
@@ -736,6 +750,7 @@ export interface FileRoutesByTo {
   '/api/metadata/entities': typeof ApiMetadataEntitiesRouteWithChildren
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
   '/api/nl-query/history': typeof ApiNlQueryHistoryRoute
+  '/api/nl-query/rag-context': typeof ApiNlQueryRagContextRoute
   '/api/nl-query/schema': typeof ApiNlQuerySchemaRoute
   '/api/nl-query/voice': typeof ApiNlQueryVoiceRoute
   '/api/queries/$id': typeof ApiQueriesIdRouteWithChildren
@@ -760,6 +775,7 @@ export interface FileRoutesByTo {
   '/reports': typeof AuthedReportsIndexRoute
   '/settings': typeof AuthedSettingsIndexRoute
   '/api/charts': typeof ApiChartsIndexRoute
+  '/api/copilotkit': typeof ApiCopilotkitIndexRoute
   '/api/dashboards': typeof ApiDashboardsIndexRoute
   '/api/data-sources': typeof ApiDataSourcesIndexRoute
   '/api/logs': typeof ApiLogsIndexRoute
@@ -810,7 +826,6 @@ export interface FileRoutesById {
   '/_authed/sql-editor': typeof AuthedSqlEditorRoute
   '/_authed/system-logs': typeof AuthedSystemLogsRoute
   '/_authed/users': typeof AuthedUsersRoute
-  '/api/copilotkit': typeof ApiCopilotkitRoute
   '/api/filters': typeof ApiFiltersRoute
   '/api/health': typeof ApiHealthRoute
   '/api/jobs': typeof ApiJobsRoute
@@ -824,6 +839,7 @@ export interface FileRoutesById {
   '/api/admin/users': typeof ApiAdminUsersRoute
   '/api/auth/permissions': typeof ApiAuthPermissionsRoute
   '/api/charts/$id': typeof ApiChartsIdRouteWithChildren
+  '/api/copilotkit/$': typeof ApiCopilotkitSplatRoute
   '/api/dashboards/$id': typeof ApiDashboardsIdRouteWithChildren
   '/api/data-sources/$id': typeof ApiDataSourcesIdRouteWithChildren
   '/api/data-sources/active': typeof ApiDataSourcesActiveRoute
@@ -835,6 +851,7 @@ export interface FileRoutesById {
   '/api/metadata/entities': typeof ApiMetadataEntitiesRouteWithChildren
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
   '/api/nl-query/history': typeof ApiNlQueryHistoryRoute
+  '/api/nl-query/rag-context': typeof ApiNlQueryRagContextRoute
   '/api/nl-query/schema': typeof ApiNlQuerySchemaRoute
   '/api/nl-query/voice': typeof ApiNlQueryVoiceRoute
   '/api/queries/$id': typeof ApiQueriesIdRouteWithChildren
@@ -859,6 +876,7 @@ export interface FileRoutesById {
   '/_authed/reports/': typeof AuthedReportsIndexRoute
   '/_authed/settings/': typeof AuthedSettingsIndexRoute
   '/api/charts/': typeof ApiChartsIndexRoute
+  '/api/copilotkit/': typeof ApiCopilotkitIndexRoute
   '/api/dashboards/': typeof ApiDashboardsIndexRoute
   '/api/data-sources/': typeof ApiDataSourcesIndexRoute
   '/api/logs/': typeof ApiLogsIndexRoute
@@ -909,7 +927,6 @@ export interface FileRouteTypes {
     | '/sql-editor'
     | '/system-logs'
     | '/users'
-    | '/api/copilotkit'
     | '/api/filters'
     | '/api/health'
     | '/api/jobs'
@@ -923,6 +940,7 @@ export interface FileRouteTypes {
     | '/api/admin/users'
     | '/api/auth/permissions'
     | '/api/charts/$id'
+    | '/api/copilotkit/$'
     | '/api/dashboards/$id'
     | '/api/data-sources/$id'
     | '/api/data-sources/active'
@@ -934,6 +952,7 @@ export interface FileRouteTypes {
     | '/api/metadata/entities'
     | '/api/nl-query/execute'
     | '/api/nl-query/history'
+    | '/api/nl-query/rag-context'
     | '/api/nl-query/schema'
     | '/api/nl-query/voice'
     | '/api/queries/$id'
@@ -958,6 +977,7 @@ export interface FileRouteTypes {
     | '/reports/'
     | '/settings/'
     | '/api/charts/'
+    | '/api/copilotkit/'
     | '/api/dashboards/'
     | '/api/data-sources/'
     | '/api/logs/'
@@ -1006,7 +1026,6 @@ export interface FileRouteTypes {
     | '/sql-editor'
     | '/system-logs'
     | '/users'
-    | '/api/copilotkit'
     | '/api/filters'
     | '/api/health'
     | '/api/jobs'
@@ -1020,6 +1039,7 @@ export interface FileRouteTypes {
     | '/api/admin/users'
     | '/api/auth/permissions'
     | '/api/charts/$id'
+    | '/api/copilotkit/$'
     | '/api/dashboards/$id'
     | '/api/data-sources/$id'
     | '/api/data-sources/active'
@@ -1031,6 +1051,7 @@ export interface FileRouteTypes {
     | '/api/metadata/entities'
     | '/api/nl-query/execute'
     | '/api/nl-query/history'
+    | '/api/nl-query/rag-context'
     | '/api/nl-query/schema'
     | '/api/nl-query/voice'
     | '/api/queries/$id'
@@ -1055,6 +1076,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/settings'
     | '/api/charts'
+    | '/api/copilotkit'
     | '/api/dashboards'
     | '/api/data-sources'
     | '/api/logs'
@@ -1104,7 +1126,6 @@ export interface FileRouteTypes {
     | '/_authed/sql-editor'
     | '/_authed/system-logs'
     | '/_authed/users'
-    | '/api/copilotkit'
     | '/api/filters'
     | '/api/health'
     | '/api/jobs'
@@ -1118,6 +1139,7 @@ export interface FileRouteTypes {
     | '/api/admin/users'
     | '/api/auth/permissions'
     | '/api/charts/$id'
+    | '/api/copilotkit/$'
     | '/api/dashboards/$id'
     | '/api/data-sources/$id'
     | '/api/data-sources/active'
@@ -1129,6 +1151,7 @@ export interface FileRouteTypes {
     | '/api/metadata/entities'
     | '/api/nl-query/execute'
     | '/api/nl-query/history'
+    | '/api/nl-query/rag-context'
     | '/api/nl-query/schema'
     | '/api/nl-query/voice'
     | '/api/queries/$id'
@@ -1153,6 +1176,7 @@ export interface FileRouteTypes {
     | '/_authed/reports/'
     | '/_authed/settings/'
     | '/api/charts/'
+    | '/api/copilotkit/'
     | '/api/dashboards/'
     | '/api/data-sources/'
     | '/api/logs/'
@@ -1192,7 +1216,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthedRoute: typeof AuthedRouteWithChildren
   LoginRoute: typeof LoginRoute
-  ApiCopilotkitRoute: typeof ApiCopilotkitRoute
   ApiFiltersRoute: typeof ApiFiltersRoute
   ApiHealthRoute: typeof ApiHealthRoute
   ApiJobsRoute: typeof ApiJobsRoute
@@ -1205,6 +1228,7 @@ export interface RootRouteChildren {
   ApiAdminUsersRoute: typeof ApiAdminUsersRoute
   ApiAuthPermissionsRoute: typeof ApiAuthPermissionsRoute
   ApiChartsIdRoute: typeof ApiChartsIdRouteWithChildren
+  ApiCopilotkitSplatRoute: typeof ApiCopilotkitSplatRoute
   ApiDashboardsIdRoute: typeof ApiDashboardsIdRouteWithChildren
   ApiDataSourcesIdRoute: typeof ApiDataSourcesIdRouteWithChildren
   ApiDataSourcesActiveRoute: typeof ApiDataSourcesActiveRoute
@@ -1216,6 +1240,7 @@ export interface RootRouteChildren {
   ApiMetadataEntitiesRoute: typeof ApiMetadataEntitiesRouteWithChildren
   ApiNlQueryExecuteRoute: typeof ApiNlQueryExecuteRoute
   ApiNlQueryHistoryRoute: typeof ApiNlQueryHistoryRoute
+  ApiNlQueryRagContextRoute: typeof ApiNlQueryRagContextRoute
   ApiNlQuerySchemaRoute: typeof ApiNlQuerySchemaRoute
   ApiNlQueryVoiceRoute: typeof ApiNlQueryVoiceRoute
   ApiSqlExecuteRoute: typeof ApiSqlExecuteRoute
@@ -1227,6 +1252,7 @@ export interface RootRouteChildren {
   ShareDashboardIdRoute: typeof ShareDashboardIdRoute
   ShareReportIdRoute: typeof ShareReportIdRoute
   ApiChartsIndexRoute: typeof ApiChartsIndexRoute
+  ApiCopilotkitIndexRoute: typeof ApiCopilotkitIndexRoute
   ApiDashboardsIndexRoute: typeof ApiDashboardsIndexRoute
   ApiDataSourcesIndexRoute: typeof ApiDataSourcesIndexRoute
   ApiLogsIndexRoute: typeof ApiLogsIndexRoute
@@ -1296,13 +1322,6 @@ declare module '@tanstack/react-router' {
       path: '/api/filters'
       fullPath: '/api/filters'
       preLoaderRoute: typeof ApiFiltersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/copilotkit': {
-      id: '/api/copilotkit'
-      path: '/api/copilotkit'
-      fullPath: '/api/copilotkit'
-      preLoaderRoute: typeof ApiCopilotkitRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authed/users': {
@@ -1401,6 +1420,13 @@ declare module '@tanstack/react-router' {
       path: '/api/dashboards'
       fullPath: '/api/dashboards/'
       preLoaderRoute: typeof ApiDashboardsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/copilotkit/': {
+      id: '/api/copilotkit/'
+      path: '/api/copilotkit'
+      fullPath: '/api/copilotkit/'
+      preLoaderRoute: typeof ApiCopilotkitIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/charts/': {
@@ -1571,6 +1597,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiNlQuerySchemaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/nl-query/rag-context': {
+      id: '/api/nl-query/rag-context'
+      path: '/api/nl-query/rag-context'
+      fullPath: '/api/nl-query/rag-context'
+      preLoaderRoute: typeof ApiNlQueryRagContextRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/nl-query/history': {
       id: '/api/nl-query/history'
       path: '/api/nl-query/history'
@@ -1646,6 +1679,13 @@ declare module '@tanstack/react-router' {
       path: '/api/dashboards/$id'
       fullPath: '/api/dashboards/$id'
       preLoaderRoute: typeof ApiDashboardsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/copilotkit/$': {
+      id: '/api/copilotkit/$'
+      path: '/api/copilotkit/$'
+      fullPath: '/api/copilotkit/$'
+      preLoaderRoute: typeof ApiCopilotkitSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/charts/$id': {
@@ -2167,7 +2207,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthedRoute: AuthedRouteWithChildren,
   LoginRoute: LoginRoute,
-  ApiCopilotkitRoute: ApiCopilotkitRoute,
   ApiFiltersRoute: ApiFiltersRoute,
   ApiHealthRoute: ApiHealthRoute,
   ApiJobsRoute: ApiJobsRoute,
@@ -2180,6 +2219,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminUsersRoute: ApiAdminUsersRoute,
   ApiAuthPermissionsRoute: ApiAuthPermissionsRoute,
   ApiChartsIdRoute: ApiChartsIdRouteWithChildren,
+  ApiCopilotkitSplatRoute: ApiCopilotkitSplatRoute,
   ApiDashboardsIdRoute: ApiDashboardsIdRouteWithChildren,
   ApiDataSourcesIdRoute: ApiDataSourcesIdRouteWithChildren,
   ApiDataSourcesActiveRoute: ApiDataSourcesActiveRoute,
@@ -2191,6 +2231,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMetadataEntitiesRoute: ApiMetadataEntitiesRouteWithChildren,
   ApiNlQueryExecuteRoute: ApiNlQueryExecuteRoute,
   ApiNlQueryHistoryRoute: ApiNlQueryHistoryRoute,
+  ApiNlQueryRagContextRoute: ApiNlQueryRagContextRoute,
   ApiNlQuerySchemaRoute: ApiNlQuerySchemaRoute,
   ApiNlQueryVoiceRoute: ApiNlQueryVoiceRoute,
   ApiSqlExecuteRoute: ApiSqlExecuteRoute,
@@ -2202,6 +2243,7 @@ const rootRouteChildren: RootRouteChildren = {
   ShareDashboardIdRoute: ShareDashboardIdRoute,
   ShareReportIdRoute: ShareReportIdRoute,
   ApiChartsIndexRoute: ApiChartsIndexRoute,
+  ApiCopilotkitIndexRoute: ApiCopilotkitIndexRoute,
   ApiDashboardsIndexRoute: ApiDashboardsIndexRoute,
   ApiDataSourcesIndexRoute: ApiDataSourcesIndexRoute,
   ApiLogsIndexRoute: ApiLogsIndexRoute,

@@ -1,7 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { sql } from "kysely";
 import { json } from "@/lib/server/response";
 import { verifySession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/config";
+import { getConnection } from "@/lib/db/connection-manager";
+import { storeSchemaEmbeddings } from "@/lib/mastra/rag-store";
+import type { DataSource } from "@/types/database";
 
 async function getSession(request: Request) {
   const cookie = request.headers.get("cookie") || "";
@@ -11,88 +15,148 @@ async function getSession(request: Request) {
   return verifySession(token);
 }
 
+async function fetchSchema(request: Request) {
+  const session = await getSession(request);
+  if (!session?.user) {
+    return json({ success: false, error: { message: "Unauthorized" } }, { status: 401 });
+  }
+
+  const url = new URL(request.url);
+  let dataSourceId = url.searchParams.get("data_source_id");
+
+  if (!dataSourceId && request.method === "POST") {
+    const body = await request.json();
+    dataSourceId = body.data_source_id || body.dataSourceId;
+  }
+
+  if (!dataSourceId) {
+    return json(
+      { success: false, error: { message: "data_source_id is required" } },
+      { status: 400 },
+    );
+  }
+
+  const db = getDb();
+
+  const dataSource = await db
+    .selectFrom("data_sources")
+    .selectAll()
+    .where("id", "=", dataSourceId)
+    .where("is_deleted", "=", false)
+    .executeTakeFirst();
+
+  if (!dataSource) {
+    return json(
+      { success: false, error: { message: "Data source not found" } },
+      { status: 404 },
+    );
+  }
+
+  const connection = await getConnection(dataSource as unknown as DataSource);
+
+  const allColumnsResult = await sql<{
+    table_name: string;
+    column_name: string;
+    data_type: string;
+    ordinal_position: number;
+  }>`
+    SELECT table_name, column_name, data_type, ordinal_position
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name IN (
+        SELECT table_name FROM information_schema.tables
+        WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+      )
+    ORDER BY table_name, ordinal_position
+  `.execute(connection);
+
+  const tableMap = new Map<string, { column_name: string; data_type: string }[]>();
+  for (const row of allColumnsResult.rows) {
+    if (!tableMap.has(row.table_name)) {
+      tableMap.set(row.table_name, []);
+    }
+    tableMap.get(row.table_name)!.push({
+      column_name: row.column_name,
+      data_type: row.data_type,
+    });
+  }
+
+  // Fetch top 5 sample rows per table for RAG context
+  const sampleData: Record<string, Record<string, unknown>[]> = {};
+  for (const tableName of tableMap.keys()) {
+    try {
+      const sampleResult = await sql<Record<string, unknown>>`
+        SELECT * FROM ${sql.ref(tableName)} LIMIT 5
+      `.execute(connection);
+      sampleData[tableName] = sampleResult.rows as Record<string, unknown>[];
+    } catch {
+      sampleData[tableName] = [];
+    }
+  }
+
+  // Store schema + sample data embeddings in user's DB (pgvector) — fire & forget
+  const tablesForEmbedding = Array.from(tableMap.entries()).map(([name, columns]) => ({
+    name,
+    columns,
+  }));
+  storeSchemaEmbeddings(connection, dataSourceId, tablesForEmbedding, sampleData).catch((e) =>
+    console.warn("[Schema] Failed to store schema embeddings:", e),
+  );
+
+  const tablesList: { name: string; columns: string[] }[] = [];
+  const schemaParts: string[] = ["DATABASE SCHEMA (PostgreSQL):\n"];
+  const otherTables: string[] = [];
+
+  for (const [tableName, columns] of tableMap) {
+    tablesList.push({ name: tableName, columns: columns.map((c) => c.column_name) });
+
+    if (tableName.startsWith("bus_")) {
+      const colDefs = columns.map((c) => `${c.column_name} (${c.data_type})`).join(", ");
+      schemaParts.push(`${tableName}: ${colDefs}`);
+      const samples = sampleData[tableName];
+      if (samples && samples.length > 0) {
+        schemaParts.push(`  Sample: ${JSON.stringify(samples[0])}`);
+      }
+    } else {
+      otherTables.push(tableName);
+    }
+  }
+
+  if (otherTables.length > 0) {
+    schemaParts.push(`\nOTHER TABLES (available but without column details): ${otherTables.join(", ")}\n`);
+  }
+
+  const instructions = await (db as any)
+    .selectFrom("schema_table_instructions")
+    .where("data_source_id", "=", dataSourceId)
+    .selectAll()
+    .execute();
+
+  if (instructions && instructions.length > 0) {
+    schemaParts.push("\nTABLE INSTRUCTIONS:\n");
+    for (const inst of instructions) {
+      schemaParts.push(`${inst.table_name}: ${inst.llm_instructions || inst.description}`);
+    }
+  }
+
+  return json({
+    success: true,
+    data: {
+      data_source_id: dataSourceId,
+      data_source_name: dataSource.name,
+      client_type: dataSource.client_type,
+      tables: tablesList,
+      schemaText: schemaParts.join("\n"),
+    },
+  });
+}
+
 export const Route = createFileRoute("/api/nl-query/schema")({
   server: {
     handlers: {
-      POST: async ({ request }: { request: Request }) => {
+      GET: async ({ request }: { request: Request }) => {
         try {
-          const session = await getSession(request);
-          if (!session?.user) {
-            return json({ success: false, error: { message: "Unauthorized" } }, { status: 401 });
-          }
-
-          const body = await request.json();
-          const dataSourceId = body.data_source_id || body.dataSourceId;
-
-          if (!dataSourceId) {
-            return json(
-              { success: false, error: { message: "data_source_id is required" } },
-              { status: 400 }
-            );
-          }
-
-          const db = getDb();
-
-          // Get data source
-          const dataSource = await db
-            .selectFrom("data_sources")
-            .selectAll()
-            .where("id", "=", dataSourceId)
-            .where("is_deleted", "=", false)
-            .executeTakeFirst();
-
-          if (!dataSource) {
-            return json(
-              { success: false, error: { message: "Data source not found" } },
-              { status: 404 }
-            );
-          }
-
-          // Query PostgreSQL schema directly from information_schema
-          const tables = await db.raw<{ table_name: string }[]>(
-            `SELECT table_name FROM information_schema.tables
-             WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
-             ORDER BY table_name`
-          );
-
-          // Build schema with fields
-          const schema: Record<string, any> = {};
-          const tablesList = [];
-
-          for (const { table_name } of tables) {
-            const fields = await db.raw<{ column_name: string; data_type: string }[]>(
-              `SELECT column_name, data_type FROM information_schema.columns
-               WHERE table_schema = 'public' AND table_name = ?
-               ORDER BY ordinal_position`,
-              [table_name]
-            );
-
-            schema[table_name] = {
-              description: `Table: ${table_name}`,
-              fields: fields.map((f) => ({
-                name: f.column_name,
-                type: f.data_type,
-                description: f.column_name,
-              })),
-            };
-
-            tablesList.push({
-              name: table_name,
-              description: `Table: ${table_name}`,
-              columns: fields.map((f) => f.column_name),
-            });
-          }
-
-          return json({
-            success: true,
-            data: {
-              data_source_id: dataSourceId,
-              data_source_name: dataSource.name,
-              client_type: dataSource.client_type,
-              schema,
-              tables: tablesList,
-            },
-          });
+          return await fetchSchema(request);
         } catch (error) {
           console.error("Schema fetch error:", error);
           return json(
@@ -102,7 +166,23 @@ export const Route = createFileRoute("/api/nl-query/schema")({
                 message: error instanceof Error ? error.message : "Failed to fetch schema",
               },
             },
-            { status: 500 }
+            { status: 500 },
+          );
+        }
+      },
+      POST: async ({ request }: { request: Request }) => {
+        try {
+          return await fetchSchema(request);
+        } catch (error) {
+          console.error("Schema fetch error:", error);
+          return json(
+            {
+              success: false,
+              error: {
+                message: error instanceof Error ? error.message : "Failed to fetch schema",
+              },
+            },
+            { status: 500 },
           );
         }
       },
