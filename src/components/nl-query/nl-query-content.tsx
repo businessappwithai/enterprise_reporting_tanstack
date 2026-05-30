@@ -233,23 +233,13 @@ export function NlQueryContent() {
   // ── CopilotKit Integration ──
   const selectedDs = dataSources.find((ds) => ds.id === dataSourceId);
 
-  const [ragContext, setRagContext] = useState<string>("");
-
   useCopilotReadable({
-    description: "Currently selected data source and database schema for NL-to-SQL queries",
+    description: "Data source and schema context",
     value: {
-      selectedDataSourceId: dataSourceId,
-      selectedDataSourceName: selectedDs?.name ?? "No data source selected",
-      selectedDataSourceType: selectedDs?.client_type ?? "pg",
-      databaseSchema: schemaContext?.schemaText ?? "Schema not yet loaded.",
-      ragContext: ragContext || "No RAG context yet. Call fetchSimilarQueries before generating SQL to get context from past successful queries and relevant table samples.",
-      lastQueryResult: queryResult
-        ? {
-            rowCount: queryResult.rowCount,
-            totalDataValue: "Check the actual cell values in the result — rowCount is the number of rows returned, NOT the data values inside them.",
-            columns: queryResult.columns.map((c) => `${c.name} (${c.type})`),
-          }
-        : null,
+      dataSourceId,
+      dsName: selectedDs?.name ?? "none",
+      dsType: selectedDs?.client_type ?? "pg",
+      schema: schemaContext?.schemaText ?? "Loading...",
     },
   });
 
@@ -273,18 +263,13 @@ export function NlQueryContent() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ query, data_source_id: dataSourceId }),
         });
-        const json = await res.json();
-        if (json.success && json.data?.contextText) {
-          setRagContext(json.data.contextText);
-          return {
-            context: json.data.contextText,
-            similarQueryCount: json.data.similarQueries?.length ?? 0,
-            relevantTableCount: json.data.relevantSchema?.length ?? 0,
-          };
+        const data = await res.json();
+        if (data.success && data.data?.contextText) {
+          return { context: data.data.contextText };
         }
-        return { context: "No similar queries found yet. Generate SQL based on schema." };
+        return { context: "No similar queries found. Use the table names from schema." };
       } catch {
-        return { context: "RAG fetch failed. Generate SQL based on schema." };
+        return { context: "RAG unavailable. Use table names from schema." };
       }
     },
   });

@@ -104,26 +104,14 @@ async function fetchSchema(request: Request) {
   );
 
   const tablesList: { name: string; columns: string[] }[] = [];
-  const schemaParts: string[] = ["DATABASE SCHEMA (PostgreSQL):\n"];
-  const otherTables: string[] = [];
+  const busTableNames: string[] = [];
 
   for (const [tableName, columns] of tableMap) {
+    if (tableName.startsWith("nl_")) continue;
     tablesList.push({ name: tableName, columns: columns.map((c) => c.column_name) });
-
     if (tableName.startsWith("bus_")) {
-      const colDefs = columns.map((c) => `${c.column_name} (${c.data_type})`).join(", ");
-      schemaParts.push(`${tableName}: ${colDefs}`);
-      const samples = sampleData[tableName];
-      if (samples && samples.length > 0) {
-        schemaParts.push(`  Sample: ${JSON.stringify(samples[0])}`);
-      }
-    } else {
-      otherTables.push(tableName);
+      busTableNames.push(tableName);
     }
-  }
-
-  if (otherTables.length > 0) {
-    schemaParts.push(`\nOTHER TABLES (available but without column details): ${otherTables.join(", ")}\n`);
   }
 
   const instructions = await (db as any)
@@ -132,10 +120,17 @@ async function fetchSchema(request: Request) {
     .selectAll()
     .execute();
 
+  const compactSchema = [
+    "DATABASE SCHEMA (PostgreSQL):",
+    `Available business tables: ${busTableNames.join(", ")}`,
+    "",
+    "IMPORTANT: Call fetchSimilarQueries FIRST to get detailed column schemas and sample data for relevant tables before generating SQL.",
+  ];
+
   if (instructions && instructions.length > 0) {
-    schemaParts.push("\nTABLE INSTRUCTIONS:\n");
+    compactSchema.push("\nTABLE INSTRUCTIONS:");
     for (const inst of instructions) {
-      schemaParts.push(`${inst.table_name}: ${inst.llm_instructions || inst.description}`);
+      compactSchema.push(`${inst.table_name}: ${inst.llm_instructions || inst.description}`);
     }
   }
 
@@ -146,7 +141,7 @@ async function fetchSchema(request: Request) {
       data_source_name: dataSource.name,
       client_type: dataSource.client_type,
       tables: tablesList,
-      schemaText: schemaParts.join("\n"),
+      schemaText: compactSchema.join("\n"),
     },
   });
 }
