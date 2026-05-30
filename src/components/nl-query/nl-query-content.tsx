@@ -246,7 +246,7 @@ export function NlQueryContent() {
   useCopilotAction({
     name: "fetchSimilarQueries",
     description:
-      "Fetch RAG context: similar past queries that worked and relevant table schemas with sample data. ALWAYS call this BEFORE generating SQL to improve accuracy. Returns context that helps generate better SQL.",
+      "Fetch RAG context: similar past queries and relevant table schemas. ALWAYS call this BEFORE generating SQL.",
     parameters: [
       {
         name: "query",
@@ -255,21 +255,64 @@ export function NlQueryContent() {
         required: true,
       },
     ],
+    render: ({ status, result }) => {
+      const typedResult = result as { context?: string; steps?: { name: string; status: string; detail?: string }[] } | undefined;
+      if (status !== "complete") {
+        return (
+          <div className="space-y-1 p-3 bg-muted rounded-lg text-sm">
+            <div className="flex items-center gap-2 font-medium">
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-500" />
+              <span>RAG Pipeline</span>
+            </div>
+            <div className="ml-6 text-muted-foreground space-y-0.5">
+              <div className="flex items-center gap-1.5">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                <span>Searching vector embeddings...</span>
+              </div>
+            </div>
+          </div>
+        );
+      }
+      const steps = typedResult?.steps || [];
+      return (
+        <div className="space-y-1 p-3 bg-muted rounded-lg text-sm">
+          <div className="flex items-center gap-2 font-medium">
+            <CheckCircle className="h-3.5 w-3.5 text-green-600" />
+            <span>RAG Pipeline</span>
+          </div>
+          <div className="ml-6 text-muted-foreground space-y-0.5">
+            {steps.map((s, i) => (
+              <div key={i} className="flex items-center gap-1.5">
+                {s.status === "done" ? (
+                  <CheckCircle className="h-3 w-3 text-green-500" />
+                ) : (
+                  <AlertCircle className="h-3 w-3 text-yellow-500" />
+                )}
+                <span>{s.name}{s.detail ? `: ${s.detail}` : ""}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    },
     handler: async ({ query }) => {
-      if (!dataSourceId) return { context: "" };
+      if (!dataSourceId) return { context: "", steps: [] };
       try {
         const res = await fetch("/api/nl-query/rag-context", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query, data_source_id: dataSourceId }),
+          body: JSON.stringify({ query, data_source_id: dataSourceId, context_budget: 4000 }),
         });
         const data = await res.json();
-        if (data.success && data.data?.contextText) {
-          return { context: data.data.contextText };
+        if (data.success && data.data) {
+          return {
+            context: data.data.contextText || "",
+            steps: data.data.modules || [],
+          };
         }
-        return { context: "No similar queries found. Use the table names from schema." };
+        return { context: "No similar queries found. Use the table names from schema.", steps: [{ name: "RAG", status: "empty", detail: "No matches" }] };
       } catch {
-        return { context: "RAG unavailable. Use table names from schema." };
+        return { context: "RAG unavailable. Use table names from schema.", steps: [{ name: "RAG", status: "error", detail: "Service unavailable" }] };
       }
     },
   });
