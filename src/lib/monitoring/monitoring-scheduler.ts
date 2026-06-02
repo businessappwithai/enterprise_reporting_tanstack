@@ -1,8 +1,21 @@
 /**
  * Monitoring Scheduler
  *
- * Manages Trigger.dev schedule lifecycle for monitoring rules.
- * All functions gracefully degrade when Trigger.dev is not configured (local dev).
+ * Manages the lifecycle of monitoring rule schedules.  Two backends are
+ * supported and are selected automatically:
+ *
+ *   1. Trigger.dev (self-hosted) — used when TRIGGER_API_URL is set and the
+ *      SDK can reach the local Trigger.dev instance.  Fully open-source;
+ *      self-hosted on-premise via docker-compose.
+ *
+ *   2. On-premise cron runner (built-in fallback) — a pure-Bun interval loop
+ *      that polls monitoring_rules every minute, parses each rule's
+ *      cron_expression with a lightweight matcher, and directly calls
+ *      executeMonitoringEvaluation.  Zero external dependencies.  Activated
+ *      automatically when Trigger.dev is unavailable.
+ *
+ * All functions degrade gracefully — a scheduler failure never blocks rule
+ * creation or deletion.
  */
 
 import { schedules } from "@trigger.dev/sdk/v3";
@@ -150,4 +163,146 @@ export async function resumeSchedule(triggerScheduleId: string): Promise<boolean
     );
     return false;
   }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// On-Premise Cron Runner (built-in fallback — zero external dependencies)
+// ────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Minimal 5-field cron matcher.
+ *
+ * Supports: exact values (5), wildcard (*), comma lists (1,3,5),
+ *           step expressions (* /15), and ranges (1-5).
+ * This is intentionally simple — production deployments with complex cron
+ * expressions should use Trigger.dev self-hosted instead.
+ */
+function matchesCronField(value: number, field: string): boolean {
+  if (field === "*") return true;
+  for (const part of field.split(",")) {
+    if (part.includes("/")) {
+      const [range, step] = part.split("/");
+      const stepN = parseInt(step, 10);
+      let start = 0;
+      let end = 59;
+      if (range !== "*") {
+        const [s, e] = range.split("-").map(Number);
+        start = s;
+        end = e ?? s;
+      }
+      if (value >= start && value <= end && (value - start) % stepN === 0) return true;
+    } else if (part.includes("-")) {
+      const [lo, hi] = part.split("-").map(Number);
+      if (value >= lo && value <= hi) return true;
+    } else if (parseInt(part, 10) === value) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function cronMatches(cron: string, date: Date): boolean {
+  const parts = cron.trim().split(/\s+/);
+  if (parts.length !== 5) return false;
+  const [minute, hour, dom, month, dow] = parts;
+  return (
+    matchesCronField(date.getUTCMinutes(), minute) &&
+    matchesCronField(date.getUTCHours(), hour) &&
+    matchesCronField(date.getUTCDate(), dom) &&
+    matchesCronField(date.getUTCMonth() + 1, month) &&
+    matchesCronField(date.getUTCDay(), dow)
+  );
+}
+
+let _onPremiseRunnerHandle: ReturnType<typeof setInterval> | null = null;
+let _onPremiseRunnerActive = false;
+
+/**
+ * Starts the on-premise cron runner.
+ *
+ * Polls active, non-paused monitoring_rules every 60 seconds.
+ * For each rule whose cron_expression matches the current UTC minute,
+ * calls executeMonitoringEvaluation directly (in-process, no external queue).
+ *
+ * Call this from the server startup path (e.g., src/lib/jobs/worker-runner.ts)
+ * when Trigger.dev self-hosted is not configured.
+ */
+export function startOnPremiseCronRunner(): void {
+  if (_onPremiseRunnerActive) return;
+  _onPremiseRunnerActive = true;
+
+  console.log("[on-premise-cron] Starting monitoring cron runner (poll interval: 60s)");
+
+  const tick = async () => {
+    const now = new Date();
+    // Align to the start of the current minute for consistent matching
+    now.setUTCSeconds(0, 0);
+
+    let rules: { id: string; cron_expression: string; is_paused: number | boolean }[] = [];
+    try {
+      const db = getDb();
+      rules = await (db as any)
+        .selectFrom("monitoring_rules")
+        .where("is_active", "=", true)
+        .where("is_paused", "=", false)
+        .select(["id", "cron_expression", "is_paused"])
+        .execute();
+    } catch (err) {
+      console.error("[on-premise-cron] Failed to load monitoring rules:", err);
+      return;
+    }
+
+    const due = rules.filter((r) => {
+      try {
+        return cronMatches(r.cron_expression, now);
+      } catch {
+        return false;
+      }
+    });
+
+    if (due.length === 0) return;
+
+    console.log(`[on-premise-cron] ${due.length} rule(s) due at ${now.toISOString()}`);
+
+    // Import lazily to avoid circular dep at module load time
+    const { executeMonitoringEvaluation } = await import(
+      "@/lib/jobs/workers/monitoring-worker"
+    );
+
+    await Promise.allSettled(
+      due.map(async (rule) => {
+        try {
+          const result = await executeMonitoringEvaluation({
+            ruleId: rule.id,
+            triggeredBy: "on_premise_cron",
+          });
+          console.log(
+            `[on-premise-cron] rule=${rule.id} status=${result.status} value=${result.metricValue ?? "n/a"}`
+          );
+        } catch (err) {
+          console.error(`[on-premise-cron] rule=${rule.id} error:`, err);
+        }
+      })
+    );
+  };
+
+  // Run once immediately in case the server started mid-minute on a due cron
+  tick().catch(console.error);
+
+  // Then poll every 60 seconds
+  _onPremiseRunnerHandle = setInterval(() => {
+    tick().catch(console.error);
+  }, 60_000);
+}
+
+/**
+ * Stops the on-premise cron runner (e.g., during graceful shutdown).
+ */
+export function stopOnPremiseCronRunner(): void {
+  if (_onPremiseRunnerHandle !== null) {
+    clearInterval(_onPremiseRunnerHandle);
+    _onPremiseRunnerHandle = null;
+  }
+  _onPremiseRunnerActive = false;
+  console.log("[on-premise-cron] Monitoring cron runner stopped");
 }

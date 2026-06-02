@@ -131,12 +131,8 @@ export interface CreateMonitoringRuleInput {
 }
 
 export interface MonitoringEvaluatePayload {
-  monitoringRuleId: string;
-  reportDefinitionId: string;
-  dataSourceId: string;
-  userId: string;
-  timezone: string;
-  rbacSnapshotVersion: number;
+  ruleId: string;
+  triggeredBy?: "schedule" | "manual" | "on_premise_cron";
 }
 
 export interface RBACDriftResult {
