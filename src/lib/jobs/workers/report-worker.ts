@@ -251,3 +251,8 @@ async function exportToPDF(
   const pdfBuffer = doc.output("arraybuffer");
   await fs.writeFile(outputPath, Buffer.from(pdfBuffer));
 }
+
+// Adapter for Trigger.dev tasks — accepts plain data instead of a BullMQ Job
+export async function generateReport(data: ReportJobData): Promise<JobResult> {
+  return processReportJob({ data, updateProgress: async () => {} } as any);
+}

@@ -1,7 +1,15 @@
-import { json } from "@tanstack/react-start";
-import { createAPIFileRoute } from "@tanstack/react-start/api";
-import { requireAuth } from "@/lib/auth/middleware";
+import { createFileRoute } from "@tanstack/react-router";
+import { json } from "@/lib/server/response";
+import { verifySession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/config";
+
+async function getSession(request: Request) {
+  const cookie = request.headers.get("cookie") || "";
+  const match = cookie.match(/session_token=([^;]+)/);
+  const token = match?.[1];
+  if (!token) return null;
+  return verifySession(token);
+}
 
 function parseJsonColumn<T>(raw: unknown, fallback: T): T {
   if (raw === null || raw === undefined) return fallback;
@@ -9,58 +17,63 @@ function parseJsonColumn<T>(raw: unknown, fallback: T): T {
   try { return JSON.parse(raw) as T; } catch { return fallback; }
 }
 
-export const APIRoute = createAPIFileRoute("/api/monitoring/rules/$id/executions")({
-  GET: async ({ request, params }) => {
-    try {
-      const session = await requireAuth();
-      const { id } = params as { id: string };
-      const url = new URL(request.url);
-      const page = Math.max(0, parseInt(url.searchParams.get("page") ?? "0", 10));
-      const pageSize = Math.min(100, Math.max(1, parseInt(url.searchParams.get("pageSize") ?? "20", 10)));
+export const Route = createFileRoute("/api/monitoring/rules/$id/executions")({
+  server: {
+    handlers: {
+      GET: async ({ request, params }: { request: Request; params: { id: string } }) => {
+        try {
+          const session = await getSession(request);
+          if (!session?.user) return json({ error: "Unauthorized" }, { status: 401 });
 
-      const db = getDb();
-      const isAdmin = session.user.roles.some((r) => r.toLowerCase() === "admin");
+          const { id } = params;
+          const url = new URL(request.url);
+          const page = Math.max(0, parseInt(url.searchParams.get("page") ?? "0", 10));
+          const pageSize = Math.min(100, Math.max(1, parseInt(url.searchParams.get("pageSize") ?? "20", 10)));
 
-      // Verify rule ownership
-      const rule = await (db as any)
-        .selectFrom("monitoring_rules")
-        .where("id", "=", id)
-        .select(["id", "created_by"])
-        .executeTakeFirst() as { id: string; created_by: string } | undefined;
+          const db = getDb();
+          const isAdmin = session.user.roles.some((r: string) => r.toLowerCase() === "admin");
 
-      if (!rule) return json({ error: "Not found" }, { status: 404 });
-      if (!isAdmin && rule.created_by !== session.user.id) return json({ error: "Forbidden" }, { status: 403 });
+          const rule = await (db as any)
+            .selectFrom("monitoring_rules")
+            .where("id", "=", id)
+            .select(["id", "created_by"])
+            .executeTakeFirst() as { id: string; created_by: string } | undefined;
 
-      const totalRow = await (db as any)
-        .selectFrom("monitoring_executions")
-        .where("monitoring_rule_id", "=", id)
-        .select((db as any).fn.count("id").as("count"))
-        .executeTakeFirst() as { count: number } | undefined;
+          if (!rule) return json({ error: "Not found" }, { status: 404 });
+          if (!isAdmin && rule.created_by !== session.user.id) return json({ error: "Forbidden" }, { status: 403 });
 
-      const total = Number(totalRow?.count ?? 0);
+          const totalRow = await (db as any)
+            .selectFrom("monitoring_executions")
+            .where("monitoring_rule_id", "=", id)
+            .select((db as any).fn.count("id").as("count"))
+            .executeTakeFirst() as { count: number } | undefined;
 
-      const executions = await (db as any)
-        .selectFrom("monitoring_executions")
-        .where("monitoring_rule_id", "=", id)
-        .selectAll()
-        .orderBy("executed_at", "desc")
-        .limit(pageSize)
-        .offset(page * pageSize)
-        .execute() as Record<string, unknown>[];
+          const total = Number(totalRow?.count ?? 0);
 
-      const deserialized = executions.map((e) => ({
-        ...e,
-        alert_channels_used: parseJsonColumn<string[]>(e.alert_channels_used, []),
-        alert_recipients_sent: parseJsonColumn<string[]>(e.alert_recipients_sent, []),
-        alert_dispatched: Boolean(e.alert_dispatched),
-        metric_value: e.metric_value != null ? Number(e.metric_value) : null,
-        previous_metric_value: e.previous_metric_value != null ? Number(e.previous_metric_value) : null,
-        delta_pct: e.delta_pct != null ? Number(e.delta_pct) : null,
-      }));
+          const executions = await (db as any)
+            .selectFrom("monitoring_executions")
+            .where("monitoring_rule_id", "=", id)
+            .selectAll()
+            .orderBy("executed_at", "desc")
+            .limit(pageSize)
+            .offset(page * pageSize)
+            .execute() as Record<string, unknown>[];
 
-      return json({ executions: deserialized, total, page, pageSize });
-    } catch (err) {
-      return json({ error: err instanceof Error ? err.message : "Error" }, { status: 500 });
-    }
+          const deserialized = executions.map((e) => ({
+            ...e,
+            alert_channels_used: parseJsonColumn<string[]>(e.alert_channels_used, []),
+            alert_recipients_sent: parseJsonColumn<string[]>(e.alert_recipients_sent, []),
+            alert_dispatched: Boolean(e.alert_dispatched),
+            metric_value: e.metric_value != null ? Number(e.metric_value) : null,
+            previous_metric_value: e.previous_metric_value != null ? Number(e.previous_metric_value) : null,
+            delta_pct: e.delta_pct != null ? Number(e.delta_pct) : null,
+          }));
+
+          return json({ executions: deserialized, total, page, pageSize });
+        } catch (err) {
+          return json({ error: err instanceof Error ? err.message : "Error" }, { status: 500 });
+        }
+      },
+    },
   },
 });

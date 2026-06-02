@@ -387,3 +387,16 @@ async function exportToPDF(
   const pdfBuffer = doc.output("arraybuffer");
   await fs.writeFile(outputPath, Buffer.from(pdfBuffer));
 }
+
+// Adapter for Trigger.dev tasks — plain-argument wrapper around processEmailBatchJob
+export async function sendEmailBatch(
+  batchId: string,
+  recipients: string[],
+  subject: string,
+  template: string
+): Promise<void> {
+  await processEmailBatchJob({
+    data: { type: "email:batch", batchId, recipients, subject, template },
+    updateProgress: async () => {},
+  } as any);
+}

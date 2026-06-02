@@ -2,6 +2,7 @@ import type { Register } from "@tanstack/react-router";
 import type { RequestHandler } from "@tanstack/react-start/server";
 import { createStartHandler, defaultStreamHandler } from "@tanstack/react-start/server";
 import { closeDb, waitForDatabaseReady } from "@/lib/db/config";
+import { initializeWorkers, shutdownWorkers } from "@/lib/jobs/worker-runner";
 
 // Persistent config store will be imported and initialized on first use
 
@@ -16,6 +17,11 @@ const SECURITY_HEADERS: Record<string, string> = {
 };
 
 const handler = createStartHandler(defaultStreamHandler);
+
+// Start background workers (Trigger.dev or on-premise cron runner)
+initializeWorkers().catch((err) =>
+  console.error("[server] Worker init failed (non-fatal):", err)
+);
 
 const fetch: RequestHandler<Register> = async (request, opts) => {
   await waitForDatabaseReady();
@@ -37,6 +43,7 @@ const fetch: RequestHandler<Register> = async (request, opts) => {
 if (typeof process !== "undefined" && process.versions?.node) {
   const shutdown = async () => {
     console.log("[server] Closing database connections...");
+    await shutdownWorkers();
     await closeDb();
     process.exit(0);
   };

@@ -38,6 +38,7 @@ import { Route as AuthedSettingsIndexRouteImport } from './routes/_authed/settin
 import { Route as AuthedReportsIndexRouteImport } from './routes/_authed/reports/index'
 import { Route as AuthedQueriesIndexRouteImport } from './routes/_authed/queries/index'
 import { Route as AuthedNlQueryIndexRouteImport } from './routes/_authed/nl-query/index'
+import { Route as AuthedMonitoringIndexRouteImport } from './routes/_authed/monitoring/index'
 import { Route as AuthedJobsIndexRouteImport } from './routes/_authed/jobs/index'
 import { Route as AuthedFiltersIndexRouteImport } from './routes/_authed/filters/index'
 import { Route as AuthedEmailTemplatesIndexRouteImport } from './routes/_authed/email-templates/index'
@@ -61,6 +62,7 @@ import { Route as ApiNlQueryRagStoreRouteImport } from './routes/api/nl-query/ra
 import { Route as ApiNlQueryRagContextRouteImport } from './routes/api/nl-query/rag-context'
 import { Route as ApiNlQueryHistoryRouteImport } from './routes/api/nl-query/history'
 import { Route as ApiNlQueryExecuteRouteImport } from './routes/api/nl-query/execute'
+import { Route as ApiMonitoringRulesRouteImport } from './routes/api/monitoring/rules'
 import { Route as ApiMetadataEntitiesRouteImport } from './routes/api/metadata/entities'
 import { Route as ApiLogsUsersRouteImport } from './routes/api/logs/users'
 import { Route as ApiLogsSearchRouteImport } from './routes/api/logs/search'
@@ -77,7 +79,9 @@ import { Route as ApiAdminUsersRouteImport } from './routes/api/admin/users'
 import { Route as ApiAdminRolesRouteImport } from './routes/api/admin/roles'
 import { Route as ApiAdminPermissionsRouteImport } from './routes/api/admin/permissions'
 import { Route as ApiAdminLogsPermissionsRouteImport } from './routes/api/admin/logs-permissions'
+import { Route as ApiAdkAnalyzeIntentRouteImport } from './routes/api/adk/analyze-intent'
 import { Route as AuthedSettingsUiRouteImport } from './routes/_authed/settings/ui'
+import { Route as AuthedMonitoringCreateRouteImport } from './routes/_authed/monitoring/create'
 import { Route as AuthedSettingsEmailIndexRouteImport } from './routes/_authed/settings/email/index'
 import { Route as AuthedMetadataEntitiesIndexRouteImport } from './routes/_authed/metadata/entities/index'
 import { Route as AuthedDashboardsIdIndexRouteImport } from './routes/_authed/dashboards/$id/index'
@@ -90,6 +94,7 @@ import { Route as ApiReportsIdFiltersRouteImport } from './routes/api/reports/$i
 import { Route as ApiReportsIdExportRouteImport } from './routes/api/reports/$id/export'
 import { Route as ApiReportsIdDataRouteImport } from './routes/api/reports/$id/data'
 import { Route as ApiQueriesIdExecuteRouteImport } from './routes/api/queries/$id/execute'
+import { Route as ApiMonitoringRulesIdRouteImport } from './routes/api/monitoring/rules.$id'
 import { Route as ApiMetadataEntitiesIdRouteImport } from './routes/api/metadata/entities/$id'
 import { Route as ApiDataSourcesIdUsageRouteImport } from './routes/api/data-sources/$id/usage'
 import { Route as ApiDataSourcesIdInspectRouteImport } from './routes/api/data-sources/$id/inspect'
@@ -104,6 +109,7 @@ import { Route as AuthedChartsViewerIdRouteImport } from './routes/_authed/chart
 import { Route as AuthedChartsEditorIdRouteImport } from './routes/_authed/charts/editor/$id'
 import { Route as AuthedMetadataEntitiesIdIndexRouteImport } from './routes/_authed/metadata/entities/$id/index'
 import { Route as ApiReportsIdFiltersFilterLinkIdRouteImport } from './routes/api/reports/$id/filters/$filterLinkId'
+import { Route as ApiMonitoringRulesIdExecutionsRouteImport } from './routes/api/monitoring/rules.$id.executions'
 import { Route as ApiMetadataEntitiesIdFieldsRouteImport } from './routes/api/metadata/entities/$id/fields'
 import { Route as ApiDashboardsIdWidgetsWidgetIdRouteImport } from './routes/api/dashboards/$id/widgets/$widgetId'
 import { Route as ApiMetadataEntitiesIdFieldsBatchRouteImport } from './routes/api/metadata/entities/$id/fields/batch'
@@ -253,6 +259,11 @@ const AuthedNlQueryIndexRoute = AuthedNlQueryIndexRouteImport.update({
   path: '/nl-query/',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedMonitoringIndexRoute = AuthedMonitoringIndexRouteImport.update({
+  id: '/monitoring/',
+  path: '/monitoring/',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedJobsIndexRoute = AuthedJobsIndexRouteImport.update({
   id: '/jobs/',
   path: '/jobs/',
@@ -369,6 +380,11 @@ const ApiNlQueryExecuteRoute = ApiNlQueryExecuteRouteImport.update({
   path: '/api/nl-query/execute',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMonitoringRulesRoute = ApiMonitoringRulesRouteImport.update({
+  id: '/api/monitoring/rules',
+  path: '/api/monitoring/rules',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiMetadataEntitiesRoute = ApiMetadataEntitiesRouteImport.update({
   id: '/api/metadata/entities',
   path: '/api/metadata/entities',
@@ -449,9 +465,19 @@ const ApiAdminLogsPermissionsRoute = ApiAdminLogsPermissionsRouteImport.update({
   path: '/api/admin/logs-permissions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdkAnalyzeIntentRoute = ApiAdkAnalyzeIntentRouteImport.update({
+  id: '/api/adk/analyze-intent',
+  path: '/api/adk/analyze-intent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthedSettingsUiRoute = AuthedSettingsUiRouteImport.update({
   id: '/settings/ui',
   path: '/settings/ui',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedMonitoringCreateRoute = AuthedMonitoringCreateRouteImport.update({
+  id: '/monitoring/create',
+  path: '/monitoring/create',
   getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedSettingsEmailIndexRoute =
@@ -518,6 +544,11 @@ const ApiQueriesIdExecuteRoute = ApiQueriesIdExecuteRouteImport.update({
   id: '/execute',
   path: '/execute',
   getParentRoute: () => ApiQueriesIdRoute,
+} as any)
+const ApiMonitoringRulesIdRoute = ApiMonitoringRulesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiMonitoringRulesRoute,
 } as any)
 const ApiMetadataEntitiesIdRoute = ApiMetadataEntitiesIdRouteImport.update({
   id: '/$id',
@@ -593,6 +624,12 @@ const ApiReportsIdFiltersFilterLinkIdRoute =
     path: '/$filterLinkId',
     getParentRoute: () => ApiReportsIdFiltersRoute,
   } as any)
+const ApiMonitoringRulesIdExecutionsRoute =
+  ApiMonitoringRulesIdExecutionsRouteImport.update({
+    id: '/executions',
+    path: '/executions',
+    getParentRoute: () => ApiMonitoringRulesIdRoute,
+  } as any)
 const ApiMetadataEntitiesIdFieldsRoute =
   ApiMetadataEntitiesIdFieldsRouteImport.update({
     id: '/fields',
@@ -638,7 +675,9 @@ export interface FileRoutesByFullPath {
   '/api/notifications': typeof ApiNotificationsRoute
   '/api/queries': typeof ApiQueriesRouteWithChildren
   '/api/reports': typeof ApiReportsRouteWithChildren
+  '/monitoring/create': typeof AuthedMonitoringCreateRoute
   '/settings/ui': typeof AuthedSettingsUiRoute
+  '/api/adk/analyze-intent': typeof ApiAdkAnalyzeIntentRoute
   '/api/admin/logs-permissions': typeof ApiAdminLogsPermissionsRoute
   '/api/admin/permissions': typeof ApiAdminPermissionsRoute
   '/api/admin/roles': typeof ApiAdminRolesRoute
@@ -655,6 +694,7 @@ export interface FileRoutesByFullPath {
   '/api/logs/search': typeof ApiLogsSearchRoute
   '/api/logs/users': typeof ApiLogsUsersRoute
   '/api/metadata/entities': typeof ApiMetadataEntitiesRouteWithChildren
+  '/api/monitoring/rules': typeof ApiMonitoringRulesRouteWithChildren
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
   '/api/nl-query/history': typeof ApiNlQueryHistoryRoute
   '/api/nl-query/rag-context': typeof ApiNlQueryRagContextRoute
@@ -678,6 +718,7 @@ export interface FileRoutesByFullPath {
   '/email-templates/': typeof AuthedEmailTemplatesIndexRoute
   '/filters/': typeof AuthedFiltersIndexRoute
   '/jobs/': typeof AuthedJobsIndexRoute
+  '/monitoring/': typeof AuthedMonitoringIndexRoute
   '/nl-query/': typeof AuthedNlQueryIndexRoute
   '/queries/': typeof AuthedQueriesIndexRoute
   '/reports/': typeof AuthedReportsIndexRoute
@@ -699,6 +740,7 @@ export interface FileRoutesByFullPath {
   '/api/data-sources/$id/inspect': typeof ApiDataSourcesIdInspectRoute
   '/api/data-sources/$id/usage': typeof ApiDataSourcesIdUsageRoute
   '/api/metadata/entities/$id': typeof ApiMetadataEntitiesIdRouteWithChildren
+  '/api/monitoring/rules/$id': typeof ApiMonitoringRulesIdRouteWithChildren
   '/api/queries/$id/execute': typeof ApiQueriesIdExecuteRoute
   '/api/reports/$id/data': typeof ApiReportsIdDataRoute
   '/api/reports/$id/export': typeof ApiReportsIdExportRoute
@@ -713,6 +755,7 @@ export interface FileRoutesByFullPath {
   '/settings/email/': typeof AuthedSettingsEmailIndexRoute
   '/api/dashboards/$id/widgets/$widgetId': typeof ApiDashboardsIdWidgetsWidgetIdRoute
   '/api/metadata/entities/$id/fields': typeof ApiMetadataEntitiesIdFieldsRouteWithChildren
+  '/api/monitoring/rules/$id/executions': typeof ApiMonitoringRulesIdExecutionsRoute
   '/api/reports/$id/filters/$filterLinkId': typeof ApiReportsIdFiltersFilterLinkIdRoute
   '/metadata/entities/$id/': typeof AuthedMetadataEntitiesIdIndexRoute
   '/api/metadata/entities/$id/fields/$fieldId': typeof ApiMetadataEntitiesIdFieldsFieldIdRoute
@@ -738,7 +781,9 @@ export interface FileRoutesByTo {
   '/api/notifications': typeof ApiNotificationsRoute
   '/api/queries': typeof ApiQueriesRouteWithChildren
   '/api/reports': typeof ApiReportsRouteWithChildren
+  '/monitoring/create': typeof AuthedMonitoringCreateRoute
   '/settings/ui': typeof AuthedSettingsUiRoute
+  '/api/adk/analyze-intent': typeof ApiAdkAnalyzeIntentRoute
   '/api/admin/logs-permissions': typeof ApiAdminLogsPermissionsRoute
   '/api/admin/permissions': typeof ApiAdminPermissionsRoute
   '/api/admin/roles': typeof ApiAdminRolesRoute
@@ -755,6 +800,7 @@ export interface FileRoutesByTo {
   '/api/logs/search': typeof ApiLogsSearchRoute
   '/api/logs/users': typeof ApiLogsUsersRoute
   '/api/metadata/entities': typeof ApiMetadataEntitiesRouteWithChildren
+  '/api/monitoring/rules': typeof ApiMonitoringRulesRouteWithChildren
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
   '/api/nl-query/history': typeof ApiNlQueryHistoryRoute
   '/api/nl-query/rag-context': typeof ApiNlQueryRagContextRoute
@@ -778,6 +824,7 @@ export interface FileRoutesByTo {
   '/email-templates': typeof AuthedEmailTemplatesIndexRoute
   '/filters': typeof AuthedFiltersIndexRoute
   '/jobs': typeof AuthedJobsIndexRoute
+  '/monitoring': typeof AuthedMonitoringIndexRoute
   '/nl-query': typeof AuthedNlQueryIndexRoute
   '/queries': typeof AuthedQueriesIndexRoute
   '/reports': typeof AuthedReportsIndexRoute
@@ -799,6 +846,7 @@ export interface FileRoutesByTo {
   '/api/data-sources/$id/inspect': typeof ApiDataSourcesIdInspectRoute
   '/api/data-sources/$id/usage': typeof ApiDataSourcesIdUsageRoute
   '/api/metadata/entities/$id': typeof ApiMetadataEntitiesIdRouteWithChildren
+  '/api/monitoring/rules/$id': typeof ApiMonitoringRulesIdRouteWithChildren
   '/api/queries/$id/execute': typeof ApiQueriesIdExecuteRoute
   '/api/reports/$id/data': typeof ApiReportsIdDataRoute
   '/api/reports/$id/export': typeof ApiReportsIdExportRoute
@@ -813,6 +861,7 @@ export interface FileRoutesByTo {
   '/settings/email': typeof AuthedSettingsEmailIndexRoute
   '/api/dashboards/$id/widgets/$widgetId': typeof ApiDashboardsIdWidgetsWidgetIdRoute
   '/api/metadata/entities/$id/fields': typeof ApiMetadataEntitiesIdFieldsRouteWithChildren
+  '/api/monitoring/rules/$id/executions': typeof ApiMonitoringRulesIdExecutionsRoute
   '/api/reports/$id/filters/$filterLinkId': typeof ApiReportsIdFiltersFilterLinkIdRoute
   '/metadata/entities/$id': typeof AuthedMetadataEntitiesIdIndexRoute
   '/api/metadata/entities/$id/fields/$fieldId': typeof ApiMetadataEntitiesIdFieldsFieldIdRoute
@@ -840,7 +889,9 @@ export interface FileRoutesById {
   '/api/notifications': typeof ApiNotificationsRoute
   '/api/queries': typeof ApiQueriesRouteWithChildren
   '/api/reports': typeof ApiReportsRouteWithChildren
+  '/_authed/monitoring/create': typeof AuthedMonitoringCreateRoute
   '/_authed/settings/ui': typeof AuthedSettingsUiRoute
+  '/api/adk/analyze-intent': typeof ApiAdkAnalyzeIntentRoute
   '/api/admin/logs-permissions': typeof ApiAdminLogsPermissionsRoute
   '/api/admin/permissions': typeof ApiAdminPermissionsRoute
   '/api/admin/roles': typeof ApiAdminRolesRoute
@@ -857,6 +908,7 @@ export interface FileRoutesById {
   '/api/logs/search': typeof ApiLogsSearchRoute
   '/api/logs/users': typeof ApiLogsUsersRoute
   '/api/metadata/entities': typeof ApiMetadataEntitiesRouteWithChildren
+  '/api/monitoring/rules': typeof ApiMonitoringRulesRouteWithChildren
   '/api/nl-query/execute': typeof ApiNlQueryExecuteRoute
   '/api/nl-query/history': typeof ApiNlQueryHistoryRoute
   '/api/nl-query/rag-context': typeof ApiNlQueryRagContextRoute
@@ -880,6 +932,7 @@ export interface FileRoutesById {
   '/_authed/email-templates/': typeof AuthedEmailTemplatesIndexRoute
   '/_authed/filters/': typeof AuthedFiltersIndexRoute
   '/_authed/jobs/': typeof AuthedJobsIndexRoute
+  '/_authed/monitoring/': typeof AuthedMonitoringIndexRoute
   '/_authed/nl-query/': typeof AuthedNlQueryIndexRoute
   '/_authed/queries/': typeof AuthedQueriesIndexRoute
   '/_authed/reports/': typeof AuthedReportsIndexRoute
@@ -901,6 +954,7 @@ export interface FileRoutesById {
   '/api/data-sources/$id/inspect': typeof ApiDataSourcesIdInspectRoute
   '/api/data-sources/$id/usage': typeof ApiDataSourcesIdUsageRoute
   '/api/metadata/entities/$id': typeof ApiMetadataEntitiesIdRouteWithChildren
+  '/api/monitoring/rules/$id': typeof ApiMonitoringRulesIdRouteWithChildren
   '/api/queries/$id/execute': typeof ApiQueriesIdExecuteRoute
   '/api/reports/$id/data': typeof ApiReportsIdDataRoute
   '/api/reports/$id/export': typeof ApiReportsIdExportRoute
@@ -915,6 +969,7 @@ export interface FileRoutesById {
   '/_authed/settings/email/': typeof AuthedSettingsEmailIndexRoute
   '/api/dashboards/$id/widgets/$widgetId': typeof ApiDashboardsIdWidgetsWidgetIdRoute
   '/api/metadata/entities/$id/fields': typeof ApiMetadataEntitiesIdFieldsRouteWithChildren
+  '/api/monitoring/rules/$id/executions': typeof ApiMonitoringRulesIdExecutionsRoute
   '/api/reports/$id/filters/$filterLinkId': typeof ApiReportsIdFiltersFilterLinkIdRoute
   '/_authed/metadata/entities/$id/': typeof AuthedMetadataEntitiesIdIndexRoute
   '/api/metadata/entities/$id/fields/$fieldId': typeof ApiMetadataEntitiesIdFieldsFieldIdRoute
@@ -942,7 +997,9 @@ export interface FileRouteTypes {
     | '/api/notifications'
     | '/api/queries'
     | '/api/reports'
+    | '/monitoring/create'
     | '/settings/ui'
+    | '/api/adk/analyze-intent'
     | '/api/admin/logs-permissions'
     | '/api/admin/permissions'
     | '/api/admin/roles'
@@ -959,6 +1016,7 @@ export interface FileRouteTypes {
     | '/api/logs/search'
     | '/api/logs/users'
     | '/api/metadata/entities'
+    | '/api/monitoring/rules'
     | '/api/nl-query/execute'
     | '/api/nl-query/history'
     | '/api/nl-query/rag-context'
@@ -982,6 +1040,7 @@ export interface FileRouteTypes {
     | '/email-templates/'
     | '/filters/'
     | '/jobs/'
+    | '/monitoring/'
     | '/nl-query/'
     | '/queries/'
     | '/reports/'
@@ -1003,6 +1062,7 @@ export interface FileRouteTypes {
     | '/api/data-sources/$id/inspect'
     | '/api/data-sources/$id/usage'
     | '/api/metadata/entities/$id'
+    | '/api/monitoring/rules/$id'
     | '/api/queries/$id/execute'
     | '/api/reports/$id/data'
     | '/api/reports/$id/export'
@@ -1017,6 +1077,7 @@ export interface FileRouteTypes {
     | '/settings/email/'
     | '/api/dashboards/$id/widgets/$widgetId'
     | '/api/metadata/entities/$id/fields'
+    | '/api/monitoring/rules/$id/executions'
     | '/api/reports/$id/filters/$filterLinkId'
     | '/metadata/entities/$id/'
     | '/api/metadata/entities/$id/fields/$fieldId'
@@ -1042,7 +1103,9 @@ export interface FileRouteTypes {
     | '/api/notifications'
     | '/api/queries'
     | '/api/reports'
+    | '/monitoring/create'
     | '/settings/ui'
+    | '/api/adk/analyze-intent'
     | '/api/admin/logs-permissions'
     | '/api/admin/permissions'
     | '/api/admin/roles'
@@ -1059,6 +1122,7 @@ export interface FileRouteTypes {
     | '/api/logs/search'
     | '/api/logs/users'
     | '/api/metadata/entities'
+    | '/api/monitoring/rules'
     | '/api/nl-query/execute'
     | '/api/nl-query/history'
     | '/api/nl-query/rag-context'
@@ -1082,6 +1146,7 @@ export interface FileRouteTypes {
     | '/email-templates'
     | '/filters'
     | '/jobs'
+    | '/monitoring'
     | '/nl-query'
     | '/queries'
     | '/reports'
@@ -1103,6 +1168,7 @@ export interface FileRouteTypes {
     | '/api/data-sources/$id/inspect'
     | '/api/data-sources/$id/usage'
     | '/api/metadata/entities/$id'
+    | '/api/monitoring/rules/$id'
     | '/api/queries/$id/execute'
     | '/api/reports/$id/data'
     | '/api/reports/$id/export'
@@ -1117,6 +1183,7 @@ export interface FileRouteTypes {
     | '/settings/email'
     | '/api/dashboards/$id/widgets/$widgetId'
     | '/api/metadata/entities/$id/fields'
+    | '/api/monitoring/rules/$id/executions'
     | '/api/reports/$id/filters/$filterLinkId'
     | '/metadata/entities/$id'
     | '/api/metadata/entities/$id/fields/$fieldId'
@@ -1143,7 +1210,9 @@ export interface FileRouteTypes {
     | '/api/notifications'
     | '/api/queries'
     | '/api/reports'
+    | '/_authed/monitoring/create'
     | '/_authed/settings/ui'
+    | '/api/adk/analyze-intent'
     | '/api/admin/logs-permissions'
     | '/api/admin/permissions'
     | '/api/admin/roles'
@@ -1160,6 +1229,7 @@ export interface FileRouteTypes {
     | '/api/logs/search'
     | '/api/logs/users'
     | '/api/metadata/entities'
+    | '/api/monitoring/rules'
     | '/api/nl-query/execute'
     | '/api/nl-query/history'
     | '/api/nl-query/rag-context'
@@ -1183,6 +1253,7 @@ export interface FileRouteTypes {
     | '/_authed/email-templates/'
     | '/_authed/filters/'
     | '/_authed/jobs/'
+    | '/_authed/monitoring/'
     | '/_authed/nl-query/'
     | '/_authed/queries/'
     | '/_authed/reports/'
@@ -1204,6 +1275,7 @@ export interface FileRouteTypes {
     | '/api/data-sources/$id/inspect'
     | '/api/data-sources/$id/usage'
     | '/api/metadata/entities/$id'
+    | '/api/monitoring/rules/$id'
     | '/api/queries/$id/execute'
     | '/api/reports/$id/data'
     | '/api/reports/$id/export'
@@ -1218,6 +1290,7 @@ export interface FileRouteTypes {
     | '/_authed/settings/email/'
     | '/api/dashboards/$id/widgets/$widgetId'
     | '/api/metadata/entities/$id/fields'
+    | '/api/monitoring/rules/$id/executions'
     | '/api/reports/$id/filters/$filterLinkId'
     | '/_authed/metadata/entities/$id/'
     | '/api/metadata/entities/$id/fields/$fieldId'
@@ -1234,6 +1307,7 @@ export interface RootRouteChildren {
   ApiNotificationsRoute: typeof ApiNotificationsRoute
   ApiQueriesRoute: typeof ApiQueriesRouteWithChildren
   ApiReportsRoute: typeof ApiReportsRouteWithChildren
+  ApiAdkAnalyzeIntentRoute: typeof ApiAdkAnalyzeIntentRoute
   ApiAdminLogsPermissionsRoute: typeof ApiAdminLogsPermissionsRoute
   ApiAdminPermissionsRoute: typeof ApiAdminPermissionsRoute
   ApiAdminRolesRoute: typeof ApiAdminRolesRoute
@@ -1250,6 +1324,7 @@ export interface RootRouteChildren {
   ApiLogsSearchRoute: typeof ApiLogsSearchRoute
   ApiLogsUsersRoute: typeof ApiLogsUsersRoute
   ApiMetadataEntitiesRoute: typeof ApiMetadataEntitiesRouteWithChildren
+  ApiMonitoringRulesRoute: typeof ApiMonitoringRulesRouteWithChildren
   ApiNlQueryExecuteRoute: typeof ApiNlQueryExecuteRoute
   ApiNlQueryHistoryRoute: typeof ApiNlQueryHistoryRoute
   ApiNlQueryRagContextRoute: typeof ApiNlQueryRagContextRoute
@@ -1477,6 +1552,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedNlQueryIndexRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/monitoring/': {
+      id: '/_authed/monitoring/'
+      path: '/monitoring'
+      fullPath: '/monitoring/'
+      preLoaderRoute: typeof AuthedMonitoringIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/jobs/': {
       id: '/_authed/jobs/'
       path: '/jobs'
@@ -1638,6 +1720,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiNlQueryExecuteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/monitoring/rules': {
+      id: '/api/monitoring/rules'
+      path: '/api/monitoring/rules'
+      fullPath: '/api/monitoring/rules'
+      preLoaderRoute: typeof ApiMonitoringRulesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/metadata/entities': {
       id: '/api/metadata/entities'
       path: '/api/metadata/entities'
@@ -1750,11 +1839,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminLogsPermissionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/adk/analyze-intent': {
+      id: '/api/adk/analyze-intent'
+      path: '/api/adk/analyze-intent'
+      fullPath: '/api/adk/analyze-intent'
+      preLoaderRoute: typeof ApiAdkAnalyzeIntentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authed/settings/ui': {
       id: '/_authed/settings/ui'
       path: '/settings/ui'
       fullPath: '/settings/ui'
       preLoaderRoute: typeof AuthedSettingsUiRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/monitoring/create': {
+      id: '/_authed/monitoring/create'
+      path: '/monitoring/create'
+      fullPath: '/monitoring/create'
+      preLoaderRoute: typeof AuthedMonitoringCreateRouteImport
       parentRoute: typeof AuthedRoute
     }
     '/_authed/settings/email/': {
@@ -1840,6 +1943,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/queries/$id/execute'
       preLoaderRoute: typeof ApiQueriesIdExecuteRouteImport
       parentRoute: typeof ApiQueriesIdRoute
+    }
+    '/api/monitoring/rules/$id': {
+      id: '/api/monitoring/rules/$id'
+      path: '/$id'
+      fullPath: '/api/monitoring/rules/$id'
+      preLoaderRoute: typeof ApiMonitoringRulesIdRouteImport
+      parentRoute: typeof ApiMonitoringRulesRoute
     }
     '/api/metadata/entities/$id': {
       id: '/api/metadata/entities/$id'
@@ -1939,6 +2049,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiReportsIdFiltersFilterLinkIdRouteImport
       parentRoute: typeof ApiReportsIdFiltersRoute
     }
+    '/api/monitoring/rules/$id/executions': {
+      id: '/api/monitoring/rules/$id/executions'
+      path: '/executions'
+      fullPath: '/api/monitoring/rules/$id/executions'
+      preLoaderRoute: typeof ApiMonitoringRulesIdExecutionsRouteImport
+      parentRoute: typeof ApiMonitoringRulesIdRoute
+    }
     '/api/metadata/entities/$id/fields': {
       id: '/api/metadata/entities/$id/fields'
       path: '/fields'
@@ -2001,6 +2118,7 @@ interface AuthedRouteChildren {
   AuthedSqlEditorRoute: typeof AuthedSqlEditorRoute
   AuthedSystemLogsRoute: typeof AuthedSystemLogsRoute
   AuthedUsersRoute: typeof AuthedUsersRoute
+  AuthedMonitoringCreateRoute: typeof AuthedMonitoringCreateRoute
   AuthedSettingsUiRoute: typeof AuthedSettingsUiRoute
   AuthedChartsIndexRoute: typeof AuthedChartsIndexRoute
   AuthedDashboardsIndexRoute: typeof AuthedDashboardsIndexRoute
@@ -2009,6 +2127,7 @@ interface AuthedRouteChildren {
   AuthedEmailTemplatesIndexRoute: typeof AuthedEmailTemplatesIndexRoute
   AuthedFiltersIndexRoute: typeof AuthedFiltersIndexRoute
   AuthedJobsIndexRoute: typeof AuthedJobsIndexRoute
+  AuthedMonitoringIndexRoute: typeof AuthedMonitoringIndexRoute
   AuthedNlQueryIndexRoute: typeof AuthedNlQueryIndexRoute
   AuthedQueriesIndexRoute: typeof AuthedQueriesIndexRoute
   AuthedReportsIndexRoute: typeof AuthedReportsIndexRoute
@@ -2036,6 +2155,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedSqlEditorRoute: AuthedSqlEditorRoute,
   AuthedSystemLogsRoute: AuthedSystemLogsRoute,
   AuthedUsersRoute: AuthedUsersRoute,
+  AuthedMonitoringCreateRoute: AuthedMonitoringCreateRoute,
   AuthedSettingsUiRoute: AuthedSettingsUiRoute,
   AuthedChartsIndexRoute: AuthedChartsIndexRoute,
   AuthedDashboardsIndexRoute: AuthedDashboardsIndexRoute,
@@ -2044,6 +2164,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedEmailTemplatesIndexRoute: AuthedEmailTemplatesIndexRoute,
   AuthedFiltersIndexRoute: AuthedFiltersIndexRoute,
   AuthedJobsIndexRoute: AuthedJobsIndexRoute,
+  AuthedMonitoringIndexRoute: AuthedMonitoringIndexRoute,
   AuthedNlQueryIndexRoute: AuthedNlQueryIndexRoute,
   AuthedQueriesIndexRoute: AuthedQueriesIndexRoute,
   AuthedReportsIndexRoute: AuthedReportsIndexRoute,
@@ -2223,6 +2344,28 @@ const ApiMetadataEntitiesRouteChildren: ApiMetadataEntitiesRouteChildren = {
 const ApiMetadataEntitiesRouteWithChildren =
   ApiMetadataEntitiesRoute._addFileChildren(ApiMetadataEntitiesRouteChildren)
 
+interface ApiMonitoringRulesIdRouteChildren {
+  ApiMonitoringRulesIdExecutionsRoute: typeof ApiMonitoringRulesIdExecutionsRoute
+}
+
+const ApiMonitoringRulesIdRouteChildren: ApiMonitoringRulesIdRouteChildren = {
+  ApiMonitoringRulesIdExecutionsRoute: ApiMonitoringRulesIdExecutionsRoute,
+}
+
+const ApiMonitoringRulesIdRouteWithChildren =
+  ApiMonitoringRulesIdRoute._addFileChildren(ApiMonitoringRulesIdRouteChildren)
+
+interface ApiMonitoringRulesRouteChildren {
+  ApiMonitoringRulesIdRoute: typeof ApiMonitoringRulesIdRouteWithChildren
+}
+
+const ApiMonitoringRulesRouteChildren: ApiMonitoringRulesRouteChildren = {
+  ApiMonitoringRulesIdRoute: ApiMonitoringRulesIdRouteWithChildren,
+}
+
+const ApiMonitoringRulesRouteWithChildren =
+  ApiMonitoringRulesRoute._addFileChildren(ApiMonitoringRulesRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthedRoute: AuthedRouteWithChildren,
@@ -2233,6 +2376,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiNotificationsRoute: ApiNotificationsRoute,
   ApiQueriesRoute: ApiQueriesRouteWithChildren,
   ApiReportsRoute: ApiReportsRouteWithChildren,
+  ApiAdkAnalyzeIntentRoute: ApiAdkAnalyzeIntentRoute,
   ApiAdminLogsPermissionsRoute: ApiAdminLogsPermissionsRoute,
   ApiAdminPermissionsRoute: ApiAdminPermissionsRoute,
   ApiAdminRolesRoute: ApiAdminRolesRoute,
@@ -2249,6 +2393,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiLogsSearchRoute: ApiLogsSearchRoute,
   ApiLogsUsersRoute: ApiLogsUsersRoute,
   ApiMetadataEntitiesRoute: ApiMetadataEntitiesRouteWithChildren,
+  ApiMonitoringRulesRoute: ApiMonitoringRulesRouteWithChildren,
   ApiNlQueryExecuteRoute: ApiNlQueryExecuteRoute,
   ApiNlQueryHistoryRoute: ApiNlQueryHistoryRoute,
   ApiNlQueryRagContextRoute: ApiNlQueryRagContextRoute,
