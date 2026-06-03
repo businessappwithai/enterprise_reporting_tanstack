@@ -1,18 +1,28 @@
+import type { AlertChannel, ThresholdOperator } from "@/types/monitoring";
+
 export type ADKIntentType = "monitoring_rule" | "report_generate" | "alert_create" | "ambiguous";
+export type ADKIntentStatus = "pending" | "classifying" | "clarification_needed" | "success" | "failed";
 
 export interface ADKIntent {
-  intent_type: ADKIntentType;
-  confidence: number;
-  metric?: string;
-  data_hint?: string;
-  time_window?: TimeWindow;
-  schedule?: ScheduleIntent;
-  threshold?: ThresholdIntent;
-  alert_channels?: string[];
-  recipients?: string[];
-  dataSourceId?: string;
+  id: string;
   userId: string;
   rawRequest: string;
+  intentType: ADKIntentType;
+  confidence: number;
+  status: ADKIntentStatus;
+  metric?: string;
+  dataHint?: string;
+  timeWindow?: TimeWindow;
+  scheduleNatural?: string;
+  scheduleCron?: string;
+  thresholdOperator?: ThresholdOperator;
+  thresholdValue?: number;
+  thresholdUpperBound?: number;
+  alertChannels?: AlertChannel[];
+  recipients?: string[];
+  dataSourceId?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface TimeWindow {
@@ -29,7 +39,7 @@ export interface ScheduleIntent {
 }
 
 export interface ThresholdIntent {
-  operator: "gt" | "gte" | "lt" | "lte" | "eq" | "neq" | "between";
+  operator: ThresholdOperator;
   value: number;
   upperBound?: number;
   currency?: string;

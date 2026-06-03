@@ -456,7 +456,10 @@ export type ResourceType =
   | "nl_query"
   | "metadata_entity"
   | "log"
-  | "setting";
+  | "setting"
+  | "monitoring_rule"
+  | "monitoring_execution"
+  | "adk_intent";
 
 export type PermissionLevel = "view" | "edit" | "execute" | "admin";
 
@@ -480,7 +483,28 @@ export type AuditAction =
   | "retry"
   | "pause"
   | "resume"
-  | "clean";
+  | "clean"
+  | "monitoring:rule_created"
+  | "monitoring:rule_updated"
+  | "monitoring:rule_deleted"
+  | "monitoring:rule_paused"
+  | "monitoring:rule_resumed"
+  | "monitoring:rule_executed"
+  | "monitoring:breach_detected"
+  | "monitoring:escalation_detected"
+  | "monitoring:alert_dispatched"
+  | "monitoring:no_data"
+  | "monitoring:rbac_drift_detected"
+  | "monitoring:rbac_revoked"
+  | "adk:intent_received"
+  | "adk:intent_classified"
+  | "adk:pipeline_started"
+  | "adk:pipeline_completed"
+  | "adk:pipeline_failed"
+  | "adk:schema_introspected"
+  | "adk:sql_generated"
+  | "adk:rule_persisted"
+  | "adk:clarification_requested";
 
 export interface AuditLog {
   id: string;

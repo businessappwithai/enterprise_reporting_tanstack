@@ -23,7 +23,8 @@
  */
 
 import { z } from "zod";
-import type { ADKIntent, ADKIntentType, AlertChannel, ThresholdOperator } from "@/types/adk";
+import type { ADKIntent, ADKIntentType } from "@/types/adk";
+import type { AlertChannel, ThresholdOperator } from "@/types/monitoring";
 
 // ─── LLM Response Schema ──────────────────────────────────────────────────────
 

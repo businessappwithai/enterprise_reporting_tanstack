@@ -313,7 +313,9 @@ export const AUDIT_ACTIONS = {
 /**
  * Audit action types - Union of all possible actions
  */
-export type AuditAction = typeof AUDIT_ACTIONS[keyof typeof AUDIT_ACTIONS][keyof typeof AUDIT_ACTIONS[keyof typeof AUDIT_ACTIONS]];
+export type AuditAction = {
+  [K in keyof typeof AUDIT_ACTIONS]: typeof AUDIT_ACTIONS[K][keyof typeof AUDIT_ACTIONS[K]];
+}[keyof typeof AUDIT_ACTIONS];
 
 /**
  * Get all available actions flattened for reference

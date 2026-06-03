@@ -34,7 +34,6 @@ import type { MonitoringRule, MonitoringEvaluatePayload } from "@/types/monitori
 export async function scheduleMonitoringRule(rule: MonitoringRule): Promise<string | null> {
   const payload: MonitoringEvaluatePayload = {
     ruleId: rule.id,
-    userId: rule.created_by,
     triggeredBy: "schedule",
   };
 

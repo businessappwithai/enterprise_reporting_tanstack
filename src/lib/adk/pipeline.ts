@@ -176,7 +176,7 @@ export async function runADKPipeline(
       userId,
       action: AUDIT_ACTIONS.ADK.INTENT_CLASSIFIED,
       resourceType: "adk_intent",
-      details: { intentType: intent.intent_type, confidence: intent.confidence },
+      details: { intentType: intent.intentType, confidence: intent.confidence },
     });
 
     // Store intent for traceability (even if pipeline fails after this)
@@ -185,7 +185,7 @@ export async function runADKPipeline(
       session_id: sessionId,
       raw_nl_request: nlRequest,
       request_source: "text",
-      intent_type: intent.intent_type,
+      intent_type: intent.intentType,
       confidence: intent.confidence,
       adk_intent_json: intent,
       pipeline_status: "pending",
@@ -193,7 +193,7 @@ export async function runADKPipeline(
     });
 
     // Guardrail: low confidence or ambiguous → request clarification
-    if (intent.confidence < 0.5 || intent.intent_type === "ambiguous") {
+    if (intent.confidence < 0.5 || intent.intentType === "ambiguous") {
       await updateADKIntent(intentId, {
         pipeline_status: "partial",
         error_message: "Low confidence — clarification required",
@@ -293,13 +293,13 @@ export async function runADKPipeline(
       supervisorResult = {
         success: sqlResult.sql.length > 0,
         intent: {
-          intent_type: intent.intent_type,
+          intent_type: intent.intentType,
           confidence: intent.confidence,
           metric: intent.metric ?? "value",
-          schedule_cron: intent.schedule?.cron ?? "0 8 * * 1",
-          threshold_operator: intent.threshold?.operator ?? "lt",
-          threshold_value: intent.threshold?.value ?? 0,
-          alert_channels: intent.alert_channels ?? ["email", "in_app"],
+          schedule_cron: intent.scheduleCron ?? "0 8 * * 1",
+          threshold_operator: intent.thresholdOperator ?? "lt",
+          threshold_value: intent.thresholdValue ?? 0,
+          alert_channels: intent.alertChannels ?? ["email", "in_app"],
         },
         reportDefinition: {
           sql: sqlResult.sql,
@@ -311,17 +311,17 @@ export async function runADKPipeline(
         monitoringRule: {
           name: `Monitor: ${intent.metric ?? "metric"}`,
           description: intent.rawRequest,
-          threshold_operator: intent.threshold?.operator ?? "lt",
-          threshold_value: intent.threshold?.value ?? 0,
+          threshold_operator: intent.thresholdOperator ?? "lt",
+          threshold_value: intent.thresholdValue ?? 0,
           escalation_threshold_pct: 20,
-          alert_channels: (intent.alert_channels ?? ["email", "in_app"]) as ("email" | "in_app" | "webhook")[],
+          alert_channels: (intent.alertChannels ?? ["email", "in_app"]) as ("email" | "in_app" | "webhook")[],
           notify_on_pass: false,
           notify_on_no_data: true,
         },
         schedule: {
-          cron_expression: intent.schedule?.cron ?? "0 8 * * 1",
-          timezone: intent.schedule?.timezone ?? "UTC",
-          description: intent.schedule?.natural ?? "Every Monday",
+          cron_expression: intent.scheduleCron ?? "0 8 * * 1",
+          timezone: "UTC",
+          description: intent.scheduleNatural ?? "Every Monday",
         },
       };
     }

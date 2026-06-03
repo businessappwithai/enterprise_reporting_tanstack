@@ -124,9 +124,9 @@ export async function validateRBACForExecution(
 
   if (!user || !user.is_active) {
     return {
-      driftType: "USER_DEACTIVATED",
+      driftType: "PERMISSION_REVOKED",
       canProceed: false,
-      detail: `User ${userId} is no longer active`,
+      details: `User ${userId} is no longer active`,
     };
   }
 
@@ -141,9 +141,9 @@ export async function validateRBACForExecution(
 
   if (roleIds.length === 0) {
     return {
-      driftType: "ROLE_REMOVED",
+      driftType: "PERMISSION_REVOKED",
       canProceed: false,
-      detail: `User ${userId} has no roles assigned`,
+      details: `User ${userId} has no roles assigned`,
     };
   }
 
@@ -156,7 +156,7 @@ export async function validateRBACForExecution(
 
   const hasAdminRole = adminRoles.some((r) => r.name.toLowerCase() === "admin");
   if (hasAdminRole) {
-    return { driftType: "NO_DRIFT", canProceed: true };
+    return { driftType: "NO_DRIFT", canProceed: true, details: "Admin role" };
   }
 
   // 4. Check resource_permissions for this data source
@@ -172,7 +172,7 @@ export async function validateRBACForExecution(
     return {
       driftType: "PERMISSION_REVOKED",
       canProceed: false,
-      detail: `No resource permission found for data source ${dataSourceId}`,
+      details: `No resource permission found for data source ${dataSourceId}`,
     };
   }
 
@@ -184,11 +184,11 @@ export async function validateRBACForExecution(
     return {
       driftType: "PERMISSION_REVOKED",
       canProceed: false,
-      detail: `Permission level '${permission.permission_level}' is insufficient (need execute or admin)`,
+      details: `Permission level '${permission.permission_level}' is insufficient (need execute or admin)`,
     };
   }
 
-  return { driftType: "NO_DRIFT", canProceed: true };
+  return { driftType: "NO_DRIFT", canProceed: true, details: "Sufficient permission" };
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -274,20 +274,15 @@ export function evaluateThreshold(
   rule: MonitoringRule,
   previousValue?: number
 ): ThresholdEvaluation {
-  const base: Omit<ThresholdEvaluation, "status" | "severity" | "message"> = {
+  const base: Omit<ThresholdEvaluation, "status" | "breachSeverity" | "message"> = {
     actualValue: null,
     thresholdValue: rule.threshold_value,
-    deviationPct: null,
+    operator: rule.threshold_operator,
     deltaFromPrevious: undefined,
   };
 
   if (rows.length === 0) {
-    return {
-      ...base,
-      status: "NO_DATA",
-      severity: "INFO",
-      message: "No data returned from report query",
-    };
+    return { ...base, status: "NO_DATA", message: "No data returned from report query" };
   }
 
   // Find the metric column value (case-insensitive)
@@ -300,7 +295,6 @@ export function evaluateThreshold(
     return {
       ...base,
       status: "NO_DATA",
-      severity: "INFO",
       message: `Metric column '${rule.metric_column}' not found in result (available: ${Object.keys(firstRow).join(", ")})`,
     };
   }
@@ -312,7 +306,6 @@ export function evaluateThreshold(
     return {
       ...base,
       status: "NO_DATA",
-      severity: "INFO",
       message: `Metric column '${rule.metric_column}' value '${String(rawValue)}' could not be parsed as a number`,
     };
   }
@@ -362,15 +355,14 @@ export function evaluateThreshold(
     return {
       actualValue,
       thresholdValue: threshold,
-      deviationPct: null,
+      operator: rule.threshold_operator,
       deltaFromPrevious,
       status: "PASS",
-      severity: "INFO",
       message: `Metric value ${actualValue} satisfies threshold condition (${rule.threshold_operator} ${threshold})`,
     };
   }
 
-  // Compute deviation
+  // Compute deviation percentage from threshold
   const deviationPct =
     threshold !== 0
       ? Math.abs(((actualValue - threshold) / Math.abs(threshold)) * 100)
@@ -383,21 +375,21 @@ export function evaluateThreshold(
     return {
       actualValue,
       thresholdValue: threshold,
-      deviationPct,
+      operator: rule.threshold_operator,
       deltaFromPrevious,
       status: "ESCALATE",
-      severity: "CRITICAL",
-      message: `CRITICAL: Metric value ${actualValue} breaches threshold (${rule.threshold_operator} ${threshold}) by ${deviationPct.toFixed(1)}% — exceeds escalation threshold of ${escalationPct}%`,
+      breachSeverity: "CRITICAL",
+      message: `CRITICAL: Metric value ${actualValue} breaches threshold (${rule.threshold_operator} ${threshold}) by ${deviationPct!.toFixed(1)}% — exceeds escalation threshold of ${escalationPct}%`,
     };
   }
 
   return {
     actualValue,
     thresholdValue: threshold,
-    deviationPct,
+    operator: rule.threshold_operator,
     deltaFromPrevious,
     status: "BREACH",
-    severity: "WARNING",
+    breachSeverity: "WARNING",
     message: `WARNING: Metric value ${actualValue} breaches threshold (${rule.threshold_operator} ${threshold})${deviationPct != null ? ` by ${deviationPct.toFixed(1)}%` : ""}`,
   };
 }
@@ -481,10 +473,9 @@ export async function dispatchAlerts(
     ruleName: rule.name,
     executionId,
     status: evaluation.status,
-    severity: evaluation.severity,
+    severity: evaluation.breachSeverity,
     actualValue: evaluation.actualValue,
     thresholdValue: evaluation.thresholdValue,
-    deviationPct: evaluation.deviationPct,
     message: evaluation.message,
     triggeredAt: new Date().toISOString(),
   };
@@ -497,7 +488,7 @@ export async function dispatchAlerts(
         continue;
       }
 
-      const severityLabel = evaluation.severity === "CRITICAL" ? "CRITICAL" : "WARNING";
+      const severityLabel = evaluation.breachSeverity === "CRITICAL" ? "CRITICAL" : "WARNING";
       const emailTemplate = {
         subject: `[${severityLabel}] Monitoring Alert: ${rule.name}`,
         htmlBody: `<!DOCTYPE html>
@@ -506,11 +497,11 @@ export async function dispatchAlerts(
   <style>
     body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
     .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: ${evaluation.severity === "CRITICAL" ? "#dc2626" : "#d97706"}; color: white; padding: 20px; border-radius: 8px 8px 0 0; }
+    .header { background: ${evaluation.breachSeverity === "CRITICAL" ? "#dc2626" : "#d97706"}; color: white; padding: 20px; border-radius: 8px 8px 0 0; }
     .content { background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
-    .metric-box { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid ${evaluation.severity === "CRITICAL" ? "#dc2626" : "#d97706"}; }
+    .metric-box { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid ${evaluation.breachSeverity === "CRITICAL" ? "#dc2626" : "#d97706"}; }
     .footer { text-align: center; margin-top: 20px; color: #6b7280; font-size: 12px; }
-    .badge { display: inline-block; padding: 4px 12px; border-radius: 4px; font-weight: bold; background: ${evaluation.severity === "CRITICAL" ? "#fee2e2" : "#fef3c7"}; color: ${evaluation.severity === "CRITICAL" ? "#991b1b" : "#92400e"}; }
+    .badge { display: inline-block; padding: 4px 12px; border-radius: 4px; font-weight: bold; background: ${evaluation.breachSeverity === "CRITICAL" ? "#fee2e2" : "#fef3c7"}; color: ${evaluation.breachSeverity === "CRITICAL" ? "#991b1b" : "#92400e"}; }
   </style>
 </head>
 <body>
@@ -541,7 +532,7 @@ export async function dispatchAlerts(
           status: evaluation.status,
           actualValue: String(evaluation.actualValue ?? "N/A"),
           thresholdValue: String(evaluation.thresholdValue),
-          deviationPct: evaluation.deviationPct != null ? evaluation.deviationPct.toFixed(1) : "",
+          deviationPct: evaluation.deltaFromPrevious != null ? evaluation.deltaFromPrevious.toFixed(1) : "",
           message: evaluation.message,
           triggeredAt: alertPayload.triggeredAt,
         }
@@ -569,7 +560,7 @@ export async function dispatchAlerts(
         try {
           await createNotification({
             userId: uid,
-            type: evaluation.severity === "CRITICAL" ? "error" : "warning",
+            type: evaluation.breachSeverity === "CRITICAL" ? "error" : "warning",
             title: `Monitoring Alert: ${rule.name}`,
             message: evaluation.message,
             metadata: alertPayload,
@@ -704,7 +695,8 @@ export async function executeMonitoringEvaluation(
   }
 
   // ── Phase 2: RBAC validation ─────────────────────────────────────────────
-  const rbacResult = await validateRBACForExecution(payload.userId, rule.data_source_id);
+  const ruleOwnerId = rule.created_by;
+  const rbacResult = await validateRBACForExecution(ruleOwnerId, rule.data_source_id);
 
   if (!rbacResult.canProceed) {
     // Pause the rule automatically
@@ -712,7 +704,7 @@ export async function executeMonitoringEvaluation(
       .updateTable("monitoring_rules")
       .set({
         is_paused: 1,
-        pause_reason: `RBAC drift detected: ${rbacResult.driftType} — ${rbacResult.detail ?? ""}`,
+        pause_reason: `RBAC drift detected: ${rbacResult.driftType} — ${rbacResult.details ?? ""}`,
         updated_at: new Date().toISOString(),
       })
       .where("id", "=", rule.id)
@@ -724,7 +716,7 @@ export async function executeMonitoringEvaluation(
         userId: rule.created_by,
         type: "error",
         title: `Monitoring Rule Paused: ${rule.name}`,
-        message: `Rule paused due to permission change (${rbacResult.driftType}): ${rbacResult.detail ?? "Access revoked"}`,
+        message: `Rule paused due to permission change (${rbacResult.driftType}): ${rbacResult.details ?? "Access revoked"}`,
         metadata: { ruleId: rule.id, driftType: rbacResult.driftType },
       });
     } catch {
@@ -732,7 +724,7 @@ export async function executeMonitoringEvaluation(
     }
 
     await logAudit({
-      userId: payload.userId,
+      userId: ruleOwnerId,
       action: "execute",
       resourceType: "data_source",
       resourceId: rule.data_source_id,
@@ -740,7 +732,7 @@ export async function executeMonitoringEvaluation(
         operation: "monitoring_rbac_drift",
         ruleId: rule.id,
         driftType: rbacResult.driftType,
-        detail: rbacResult.detail,
+        detail: rbacResult.details,
       },
     });
 
@@ -839,7 +831,7 @@ export async function executeMonitoringEvaluation(
 
   // ── Phase 9: Audit log ────────────────────────────────────────────────────
   await logAudit({
-    userId: payload.userId,
+    userId: ruleOwnerId,
     action: "execute",
     resourceType: "data_source",
     resourceId: rule.data_source_id,
