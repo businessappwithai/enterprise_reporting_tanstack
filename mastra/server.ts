@@ -379,6 +379,123 @@ Respond with ONLY a JSON object in this exact format:
       }
     }
 
+    // ── Supervisor: build-monitoring-pipeline ─────────────────────────────────
+    // Orchestrates intent-classifier, report-builder, rule-builder, and schedule
+    // specialist agents to produce a complete monitoring pipeline definition.
+    if (path === "/api/build-monitoring-pipeline" && req.method === "POST") {
+      try {
+        const {
+          nlRequest,
+          userId,
+          dataSourceId,
+          dataSourceType,
+          schemaText,
+          allowedTableNames,
+          rbacSnapshot,
+        } = await req.json() as {
+          nlRequest: string;
+          userId: string;
+          dataSourceId: string;
+          dataSourceType: string;
+          schemaText: string;
+          allowedTableNames: string[];
+          rbacSnapshot: unknown;
+          sessionId?: string;
+        };
+
+        if (!nlRequest || !schemaText) {
+          return Response.json(
+            { error: "nlRequest and schemaText are required" },
+            { status: 400, headers: corsHeaders }
+          );
+        }
+
+        const { runSupervisorAgent } = await import("./agents/supervisor-agent");
+        const result = await runSupervisorAgent({
+          nlRequest,
+          userId,
+          dataSourceId,
+          dataSourceType,
+          schemaText,
+          allowedTableNames: allowedTableNames ?? [],
+          rbacSnapshot,
+        });
+
+        return Response.json(result, { headers: corsHeaders });
+      } catch (error) {
+        console.error("[Mastra] build-monitoring-pipeline error:", error);
+        return Response.json(
+          {
+            success: false,
+            error: `Supervisor agent failed: ${error instanceof Error ? error.message : String(error)}`,
+          },
+          { status: 500, headers: corsHeaders }
+        );
+      }
+    }
+
+    // ── RBAC-filtered schema for a user+datasource pair ───────────────────────
+    if (path === "/api/rbac-schema" && req.method === "POST") {
+      try {
+        const { userId, dataSourceId } = await req.json() as { userId: string; dataSourceId: string };
+        if (!userId || !dataSourceId) {
+          return Response.json(
+            { error: "userId and dataSourceId are required" },
+            { status: 400, headers: corsHeaders }
+          );
+        }
+        // Return a placeholder — actual RBAC schema resolution happens in the app layer
+        // This endpoint is for direct Mastra-to-app queries in multi-service deployments
+        return Response.json(
+          { message: "Use the app's /api/adk/analyze-intent endpoint for full RBAC resolution" },
+          { headers: corsHeaders }
+        );
+      } catch (error) {
+        return Response.json({ error: String(error) }, { status: 500, headers: corsHeaders });
+      }
+    }
+
+    // ── Validate a monitoring rule (dry-run) ──────────────────────────────────
+    if (path === "/api/validate-monitoring-rule" && req.method === "POST") {
+      try {
+        const { sql, metricColumn, thresholdOperator, thresholdValue } =
+          await req.json() as Record<string, unknown>;
+
+        const errors: string[] = [];
+        if (!sql || typeof sql !== "string" || !sql.trim()) {
+          errors.push("sql is required and must be a non-empty string");
+        }
+        if (!metricColumn || typeof metricColumn !== "string") {
+          errors.push("metricColumn is required");
+        }
+        const validOperators = ["gt", "gte", "lt", "lte", "eq", "neq", "between"];
+        if (!thresholdOperator || !validOperators.includes(thresholdOperator as string)) {
+          errors.push(`thresholdOperator must be one of: ${validOperators.join(", ")}`);
+        }
+        if (thresholdValue === undefined || thresholdValue === null || typeof thresholdValue !== "number") {
+          errors.push("thresholdValue must be a number");
+        }
+
+        // SQL read-only check
+        if (typeof sql === "string") {
+          const upper = sql.trim().toUpperCase();
+          const forbidden = ["INSERT", "UPDATE", "DELETE", "DROP", "TRUNCATE", "ALTER", "CREATE"];
+          for (const kw of forbidden) {
+            if (new RegExp(`\\b${kw}\\b`).test(upper)) {
+              errors.push(`SQL contains forbidden keyword: ${kw}`);
+            }
+          }
+        }
+
+        return Response.json({ valid: errors.length === 0, errors }, { headers: corsHeaders });
+      } catch (error) {
+        return Response.json(
+          { valid: false, errors: [`Validation error: ${error}`] },
+          { status: 500, headers: corsHeaders }
+        );
+      }
+    }
+
     return Response.json({ error: "Not found" }, { status: 404, headers: corsHeaders });
   },
 });
@@ -386,10 +503,13 @@ Respond with ONLY a JSON object in this exact format:
 console.log(`[Mastra Agent] Server running at http://localhost:${PORT}`);
 console.log(`[Mastra Agent] LLM backend: ${LLAMA_URL} (model: ${LLAMA_MODEL})`);
 console.log(`[Mastra Agent] Endpoints:`);
-console.log(`  GET  /health              — Health check`);
-console.log(`  POST /v1/chat/completions — OpenAI-compatible chat (proxied to llama.cpp)`);
-console.log(`  GET  /v1/models           — Models list`);
-console.log(`  POST /api/nl-to-sql       — NL to SQL translation`);
-console.log(`  POST /api/validate-sql    — SQL validation`);
-console.log(`  POST /v1/embeddings       — Embedding generation (proxied to llama.cpp)`);
+console.log(`  GET  /health                         — Health check`);
+console.log(`  POST /v1/chat/completions             — OpenAI-compatible chat (proxied to llama.cpp)`);
+console.log(`  GET  /v1/models                       — Models list`);
+console.log(`  POST /api/nl-to-sql                   — NL to SQL translation`);
+console.log(`  POST /api/validate-sql                — SQL validation`);
+console.log(`  POST /v1/embeddings                   — Embedding generation (proxied to llama.cpp)`);
+console.log(`  POST /api/build-monitoring-pipeline   — Supervisor agent: full monitoring pipeline`);
+console.log(`  POST /api/rbac-schema                 — RBAC-filtered schema`);
+console.log(`  POST /api/validate-monitoring-rule    — Monitoring rule dry-run validation`);
 console.log(`[Mastra Agent] Embedding backend: ${LLAMA_EMBEDDING_URL} (model: ${LLAMA_EMBEDDING_MODEL})`);

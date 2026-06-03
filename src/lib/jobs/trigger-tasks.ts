@@ -7,6 +7,8 @@ import { task } from "@trigger.dev/sdk/v3";
 import { exportQueryData } from "./workers/export-worker";
 import { generateReport } from "./workers/report-worker";
 import { sendEmailBatch } from "./workers/email-batch-worker";
+import { executeMonitoringEvaluation } from "./workers/monitoring-worker";
+import type { MonitoringEvaluatePayload } from "@/types/monitoring";
 import type {
   ReportJobData,
   ChartJobData,
@@ -133,6 +135,45 @@ export const scheduledRefreshTask = task({
         success: false,
         duration: Date.now() - startTime,
         error: error instanceof Error ? error.message : "Scheduled refresh failed",
+      };
+    }
+  },
+});
+
+/**
+ * Monitoring Evaluation Task
+ * Executes a monitoring rule: runs the report SQL, evaluates the threshold,
+ * dispatches alerts on breach, and records the execution result.
+ *
+ * Retry strategy: 3 attempts with exponential backoff (5s → 10s → 20s).
+ * maxDuration: 5 minutes per execution (covers slow external DB queries).
+ */
+export const monitoringEvaluateTask = task({
+  id: "monitoring:evaluate",
+  maxDuration: 300,
+  retry: {
+    maxAttempts: 3,
+    factor: 2,
+    minTimeoutInMs: 5_000,
+    maxTimeoutInMs: 60_000,
+  },
+  run: async (payload: MonitoringEvaluatePayload) => {
+    const startTime = Date.now();
+    try {
+      const result = await executeMonitoringEvaluation(payload);
+      return {
+        success: result.status !== "ERROR",
+        status: result.status,
+        metricValue: result.metricValue,
+        duration: Date.now() - startTime,
+        error: result.error,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        status: "ERROR",
+        duration: Date.now() - startTime,
+        error: error instanceof Error ? error.message : "Monitoring evaluation failed",
       };
     }
   },

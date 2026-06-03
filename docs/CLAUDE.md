@@ -51,7 +51,7 @@ Enterprise Reporting and Dashboard System built with **TanStack Start** (full-st
 | Data Source Connections | Kysely (PostgreSQL, MySQL, SQL Server, Oracle, SQLite) |
 | Auth | Custom JWT (jose) with HTTP-only cookies |
 | Charts | Recharts, ECharts |
-| Job Queue | Trigger.dev (Cloud-based job processing with local Mastra.ai API) |
+| Job Queue | Trigger.dev (self-hosted on-premise) + built-in fallback cron runner |
 | AI/NL Query | OpenAI (via @ai-sdk/openai), CopilotKit, Ollama (local) |
 | Testing | Playwright (E2E only) |
 | Styling | Tailwind CSS with CSS variables (HSL color system) |
@@ -476,7 +476,7 @@ Migrations live in `src/lib/db/migrations/` and follow the pattern:
 
 ## Background Jobs with Trigger.dev
 
-This application uses **Trigger.dev** for reliable background job processing, replacing the previous BullMQ + Redis setup. Trigger.dev provides cloud-native job orchestration while supporting local development via Mastra.ai server API endpoints.
+This application uses **Trigger.dev** (self-hosted on-premise) for reliable background job processing, replacing the previous BullMQ + Redis setup. When Trigger.dev is not configured, a built-in on-premise cron runner takes over automatically — a pure-Bun interval loop with zero external dependencies. Both backends integrate with the local Mastra.ai supervisor agent for NL-driven rule creation.
 
 ### Job Types
 
@@ -523,7 +523,7 @@ Tasks are defined in `src/lib/jobs/trigger-tasks.ts`:
 
 ### Monitoring & Debugging
 
-- **Trigger.dev Dashboard:** https://dashboard.trigger.dev (for cloud deployments)
+- **Trigger.dev Dashboard:** Available via self-hosted Trigger.dev instance (see `TRIGGER_API_URL`)
 - **Local Logs:** Printed to console during development
 - **Job Status:** Check via API or dashboard
 

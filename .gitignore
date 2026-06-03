@@ -81,3 +81,4 @@ job-outputs/
 /srv/
 .gstack/
 auth.json
+.claude/worktrees/

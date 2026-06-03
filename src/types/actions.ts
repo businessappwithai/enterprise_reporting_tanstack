@@ -278,12 +278,44 @@ export const AUDIT_ACTIONS = {
     EXPORT_FAILED: "import_export:export_failed" as const,
     FORMAT_CONVERSION: "import_export:format_conversion" as const,
   },
+
+  // === MONITORING & ADK ===
+  MONITORING: {
+    RULE_CREATED: "monitoring:rule_created" as const,
+    RULE_UPDATED: "monitoring:rule_updated" as const,
+    RULE_DELETED: "monitoring:rule_deleted" as const,
+    RULE_PAUSED: "monitoring:rule_paused" as const,
+    RULE_RESUMED: "monitoring:rule_resumed" as const,
+    RULE_EXECUTED: "monitoring:rule_executed" as const,
+    BREACH_DETECTED: "monitoring:breach_detected" as const,
+    ESCALATION_DETECTED: "monitoring:escalation_detected" as const,
+    ALERT_DISPATCHED: "monitoring:alert_dispatched" as const,
+    NO_DATA: "monitoring:no_data" as const,
+    RBAC_DRIFT_DETECTED: "monitoring:rbac_drift_detected" as const,
+    RBAC_REVOKED: "monitoring:rbac_revoked" as const,
+  },
+
+  // === ADK PIPELINE ===
+  ADK: {
+    INTENT_RECEIVED: "adk:intent_received" as const,
+    INTENT_CLASSIFIED: "adk:intent_classified" as const,
+    PIPELINE_STARTED: "adk:pipeline_started" as const,
+    PIPELINE_COMPLETED: "adk:pipeline_completed" as const,
+    PIPELINE_FAILED: "adk:pipeline_failed" as const,
+    SCHEMA_INTROSPECTED: "adk:schema_introspected" as const,
+    SQL_GENERATED: "adk:sql_generated" as const,
+    RULE_PERSISTED: "adk:rule_persisted" as const,
+    CLARIFICATION_REQUESTED: "adk:clarification_requested" as const,
+  },
+
 } as const;
 
 /**
  * Audit action types - Union of all possible actions
  */
-export type AuditAction = typeof AUDIT_ACTIONS[keyof typeof AUDIT_ACTIONS][keyof typeof AUDIT_ACTIONS[keyof typeof AUDIT_ACTIONS]];
+export type AuditAction = {
+  [K in keyof typeof AUDIT_ACTIONS]: typeof AUDIT_ACTIONS[K][keyof typeof AUDIT_ACTIONS[K]];
+}[keyof typeof AUDIT_ACTIONS];
 
 /**
  * Get all available actions flattened for reference

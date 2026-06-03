@@ -197,3 +197,8 @@ async function exportToPdf(rows: Record<string, unknown>[], outputPath: string):
   doc.save(outputPath);
   return rows.length;
 }
+
+// Adapter for Trigger.dev tasks — accepts plain data instead of a BullMQ Job
+export async function exportQueryData(data: ExportJobData): Promise<JobResult> {
+  return processExportJob({ data, updateProgress: async () => {} } as any);
+}
