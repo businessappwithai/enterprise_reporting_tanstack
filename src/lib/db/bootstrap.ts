@@ -452,6 +452,18 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
       UNIQUE KEY unique_field (entity_header_id, field_name)
     )`,
 
+    // Schema cache — stores introspected schema metadata for ADK/NL-to-SQL RAG context
+    sql`CREATE TABLE IF NOT EXISTS ds_schema_cache (
+      id VARCHAR(255) PRIMARY KEY,
+      data_source_id VARCHAR(255) NOT NULL UNIQUE,
+      schema_metadata LONGTEXT NOT NULL,
+      sample_data LONGTEXT,
+      embedding_data LONGTEXT,
+      last_introspected_at VARCHAR(255) DEFAULT CURRENT_TIMESTAMP,
+      created_at VARCHAR(255) DEFAULT CURRENT_TIMESTAMP,
+      updated_at VARCHAR(255) DEFAULT CURRENT_TIMESTAMP
+    )`,
+
     // ADK intents — stores NL monitoring pipeline intent results
     sql`CREATE TABLE IF NOT EXISTS adk_intents (
       id VARCHAR(255) PRIMARY KEY,
