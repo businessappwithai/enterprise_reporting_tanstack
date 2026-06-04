@@ -23,6 +23,9 @@ function parseJsonColumn<T>(raw: unknown, fallback: T): T {
 }
 
 function deserializeRule(row: Record<string, unknown>) {
+  const isActive = Boolean(row.is_active);
+  const isPaused = Boolean(row.is_paused);
+  const status = isPaused ? "paused" : isActive ? "active" : "error";
   return {
     ...row,
     alert_channels: parseJsonColumn<AlertChannel[]>(row.alert_channels, []),
@@ -30,8 +33,11 @@ function deserializeRule(row: Record<string, unknown>) {
     rbac_snapshot: parseJsonColumn(row.rbac_snapshot, {}),
     notify_on_pass: Boolean(row.notify_on_pass),
     notify_on_no_data: Boolean(row.notify_on_no_data),
-    is_active: Boolean(row.is_active),
-    is_paused: Boolean(row.is_paused),
+    is_active: isActive,
+    is_paused: isPaused,
+    status,
+    schedule_cron: row.cron_expression,
+    last_run_at: row.last_executed_at ?? null,
     threshold_value: Number(row.threshold_value),
     threshold_upper_bound: row.threshold_upper_bound != null ? Number(row.threshold_upper_bound) : undefined,
     escalation_threshold_pct: Number(row.escalation_threshold_pct ?? 20),
@@ -53,22 +59,56 @@ export const Route = createFileRoute("/api/monitoring/rules")({
           const isAdmin = session.user.roles.some((r: string) => r.toLowerCase() === "admin");
           const db = getDb();
 
-          let query = (db as any).selectFrom("monitoring_rules");
-          if (!isAdmin) query = query.where("created_by", "=", session.user.id);
+          let query = (db as any)
+            .selectFrom("monitoring_rules")
+            .leftJoin("data_sources", "data_sources.id", "monitoring_rules.data_source_id");
+          if (!isAdmin) query = query.where("monitoring_rules.created_by", "=", session.user.id);
           if (statusFilter === "active") {
-            query = query.where("is_active", "=", true).where("is_paused", "=", false);
+            query = query.where("monitoring_rules.is_active", "=", true).where("monitoring_rules.is_paused", "=", false);
           } else if (statusFilter === "paused") {
-            query = query.where("is_paused", "=", true);
+            query = query.where("monitoring_rules.is_paused", "=", true);
           }
 
-          const totalRow = await query
-            .select((db as any).fn.count("id").as("count"))
+          const totalRow = await (db as any)
+            .selectFrom("monitoring_rules")
+            .select((db as any).fn.count("monitoring_rules.id").as("count"))
             .executeTakeFirst() as { count: number } | undefined;
           const total = Number(totalRow?.count ?? 0);
 
           const rules = await query
-            .selectAll()
-            .orderBy("created_at", "desc")
+            .select([
+              "monitoring_rules.id",
+              "monitoring_rules.name",
+              "monitoring_rules.description",
+              "monitoring_rules.data_source_id",
+              "data_sources.name as data_source_name",
+              "monitoring_rules.metric_column",
+              "monitoring_rules.threshold_operator",
+              "monitoring_rules.threshold_value",
+              "monitoring_rules.threshold_upper_bound",
+              "monitoring_rules.escalation_threshold_pct",
+              "monitoring_rules.cron_expression",
+              "monitoring_rules.timezone",
+              "monitoring_rules.alert_channels",
+              "monitoring_rules.alert_recipients",
+              "monitoring_rules.webhook_url",
+              "monitoring_rules.notify_on_pass",
+              "monitoring_rules.notify_on_no_data",
+              "monitoring_rules.is_active",
+              "monitoring_rules.is_paused",
+              "monitoring_rules.pause_reason",
+              "monitoring_rules.trigger_schedule_id",
+              "monitoring_rules.last_executed_at",
+              "monitoring_rules.last_execution_status",
+              "monitoring_rules.last_metric_value",
+              "monitoring_rules.consecutive_breaches",
+              "monitoring_rules.total_executions",
+              "monitoring_rules.total_alerts_sent",
+              "monitoring_rules.created_by",
+              "monitoring_rules.created_at",
+              "monitoring_rules.updated_at",
+            ])
+            .orderBy("monitoring_rules.created_at", "desc")
             .limit(pageSize)
             .offset(page * pageSize)
             .execute() as Record<string, unknown>[];
@@ -121,7 +161,7 @@ export const Route = createFileRoute("/api/monitoring/rules")({
           const rbacSnapshot = await resolveRBACContext(userId, securityContext);
 
           const id = crypto.randomUUID();
-          const now = new Date().toISOString();
+          const now = new Date().toISOString().slice(0, 19).replace("T", " ");
 
           let reportDefinitionId = body.reportDefinitionId;
           if (!reportDefinitionId && body.sql) {

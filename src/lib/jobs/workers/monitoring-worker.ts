@@ -8,6 +8,10 @@
 
 import { randomUUID } from "node:crypto";
 import { getDb } from "@/lib/db/config";
+
+function mariadbNow(): string {
+  return new Date().toISOString().slice(0, 19).replace("T", " ");
+}
 import { getConnection } from "@/lib/db/connection-manager";
 import { decrypt } from "@/lib/security/encryption";
 import { logAudit } from "@/lib/security/audit";
@@ -154,7 +158,10 @@ export async function validateRBACForExecution(
     .where("id", "in", roleIds)
     .execute();
 
-  const hasAdminRole = adminRoles.some((r) => r.name.toLowerCase() === "admin");
+  const hasAdminRole = adminRoles.some((r) => {
+    const n = r.name.toLowerCase();
+    return n === "admin" || n === "administrator" || n.startsWith("admin");
+  });
   if (hasAdminRole) {
     return { driftType: "NO_DRIFT", canProceed: true, details: "Admin role" };
   }
@@ -645,7 +652,7 @@ export async function recordExecution(data: {
 }): Promise<string> {
   const db = getDb();
   const id = randomUUID();
-  const now = new Date().toISOString();
+  const now = mariadbNow();
 
   await (db as any)
     .insertInto("monitoring_executions")
@@ -705,7 +712,7 @@ export async function executeMonitoringEvaluation(
       .set({
         is_paused: 1,
         pause_reason: `RBAC drift detected: ${rbacResult.driftType} — ${rbacResult.details ?? ""}`,
-        updated_at: new Date().toISOString(),
+        updated_at: mariadbNow(),
       })
       .where("id", "=", rule.id)
       .execute();
@@ -817,14 +824,14 @@ export async function executeMonitoringEvaluation(
     .updateTable("monitoring_rules")
     .set({
       total_executions: rule.total_executions + 1,
-      last_executed_at: new Date().toISOString(),
+      last_executed_at: mariadbNow(),
       last_execution_status: evaluation.status,
       last_metric_value: evaluation.actualValue,
       consecutive_breaches: newConsecutiveBreaches,
       total_alerts_sent: alertDispatched
         ? rule.total_alerts_sent + alertResults.filter((r) => r.success).length
         : rule.total_alerts_sent,
-      updated_at: new Date().toISOString(),
+      updated_at: mariadbNow(),
     })
     .where("id", "=", rule.id)
     .execute();

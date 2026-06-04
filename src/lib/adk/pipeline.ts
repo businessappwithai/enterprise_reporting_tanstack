@@ -26,17 +26,21 @@ import { executeSqlGenerate } from "./tools/sql-generate-tool";
 import { executeRulePersist } from "./tools/rule-persist-tool";
 import { logAudit } from "@/lib/security/audit";
 import { AUDIT_ACTIONS } from "@/types/actions";
-import type { ADKIntent, ADKPipelineResult, ADKStoredIntent } from "@/types/adk";
+import type { ADKIntent, ADKPipelineResult, ADKPreview, ADKStoredIntent } from "@/types/adk";
 import type { SecurityContext } from "@/lib/auth/rbac";
 
 // ─── ADK Intent Store (inline — avoids circular import with monitoring-repository) ─
+
+function mariadbNow(): string {
+  return new Date().toISOString().slice(0, 19).replace("T", " ");
+}
 
 async function storeADKIntent(
   data: Omit<ADKStoredIntent, "id" | "created_at">
 ): Promise<string> {
   const db = getDb();
   const id = crypto.randomUUID();
-  const now = new Date().toISOString();
+  const now = mariadbNow();
   await (db as any)
     .insertInto("adk_intents")
     .values({
@@ -144,7 +148,7 @@ async function callMastraSupervisor(
       rbacSnapshot,
       sessionId,
     }),
-    signal: AbortSignal.timeout(60_000),
+    signal: AbortSignal.timeout(180_000),
   });
 
   if (!response.ok) {
@@ -161,7 +165,8 @@ export async function runADKPipeline(
   nlRequest: string,
   userId: string,
   dataSourceId: string,
-  sessionId?: string
+  sessionId?: string,
+  options: { dryRun?: boolean } = {}
 ): Promise<ADKPipelineResult> {
   const pipelineStart = Date.now();
   let intentId: string | undefined;
@@ -267,7 +272,13 @@ export async function runADKPipeline(
     });
 
     // ── Stage 4–6: Mastra Supervisor Orchestration ────────────────────────────
-    // The supervisor calls specialist agents for SQL gen, rule build, and schedule
+    // The supervisor calls specialist agents for SQL gen, rule build, and schedule.
+    // Limit schema to first 4000 chars to keep LLM prompt manageable.
+    const MAX_SCHEMA_CHARS = 4000;
+    const truncatedSchema = schema.schemaText.length > MAX_SCHEMA_CHARS
+      ? schema.schemaText.slice(0, MAX_SCHEMA_CHARS) + "\n... (schema truncated for LLM context)"
+      : schema.schemaText;
+
     let supervisorResult: z.infer<typeof SupervisorResultSchema>;
     try {
       supervisorResult = await callMastraSupervisor(
@@ -275,7 +286,7 @@ export async function runADKPipeline(
         userId,
         dataSourceId,
         schema.dataSourceType,
-        schema.schemaText,
+        truncatedSchema,
         schema.allowedTableNames,
         rbacSnapshot,
         sessionId
@@ -285,7 +296,7 @@ export async function runADKPipeline(
       console.warn("[ADK] Mastra supervisor unreachable, falling back to direct SQL generation:", supervisorErr);
       const sqlResult = await executeSqlGenerate({
         nlQuestion: nlRequest,
-        schemaText: schema.schemaText,
+        schemaText: truncatedSchema,
         dataSourceType: schema.dataSourceType,
         dataSourceId,
       });
@@ -362,6 +373,31 @@ export async function runADKPipeline(
       resourceId: intentId,
       details: { metricColumn: supervisorResult.reportDefinition.metric_column },
     });
+
+    // Build preview for dry-run (analysis-only) mode
+    const preview: ADKPreview = {
+      name: supervisorResult.monitoringRule.name,
+      description: supervisorResult.monitoringRule.description,
+      sql: supervisorResult.reportDefinition.sql,
+      metricColumn: supervisorResult.reportDefinition.metric_column,
+      thresholdOperator: supervisorResult.monitoringRule.threshold_operator,
+      thresholdValue: supervisorResult.monitoringRule.threshold_value,
+      escalationThresholdPct: supervisorResult.monitoringRule.escalation_threshold_pct,
+      cronExpression: supervisorResult.schedule.cron_expression,
+      timezone: supervisorResult.schedule.timezone,
+      scheduleDescription: supervisorResult.schedule.description,
+      alertChannels: supervisorResult.monitoringRule.alert_channels,
+      notifyOnPass: supervisorResult.monitoringRule.notify_on_pass,
+      notifyOnNoData: supervisorResult.monitoringRule.notify_on_no_data,
+    };
+
+    if (options.dryRun) {
+      await updateADKIntent(intentId, {
+        pipeline_status: "partial",
+        error_message: "dry-run: awaiting user confirmation",
+      });
+      return { success: true, intentId, adkIntent: intent, preview };
+    }
 
     // ── Stage 6: Persist Report + Rule + Job ──────────────────────────────────
     const { reportDefinitionId, monitoringRuleId, jobDefinitionId } =

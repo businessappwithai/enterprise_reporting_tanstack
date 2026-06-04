@@ -47,6 +47,7 @@ const mainNavItems = [
   { href: "/jobs", label: "Jobs", icon: Play, permissionKey: "job" as const },
   { href: "/monitoring", label: "Monitoring", icon: Activity, permissionKey: "monitoring_rule" as const },
   { href: "/nl-query", label: "NL Query", icon: MessageSquare, permissionKey: "nl_query" as const },
+  { href: "/reports/generate", label: "Report Generator", icon: FileText, permissionKey: "report" as const },
 ];
 
 const adminNavItems = [

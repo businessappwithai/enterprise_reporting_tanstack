@@ -47,6 +47,23 @@ export interface ThresholdIntent {
   percentageChange?: boolean;
 }
 
+export interface ADKPreview {
+  name: string;
+  description: string;
+  sql: string;
+  metricColumn: string;
+  thresholdOperator: string;
+  thresholdValue: number;
+  thresholdUpperBound?: number;
+  escalationThresholdPct: number;
+  cronExpression: string;
+  timezone: string;
+  scheduleDescription: string;
+  alertChannels: string[];
+  notifyOnPass: boolean;
+  notifyOnNoData: boolean;
+}
+
 export interface ADKPipelineResult {
   success: boolean;
   intentId?: string;
@@ -55,6 +72,7 @@ export interface ADKPipelineResult {
   jobDefinitionId?: string;
   nextRunAt?: string;
   adkIntent?: ADKIntent;
+  preview?: ADKPreview;
   error?: string;
   clarificationNeeded?: boolean;
   clarificationPrompt?: string;

@@ -42,28 +42,30 @@ export async function introspectAndCacheSchema(dataSource: DataSource): Promise<
 
   // Cache in database
   const db = getDb();
-  const now = new Date().toISOString();
+  const now = new Date().toISOString().slice(0, 19).replace("T", " ");
+  const schemaMetadata = JSON.stringify(schemaInfo);
+  const sampleDataJson = JSON.stringify(sampleData);
 
   await (db as any)
     .insertInto("ds_schema_cache")
     .values({
       id: crypto.randomUUID(),
       data_source_id: dataSource.id,
-      schema_metadata: JSON.stringify(schemaInfo),
-      sample_data: JSON.stringify(sampleData),
+      schema_metadata: schemaMetadata,
+      sample_data: sampleDataJson,
       embedding_data: schemaText,
       last_introspected_at: now,
       created_at: now,
       updated_at: now,
     })
-    .onConflict("data_source_id")
-    .merge({
-      schema_metadata: JSON.stringify(schemaInfo),
-      sample_data: JSON.stringify(sampleData),
+    .onDuplicateKeyUpdate({
+      schema_metadata: schemaMetadata,
+      sample_data: sampleDataJson,
       embedding_data: schemaText,
       last_introspected_at: now,
       updated_at: now,
-    });
+    })
+    .execute();
 
   return { schemaInfo, sampleData, schemaText };
 }
@@ -77,7 +79,7 @@ export async function getSchemaContext(dataSource: DataSource): Promise<SchemaCo
 
   const cached = (await (db as any)
     .selectFrom("ds_schema_cache")
-    .where("data_source_id", dataSource.id)
+    .where("data_source_id", "=", dataSource.id)
     .selectAll()
     .executeTakeFirst()) as DsSchemaCache | undefined;
 
@@ -213,7 +215,7 @@ function extractRelationships(schemaInfo: SchemaInfo): Relationship[] {
  */
 export async function invalidateSchemaCache(dataSourceId: string): Promise<void> {
   const db = getDb();
-  await (db as any).deleteFrom("ds_schema_cache").where("data_source_id", dataSourceId);
+  await (db as any).deleteFrom("ds_schema_cache").where("data_source_id", "=", dataSourceId).execute();
 }
 
 /**
@@ -223,7 +225,7 @@ export async function getCachedEntityNames(dataSourceId: string): Promise<string
   const db = getDb();
   const cached = (await (db as any)
     .selectFrom("ds_schema_cache")
-    .where("data_source_id", dataSourceId)
+    .where("data_source_id", "=", dataSourceId)
     .selectAll()
     .executeTakeFirst()) as DsSchemaCache | undefined;
 

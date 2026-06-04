@@ -6,10 +6,13 @@ import {
   ChevronLeft,
   ChevronRight,
   History,
+  Loader2,
   Pause,
   Play,
   Plus,
+  Search,
   Trash2,
+  Zap,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -34,6 +37,7 @@ import {
 } from "@/components/ui/table";
 import { formatDateTime } from "@/lib/utils";
 import { ExecutionHistoryTable } from "./ExecutionHistoryTable";
+import { ExecutionInvestigateModal } from "./ExecutionInvestigateModal";
 
 interface MonitoringRule {
   id: string;
@@ -156,6 +160,7 @@ export function MonitoringRuleList() {
   const pageSize = 20;
   const [historyRuleId, setHistoryRuleId] = useState<string | null>(null);
   const [deleteRuleId, setDeleteRuleId] = useState<string | null>(null);
+  const [investigateRule, setInvestigateRule] = useState<{ id: string; name: string } | null>(null);
 
   const { data, isLoading } = useQuery<MonitoringRulesResponse>({
     queryKey: ["monitoring-rules", page, pageSize],
@@ -206,6 +211,39 @@ export function MonitoringRuleList() {
     },
     onError: (err) => {
       toast.error(err instanceof Error ? err.message : "Delete failed");
+    },
+  });
+
+  const [runningRuleId, setRunningRuleId] = useState<string | null>(null);
+
+  const runMutation = useMutation({
+    mutationFn: async (id: string) => {
+      setRunningRuleId(id);
+      const res = await fetch(`/api/monitoring/rules/${id}?action=run`, {
+        method: "PATCH",
+      });
+      if (!res.ok) throw new Error("Failed to run rule");
+      return res.json() as Promise<{ result: { status: string; metricValue?: number | null; error?: string } }>;
+    },
+    onSuccess: (data, id) => {
+      const { result } = data;
+      setRunningRuleId(null);
+      queryClient.invalidateQueries({ queryKey: ["monitoring-rules"] });
+      if (result.status === "BREACH" || result.status === "ESCALATE") {
+        toast.warning(`Rule executed — BREACH detected (value: ${result.metricValue ?? "N/A"})`);
+      } else if (result.status === "PASS") {
+        toast.success(`Rule executed — threshold passed (value: ${result.metricValue ?? "N/A"})`);
+      } else if (result.status === "NO_DATA") {
+        toast.info("Rule executed — no data returned");
+      } else if (result.status === "SKIPPED") {
+        toast.info("Rule skipped (paused or inactive)");
+      } else {
+        toast.success(`Rule executed — status: ${result.status}`);
+      }
+    },
+    onError: (err) => {
+      setRunningRuleId(null);
+      toast.error(err instanceof Error ? err.message : "Run failed");
     },
   });
 
@@ -300,6 +338,27 @@ export function MonitoringRuleList() {
                       <Button
                         variant="ghost"
                         size="sm"
+                        onClick={() => setInvestigateRule({ id: rule.id, name: rule.name })}
+                        title="Investigate last run"
+                      >
+                        <Search className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={runningRuleId === rule.id}
+                        onClick={() => runMutation.mutate(rule.id)}
+                        title="Run now"
+                      >
+                        {runningRuleId === rule.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Zap className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         disabled={toggleMutation.isPending}
                         onClick={() =>
                           toggleMutation.mutate({
@@ -384,6 +443,15 @@ export function MonitoringRuleList() {
           )}
         </DialogContent>
       </Dialog>
+
+      {investigateRule && (
+        <ExecutionInvestigateModal
+          ruleId={investigateRule.id}
+          ruleName={investigateRule.name}
+          open={investigateRule !== null}
+          onClose={() => setInvestigateRule(null)}
+        />
+      )}
 
       <Dialog
         open={deleteRuleId !== null}

@@ -46,6 +46,7 @@ export const Route = createFileRoute("/api/adk/analyze-intent")({
             session.user.id,
             body.dataSourceId,
             body.sessionId,
+            { dryRun: true },
           );
 
           return json(result, { status: result.success ? 200 : result.clarificationNeeded ? 200 : 422 });

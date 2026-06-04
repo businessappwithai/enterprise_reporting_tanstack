@@ -77,7 +77,7 @@ async function callLLM(systemPrompt: string, userPrompt: string): Promise<string
       temperature: 0.1,
       chat_template_kwargs: { enable_thinking: false },
     }),
-    signal: AbortSignal.timeout(30_000),
+    signal: AbortSignal.timeout(120_000),
   });
 
   if (!res.ok) throw new Error(`LLM call failed: HTTP ${res.status}`);
@@ -217,7 +217,9 @@ Respond with JSON:
 }`;
 
   const response = await callLLM(REPORT_SYSTEM, userPrompt);
+  console.log("[ReportBuilder] LLM raw response (first 500 chars):", response.slice(0, 500));
   const raw = extractJSON(response);
+  console.log("[ReportBuilder] Extracted JSON:", JSON.stringify(raw));
   return ReportDefinitionGuardrail.parse(raw);
 }
 
@@ -364,22 +366,31 @@ export async function runSupervisorAgent(input: SupervisorInput): Promise<Superv
     };
   }
 
-  // ── Stages 2–4: Specialist agents in parallel ─────────────────────────────
-  const [scheduleSettled, reportSettled, ruleSettled] = await Promise.allSettled([
-    runScheduleAgent(intent.schedule_natural ?? "every Monday"),
-    runReportBuilderAgent(
-      intent.metric ?? "value",
-      intent.data_hint ?? "",
-      schemaText,
-      intent.schedule_natural,
-    ),
-    runMonitoringRuleAgent(
-      nlRequest,
-      intent.metric ?? "value",
-      intent.threshold_operator,
-      intent.threshold_value,
-    ),
-  ]);
+  // ── Stages 2–4: Specialist agents run sequentially (single LLM server) ───────
+  const scheduleSettled = await runScheduleAgent(intent.schedule_natural ?? "every Monday").then(
+    (v) => ({ status: "fulfilled" as const, value: v }),
+    (e) => ({ status: "rejected" as const, reason: e }),
+  );
+
+  const reportSettled = await runReportBuilderAgent(
+    intent.metric ?? "value",
+    intent.data_hint ?? "",
+    schemaText,
+    intent.schedule_natural,
+  ).then(
+    (v) => ({ status: "fulfilled" as const, value: v }),
+    (e) => ({ status: "rejected" as const, reason: e }),
+  );
+
+  const ruleSettled = await runMonitoringRuleAgent(
+    nlRequest,
+    intent.metric ?? "value",
+    intent.threshold_operator,
+    intent.threshold_value,
+  ).then(
+    (v) => ({ status: "fulfilled" as const, value: v }),
+    (e) => ({ status: "rejected" as const, reason: e }),
+  );
 
   const schedule =
     scheduleSettled.status === "fulfilled"

@@ -55,6 +55,8 @@ export function NLMonitoringCreator({ onSuccess, onCancel }: Props) {
 
   // Step 2 state
   const [parsedIntent, setParsedIntent] = useState<ParsedIntent | null>(null);
+  const [ruleName, setRuleName] = useState("");
+  const [metricColumn, setMetricColumn] = useState("");
   const [thresholdOperator, setThresholdOperator] = useState("lt");
   const [thresholdValue, setThresholdValue] = useState(0);
   const [thresholdUpper, setThresholdUpper] = useState<number | undefined>();
@@ -102,15 +104,32 @@ export function NLMonitoringCreator({ onSuccess, onCancel }: Props) {
         body: JSON.stringify({ nlRequest, dataSourceId }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error?.message ?? "Failed to analyze intent");
+      if (!res.ok || !data.success) {
+        if (data.clarificationNeeded) {
+          throw new Error(data.clarificationPrompt ?? "Please provide more detail about what you want to monitor.");
+        }
+        throw new Error(data.error ?? data.error?.message ?? "Failed to analyze intent");
       }
-      const intent: ParsedIntent = data.result ?? data.data ?? data;
+      const preview = data.preview;
+      const adkIntent = data.adkIntent;
+      const intent: ParsedIntent = {
+        metric: preview?.metricColumn ?? adkIntent?.metric ?? "",
+        threshold_operator: preview?.thresholdOperator ?? adkIntent?.thresholdOperator ?? "lt",
+        threshold_value: preview?.thresholdValue ?? adkIntent?.thresholdValue ?? 0,
+        threshold_upper_bound: preview?.thresholdUpperBound ?? adkIntent?.thresholdUpperBound,
+        schedule_cron: preview?.cronExpression ?? adkIntent?.scheduleCron ?? "0 8 * * 1",
+        generated_sql: preview?.sql,
+      };
       setParsedIntent(intent);
+      setRuleName(preview?.name ?? `Monitor: ${nlRequest.slice(0, 60)}`);
+      setMetricColumn(intent.metric ?? "value");
       setThresholdOperator(intent.threshold_operator ?? "lt");
       setThresholdValue(intent.threshold_value ?? 0);
       setThresholdUpper(intent.threshold_upper_bound);
       setScheduleCron(intent.schedule_cron ?? "0 8 * * 1");
+      if (preview?.alertChannels?.length) {
+        setAlertChannels(preview.alertChannels.filter((c: string): c is AlertChannel => ["email", "in_app", "webhook"].includes(c)));
+      }
       setStep(2);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Analysis failed");
@@ -120,7 +139,7 @@ export function NLMonitoringCreator({ onSuccess, onCancel }: Props) {
   }
 
   async function handleCreate() {
-    if (!parsedIntent?.rule_id && !parsedIntent) {
+    if (!parsedIntent) {
       setError("No intent data available.");
       return;
     }
@@ -131,23 +150,25 @@ export function NLMonitoringCreator({ onSuccess, onCancel }: Props) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          nl_request: nlRequest,
-          data_source_id: dataSourceId,
-          threshold_operator: thresholdOperator,
-          threshold_value: thresholdValue,
-          threshold_upper_bound: thresholdUpper,
-          schedule_cron: scheduleCron,
-          alert_channels: alertChannels,
-          generated_sql: parsedIntent?.generated_sql,
-          metric: parsedIntent?.metric,
+          name: ruleName || `Monitor: ${nlRequest.slice(0, 60)}`,
+          description: nlRequest,
+          dataSourceId: dataSourceId,
+          metricColumn: metricColumn || parsedIntent.metric || "value",
+          thresholdOperator: thresholdOperator,
+          thresholdValue: thresholdValue,
+          thresholdUpperBound: thresholdUpper,
+          cronExpression: scheduleCron,
+          alertChannels: alertChannels,
+          sql: parsedIntent.generated_sql,
+          originalNlRequest: nlRequest,
         }),
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error?.message ?? "Failed to create monitoring rule");
+        throw new Error(data.error ?? "Failed to create monitoring rule");
       }
-      const ruleId = data.rule_id ?? data.data?.id ?? data.id ?? parsedIntent?.rule_id ?? "";
-      const nextRunAt = data.next_run_at ?? parsedIntent?.next_run_at;
+      const ruleId = data.rule?.id ?? data.rule_id ?? data.id ?? "";
+      const nextRunAt = data.rule?.trigger_schedule_id ? undefined : undefined;
       setSuccessResult({ ruleId, nextRunAt });
       setStep(3);
     } catch (e) {
@@ -207,11 +228,21 @@ export function NLMonitoringCreator({ onSuccess, onCancel }: Props) {
         )}
 
         <div className="space-y-2">
+          <Label htmlFor="rule-name" className="text-sm font-medium">Rule Name</Label>
+          <input
+            id="rule-name"
+            value={ruleName}
+            onChange={(e) => setRuleName(e.target.value)}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          />
+        </div>
+
+        <div className="space-y-2">
           <Label className="text-sm font-medium">Detected Intent</Label>
           <div className="flex flex-wrap gap-2">
-            {parsedIntent.metric && (
+            {(parsedIntent.metric || metricColumn) && (
               <Badge variant="secondary">
-                Metric: {parsedIntent.metric}
+                Metric: {parsedIntent.metric || metricColumn}
               </Badge>
             )}
             {parsedIntent.threshold_operator && (

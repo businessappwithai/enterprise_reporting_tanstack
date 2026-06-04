@@ -213,6 +213,53 @@ function cronMatches(cron: string, date: Date): boolean {
   );
 }
 
+/**
+ * Timezone-aware cron matching.
+ *
+ * Converts the current UTC time to the rule's configured timezone using
+ * Intl.DateTimeFormat, then evaluates the cron expression against the
+ * local time components. Falls back to UTC if the timezone is invalid.
+ */
+function cronMatchesWithTimezone(cron: string, dateUtc: Date, timezone: string): boolean {
+  if (!timezone || timezone === "UTC") return cronMatches(cron, dateUtc);
+
+  try {
+    const fmt = new Intl.DateTimeFormat("en-US", {
+      timeZone: timezone,
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: false,
+    });
+    const parts = fmt.formatToParts(dateUtc);
+    const get = (type: string) => parseInt(parts.find((p) => p.type === type)?.value ?? "0", 10);
+
+    const localMinute = get("minute");
+    const localHour = get("hour") === 24 ? 0 : get("hour");
+    const localDay = get("day");
+    const localMonth = get("month");
+    // Day of week: reconstruct from the local date
+    const localDate = new Date(get("year"), localMonth - 1, localDay);
+    const localDow = localDate.getDay();
+
+    const cronParts = cron.trim().split(/\s+/);
+    if (cronParts.length !== 5) return false;
+
+    return (
+      matchesCronField(localMinute, cronParts[0]) &&
+      matchesCronField(localHour, cronParts[1]) &&
+      matchesCronField(localDay, cronParts[2]) &&
+      matchesCronField(localMonth, cronParts[3]) &&
+      matchesCronField(localDow, cronParts[4])
+    );
+  } catch {
+    // Invalid timezone — fall back to UTC
+    return cronMatches(cron, dateUtc);
+  }
+}
+
 let _onPremiseRunnerHandle: ReturnType<typeof setInterval> | null = null;
 let _onPremiseRunnerActive = false;
 
@@ -237,52 +284,115 @@ export function startOnPremiseCronRunner(): void {
     // Align to the start of the current minute for consistent matching
     now.setUTCSeconds(0, 0);
 
-    let rules: { id: string; cron_expression: string; is_paused: number | boolean }[] = [];
+    // ── Monitoring Rules ──
+    let rules: { id: string; cron_expression: string; timezone: string; is_paused: number | boolean }[] = [];
     try {
       const db = getDb();
       rules = await (db as any)
         .selectFrom("monitoring_rules")
         .where("is_active", "=", true)
         .where("is_paused", "=", false)
-        .select(["id", "cron_expression", "is_paused"])
+        .select(["id", "cron_expression", "timezone", "is_paused"])
         .execute();
     } catch (err) {
       console.error("[on-premise-cron] Failed to load monitoring rules:", err);
-      return;
     }
 
-    const due = rules.filter((r) => {
+    const dueRules = rules.filter((r) => {
       try {
-        return cronMatches(r.cron_expression, now);
+        return cronMatchesWithTimezone(r.cron_expression, now, r.timezone ?? "UTC");
       } catch {
         return false;
       }
     });
 
-    if (due.length === 0) return;
+    if (dueRules.length > 0) {
+      console.log(`[on-premise-cron] ${dueRules.length} monitoring rule(s) due at ${now.toISOString()}`);
 
-    console.log(`[on-premise-cron] ${due.length} rule(s) due at ${now.toISOString()}`);
+      const { executeMonitoringEvaluation } = await import(
+        "@/lib/jobs/workers/monitoring-worker"
+      );
 
-    // Import lazily to avoid circular dep at module load time
-    const { executeMonitoringEvaluation } = await import(
-      "@/lib/jobs/workers/monitoring-worker"
-    );
+      await Promise.allSettled(
+        dueRules.map(async (rule) => {
+          try {
+            const result = await executeMonitoringEvaluation({
+              ruleId: rule.id,
+              triggeredBy: "on_premise_cron",
+            });
+            console.log(
+              `[on-premise-cron] rule=${rule.id} status=${result.status} value=${result.metricValue ?? "n/a"}`
+            );
+          } catch (err) {
+            console.error(`[on-premise-cron] rule=${rule.id} error:`, err);
+          }
+        })
+      );
+    }
 
-    await Promise.allSettled(
-      due.map(async (rule) => {
-        try {
-          const result = await executeMonitoringEvaluation({
-            ruleId: rule.id,
-            triggeredBy: "on_premise_cron",
-          });
+    // ── Scheduled Report Definitions ──
+    let reportDefs: { id: string; schedule_cron: string; schedule_timezone: string; last_run_status: string | null }[] = [];
+    try {
+      const db = getDb();
+      reportDefs = await (db as any)
+        .selectFrom("nl_report_definitions")
+        .where("schedule_enabled", "=", true)
+        .whereRef("schedule_cron", "is not", null)
+        .select(["id", "schedule_cron", "schedule_timezone", "last_run_status"])
+        .execute();
+    } catch {
+      // Table may not exist yet — gracefully skip
+    }
+
+    const dueReports = reportDefs.filter((r) => {
+      if (r.last_run_status === "running") return false;
+      try {
+        return cronMatchesWithTimezone(r.schedule_cron, now, r.schedule_timezone ?? "UTC");
+      } catch {
+        return false;
+      }
+    });
+
+    if (dueReports.length > 0) {
+      console.log(`[on-premise-cron] ${dueReports.length} scheduled report(s) due at ${now.toISOString()}`);
+
+      const { executeReportGeneration } = await import(
+        "@/lib/report-generation/report-generation-worker"
+      );
+
+      await Promise.allSettled(
+        dueReports.map(async (def) => {
+          try {
+            const result = await executeReportGeneration({
+              reportDefinitionId: def.id,
+              triggeredBy: "scheduled",
+            });
+            console.log(
+              `[on-premise-cron] report=${def.id} status=${result.status} rows=${result.rowCount}`
+            );
+          } catch (err) {
+            console.error(`[on-premise-cron] report=${def.id} error:`, err);
+          }
+        })
+      );
+    }
+
+    // ── Nightly Artifact Retention Cleanup (runs at 02:00 UTC) ──
+    if (now.getUTCHours() === 2 && now.getUTCMinutes() === 0) {
+      try {
+        const { cleanupExpiredReportArtifacts } = await import(
+          "@/lib/report-generation/report-cleanup"
+        );
+        const result = await cleanupExpiredReportArtifacts();
+        if (result.deletedRecords > 0) {
           console.log(
-            `[on-premise-cron] rule=${rule.id} status=${result.status} value=${result.metricValue ?? "n/a"}`
+            `[on-premise-cron] Artifact cleanup: ${result.deletedFiles} files, ${result.deletedRecords} records deleted`
           );
-        } catch (err) {
-          console.error(`[on-premise-cron] rule=${rule.id} error:`, err);
         }
-      })
-    );
+      } catch (err) {
+        console.error("[on-premise-cron] Artifact cleanup failed:", err);
+      }
+    }
   };
 
   // Run once immediately in case the server started mid-minute on a due cron
