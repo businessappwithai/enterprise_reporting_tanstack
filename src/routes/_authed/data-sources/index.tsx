@@ -618,7 +618,7 @@ function DataSourcesPage() {
                   <TableRow key={ds.id} className={ds.is_deleted ? "opacity-60" : ""}>
                     <TableCell className="font-medium">
                       {ds.name}
-                      {ds.is_deleted && (
+                      {!!ds.is_deleted && (
                         <Badge variant="destructive" className="ml-2 text-xs">
                           Deleted
                         </Badge>
@@ -633,7 +633,7 @@ function DataSourcesPage() {
                         <Badge variant={ds.is_deleted ? "secondary" : ds.is_active ? "default" : "secondary"}>
                           {ds.is_deleted ? "Inactive" : ds.is_active ? "Connected" : "No Connection"}
                         </Badge>
-                        {ds.is_inspected && !ds.is_deleted && (
+                        {!!ds.is_inspected && !ds.is_deleted && (
                           <Badge variant="outline" className="text-green-600 border-green-600">
                             <Check className="h-3 w-3 mr-1" />
                             Inspected
@@ -646,7 +646,7 @@ function DataSourcesPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
-                        {ds.is_active && (
+                        {!!ds.is_active && (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -665,7 +665,7 @@ function DataSourcesPage() {
                             )}
                           </Button>
                         )}
-                        {ds.is_active && (
+                        {!!ds.is_active && (
                           <Link to="/metadata/entities" search={{ data_source_id: ds.id }}>
                             <Button
                               variant="ghost"
