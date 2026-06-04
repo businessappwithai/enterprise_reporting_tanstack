@@ -83,7 +83,7 @@ export const Route = createFileRoute("/api/monitoring/rules/$id")({
             webhookUrl?: string; notifyOnPass?: boolean; notifyOnNoData?: boolean;
           };
 
-          const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+          const updates: Record<string, unknown> = { updated_at: new Date().toISOString().slice(0, 19).replace("T", " ") };
           if (body.name !== undefined) updates.name = body.name;
           if (body.description !== undefined) updates.description = body.description;
           if (body.metricColumn !== undefined) updates.metric_column = body.metricColumn;
@@ -165,7 +165,7 @@ export const Route = createFileRoute("/api/monitoring/rules/$id")({
           if (action === "pause") {
             const body = await request.json().catch(() => ({})) as { reason?: string };
             await (db as any).updateTable("monitoring_rules")
-              .set({ is_paused: 1, pause_reason: body.reason ?? null, updated_at: new Date().toISOString() })
+              .set({ is_paused: 1, pause_reason: body.reason ?? null, updated_at: new Date().toISOString().slice(0, 19).replace("T", " ") })
               .where("id", "=", id).execute();
             if (rule.trigger_schedule_id) {
               await pauseSchedule(rule.trigger_schedule_id as string).catch(() => {});
@@ -173,14 +173,23 @@ export const Route = createFileRoute("/api/monitoring/rules/$id")({
             await logAudit({ userId: session.user.id, action: AUDIT_ACTIONS.MONITORING.RULE_PAUSED, resourceType: "monitoring_rule" as any, resourceId: id });
           } else if (action === "resume") {
             await (db as any).updateTable("monitoring_rules")
-              .set({ is_paused: 0, pause_reason: null, updated_at: new Date().toISOString() })
+              .set({ is_paused: 0, pause_reason: null, updated_at: new Date().toISOString().slice(0, 19).replace("T", " ") })
               .where("id", "=", id).execute();
             if (rule.trigger_schedule_id) {
               await resumeSchedule(rule.trigger_schedule_id as string).catch(() => {});
             }
             await logAudit({ userId: session.user.id, action: AUDIT_ACTIONS.MONITORING.RULE_RESUMED, resourceType: "monitoring_rule" as any, resourceId: id });
+          } else if (action === "run") {
+            const { executeMonitoringEvaluation } = await import("@/lib/jobs/workers/monitoring-worker");
+            const result = await executeMonitoringEvaluation({
+              ruleId: id,
+              triggeredBy: "manual",
+            });
+            await logAudit({ userId: session.user.id, action: AUDIT_ACTIONS.MONITORING.RULE_UPDATED, resourceType: "monitoring_rule" as any, resourceId: id, details: { operation: "manual_run", status: result.status } });
+            const updated = await (db as any).selectFrom("monitoring_rules").where("id", "=", id).selectAll().executeTakeFirst() as Record<string, unknown>;
+            return json({ result, rule: deserializeRule(updated) });
           } else {
-            return json({ error: "Invalid action. Use ?action=pause or ?action=resume" }, { status: 400 });
+            return json({ error: "Invalid action. Use ?action=pause, ?action=resume, or ?action=run" }, { status: 400 });
           }
 
           const updated = await (db as any).selectFrom("monitoring_rules").where("id", "=", id).selectAll().executeTakeFirst() as Record<string, unknown>;

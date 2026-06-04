@@ -504,7 +504,11 @@ export type AuditAction =
   | "adk:schema_introspected"
   | "adk:sql_generated"
   | "adk:rule_persisted"
-  | "adk:clarification_requested";
+  | "adk:clarification_requested"
+  | "report:generated"
+  | "report:permission_revoked"
+  | "report:failed"
+  | "report:scheduled";
 
 export interface AuditLog {
   id: string;

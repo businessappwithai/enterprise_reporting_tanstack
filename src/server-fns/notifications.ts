@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import { verifySession } from "@/lib/auth/session";
+import { getDb } from "@/lib/db/config";
 
 async function getSession() {
   const cookie = getRequestHeader("cookie") || "";
@@ -18,9 +19,19 @@ export const fetchNotificationsFn = createServerFn({ method: "GET" }).handler(
         return { success: false, data: [], error: "Unauthorized" };
       }
 
-      // Return empty array for now (notifications table not fully implemented)
-      // When fully implemented, fetch from database
-      return { success: true, data: [] };
+      const db = getDb();
+      let query = (db as any)
+        .selectFrom("notifications")
+        .where("user_id", "=", session.user.id)
+        .orderBy("created_at", "desc")
+        .limit(50);
+
+      if (!includeRead) {
+        query = query.where("is_read", "=", 0);
+      }
+
+      const rows = await query.selectAll().execute();
+      return { success: true, data: rows };
     } catch (error) {
       console.error("Error fetching notifications:", error);
       return {
@@ -40,7 +51,14 @@ export const markNotificationAsReadFn = createServerFn({ method: "POST" }).handl
         return { success: false, error: "Unauthorized" };
       }
 
-      // When notifications are implemented in the database, add update logic here
+      const db = getDb();
+      await (db as any)
+        .updateTable("notifications")
+        .set({ is_read: 1 })
+        .where("id", "=", id)
+        .where("user_id", "=", session.user.id)
+        .execute();
+
       return { success: true };
     } catch (error) {
       console.error("Error marking notification as read:", error);
@@ -60,7 +78,14 @@ export const markAllNotificationsAsReadFn = createServerFn({ method: "POST" }).h
         return { success: false, error: "Unauthorized" };
       }
 
-      // When notifications are implemented in the database, add bulk update logic here
+      const db = getDb();
+      await (db as any)
+        .updateTable("notifications")
+        .set({ is_read: 1 })
+        .where("user_id", "=", session.user.id)
+        .where("is_read", "=", 0)
+        .execute();
+
       return { success: true };
     } catch (error) {
       console.error("Error marking all notifications as read:", error);
@@ -80,7 +105,13 @@ export const deleteNotificationFn = createServerFn({ method: "POST" }).handler(
         return { success: false, error: "Unauthorized" };
       }
 
-      // When notifications are implemented in the database, add delete logic here
+      const db = getDb();
+      await (db as any)
+        .deleteFrom("notifications")
+        .where("id", "=", id)
+        .where("user_id", "=", session.user.id)
+        .execute();
+
       return { success: true };
     } catch (error) {
       console.error("Error deleting notification:", error);

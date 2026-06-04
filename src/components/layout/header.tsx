@@ -67,7 +67,9 @@ export function Header({ user, onMobileMenuToggle, mobileMenuOpen }: HeaderProps
       try {
         const result = await fetchNotificationsFn({ includeRead: showReadNotifications });
         if (!result.success) {
-          console.warn("Failed to fetch notifications:", result.error);
+          if (result.error !== "Unauthorized") {
+            console.warn("Failed to fetch notifications:", result.error);
+          }
           return [];
         }
         return result.data || [];

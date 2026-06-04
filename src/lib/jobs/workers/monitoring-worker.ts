@@ -8,6 +8,10 @@
 
 import { randomUUID } from "node:crypto";
 import { getDb } from "@/lib/db/config";
+
+function mariadbNow(): string {
+  return new Date().toISOString().slice(0, 19).replace("T", " ");
+}
 import { getConnection } from "@/lib/db/connection-manager";
 import { decrypt } from "@/lib/security/encryption";
 import { logAudit } from "@/lib/security/audit";
@@ -154,7 +158,10 @@ export async function validateRBACForExecution(
     .where("id", "in", roleIds)
     .execute();
 
-  const hasAdminRole = adminRoles.some((r) => r.name.toLowerCase() === "admin");
+  const hasAdminRole = adminRoles.some((r) => {
+    const n = r.name.toLowerCase();
+    return n === "admin" || n === "administrator" || n.startsWith("admin");
+  });
   if (hasAdminRole) {
     return { driftType: "NO_DRIFT", canProceed: true, details: "Admin role" };
   }
@@ -209,9 +216,13 @@ export async function executeReportSQL(
     .executeTakeFirst();
 
   if (!reportDef?.saved_query_id) {
-    throw new Error(
-      `Report definition ${rule.report_definition_id} has no associated saved query`
+    // Report definition missing or has no saved query — return empty rows so
+    // threshold evaluation produces NO_DATA rather than crashing the pipeline.
+    const executionMs = Date.now() - startTime;
+    console.warn(
+      `[monitoring-worker] Report definition ${rule.report_definition_id} has no associated saved query — producing NO_DATA`
     );
+    return { rows: [], executionMs, sql: "" };
   }
 
   // Load the saved query to get SQL and data_source_id
@@ -222,7 +233,11 @@ export async function executeReportSQL(
     .executeTakeFirst();
 
   if (!savedQuery) {
-    throw new Error(`Saved query ${reportDef.saved_query_id} not found`);
+    const executionMs = Date.now() - startTime;
+    console.warn(
+      `[monitoring-worker] Saved query ${reportDef.saved_query_id} not found — producing NO_DATA`
+    );
+    return { rows: [], executionMs, sql: "" };
   }
 
   const sqlContent = savedQuery.sql_content;
@@ -645,7 +660,7 @@ export async function recordExecution(data: {
 }): Promise<string> {
   const db = getDb();
   const id = randomUUID();
-  const now = new Date().toISOString();
+  const now = mariadbNow();
 
   await (db as any)
     .insertInto("monitoring_executions")
@@ -705,7 +720,7 @@ export async function executeMonitoringEvaluation(
       .set({
         is_paused: 1,
         pause_reason: `RBAC drift detected: ${rbacResult.driftType} — ${rbacResult.details ?? ""}`,
-        updated_at: new Date().toISOString(),
+        updated_at: mariadbNow(),
       })
       .where("id", "=", rule.id)
       .execute();
@@ -817,14 +832,14 @@ export async function executeMonitoringEvaluation(
     .updateTable("monitoring_rules")
     .set({
       total_executions: rule.total_executions + 1,
-      last_executed_at: new Date().toISOString(),
+      last_executed_at: mariadbNow(),
       last_execution_status: evaluation.status,
       last_metric_value: evaluation.actualValue,
       consecutive_breaches: newConsecutiveBreaches,
       total_alerts_sent: alertDispatched
         ? rule.total_alerts_sent + alertResults.filter((r) => r.success).length
         : rule.total_alerts_sent,
-      updated_at: new Date().toISOString(),
+      updated_at: mariadbNow(),
     })
     .where("id", "=", rule.id)
     .execute();

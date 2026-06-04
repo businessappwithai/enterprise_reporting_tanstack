@@ -16,15 +16,19 @@ interface MonitoringExecution {
   id: string;
   monitoring_rule_id: string;
   executed_at: string;
-  status: "PASS" | "BREACH" | "ESCALATE" | "NO_DATA" | "ERROR";
+  evaluation_status: "PASS" | "BREACH" | "ESCALATE" | "NO_DATA" | "ERROR";
   metric_value?: number | null;
-  threshold_operator?: string;
-  threshold_value?: number;
-  threshold_upper_bound?: number | null;
+  previous_metric_value?: number | null;
   delta_pct?: number | null;
-  alert_sent: boolean;
-  duration_ms?: number | null;
+  alert_dispatched: boolean;
+  alert_channels_used?: string[];
+  alert_recipients_sent?: string[];
+  alert_sent_at?: string | null;
+  execution_ms?: number | null;
+  rows_returned?: number | null;
+  sql_executed?: string | null;
   error_message?: string | null;
+  error_phase?: string | null;
 }
 
 interface ExecutionsResponse {
@@ -38,7 +42,7 @@ interface Props {
   ruleId: string;
 }
 
-function StatusBadge({ status }: { status: MonitoringExecution["status"] }) {
+function StatusBadge({ status }: { status: MonitoringExecution["evaluation_status"] }) {
   switch (status) {
     case "PASS":
       return (
@@ -76,28 +80,8 @@ function StatusBadge({ status }: { status: MonitoringExecution["status"] }) {
 }
 
 function formatThresholdCompare(exec: MonitoringExecution): string {
-  if (exec.metric_value == null || exec.threshold_value == null) return "—";
-  const op = exec.threshold_operator ?? "";
-  const val = exec.threshold_value.toLocaleString();
-  const upper = exec.threshold_upper_bound;
-  switch (op) {
-    case "lt":
-      return `< ${val}`;
-    case "lte":
-      return `≤ ${val}`;
-    case "gt":
-      return `> ${val}`;
-    case "gte":
-      return `≥ ${val}`;
-    case "eq":
-      return `= ${val}`;
-    case "neq":
-      return `≠ ${val}`;
-    case "between":
-      return `${val} – ${(upper ?? 0).toLocaleString()}`;
-    default:
-      return val;
-  }
+  if (exec.metric_value == null) return "—";
+  return exec.metric_value.toLocaleString();
 }
 
 function DeltaBadge({ delta }: { delta: number | null | undefined }) {
@@ -173,7 +157,7 @@ export function ExecutionHistoryTable({ ruleId }: Props) {
                   {formatDateTime(exec.executed_at)}
                 </TableCell>
                 <TableCell>
-                  <StatusBadge status={exec.status} />
+                  <StatusBadge status={exec.evaluation_status} />
                 </TableCell>
                 <TableCell className="text-sm">
                   {exec.metric_value != null
@@ -187,14 +171,14 @@ export function ExecutionHistoryTable({ ruleId }: Props) {
                   <DeltaBadge delta={exec.delta_pct} />
                 </TableCell>
                 <TableCell>
-                  {exec.alert_sent ? (
+                  {exec.alert_dispatched ? (
                     <Check className="h-4 w-4 text-green-600" />
                   ) : (
                     <Minus className="h-4 w-4 text-muted-foreground" />
                   )}
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
-                  {exec.duration_ms != null ? `${exec.duration_ms}ms` : "—"}
+                  {exec.execution_ms != null ? `${exec.execution_ms}ms` : "—"}
                 </TableCell>
               </TableRow>
             ))

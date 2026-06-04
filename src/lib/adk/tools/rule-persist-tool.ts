@@ -73,7 +73,7 @@ export async function executeRulePersist(
   const reportId = crypto.randomUUID();
   const jobId = crypto.randomUUID();
   const ruleId = crypto.randomUUID();
-  const now = new Date().toISOString();
+  const now = new Date().toISOString().slice(0, 19).replace("T", " ");
 
   // 1. Saved query — the raw SQL backing this monitor
   await (db as any)

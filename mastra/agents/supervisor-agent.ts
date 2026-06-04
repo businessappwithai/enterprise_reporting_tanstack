@@ -77,7 +77,7 @@ async function callLLM(systemPrompt: string, userPrompt: string): Promise<string
       temperature: 0.1,
       chat_template_kwargs: { enable_thinking: false },
     }),
-    signal: AbortSignal.timeout(30_000),
+    signal: AbortSignal.timeout(120_000),
   });
 
   if (!res.ok) throw new Error(`LLM call failed: HTTP ${res.status}`);
@@ -186,12 +186,16 @@ Respond with JSON:
 // ─── Specialist Agent: Report Definition Builder ──────────────────────────────
 
 const REPORT_SYSTEM = `You are a SQL generation specialist for monitoring reports.
-Given a metric description and database schema, generate optimal SQL.
+Given a metric description and database schema, generate optimal PostgreSQL SQL.
 GUARDRAILS:
 - SQL must be SELECT-only (no INSERT, UPDATE, DELETE, DROP, TRUNCATE)
-- SQL must return exactly one row with the metric value as the primary column
-- Use the exact table and column names from the schema
+- Use the exact table and column names from the schema — do NOT invent or assume column names
 - metric_column must match a column alias in the generated SQL
+- Use PostgreSQL syntax ONLY: use NOW() - INTERVAL '7 days' NOT DATE_SUB; use EXTRACT(YEAR FROM col) for year; use :: for casting
+- CRITICAL: The schema includes MULTI-HOP JOIN PATHS — follow them EXACTLY for cross-table joins
+- CRITICAL: If a column does not exist in a table per the schema, use the multi-hop path to reach it through an intermediate table
+- NEVER assume a column exists. Only use columns listed under that table in the DATABASE SCHEMA
+- TIME FILTERS: Only add WHERE clauses on date/time columns if the Time context explicitly mentions a period. If the time context says "all time" or does not mention a period, do NOT add any date filter
 - Respond with ONLY a JSON object`;
 
 export async function runReportBuilderAgent(
@@ -209,15 +213,17 @@ ${schemaText}
 
 Respond with JSON:
 {
-  "sql": "SELECT SUM(order_total) AS weekly_revenue FROM orders WHERE order_date >= DATE_SUB(NOW(), INTERVAL 7 DAY)",
-  "metric_column": "weekly_revenue",
-  "explanation": "Sums all order totals in the last 7 days",
+  "sql": "SELECT d.name AS department_name, COUNT(*) AS total_admissions FROM bus_admission a JOIN bus_encounter e ON a.encounter_id::uuid = e.id JOIN bus_department d ON e.department_id::uuid = d.id WHERE a.admission_datetime >= NOW() - INTERVAL '7 days' GROUP BY d.name ORDER BY total_admissions DESC",
+  "metric_column": "total_admissions",
+  "explanation": "Counts admissions by department in the last 7 days, joining through bus_encounter since bus_admission has no direct department_id",
   "confidence": 0.92,
   "warnings": []
 }`;
 
   const response = await callLLM(REPORT_SYSTEM, userPrompt);
+  console.log("[ReportBuilder] LLM raw response (first 500 chars):", response.slice(0, 500));
   const raw = extractJSON(response);
+  console.log("[ReportBuilder] Extracted JSON:", JSON.stringify(raw));
   return ReportDefinitionGuardrail.parse(raw);
 }
 
@@ -364,22 +370,31 @@ export async function runSupervisorAgent(input: SupervisorInput): Promise<Superv
     };
   }
 
-  // ── Stages 2–4: Specialist agents in parallel ─────────────────────────────
-  const [scheduleSettled, reportSettled, ruleSettled] = await Promise.allSettled([
-    runScheduleAgent(intent.schedule_natural ?? "every Monday"),
-    runReportBuilderAgent(
-      intent.metric ?? "value",
-      intent.data_hint ?? "",
-      schemaText,
-      intent.schedule_natural,
-    ),
-    runMonitoringRuleAgent(
-      nlRequest,
-      intent.metric ?? "value",
-      intent.threshold_operator,
-      intent.threshold_value,
-    ),
-  ]);
+  // ── Stages 2–4: Specialist agents run sequentially (single LLM server) ───────
+  const scheduleSettled = await runScheduleAgent(intent.schedule_natural ?? "every Monday").then(
+    (v) => ({ status: "fulfilled" as const, value: v }),
+    (e) => ({ status: "rejected" as const, reason: e }),
+  );
+
+  const reportSettled = await runReportBuilderAgent(
+    intent.metric ?? "value",
+    intent.data_hint ?? "",
+    schemaText,
+    intent.schedule_natural,
+  ).then(
+    (v) => ({ status: "fulfilled" as const, value: v }),
+    (e) => ({ status: "rejected" as const, reason: e }),
+  );
+
+  const ruleSettled = await runMonitoringRuleAgent(
+    nlRequest,
+    intent.metric ?? "value",
+    intent.threshold_operator,
+    intent.threshold_value,
+  ).then(
+    (v) => ({ status: "fulfilled" as const, value: v }),
+    (e) => ({ status: "rejected" as const, reason: e }),
+  );
 
   const schedule =
     scheduleSettled.status === "fulfilled"
