@@ -45,7 +45,7 @@ export function ReportPreviewPanel({ rows, columns, sql, intent }: Props) {
             <div>
               <span className="text-muted-foreground">Metrics</span>
               <div className="flex flex-wrap gap-1 mt-1">
-                {intent.metrics.map((m) => (
+                {(intent.metrics ?? []).map((m) => (
                   <Badge key={m} variant="outline" className="text-xs font-mono">{m}</Badge>
                 ))}
               </div>
@@ -53,7 +53,7 @@ export function ReportPreviewPanel({ rows, columns, sql, intent }: Props) {
             <div>
               <span className="text-muted-foreground">Dimensions</span>
               <div className="flex flex-wrap gap-1 mt-1">
-                {intent.dimensions.map((d) => (
+                {(intent.dimensions ?? []).map((d) => (
                   <Badge key={d} variant="outline" className="text-xs font-mono">{d}</Badge>
                 ))}
               </div>
@@ -61,7 +61,7 @@ export function ReportPreviewPanel({ rows, columns, sql, intent }: Props) {
             <div>
               <span className="text-muted-foreground">Formats</span>
               <div className="flex flex-wrap gap-1 mt-1">
-                {intent.outputFormats.map((f) => (
+                {(intent.outputFormats ?? []).map((f) => (
                   <Badge key={f} variant="secondary" className="text-xs uppercase">{f}</Badge>
                 ))}
               </div>

@@ -313,7 +313,7 @@ export function NlQueryContent() {
   useCopilotAction({
     name: "fetchSimilarQueries",
     description:
-      "Fetch RAG context: similar past queries and relevant table schemas. ALWAYS call this BEFORE generating SQL.",
+      "Fetch RAG context: similar past queries and relevant table schemas. Call this ONCE as the first step, then proceed to executeNaturalLanguageQuery.",
     parameters: [
       {
         name: "query",

@@ -37,7 +37,9 @@ export function ReportBuilderPanel() {
     queryFn: async () => {
       const res = await fetch("/api/data-sources?pageSize=100");
       if (!res.ok) return { dataSources: [] };
-      return res.json();
+      const json = await res.json();
+      // API returns { success, data: { items, meta } } — normalise to { dataSources }
+      return { dataSources: json.data?.items ?? json.dataSources ?? [] };
     },
   });
 

@@ -19,6 +19,7 @@ import * as path from "node:path";
 import ExcelJS from "exceljs";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { sql } from "kysely";
 import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
 import { sendEmail } from "@/lib/email/email-service";
@@ -208,18 +209,19 @@ async function executeReportSQL(
 
   const connection = await getConnection(ds);
 
-  const limitedSQL = `SELECT * FROM (${generatedSQL}) AS __rpt__ LIMIT ${REPORT_ROW_LIMIT + 1}`;
+  const cleanSQL = generatedSQL.replace(/;\s*$/, "");
+  const limitedSQL = `SELECT * FROM (${cleanSQL}) AS __rpt__ LIMIT ${REPORT_ROW_LIMIT + 1}`;
 
   const start = Date.now();
   const result = await Promise.race([
-    (connection as any).raw(limitedSQL),
+    sql.raw(limitedSQL).execute(connection),
     new Promise<never>((_, reject) =>
       setTimeout(() => reject(new Error(`Query timeout after ${REPORT_QUERY_TIMEOUT_MS}ms`)), REPORT_QUERY_TIMEOUT_MS)
     ),
   ]);
 
   const executionMs = Date.now() - start;
-  const rawRows = (result as any).rows ?? (Array.isArray(result) ? result : []);
+  const rawRows = Array.isArray((result as any).rows) ? (result as any).rows : (Array.isArray(result) ? result : []);
   const rows = rawRows.length > REPORT_ROW_LIMIT ? rawRows.slice(0, REPORT_ROW_LIMIT) : rawRows;
   const columns = rows.length > 0 ? Object.keys(rows[0]) : [];
 

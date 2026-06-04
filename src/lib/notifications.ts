@@ -8,17 +8,19 @@ export async function createNotification(params: {
   metadata?: Record<string, any>;
 }) {
   const db = getDb();
-  const [notification] = await (db as any)
+  const id = crypto.randomUUID();
+  await (db as any)
     .insertInto("notifications")
     .values({
+      id,
       user_id: params.userId,
       type: params.type,
       title: params.title,
       message: params.message,
       metadata: params.metadata ? JSON.stringify(params.metadata) : null,
     })
-    .returningAll();
-  return notification;
+    .execute();
+  return { id };
 }
 
 export async function createNotificationForAllUsers(params: {

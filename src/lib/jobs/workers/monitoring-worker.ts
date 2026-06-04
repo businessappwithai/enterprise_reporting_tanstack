@@ -216,9 +216,13 @@ export async function executeReportSQL(
     .executeTakeFirst();
 
   if (!reportDef?.saved_query_id) {
-    throw new Error(
-      `Report definition ${rule.report_definition_id} has no associated saved query`
+    // Report definition missing or has no saved query — return empty rows so
+    // threshold evaluation produces NO_DATA rather than crashing the pipeline.
+    const executionMs = Date.now() - startTime;
+    console.warn(
+      `[monitoring-worker] Report definition ${rule.report_definition_id} has no associated saved query — producing NO_DATA`
     );
+    return { rows: [], executionMs, sql: "" };
   }
 
   // Load the saved query to get SQL and data_source_id
@@ -229,7 +233,11 @@ export async function executeReportSQL(
     .executeTakeFirst();
 
   if (!savedQuery) {
-    throw new Error(`Saved query ${reportDef.saved_query_id} not found`);
+    const executionMs = Date.now() - startTime;
+    console.warn(
+      `[monitoring-worker] Saved query ${reportDef.saved_query_id} not found — producing NO_DATA`
+    );
+    return { rows: [], executionMs, sql: "" };
   }
 
   const sqlContent = savedQuery.sql_content;

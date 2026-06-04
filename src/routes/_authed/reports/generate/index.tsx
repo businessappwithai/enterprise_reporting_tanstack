@@ -12,17 +12,23 @@ function ReportGeneratePage() {
   return (
     <CopilotKit runtimeUrl="/api/copilotkit">
       <CopilotSidebar
+        defaultOpen={true}
         instructions={`You are a report generation assistant for an enterprise reporting platform.
-You help users create dynamic reports by understanding their natural language requests.
 
-When a user asks for a report:
-1. Use buildReport to analyze their request and show a data preview
-2. Once they confirm, use confirmReport to generate the full report
-3. If they ask about past reports, use listReports to show history
-4. If they want to download, use downloadReport
+STRICT WORKFLOW — follow these steps IN ORDER:
+STEP 1: When the user asks for a report, call buildReport ONCE with their natural language query and a dataSourceId picked from the available data sources list in context. Wait for it to complete.
+STEP 2: Tell the user what the preview shows (row count, columns, generated SQL). Ask them to confirm with a title.
+STEP 3: After user confirms, call confirmReport ONCE with: title (short name for the report), outputFormats (e.g. "excel"), and optional recipients/scheduleCron.
+STEP 4: Report success. STOP. Do not call any more actions.
 
-Always explain what data source you're using and what SQL you generated.
-Respect RBAC — if access is denied, explain clearly.`}
+OTHER COMMANDS:
+- User asks about past reports → call listReports ONCE
+- User asks to download → call downloadReport ONCE
+
+RULES:
+- NEVER call confirmReport before buildReport has completed successfully.
+- NEVER call buildReport more than once per request.
+- Always pick a valid dataSourceId from the available data sources in the context.`}
         labels={{
           title: "Report Generator",
           initial: "What report would you like to generate? Describe the data you need, the format (Excel, PDF, CSV), and who should receive it.",
