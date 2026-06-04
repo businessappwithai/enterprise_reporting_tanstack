@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
+  Activity,
   BarChart3,
   ChevronLeft,
   ChevronRight,
@@ -44,6 +45,7 @@ const mainNavItems = [
   },
   { href: "/filters", label: "Filters", icon: Filter, permissionKey: "filter" as const },
   { href: "/jobs", label: "Jobs", icon: Play, permissionKey: "job" as const },
+  { href: "/monitoring", label: "Monitoring", icon: Activity, permissionKey: "monitoring_rule" as const },
   { href: "/nl-query", label: "NL Query", icon: MessageSquare, permissionKey: "nl_query" as const },
 ];
 
@@ -89,6 +91,7 @@ export function Sidebar({ collapsed, onCollapse }: SidebarProps) {
   const canViewUser = useCanView("user");
   const canViewRole = useCanView("role");
   const canViewNlQuery = useCanView("nl_query");
+  const canViewMonitoring = useCanView("monitoring_rule");
   const canViewLog = useCanView("log");
   const canViewSetting = useCanView("setting");
 
@@ -129,6 +132,8 @@ export function Sidebar({ collapsed, onCollapse }: SidebarProps) {
         return canViewRole;
       case "nl_query":
         return canViewNlQuery;
+      case "monitoring_rule":
+        return canViewMonitoring;
       case "log":
         return canViewLog;
       case "setting":
