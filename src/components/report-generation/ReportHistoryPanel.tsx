@@ -72,6 +72,21 @@ function ArtifactDownloadButtons({ reportId }: { reportId: string }) {
   const latest = data?.executions?.[0];
   if (!latest?.artifacts?.length) return <span className="text-xs text-muted-foreground">No files</span>;
 
+  async function triggerDownload(downloadUrl: string, filename: string) {
+    const resp = await fetch(downloadUrl, { credentials: "include" });
+    const blob = await resp.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = blobUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    }, 100);
+  }
+
   return (
     <div className="flex gap-1">
       {latest.artifacts.map((a: any) => (
@@ -80,7 +95,7 @@ function ArtifactDownloadButtons({ reportId }: { reportId: string }) {
           variant="ghost"
           size="sm"
           className="h-7 px-2 text-xs gap-1"
-          onClick={() => window.open(a.downloadUrl, "_blank")}
+          onClick={() => triggerDownload(a.downloadUrl, a.filename)}
           title={`Download ${a.format.toUpperCase()}`}
         >
           <FormatIcon format={a.format} />

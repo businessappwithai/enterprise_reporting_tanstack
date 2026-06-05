@@ -42,7 +42,7 @@ export const Route = createFileRoute("/api/report-generation/artifacts/$id")({
 
       // RBAC: owner or admin
       const isAdmin = (session.user as any).roles?.some((r: any) => {
-        const n = (r.name || "").toLowerCase();
+        const n = (typeof r === "string" ? r : (r.name || "")).toLowerCase();
         return n === "admin" || n === "administrator" || n.startsWith("admin");
       });
 
@@ -50,8 +50,7 @@ export const Route = createFileRoute("/api/report-generation/artifacts/$id")({
         return json({ error: "Forbidden" }, { status: 403 });
       }
 
-      // Additionally verify the user still has data source access
-      // (fixes H3 from adversarial review — download RBAC checks data source too)
+      // Additionally verify the user still has data source access via ds_user_roles
       if (!isAdmin) {
         const definition = await (db as any)
           .selectFrom("nl_report_definitions")
@@ -60,14 +59,14 @@ export const Route = createFileRoute("/api/report-generation/artifacts/$id")({
           .executeTakeFirst();
 
         if (definition) {
-          const dsPermission = await (db as any)
-            .selectFrom("data_source_permissions")
+          const dsAccess = await (db as any)
+            .selectFrom("ds_user_roles")
             .where("data_source_id", "=", definition.data_source_id)
             .where("user_id", "=", session.user.id)
             .selectAll()
             .executeTakeFirst();
 
-          if (!dsPermission) {
+          if (!dsAccess) {
             return json({ error: "Data source access revoked" }, { status: 403 });
           }
         }
@@ -79,10 +78,15 @@ export const Route = createFileRoute("/api/report-generation/artifacts/$id")({
         const ext = artifact.format === "excel" ? "xlsx" : artifact.format;
         const mimeType = MIME_TYPES[artifact.format] || "application/octet-stream";
 
+        const ts = new Date(artifact.created_at);
+        const datePart = ts.toISOString().slice(0, 10);
+        const timePart = ts.toISOString().slice(11, 19).replace(/:/g, "-");
+        const filename = `report_${datePart}_${timePart}.${ext}`;
+
         return new Response(fileBuffer, {
           headers: {
             "Content-Type": mimeType,
-            "Content-Disposition": `attachment; filename="report.${ext}"`,
+            "Content-Disposition": `attachment; filename="${filename}"`,
             "Content-Length": String(fileBuffer.length),
           },
         });
@@ -124,11 +128,18 @@ export const Route = createFileRoute("/api/report-generation/artifacts/$id")({
           artifacts: [],
         });
       }
+      const artExt = artifact.format === "excel" ? "xlsx" : artifact.format;
+      const artTs = new Date(artifact.created_at);
+      const artDate = artTs.toISOString().slice(0, 10);
+      const artTime = artTs.toISOString().slice(11, 19).replace(/:/g, "-");
+      const suggestedFilename = `report_${artDate}_${artTime}.${artExt}`;
+
       executionMap.get(artifact.execution_id).artifacts.push({
         id: artifact.id,
         format: artifact.format,
         fileSizeBytes: artifact.file_size_bytes,
         downloadUrl: `/api/report-generation/artifacts/${artifact.id}?download=true&format=${artifact.format}`,
+        filename: suggestedFilename,
       });
     }
 

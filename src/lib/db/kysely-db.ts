@@ -440,6 +440,7 @@ function buildMariaDBConnection(): KyselyDB {
     waitForConnections: true,
     enableKeepAlive: true,
     keepAliveInitialDelayMs: 0,
+    charset: "utf8mb4_general_ci",
   });
 
   return new Kysely<Database>({

@@ -82,3 +82,4 @@ job-outputs/
 .gstack/
 auth.json
 .claude/worktrees/
+.playwright-mcp/

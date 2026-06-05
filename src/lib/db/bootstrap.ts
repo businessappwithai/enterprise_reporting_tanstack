@@ -569,10 +569,10 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
 
     // NL Report Definitions — dynamic report generation
     sql`CREATE TABLE IF NOT EXISTS nl_report_definitions (
-      id VARCHAR(255) NOT NULL PRIMARY KEY,
+      id VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL PRIMARY KEY,
       title VARCHAR(255) NOT NULL,
-      created_by VARCHAR(255) NOT NULL,
-      data_source_id VARCHAR(255) NOT NULL,
+      created_by VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+      data_source_id VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
       nl_query TEXT NOT NULL,
       generated_sql TEXT NOT NULL,
       metric_columns LONGTEXT NOT NULL,
@@ -599,10 +599,10 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
 
     // Generated Report Artifacts — output files from report worker
     sql`CREATE TABLE IF NOT EXISTS generated_report_artifacts (
-      id VARCHAR(255) NOT NULL PRIMARY KEY,
-      report_definition_id VARCHAR(255) NOT NULL,
-      execution_id VARCHAR(255) NOT NULL,
-      created_by VARCHAR(255) NOT NULL,
+      id VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL PRIMARY KEY,
+      report_definition_id VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+      execution_id VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+      created_by VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
       format VARCHAR(10) NOT NULL,
       file_path VARCHAR(500) NOT NULL,
       file_size_bytes BIGINT NULL,
