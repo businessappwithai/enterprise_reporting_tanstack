@@ -1,6 +1,7 @@
 import { createSttClient } from "./llama-client";
 
-const LLAMA_STT_MODEL = process.env.LLAMA_STT_MODEL || "Qwen3-ASR";
+const STT_MODEL =
+  process.env.AI_STT_MODEL ?? process.env.LLAMA_STT_MODEL ?? "Qwen3-ASR";
 
 export async function transcribeAudio(audioBlob: Blob): Promise<string> {
   const client = createSttClient();
@@ -9,7 +10,7 @@ export async function transcribeAudio(audioBlob: Blob): Promise<string> {
 
   const response = await client.audio.transcriptions.create({
     file: file,
-    model: LLAMA_STT_MODEL,
+    model: STT_MODEL,
     response_format: "json",
   });
 

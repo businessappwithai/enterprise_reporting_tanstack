@@ -33,15 +33,12 @@ function getMastraHeaders(): Record<string, string> {
 
 function getModelConfig() {
   return {
-    reasoningUrl: process.env.LLAMA_REASONING_URL || "http://localhost:8080",
-    reasoningModel: process.env.LLAMA_REASONING_MODEL || "qwen3.6",
-    reasoningApiKey: process.env.LLAMA_REASONING_API_KEY || "none",
-    sttUrl: process.env.LLAMA_STT_URL || "http://localhost:8081",
-    sttModel: process.env.LLAMA_STT_MODEL || "Qwen3-ASR",
-    sttApiKey: process.env.LLAMA_STT_API_KEY || "none",
-    ttsUrl: process.env.LLAMA_TTS_URL || "http://localhost:8083",
-    ttsModel: process.env.LLAMA_TTS_MODEL || "Qwen3-TTS",
-    ttsApiKey: process.env.LLAMA_TTS_API_KEY || "none",
+    reasoningModel:
+      process.env.AI_NL2SQL_MODEL ?? process.env.LLAMA_REASONING_MODEL ?? "qwen3.6",
+    sttModel:
+      process.env.AI_STT_MODEL ?? process.env.LLAMA_STT_MODEL ?? "Qwen3-ASR",
+    ttsModel:
+      process.env.AI_TTS_MODEL ?? process.env.LLAMA_TTS_MODEL ?? "Qwen3-TTS",
   };
 }
 

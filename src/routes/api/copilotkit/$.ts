@@ -33,8 +33,10 @@ let _handler: { handleRequest: (req: Request) => Response | Promise<Response> } 
 function getHandler() {
   if (!_handler) {
     const mastraUrl = process.env.MASTRA_URL || "http://localhost:4111";
-    const apiKey = process.env.LLAMA_REASONING_API_KEY || "none";
-    const model = process.env.LLAMA_REASONING_MODEL || "qwen3.6";
+    const apiKey =
+      process.env.AI_NL2SQL_API_KEY ?? process.env.LLAMA_REASONING_API_KEY ?? "none";
+    const model =
+      process.env.AI_NL2SQL_MODEL ?? process.env.LLAMA_REASONING_MODEL ?? "qwen3.6";
 
     const openai = new OpenAI({
       baseURL: `${mastraUrl}/v1`,

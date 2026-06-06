@@ -633,6 +633,7 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
   console.log("[bootstrap] Seeding admin user...");
   const adminRoleId = "admin-role-id";
   const ADMIN_PERMISSIONS = JSON.stringify([
+    "*:*",
     "admin:*",
     "user:*",
     "role:*",
@@ -644,32 +645,39 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
     "job:*",
     "audit:*",
     "nl_query:*",
+    "filter:*",
+    "monitoring_rule:*",
+    "log:*",
+    "setting:*",
+    "queue:*",
+    "metadata_entity:*",
   ]);
 
   const now = new Date().toISOString();
 
-  // Only seed if no users exist
+  // Always upsert admin role with latest permissions (safe to run every boot)
+  await db
+    .insertInto("roles")
+    .values({
+      id: adminRoleId,
+      name: "Administrator",
+      description: "Full system administrator",
+      permissions: ADMIN_PERMISSIONS,
+      created_at: now,
+    })
+    .onDuplicateKeyUpdate({ permissions: ADMIN_PERMISSIONS })
+    .execute()
+    .catch((err) => {
+      console.warn("[bootstrap] admin role upsert warning:", (err as Error).message?.slice(0, 120));
+    });
+
+  // Only seed users/assignments if no users exist yet
   const userCount = await db
     .selectFrom("users")
     .select(db.fn.count<number>("id").as("count"))
     .executeTakeFirst();
 
   if (!userCount || userCount.count === 0) {
-    // Insert admin role
-    await db
-      .insertInto("roles")
-      .values({
-        id: adminRoleId,
-        name: "Administrator",
-        description: "Full system administrator",
-        permissions: ADMIN_PERMISSIONS,
-        created_at: now,
-      })
-      .onDuplicateKeyUpdate({ permissions: ADMIN_PERMISSIONS })
-      .execute()
-      .catch((err) => {
-        console.warn("[bootstrap] admin role insert warning:", (err as Error).message?.slice(0, 120));
-      });
 
     // Insert admin user
     await db

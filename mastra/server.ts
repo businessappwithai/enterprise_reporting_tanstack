@@ -30,19 +30,39 @@ try {
   }
 } catch {}
 
-const LLAMA_URL = process.env.LLAMA_REASONING_URL || "http://localhost:8080";
-const LLAMA_MODEL = process.env.LLAMA_REASONING_MODEL || "qwen3.6";
-const LLAMA_API_KEY = process.env.LLAMA_REASONING_API_KEY || "none";
-const STT_URL = process.env.LLAMA_STT_URL || "http://localhost:8081";
-const STT_MODEL = process.env.LLAMA_STT_MODEL || "Qwen3-ASR";
-const STT_API_KEY = process.env.LLAMA_STT_API_KEY || "none";
-const TTS_URL = process.env.LLAMA_TTS_URL || "http://localhost:8083";
-const TTS_MODEL = process.env.LLAMA_TTS_MODEL || "Qwen3-TTS";
-const TTS_API_KEY = process.env.LLAMA_TTS_API_KEY || "none";
-const PORT = parseInt(process.env.MASTRA_PORT || "4111", 10);
+// AI_* vars take priority over the legacy LLAMA_* vars.
+// AI_* BASE_URL must be the full OpenAI-compatible base including /v1.
+// LLAMA_* vars (no /v1 suffix) are the local fallback — /v1 is appended below.
+function _base(ai: string | undefined, llama: string | undefined, def: string): string {
+  return ai ?? `${llama ?? def}/v1`;
+}
+function isLocal(url: string): boolean {
+  return url.includes("localhost") || url.includes("127.0.0.1");
+}
 
-const LLAMA_EMBEDDING_URL = process.env.LLAMA_EMBEDDING_URL || LLAMA_URL;
-const LLAMA_EMBEDDING_MODEL = process.env.LLAMA_EMBEDDING_MODEL || "embedding";
+const NL2SQL_BASE = _base(process.env.AI_NL2SQL_BASE_URL, process.env.LLAMA_REASONING_URL, "http://localhost:8080");
+const NL2SQL_MODEL = process.env.AI_NL2SQL_MODEL ?? process.env.LLAMA_REASONING_MODEL ?? "qwen3.6";
+const NL2SQL_API_KEY = process.env.AI_NL2SQL_API_KEY ?? process.env.LLAMA_REASONING_API_KEY ?? "none";
+
+const STT_BASE = _base(process.env.AI_STT_BASE_URL, process.env.LLAMA_STT_URL, "http://localhost:8081");
+const STT_MODEL = process.env.AI_STT_MODEL ?? process.env.LLAMA_STT_MODEL ?? "Qwen3-ASR";
+const STT_API_KEY = process.env.AI_STT_API_KEY ?? process.env.LLAMA_STT_API_KEY ?? "none";
+// Treat any HTTP (non-HTTPS) URL as a local/internal service that may support
+// the whisper.cpp /inference endpoint in addition to /v1/audio/transcriptions
+const STT_IS_LOCAL = isLocal(STT_BASE) || STT_BASE.startsWith("http://");
+
+const TTS_BASE = _base(process.env.AI_TTS_BASE_URL, process.env.LLAMA_TTS_URL, "http://localhost:8083");
+const TTS_MODEL = process.env.AI_TTS_MODEL ?? process.env.LLAMA_TTS_MODEL ?? "Qwen3-TTS";
+const TTS_API_KEY = process.env.AI_TTS_API_KEY ?? process.env.LLAMA_TTS_API_KEY ?? "none";
+
+const EMB_BASE = _base(
+  process.env.AI_EMBEDDING_BASE_URL,
+  process.env.LLAMA_EMBEDDING_URL ?? process.env.LLAMA_REASONING_URL,
+  "http://localhost:8080"
+);
+const EMB_MODEL = process.env.AI_EMBEDDING_MODEL ?? process.env.LLAMA_EMBEDDING_MODEL ?? "embedding";
+
+const PORT = parseInt(process.env.MASTRA_PORT || "4111", 10);
 
 const SYSTEM_PROMPT = `You are a highly experienced SQL generation agent for the Enterprise Reporting System.
 
@@ -86,15 +106,15 @@ OUTPUT FORMAT:
 
 async function proxyToLlama(body: unknown): Promise<Response> {
   const payload = body as Record<string, unknown>;
-  // Disable Qwen3 thinking mode — reasoning_content tokens break OpenAI-compatible clients
-  if (!payload.chat_template_kwargs) {
+  // chat_template_kwargs is Qwen3/llama.cpp specific — skip for cloud providers
+  if (isLocal(NL2SQL_BASE) && !payload.chat_template_kwargs) {
     payload.chat_template_kwargs = { enable_thinking: false };
   }
-  const res = await fetch(`${LLAMA_URL}/v1/chat/completions`, {
+  const res = await fetch(`${NL2SQL_BASE}/chat/completions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(LLAMA_API_KEY !== "none" ? { Authorization: `Bearer ${LLAMA_API_KEY}` } : {}),
+      ...(NL2SQL_API_KEY !== "none" ? { Authorization: `Bearer ${NL2SQL_API_KEY}` } : {}),
     },
     body: JSON.stringify(payload),
   });
@@ -121,21 +141,21 @@ const server = Bun.serve({
     // Health check
     if (path === "/health" || path === "/") {
       try {
-        const llamaRes = await fetch(`${LLAMA_URL}/v1/models`);
+        const llamaRes = await fetch(`${NL2SQL_BASE}/models`);
         const llamaOk = llamaRes.ok;
         return Response.json(
           {
             status: "ok",
             agent: "sql-agent",
             llama: llamaOk ? "connected" : "unreachable",
-            llamaUrl: LLAMA_URL,
-            model: LLAMA_MODEL,
+            llamaUrl: NL2SQL_BASE,
+            model: NL2SQL_MODEL,
           },
           { headers: corsHeaders },
         );
       } catch {
         return Response.json(
-          { status: "degraded", agent: "sql-agent", llama: "unreachable", llamaUrl: LLAMA_URL },
+          { status: "degraded", agent: "sql-agent", llama: "unreachable", llamaUrl: NL2SQL_BASE },
           { status: 503, headers: corsHeaders },
         );
       }
@@ -150,7 +170,7 @@ const server = Bun.serve({
           body.messages = [{ role: "system", content: SYSTEM_PROMPT }, ...(body.messages || [])];
         }
         // Override model to the configured one
-        body.model = body.model || LLAMA_MODEL;
+        body.model = body.model || NL2SQL_MODEL;
 
         const llamaRes = await proxyToLlama(body);
         const llamaBody = await llamaRes.text();
@@ -170,15 +190,15 @@ const server = Bun.serve({
       }
     }
 
-    // Models endpoint — proxy to llama.cpp
+    // Models endpoint — proxy to LLM backend
     if (path === "/v1/models") {
       try {
-        const llamaRes = await fetch(`${LLAMA_URL}/v1/models`);
+        const llamaRes = await fetch(`${NL2SQL_BASE}/models`);
         const data = await llamaRes.json();
         return Response.json(data, { headers: corsHeaders });
       } catch {
         return Response.json(
-          { data: [{ id: LLAMA_MODEL, object: "model", owned_by: "local" }] },
+          { data: [{ id: NL2SQL_MODEL, object: "model", owned_by: "local" }] },
           { headers: corsHeaders },
         );
       }
@@ -210,7 +230,7 @@ USER QUESTION: ${nlQuestion}
 Respond with ONLY a JSON object in this exact format:
 {"sql": "SELECT ...", "explanation": "Brief explanation of what the query does", "warnings": []}`;
 
-        const model = modelConfig?.reasoningModel || LLAMA_MODEL;
+        const model = modelConfig?.reasoningModel || NL2SQL_MODEL;
 
         const llamaRes = await proxyToLlama({
           model,
@@ -282,7 +302,7 @@ Respond with ONLY a JSON object in this exact format:
         const body = await req.json();
         body.model = body.model || TTS_MODEL;
 
-        const ttsRes = await fetch(`${TTS_URL}/v1/audio/speech`, {
+        const ttsRes = await fetch(`${TTS_BASE}/audio/speech`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -316,21 +336,26 @@ Respond with ONLY a JSON object in this exact format:
           newForm.append(key, value);
         }
 
-        // Try whisper.cpp /inference endpoint first, fall back to OpenAI-compatible
         let sttRes: Response;
-        try {
-          sttRes = await fetch(`${STT_URL}/inference`, {
-            method: "POST",
-            body: newForm,
-          });
-        } catch {
-          // Fallback to OpenAI-compatible endpoint
+        if (STT_IS_LOCAL) {
+          // Try whisper.cpp /inference endpoint first, fall back to OpenAI-compatible
+          const sttRoot = STT_BASE.replace(/\/v1$/, "");
+          try {
+            sttRes = await fetch(`${sttRoot}/inference`, { method: "POST", body: newForm });
+          } catch {
+            if (!newForm.has("model")) newForm.append("model", STT_MODEL);
+            sttRes = await fetch(`${STT_BASE}/audio/transcriptions`, {
+              method: "POST",
+              headers: { ...(STT_API_KEY !== "none" ? { Authorization: `Bearer ${STT_API_KEY}` } : {}) },
+              body: newForm,
+            });
+          }
+        } else {
+          // Cloud/OpenAI-compatible: go straight to /audio/transcriptions
           if (!newForm.has("model")) newForm.append("model", STT_MODEL);
-          sttRes = await fetch(`${STT_URL}/v1/audio/transcriptions`, {
+          sttRes = await fetch(`${STT_BASE}/audio/transcriptions`, {
             method: "POST",
-            headers: {
-              ...(STT_API_KEY !== "none" ? { Authorization: `Bearer ${STT_API_KEY}` } : {}),
-            },
+            headers: { ...(STT_API_KEY !== "none" ? { Authorization: `Bearer ${STT_API_KEY}` } : {}) },
             body: newForm,
           });
         }
@@ -355,9 +380,9 @@ Respond with ONLY a JSON object in this exact format:
     if (path === "/v1/embeddings" && req.method === "POST") {
       try {
         const body = await req.json();
-        body.model = body.model || LLAMA_EMBEDDING_MODEL;
+        body.model = body.model || EMB_MODEL;
 
-        const embRes = await fetch(`${LLAMA_EMBEDDING_URL}/v1/embeddings`, {
+        const embRes = await fetch(`${EMB_BASE}/embeddings`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
@@ -501,7 +526,7 @@ Respond with ONLY a JSON object in this exact format:
 });
 
 console.log(`[Mastra Agent] Server running at http://localhost:${PORT}`);
-console.log(`[Mastra Agent] LLM backend: ${LLAMA_URL} (model: ${LLAMA_MODEL})`);
+console.log(`[Mastra Agent] LLM backend: ${NL2SQL_BASE} (model: ${NL2SQL_MODEL})`);
 console.log(`[Mastra Agent] Endpoints:`);
 console.log(`  GET  /health                         — Health check`);
 console.log(`  POST /v1/chat/completions             — OpenAI-compatible chat (proxied to llama.cpp)`);
@@ -512,4 +537,4 @@ console.log(`  POST /v1/embeddings                   — Embedding generation (p
 console.log(`  POST /api/build-monitoring-pipeline   — Supervisor agent: full monitoring pipeline`);
 console.log(`  POST /api/rbac-schema                 — RBAC-filtered schema`);
 console.log(`  POST /api/validate-monitoring-rule    — Monitoring rule dry-run validation`);
-console.log(`[Mastra Agent] Embedding backend: ${LLAMA_EMBEDDING_URL} (model: ${LLAMA_EMBEDDING_MODEL})`);
+console.log(`[Mastra Agent] Embedding backend: ${EMB_BASE} (model: ${EMB_MODEL})`);

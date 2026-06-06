@@ -1,15 +1,15 @@
-# Enterprise Reporting System — Local test stack
-# Includes: MariaDB · Redis · whisper.cpp STT · Mastra AI · App
-# Usage: docker compose -f docker-compose.local.yml up -d --build
-# App: http://localhost:5050  |  Mastra: http://localhost:4111
+# Enterprise Reporting System — Remote Hostinger Deployment
+# Identical to local setup but with remote-friendly network/port configurations
+# Usage: docker compose -f docker-compose.remote.yml up -d --build
+# App: https://your-hostinger-domain.com  |  Mastra: http://your-hostinger-ip:4111
 
 services:
 
   # ── MariaDB — configuration + metadata database ──────────────────────────────
   mariadb:
     image: mariadb:11
-    container_name: ers-local-mariadb
-    restart: unless-stopped
+    container_name: ers-remote-mariadb
+    restart: always
     environment:
       MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-root_pass}
       MARIADB_DATABASE:      ${MARIADB_DATABASE:-enterprise_config}
@@ -23,8 +23,10 @@ services:
       --max-allowed-packet=64M
     volumes:
       - mariadb_data:/var/lib/mysql
+      # Optional: Import database dump on first run
+      # - ./enterprise_config_backup.sql:/docker-entrypoint-initdb.d/init.sql:ro
     ports:
-      - "3307:3306"
+      - "3306:3306"
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
@@ -36,13 +38,13 @@ services:
   # ── Redis — job queue ─────────────────────────────────────────────────────────
   redis:
     image: redis:7-alpine
-    container_name: ers-local-redis
-    restart: unless-stopped
-    command: redis-server --appendonly yes
+    container_name: ers-remote-redis
+    restart: always
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_pass}
     volumes:
       - redis_data:/data
     ports:
-      - "6380:6379"
+      - "6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -57,8 +59,8 @@ services:
       context: .
       dockerfile: Dockerfile.stt
     image: ers-stt:latest
-    container_name: ers-local-stt
-    restart: unless-stopped
+    container_name: ers-remote-stt
+    restart: always
     ports:
       - "8081:8081"
     healthcheck:
@@ -76,14 +78,13 @@ services:
       context: .
       dockerfile: Dockerfile.mastra
     image: ers-mastra:latest
-    container_name: ers-local-mastra
-    restart: unless-stopped
+    container_name: ers-remote-mastra
+    restart: always
     ports:
       - "4111:4111"
     environment:
       MASTRA_PORT: "4111"
       # NL-to-SQL via OpenRouter (free tier)
-      # Alternatives: google/gemma-4-31b-it:free  qwen/qwen3-coder:free
       AI_NL2SQL_BASE_URL: "https://openrouter.ai/api/v1"
       AI_NL2SQL_MODEL:    "openai/gpt-oss-120b:free"
       AI_NL2SQL_API_KEY:  ${AI_NL2SQL_API_KEY:-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}
@@ -112,16 +113,16 @@ services:
       context: .
       dockerfile: Dockerfile
     image: enterprise-reporting-system:latest
-    container_name: ers-local-app
-    restart: unless-stopped
+    container_name: ers-remote-app
+    restart: always
     ports:
-      - "5050:3000"
+      - "3000:3000"
     environment:
       NODE_ENV:             production
       PORT:                 "3000"
-      NEXT_PUBLIC_APP_URL:  "http://localhost:5050"
-      AUTH_SECRET:          ${AUTH_SECRET:-local-dev-secret-change-in-production}
-      AUTH_URL:             "http://localhost:5050"
+      NEXT_PUBLIC_APP_URL:  "${NEXT_PUBLIC_APP_URL:-http://localhost:3000}"
+      AUTH_SECRET:          "${AUTH_SECRET}"
+      AUTH_URL:             "${AUTH_URL:-http://localhost:3000}"
 
       # MariaDB
       MARIADB_HOST:     mariadb
@@ -131,8 +132,8 @@ services:
       MARIADB_PASSWORD: ${MARIADB_PASSWORD:-enterprise_pass}
 
       # Redis
-      REDIS_URL:             "redis://redis:6379"
-      ENCRYPTION_KEY:        ${ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
+      REDIS_URL:             "redis://:${REDIS_PASSWORD:-redis_pass}@redis:6379"
+      ENCRYPTION_KEY:        "${ENCRYPTION_KEY}"
       JOB_OUTPUT_PATH:       /app/job-outputs
       MAX_CONCURRENT_JOBS:   "5"
 
@@ -143,13 +144,13 @@ services:
       EXPORT_PAGE_SIZE:           "1000"
       VIRTUAL_SCROLL_THRESHOLD:   "500"
       ENABLE_VIRTUAL_SCROLLING:   "true"
-      NEXT_PUBLIC_ERROR_REPORTING_EMAIL: "admin@localhost"
+      NEXT_PUBLIC_ERROR_REPORTING_EMAIL: "${ERROR_REPORTING_EMAIL:-admin@localhost}"
       PGCONNECT_TIMEOUT:          "30000"
 
       # Mastra AI agent (Docker-internal hostname)
       MASTRA_URL: "http://mastra:4111"
 
-      # AI provider — NL-to-SQL via OpenRouter; STT via Moonshine container
+      # AI provider — NL-to-SQL via OpenRouter; STT via Whisper container
       AI_NL2SQL_BASE_URL: "https://openrouter.ai/api/v1"
       AI_NL2SQL_MODEL:    "openai/gpt-oss-120b:free"
       AI_NL2SQL_API_KEY:  ${AI_NL2SQL_API_KEY:-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}

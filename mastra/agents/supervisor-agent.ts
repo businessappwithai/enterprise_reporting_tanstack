@@ -61,22 +61,35 @@ export const ScheduleGuardrail = z.object({
 
 // ─── LLM Call Helper ─────────────────────────────────────────────────────────
 
-const LLAMA_URL = process.env.LLAMA_REASONING_URL ?? "http://localhost:8080";
-const LLAMA_MODEL = process.env.LLAMA_REASONING_MODEL ?? "qwen3.6";
+const NL2SQL_BASE =
+  process.env.AI_NL2SQL_BASE_URL ??
+  `${process.env.LLAMA_REASONING_URL ?? "http://localhost:8080"}/v1`;
+const NL2SQL_MODEL =
+  process.env.AI_NL2SQL_MODEL ?? process.env.LLAMA_REASONING_MODEL ?? "qwen3.6";
+const NL2SQL_API_KEY =
+  process.env.AI_NL2SQL_API_KEY ?? process.env.LLAMA_REASONING_API_KEY ?? "none";
+const NL2SQL_IS_LOCAL =
+  NL2SQL_BASE.includes("localhost") || NL2SQL_BASE.includes("127.0.0.1");
 
 async function callLLM(systemPrompt: string, userPrompt: string): Promise<string> {
-  const res = await fetch(`${LLAMA_URL}/v1/chat/completions`, {
+  const payload: Record<string, unknown> = {
+    model: NL2SQL_MODEL,
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
+    ],
+    temperature: 0.1,
+  };
+  // chat_template_kwargs is Qwen3/llama.cpp specific — skip for cloud providers
+  if (NL2SQL_IS_LOCAL) payload.chat_template_kwargs = { enable_thinking: false };
+
+  const res = await fetch(`${NL2SQL_BASE}/chat/completions`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: LLAMA_MODEL,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-      temperature: 0.1,
-      chat_template_kwargs: { enable_thinking: false },
-    }),
+    headers: {
+      "Content-Type": "application/json",
+      ...(NL2SQL_API_KEY !== "none" ? { Authorization: `Bearer ${NL2SQL_API_KEY}` } : {}),
+    },
+    body: JSON.stringify(payload),
     signal: AbortSignal.timeout(120_000),
   });
 

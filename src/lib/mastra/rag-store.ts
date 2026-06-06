@@ -15,9 +15,11 @@ import { getConnection } from "@/lib/db/connection-manager";
 import type { DataSource } from "@/types/database";
 
 const EMBEDDING_DIM = 384;
-const LLAMA_EMBEDDING_URL =
-  process.env.LLAMA_EMBEDDING_URL || process.env.LLAMA_REASONING_URL || "http://localhost:8080";
-const LLAMA_EMBEDDING_MODEL = process.env.LLAMA_EMBEDDING_MODEL || "embedding";
+const EMBEDDING_BASE_URL =
+  process.env.AI_EMBEDDING_BASE_URL ??
+  `${process.env.LLAMA_EMBEDDING_URL ?? process.env.LLAMA_REASONING_URL ?? "http://localhost:8080"}/v1`;
+const EMBEDDING_MODEL =
+  process.env.AI_EMBEDDING_MODEL ?? process.env.LLAMA_EMBEDDING_MODEL ?? "embedding";
 
 // ---------------------------------------------------------------------------
 // Embedding generation
@@ -27,10 +29,10 @@ let _embeddingAvailable: boolean | null = null;
 
 async function llamaEmbed(text: string): Promise<number[] | null> {
   try {
-    const res = await fetch(`${LLAMA_EMBEDDING_URL}/v1/embeddings`, {
+    const res = await fetch(`${EMBEDDING_BASE_URL}/embeddings`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ input: text, model: LLAMA_EMBEDDING_MODEL }),
+      body: JSON.stringify({ input: text, model: EMBEDDING_MODEL }),
       signal: AbortSignal.timeout(10_000),
     });
     if (!res.ok) {
