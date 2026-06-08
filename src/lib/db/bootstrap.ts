@@ -9,6 +9,7 @@
 import { sql } from "kysely";
 import type { Kysely } from "kysely";
 import type { Database } from "./kysely-db";
+import { seedHelpArticles } from "./help-seed";
 
 // bcrypt hash of "admin" (10 rounds) – pre-computed to avoid runtime bcrypt dependency
 const ADMIN_PASSWORD_HASH =
@@ -618,6 +619,22 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
       INDEX idx_gra_user (created_by, created_at),
       INDEX idx_gra_execution (execution_id)
     )`,
+
+    // Help articles — in-app help system
+    sql`CREATE TABLE IF NOT EXISTS help_articles (
+      id VARCHAR(255) PRIMARY KEY,
+      category VARCHAR(100) NOT NULL,
+      icon VARCHAR(100) NOT NULL DEFAULT 'HelpCircle',
+      color VARCHAR(50) NOT NULL DEFAULT 'blue',
+      title VARCHAR(255) NOT NULL,
+      summary TEXT NOT NULL,
+      content LONGTEXT NOT NULL,
+      keywords TEXT NOT NULL DEFAULT '',
+      sort_order INT NOT NULL DEFAULT 0,
+      is_published TINYINT(1) NOT NULL DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    )`,
   ];
 
   console.log("[bootstrap] Creating tables...");
@@ -762,5 +779,10 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
     });
 
   console.log("[bootstrap] NL Query user ensured: nlquery@nlquery.com / nlquery");
+
+  // Seed help articles
+  console.log("[bootstrap] Seeding help articles...");
+  await seedHelpArticles(db);
+
   console.log("[bootstrap] Database bootstrap complete!");
 }

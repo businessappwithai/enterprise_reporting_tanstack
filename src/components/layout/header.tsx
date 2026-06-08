@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ThemeSelector } from "@/components/theme/theme-selector";
+import { HelpButton } from "@/components/help/HelpButton";
 import { logoutFn } from "@/server-fns/auth";
 import {
   fetchNotificationsFn,
@@ -182,6 +183,8 @@ export function Header({ user, onMobileMenuToggle, mobileMenuOpen }: HeaderProps
 
       <div className="flex items-center gap-2">
         <ThemeSelector />
+
+        <HelpButton />
 
         {/* Notifications */}
         <DropdownMenu>

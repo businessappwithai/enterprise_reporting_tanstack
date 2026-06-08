@@ -71,6 +71,7 @@ import { Route as ApiLogsSearchRouteImport } from './routes/api/logs/search'
 import { Route as ApiLogsComponentsRouteImport } from './routes/api/logs/components'
 import { Route as ApiJobsStatusRouteImport } from './routes/api/jobs/status'
 import { Route as ApiJobsExecutionsRouteImport } from './routes/api/jobs/executions'
+import { Route as ApiHelpArticlesRouteImport } from './routes/api/help/articles'
 import { Route as ApiDataSourcesUploadRouteImport } from './routes/api/data-sources/upload'
 import { Route as ApiDataSourcesTestRouteImport } from './routes/api/data-sources/test'
 import { Route as ApiDataSourcesActiveRouteImport } from './routes/api/data-sources/active'
@@ -433,6 +434,11 @@ const ApiJobsExecutionsRoute = ApiJobsExecutionsRouteImport.update({
   path: '/executions',
   getParentRoute: () => ApiJobsRoute,
 } as any)
+const ApiHelpArticlesRoute = ApiHelpArticlesRouteImport.update({
+  id: '/api/help/articles',
+  path: '/api/help/articles',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiDataSourcesUploadRoute = ApiDataSourcesUploadRouteImport.update({
   id: '/api/data-sources/upload',
   path: '/api/data-sources/upload',
@@ -736,6 +742,7 @@ export interface FileRoutesByFullPath {
   '/api/data-sources/active': typeof ApiDataSourcesActiveRoute
   '/api/data-sources/test': typeof ApiDataSourcesTestRoute
   '/api/data-sources/upload': typeof ApiDataSourcesUploadRoute
+  '/api/help/articles': typeof ApiHelpArticlesRoute
   '/api/jobs/executions': typeof ApiJobsExecutionsRoute
   '/api/jobs/status': typeof ApiJobsStatusRoute
   '/api/logs/components': typeof ApiLogsComponentsRoute
@@ -849,6 +856,7 @@ export interface FileRoutesByTo {
   '/api/data-sources/active': typeof ApiDataSourcesActiveRoute
   '/api/data-sources/test': typeof ApiDataSourcesTestRoute
   '/api/data-sources/upload': typeof ApiDataSourcesUploadRoute
+  '/api/help/articles': typeof ApiHelpArticlesRoute
   '/api/jobs/executions': typeof ApiJobsExecutionsRoute
   '/api/jobs/status': typeof ApiJobsStatusRoute
   '/api/logs/components': typeof ApiLogsComponentsRoute
@@ -964,6 +972,7 @@ export interface FileRoutesById {
   '/api/data-sources/active': typeof ApiDataSourcesActiveRoute
   '/api/data-sources/test': typeof ApiDataSourcesTestRoute
   '/api/data-sources/upload': typeof ApiDataSourcesUploadRoute
+  '/api/help/articles': typeof ApiHelpArticlesRoute
   '/api/jobs/executions': typeof ApiJobsExecutionsRoute
   '/api/jobs/status': typeof ApiJobsStatusRoute
   '/api/logs/components': typeof ApiLogsComponentsRoute
@@ -1079,6 +1088,7 @@ export interface FileRouteTypes {
     | '/api/data-sources/active'
     | '/api/data-sources/test'
     | '/api/data-sources/upload'
+    | '/api/help/articles'
     | '/api/jobs/executions'
     | '/api/jobs/status'
     | '/api/logs/components'
@@ -1192,6 +1202,7 @@ export interface FileRouteTypes {
     | '/api/data-sources/active'
     | '/api/data-sources/test'
     | '/api/data-sources/upload'
+    | '/api/help/articles'
     | '/api/jobs/executions'
     | '/api/jobs/status'
     | '/api/logs/components'
@@ -1306,6 +1317,7 @@ export interface FileRouteTypes {
     | '/api/data-sources/active'
     | '/api/data-sources/test'
     | '/api/data-sources/upload'
+    | '/api/help/articles'
     | '/api/jobs/executions'
     | '/api/jobs/status'
     | '/api/logs/components'
@@ -1408,6 +1420,7 @@ export interface RootRouteChildren {
   ApiDataSourcesActiveRoute: typeof ApiDataSourcesActiveRoute
   ApiDataSourcesTestRoute: typeof ApiDataSourcesTestRoute
   ApiDataSourcesUploadRoute: typeof ApiDataSourcesUploadRoute
+  ApiHelpArticlesRoute: typeof ApiHelpArticlesRoute
   ApiLogsComponentsRoute: typeof ApiLogsComponentsRoute
   ApiLogsSearchRoute: typeof ApiLogsSearchRoute
   ApiLogsUsersRoute: typeof ApiLogsUsersRoute
@@ -1873,6 +1886,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/jobs/executions'
       preLoaderRoute: typeof ApiJobsExecutionsRouteImport
       parentRoute: typeof ApiJobsRoute
+    }
+    '/api/help/articles': {
+      id: '/api/help/articles'
+      path: '/api/help/articles'
+      fullPath: '/api/help/articles'
+      preLoaderRoute: typeof ApiHelpArticlesRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/data-sources/upload': {
       id: '/api/data-sources/upload'
@@ -2559,6 +2579,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiDataSourcesActiveRoute: ApiDataSourcesActiveRoute,
   ApiDataSourcesTestRoute: ApiDataSourcesTestRoute,
   ApiDataSourcesUploadRoute: ApiDataSourcesUploadRoute,
+  ApiHelpArticlesRoute: ApiHelpArticlesRoute,
   ApiLogsComponentsRoute: ApiLogsComponentsRoute,
   ApiLogsSearchRoute: ApiLogsSearchRoute,
   ApiLogsUsersRoute: ApiLogsUsersRoute,

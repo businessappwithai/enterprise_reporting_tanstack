@@ -86,14 +86,14 @@ async function buildKyselyConnection(
       // Build pool config with battle-tested SSL/TLS settings for Neon and other external databases
       const poolConfig: any = {
         // Connection pool configuration
-        max: 10,
+        max: 5, // Reduced from 10 to minimize Neon connection limit issues
         min: 0,
-        idleTimeoutMillis: 600000,
+        idleTimeoutMillis: 300000, // 5 minutes (Neon free tier disconnects after ~5 min idle)
         // Extended timeout for external databases with SSL/TLS handshake and SASL channel binding
-        connectionTimeoutMillis: 180000, // 180 seconds for Neon's strict SSL/SASL
+        connectionTimeoutMillis: 30000, // 30 seconds (Neon pooler is fast when responsive)
         statement_timeout: 60000,
         keepalives: 1,
-        keepalives_idle: 30,
+        keepalives_idle: 5, // Send TCP keepalive every 5 seconds to prevent idle disconnection
       };
 
       console.log(`[BUILD_CONN:${buildId}] Pool config: max=${poolConfig.max}, connectionTimeout=${poolConfig.connectionTimeoutMillis}ms`);
@@ -173,6 +173,16 @@ async function buildKyselyConnection(
         const pool = new Pool(poolConfig);
         console.log(`[BUILD_CONN:${buildId}] pg Pool created successfully`);
 
+        // Add error event handler to log pool errors without crashing
+        pool.on('error', (err: Error) => {
+          console.warn(`[BUILD_CONN:${buildId}] [POOL ERROR] ${err.message}`);
+        });
+
+        // Log when clients fail
+        pool.on('connect', () => {
+          console.log(`[BUILD_CONN:${buildId}] Pool: new client connected`);
+        });
+
         console.log(`[BUILD_CONN:${buildId}] Creating Kysely instance with PostgreSQL dialect...`);
         const kysely = new Kysely({ dialect: new PostgresDialect({ pool }) });
         console.log(`[BUILD_CONN:${buildId}] Kysely instance created successfully`);
@@ -233,8 +243,15 @@ export async function getConnection(dataSource: DataSource): Promise<AnyKysely> 
     try {
       await sql`SELECT 1`.execute(connectionPool[poolKey]);
       return connectionPool[poolKey];
-    } catch {
-      await connectionPool[poolKey].destroy();
+    } catch (error) {
+      // Log the connection error for debugging
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.warn(`[CONNECTION MANAGER] Cached connection failed for ${poolKey}: ${errorMsg}. Recreating...`);
+      try {
+        await connectionPool[poolKey].destroy();
+      } catch (destroyError) {
+        console.warn(`[CONNECTION MANAGER] Error destroying failed connection: ${destroyError}`);
+      }
       delete connectionPool[poolKey];
     }
   }

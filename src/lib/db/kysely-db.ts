@@ -40,6 +40,7 @@ export interface Database {
   nl_query_context: NLQueryContextTable;
   nl_query_role_stats: NLQueryRoleStatsTable;
   nl_query_feedback: NLQueryFeedbackTable;
+  help_articles: HelpArticleRow;
 }
 
 // Table type definitions — column names match actual DB schema
@@ -417,6 +418,21 @@ export interface NLQueryFeedbackTable {
   corrected_sql: string | null;
   feedback_by: string | null;
   created_at: string;
+}
+
+export interface HelpArticleRow {
+  id: string;
+  category: string;
+  icon: string;
+  color: string;
+  title: string;
+  summary: string;
+  content: string;
+  keywords: string;
+  sort_order: number;
+  is_published: number;
+  created_at: string;
+  updated_at: string;
 }
 
 // Database instance type
