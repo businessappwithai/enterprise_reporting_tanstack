@@ -3,12 +3,18 @@
 # Mastra AI Agent Server
 # NL-to-SQL + STT via OpenAI-compatible API
 # ==========================================
-FROM oven/bun:1.3-alpine
+FROM oven/bun:1.3-slim
 
 WORKDIR /app
 
 # Build tools required for native modules in package.json
-RUN apk add --no-cache curl ca-certificates python3 make g++
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install dependencies (shared bun.lock with main app)
 COPY package.json bun.lock ./

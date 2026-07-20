@@ -20,7 +20,7 @@ RUN cmake -B build \
       -DWHISPER_BUILD_SERVER=ON \
       -DCMAKE_BUILD_TYPE=Release \
       -DBUILD_SHARED_LIBS=OFF \
-    && cmake --build build --config Release --target whisper-server -j$(nproc)
+    && cmake --build build --config Release --target whisper-server
 
 # Download the smallest English model (~77 MB)
 RUN bash ./models/download-ggml-model.sh tiny.en

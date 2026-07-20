@@ -1,7 +1,7 @@
 #!/bin/bash
 # Test remote deployment — validate all services and functionality
 
-set -e
+set +e
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -78,7 +78,7 @@ fi
 echo ""
 echo "─── Test 3: MariaDB Database ───"
 TABLE_COUNT=$(ssh -p "$HOSTINGER_PORT" "$HOSTINGER_USER@$HOSTINGER_IP" << 'EOF'
-docker exec ers-remote-mariadb mysql -u enterprise -penterprise_pass enterprise_config -e \
+docker exec ers-remote-mariadb mariadb -u enterprise -penterprise_pass enterprise_config -e \
   "SELECT COUNT(*) FROM information_schema.TABLES WHERE table_schema='enterprise_config';" 2>/dev/null | tail -1
 EOF
 )
@@ -93,7 +93,7 @@ fi
 echo ""
 echo "─── Test 4: Redis Cache ───"
 REDIS_PING=$(ssh -p "$HOSTINGER_PORT" "$HOSTINGER_USER@$HOSTINGER_IP" << 'EOF'
-docker exec ers-remote-redis redis-cli ping 2>/dev/null || echo "FAILED"
+docker exec ers-remote-redis redis-cli -a redis_pass ping 2>/dev/null || echo "FAILED"
 EOF
 )
 
@@ -190,7 +190,7 @@ echo "$STATS" | sed 's/^/  /'
 echo ""
 echo "─── Test 12: Application Process Health ───"
 PROCESS_CHECK=$(ssh -p "$HOSTINGER_PORT" "$HOSTINGER_USER@$HOSTINGER_IP" << 'EOF'
-docker exec ers-remote-app ps aux | grep -E "node|next" | grep -v grep | wc -l
+docker exec ers-remote-app ps aux | grep -E "node|next|bun" | grep -v grep | wc -l
 EOF
 )
 
@@ -218,7 +218,7 @@ fi
 echo ""
 echo "─── Test 14: App → Redis Connectivity ───"
 REDIS_CONNECT=$(ssh -p "$HOSTINGER_PORT" "$HOSTINGER_USER@$HOSTINGER_IP" << 'EOF'
-docker exec ers-remote-app redis-cli -h redis ping 2>&1 | head -1
+docker exec ers-remote-app redis-cli -h redis -a redis_pass ping 2>/dev/null | head -1
 EOF
 )
 

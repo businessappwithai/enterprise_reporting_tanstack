@@ -4,15 +4,16 @@
 # ==========================================
 
 # Build stage - Pure Bun
-FROM oven/bun:1.3-alpine AS builder
+FROM oven/bun:1.3 AS builder
 
 WORKDIR /app
 
 # Install build dependencies
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     make \
-    g++
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy package files and source
 COPY package.json bun.lock ./
@@ -25,19 +26,22 @@ RUN bun install --frozen-lockfile && bun pm cache rm
 RUN bun run build
 
 # Production stage - Runtime only
-FROM oven/bun:1.3-alpine
+FROM oven/bun:1.3-slim
 
 WORKDIR /app
 
-# Install runtime dependencies (curl for health checks, ca-certs for HTTPS)
-RUN apk add --no-cache \
+# Install runtime dependencies (curl for health checks, ca-certs for HTTPS, mysql/redis clients for tests)
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
-    ca-certificates
+    ca-certificates \
+    default-mysql-client \
+    redis-tools \
+    procps \
+    && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user for security
-RUN adduser --system --uid 1001 bunuser || true && \
-    addgroup -g 1001 bunuser || true && \
-    adduser bunuser bunuser 2>/dev/null || true
+RUN groupadd -g 1001 bunuser && \
+    useradd -r -u 1001 -g bunuser bunuser
 
 # Copy package files
 COPY --from=builder /app/package.json ./package.json
@@ -51,6 +55,7 @@ COPY --from=builder --chown=bunuser:bunuser /app/node_modules ./node_modules
 # Copy database migration scripts (needed for runtime initialization)
 COPY --chown=bunuser:bunuser scripts ./scripts
 COPY --chown=bunuser:bunuser src/lib/db ./src/lib/db
+COPY --chown=bunuser:bunuser src/lib/security ./src/lib/security
 
 # Copy server wrapper for static file serving
 COPY --chown=bunuser:bunuser server-static-wrapper.mjs ./server-static-wrapper.mjs
