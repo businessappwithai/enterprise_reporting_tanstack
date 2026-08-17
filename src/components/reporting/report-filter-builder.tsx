@@ -201,7 +201,7 @@ export function ReportFilterBuilder({
               className="h-8 flex-1"
               placeholder="From"
             />
-            <span className="text-muted-foreground">to</span>
+            <span className="text-tremor-content">to</span>
             <Input
               type="text"
               value={(condition.value2 as string) || ""}

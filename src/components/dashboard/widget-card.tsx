@@ -200,7 +200,7 @@ export function WidgetCard({ widget, onFilterApply }: WidgetCardProps) {
                 cell: ({ getValue }) => {
                   const value = getValue();
                   if (value === null || value === undefined) {
-                    return <span className="text-muted-foreground">-</span>;
+                    return <span className="text-tremor-content">-</span>;
                   }
                   return String(value);
                 },
@@ -224,7 +224,7 @@ export function WidgetCard({ widget, onFilterApply }: WidgetCardProps) {
         <div className="flex items-center justify-center h-full">
           <div className="text-center">
             <div className="text-4xl font-bold">{config.value || "--"}</div>
-            <div className="text-muted-foreground">{config.label || "Metric"}</div>
+            <div className="text-tremor-content">{config.label || "Metric"}</div>
           </div>
         </div>
       );
@@ -234,7 +234,7 @@ export function WidgetCard({ widget, onFilterApply }: WidgetCardProps) {
       const textConfig = widget.widget_config ? JSON.parse(widget.widget_config) : {};
       return (
         <div className="p-2 h-full overflow-auto">
-          <p className="text-sm text-muted-foreground">{textConfig.content || "Text widget"}</p>
+          <p className="text-tremor-default text-tremor-content">{textConfig.content || "Text widget"}</p>
         </div>
       );
     }

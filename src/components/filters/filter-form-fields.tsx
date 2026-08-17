@@ -110,7 +110,7 @@ export function FilterFormFields({
             <SelectItem value="text">Text (Pattern matching)</SelectItem>
           </SelectContent>
         </Select>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-tremor-label text-tremor-content">
           {formData.field_type === "id" && "Select a query to populate dropdown options in filter"}
           {formData.field_type === "number" && "Select a query to filter by numeric column"}
           {formData.field_type === "date" && "Select a query to filter by date column"}
@@ -132,7 +132,7 @@ export function FilterFormFields({
             ))}
           </SelectContent>
         </Select>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-tremor-label text-tremor-content">
           Select a saved query to populate available columns
         </p>
       </div>
@@ -142,7 +142,7 @@ export function FilterFormFields({
           <div className="grid gap-2">
             <Label>Display Fields (Multiple)</Label>
             {isLoadingFields ? (
-              <p className="text-xs text-muted-foreground">Loading fields...</p>
+              <p className="text-tremor-label text-tremor-content">Loading fields...</p>
             ) : availableFields.length > 0 ? (
               <MultiSelect
                 options={availableFields.map((f) => ({ label: f.name, value: f.name }))}
@@ -165,13 +165,13 @@ export function FilterFormFields({
                 placeholder="e.g., firstName, lastName"
               />
             )}
-            <p className="text-xs text-muted-foreground">Select multiple fields to display</p>
+            <p className="text-tremor-label text-tremor-content">Select multiple fields to display</p>
           </div>
 
           <div className="grid gap-2">
             <Label>Value Field</Label>
             {isLoadingFields ? (
-              <p className="text-xs text-muted-foreground">Loading fields...</p>
+              <p className="text-tremor-label text-tremor-content">Loading fields...</p>
             ) : availableFields.length > 0 ? (
               <Select
                 value={formData.value_field}
@@ -195,7 +195,7 @@ export function FilterFormFields({
                 placeholder="e.g., id"
               />
             )}
-            <p className="text-xs text-muted-foreground">
+            <p className="text-tremor-label text-tremor-content">
               Field used for filtering (should be unique)
             </p>
           </div>
@@ -225,7 +225,7 @@ export function FilterFormFields({
           <div className="grid gap-2">
             <Label htmlFor={`${idPrefix}value_field`}>Numeric Column *</Label>
             {isLoadingFields ? (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-tremor-label text-tremor-content">
                 Loading fields... Please select a saved query first.
               </p>
             ) : availableFields.length > 0 ? (
@@ -267,7 +267,7 @@ export function FilterFormFields({
                 </p>
               </div>
             )}
-            <p className="text-xs text-muted-foreground">
+            <p className="text-tremor-label text-tremor-content">
               The numeric database column to filter on
             </p>
           </div>
@@ -296,7 +296,7 @@ export function FilterFormFields({
           <div className="grid gap-2">
             <Label htmlFor={`${idPrefix}date-column`}>Date Column</Label>
             {isLoadingFields ? (
-              <p className="text-xs text-muted-foreground">Loading fields...</p>
+              <p className="text-tremor-label text-tremor-content">Loading fields...</p>
             ) : availableFields.length > 0 ? (
               <Select
                 value={formData.value_field}
@@ -327,7 +327,7 @@ export function FilterFormFields({
                 placeholder="e.g., created_at, order_date"
               />
             )}
-            <p className="text-xs text-muted-foreground">The database date column to filter on</p>
+            <p className="text-tremor-label text-tremor-content">The database date column to filter on</p>
           </div>
           {formData.operator === "between" && (
             <div className="border rounded-md p-3 bg-muted/50">
@@ -384,7 +384,7 @@ export function FilterFormFields({
           <div className="grid gap-2">
             <Label htmlFor={`${idPrefix}text-column`}>Text Column</Label>
             {isLoadingFields ? (
-              <p className="text-xs text-muted-foreground">Loading fields...</p>
+              <p className="text-tremor-label text-tremor-content">Loading fields...</p>
             ) : availableFields.length > 0 ? (
               <Select
                 value={formData.value_field}
@@ -430,7 +430,7 @@ export function FilterFormFields({
                 placeholder="e.g., customer_name, email"
               />
             )}
-            <p className="text-xs text-muted-foreground">The database text column to search in</p>
+            <p className="text-tremor-label text-tremor-content">The database text column to search in</p>
           </div>
           <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
             <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />

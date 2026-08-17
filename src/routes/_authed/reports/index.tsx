@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/table";
 import { formatDateTime } from "@/lib/utils";
 import type { ReportDefinition, SavedQuery } from "@/types/database";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authed/reports/")({
   component: ReportsPage,
@@ -115,11 +116,8 @@ function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Reports</h1>
-          <p className="text-muted-foreground">Create and manage tabular reports</p>
-        </div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader title="Reports" description="Create and manage tabular reports" />
 
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogTrigger asChild>
@@ -217,15 +215,14 @@ function ReportsPage() {
                         {report.name}
                         {(!report.name || report.name === "Draft Report") && (
                           <Badge
-                            variant="outline"
-                            className="text-xs bg-amber-50 text-amber-700 border-amber-300"
+                            variant="warning"
                           >
                             Draft
                           </Badge>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="text-tremor-content">
                       {report.description || "-"}
                     </TableCell>
                     <TableCell>
@@ -235,10 +232,10 @@ function ReportsPage() {
                         <Badge variant="outline">No Query</Badge>
                       )}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="text-tremor-content">
                       {formatDateTime(report.created_at)}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="text-tremor-content">
                       {formatDateTime(report.updated_at)}
                     </TableCell>
                     <TableCell>

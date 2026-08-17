@@ -101,7 +101,7 @@ export function ShareDialog({
           <div className="flex items-center justify-between space-x-4">
             <div className="space-y-0.5">
               <Label className="text-base">Make Public</Label>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-tremor-default text-tremor-content">
                 {isPublic
                   ? "Anyone with the link can view this without logging in."
                   : "Only you can view this. Users must be logged in."}
@@ -136,7 +136,7 @@ export function ShareDialog({
                   {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-tremor-label text-tremor-content">
                 Share this link to give others view access.
               </p>
             </div>
@@ -148,7 +148,7 @@ export function ShareDialog({
                 <Lock className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div className="space-y-1">
                   <p className="text-sm font-medium">Private Sharing</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-tremor-label text-tremor-content">
                     Make this {resourceType} public to generate a share link that doesn't require
                     login.
                   </p>

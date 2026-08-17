@@ -16,6 +16,7 @@ import { SchemaBrowser } from "@/components/sql-editor/schema-browser";
 import { sqlEditorConfig } from "@/lib/config/pagination";
 import type { SQLExecutionResponse } from "@/types/api";
 import type { DataSource } from "@/types/database";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authed/sql-editor")({
   component: SQLEditorPage,
@@ -365,10 +366,7 @@ function SQLEditorPage() {
     <div className="p-3 sm:p-6">
       {/* Header — stacks on mobile, row on sm+ */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
-        <div>
-          <h1 className="text-2xl font-bold">SQL Editor</h1>
-          <p className="text-muted-foreground text-sm">Write and execute SQL queries</p>
-        </div>
+        <PageHeader title="SQL Editor" description="Write and execute SQL queries" />
         {/* Action buttons — full-width on mobile, auto on sm+ */}
         <div className="grid grid-cols-3 gap-2 sm:flex sm:gap-2">
           <button
@@ -470,7 +468,7 @@ function SQLEditorPage() {
             </button>
           </div>
           <div className="flex gap-2 items-center">
-            {isLoadingDataSources && <p className="text-xs text-muted-foreground">Loading…</p>}
+            {isLoadingDataSources && <p className="text-tremor-label text-tremor-content">Loading…</p>}
             {!isLoadingDataSources && dataSources && dataSources.length > 0 && (
               <Select value={selectedDataSource} onValueChange={setSelectedDataSource}>
                 <SelectTrigger className="w-full sm:w-72">
@@ -567,7 +565,7 @@ function SQLEditorPage() {
                 onColumnClick={handleColumnClick}
               />
             ) : (
-              <p className="text-sm text-muted-foreground">Select a data source to view schema</p>
+              <p className="text-tremor-default text-tremor-content">Select a data source to view schema</p>
             )}
           </div>
         </div>
@@ -639,7 +637,7 @@ function SQLEditorPage() {
               {executeMutation.isPending && (
                 <div className="text-center py-8">
                   <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4" />
-                  <p className="text-sm text-muted-foreground">Executing query…</p>
+                  <p className="text-tremor-default text-tremor-content">Executing query…</p>
                 </div>
               )}
             </div>
@@ -726,7 +724,7 @@ function SQLEditorPage() {
               </div>
               <div>
                 <label htmlFor="queryDescription" className="block text-sm font-medium mb-1">
-                  Description <span className="text-muted-foreground">(optional)</span>
+                  Description <span className="text-tremor-content">(optional)</span>
                 </label>
                 <textarea
                   id="queryDescription"

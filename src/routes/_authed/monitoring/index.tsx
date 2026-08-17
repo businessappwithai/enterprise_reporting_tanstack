@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { MonitoringRuleList } from "@/components/monitoring/MonitoringRuleList";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authed/monitoring/")({
   component: MonitoringPage,
@@ -10,15 +11,8 @@ export const Route = createFileRoute("/_authed/monitoring/")({
 function MonitoringPage() {
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Monitoring Rules
-          </h1>
-          <p className="text-muted-foreground">
-            Automated threshold monitoring with intelligent alerts
-          </p>
-        </div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader title="Monitoring Rules" description="Automated threshold monitoring with intelligent alerts" />
         <Link to="/monitoring/create">
           <Button>+ New Monitor</Button>
         </Link>

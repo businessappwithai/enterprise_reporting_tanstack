@@ -92,7 +92,7 @@ export function CronBuilder({ value, onChange }: CronBuilderProps) {
               <RefreshCw className="h-4 w-4" />
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-tremor-label text-tremor-content">
             Format: minute hour day month weekday (0-6, Sunday = 0)
           </p>
         </div>

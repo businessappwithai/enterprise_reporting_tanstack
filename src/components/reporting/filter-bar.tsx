@@ -165,7 +165,7 @@ export function FilterBar({ filters }: FilterBarProps) {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold">Filters</h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-tremor-default text-tremor-content">
                 Select values and click Run to apply filters
               </p>
             </div>
@@ -209,7 +209,7 @@ export function FilterBar({ filters }: FilterBarProps) {
                     (isLoading ? (
                       <div className="flex items-center gap-2 h-10 px-3 py-2 border rounded-md">
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        <span className="text-sm text-muted-foreground">Loading...</span>
+                        <span className="text-tremor-default text-tremor-content">Loading...</span>
                       </div>
                     ) : (
                       <MultiSelect
@@ -240,7 +240,7 @@ export function FilterBar({ filters }: FilterBarProps) {
                   {fieldType === "date" && (
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <Label className="text-xs text-muted-foreground">From</Label>
+                        <Label className="text-tremor-label text-tremor-content">From</Label>
                         <Input
                           type="date"
                           value={(value as { from: string; to: string })?.from || getTodayDate()}
@@ -253,7 +253,7 @@ export function FilterBar({ filters }: FilterBarProps) {
                         />
                       </div>
                       <div>
-                        <Label className="text-xs text-muted-foreground">To</Label>
+                        <Label className="text-tremor-label text-tremor-content">To</Label>
                         <Input
                           type="date"
                           value={(value as { from: string; to: string })?.to || getTodayDate()}

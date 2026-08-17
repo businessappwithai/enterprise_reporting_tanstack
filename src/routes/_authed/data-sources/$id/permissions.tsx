@@ -32,6 +32,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PageHeader } from "@/components/layout/page-header";
 import type {
   DataSource,
   DsEntityPermission,
@@ -296,13 +297,7 @@ function DataSourcePermissionsPage() {
         <Button variant="ghost" size="icon" onClick={() => navigate({ to: "/data-sources/" })}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Data Source Entity Permissions</h1>
-          <p className="text-muted-foreground">
-            {dataSource?.name || "Loading..."} - Manage roles, users, and entity-level access
-            control
-          </p>
-        </div>
+        <PageHeader title="Data Source Entity Permissions" description="{dataSource?.name || &quot;Loading...&quot;} - Manage roles, users, and entity-level access control" />
       </div>
 
       <Tabs defaultValue="roles" className="space-y-4">
@@ -517,7 +512,7 @@ function DataSourcePermissionsPage() {
                               {perm.permission_level}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">
+                          <TableCell className="text-tremor-label text-tremor-content">
                             {perm.column_restrictions
                               ? JSON.parse(perm.column_restrictions).join(", ")
                               : "All columns"}

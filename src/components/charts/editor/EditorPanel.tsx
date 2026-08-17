@@ -12,7 +12,7 @@ export function EditorPanel({ title, description, children, contentClassName }: 
     <Card>
       <CardHeader>
         <div>
-          <CardTitle className="text-sm font-medium">{title}</CardTitle>
+          <CardTitle className="text-tremor-default font-medium text-tremor-content">{title}</CardTitle>
           {description && <p className="text-xs text-muted-foreground mt-1">{description}</p>}
         </div>
       </CardHeader>

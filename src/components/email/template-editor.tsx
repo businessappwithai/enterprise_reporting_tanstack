@@ -229,7 +229,7 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
               rows={15}
               className="font-mono text-sm"
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-tremor-label text-tremor-content">
               Use {"{{placeholder}}"} syntax for variables. Available: {"{{#if var}}...{{/if}}"} for
               conditionals
             </p>
@@ -301,7 +301,7 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-tremor-label text-tremor-content">
               Connect a query to fetch data for placeholders (e.g., customer data for billing
               emails)
             </p>
@@ -310,7 +310,7 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
           {selectedQueryId && availableColumns.length > 0 && (
             <div className="space-y-3">
               <Label>Column Mappings</Label>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-tremor-label text-tremor-content">
                 Map query columns to template placeholders
               </p>
 
@@ -320,7 +320,7 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
                     <span className="text-sm font-mono bg-muted px-2 py-1 rounded min-w-[120px]">
                       {`{{${placeholder}}}`}
                     </span>
-                    <span className="text-muted-foreground">→</span>
+                    <span className="text-tremor-content">→</span>
                     <Select
                       value={columnMappings[placeholder] || ""}
                       onValueChange={(value) => {
@@ -387,7 +387,7 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-sm font-medium">Email Preview</h3>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-tremor-label text-tremor-content">
                 See how your template looks with actual data
               </p>
             </div>
@@ -403,7 +403,7 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
 
           {previewMutation.data?.success ? (
             <div className="space-y-4">
-              <div className="text-sm text-muted-foreground">
+              <div className="text-tremor-default text-tremor-content">
                 Showing {previewMutation.data.data.previewingFirst} of{" "}
                 {previewMutation.data.data.totalRows} rows
               </div>

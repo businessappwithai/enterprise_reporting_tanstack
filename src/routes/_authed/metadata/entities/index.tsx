@@ -49,7 +49,7 @@ function MetadataEntitiesPage() {
       <div className="container mx-auto p-6">
         <div className="mx-auto max-w-md text-center py-12">
           <Database className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Access Restricted</h2>
+          <h2 className="mb-2 font-semibold text-2xl text-tremor-content-strong">Access Restricted</h2>
           <p className="text-muted-foreground mb-6">
             Entity metadata management must be accessed from a datasource.
           </p>
@@ -89,7 +89,7 @@ function MetadataEntitiesPage() {
                 Back to Data Sources
               </Button>
             </Link>
-            <h1 className="text-3xl font-bold tracking-tight">Entity Metadata</h1>
+            <h1 className="font-semibold text-2xl text-tremor-content-strong">Entity Metadata</h1>
           </div>
           <p className="text-muted-foreground mt-1">
             Configure entity descriptions, field sections, and display settings for this datasource
@@ -122,8 +122,8 @@ function MetadataEntitiesPage() {
         <div className="border rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Total Entities</p>
-              <p className="text-2xl font-bold">{entities?.length ?? 0}</p>
+              <p className="text-tremor-default text-tremor-content">Total Entities</p>
+              <p className="font-semibold text-tremor-metric text-tremor-content-strong">{entities?.length ?? 0}</p>
             </div>
             <Database className="h-8 w-8 text-muted-foreground" />
           </div>
@@ -131,8 +131,8 @@ function MetadataEntitiesPage() {
         <div className="border rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Active & Visible</p>
-              <p className="text-2xl font-bold text-emerald-600">{activeCount}</p>
+              <p className="text-tremor-default text-tremor-content">Active & Visible</p>
+              <p className="font-semibold text-tremor-metric text-emerald-600">{activeCount}</p>
             </div>
             <Settings className="h-8 w-8 text-emerald-600" />
           </div>
@@ -140,8 +140,8 @@ function MetadataEntitiesPage() {
         <div className="border rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Hidden</p>
-              <p className="text-2xl font-bold text-orange-600">{hiddenCount}</p>
+              <p className="text-tremor-default text-tremor-content">Hidden</p>
+              <p className="font-semibold text-tremor-metric text-orange-600">{hiddenCount}</p>
             </div>
             <Settings className="h-8 w-8 text-orange-600" />
           </div>
@@ -149,8 +149,8 @@ function MetadataEntitiesPage() {
         <div className="border rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Inactive</p>
-              <p className="text-2xl font-bold text-red-600">{inactiveCount}</p>
+              <p className="text-tremor-default text-tremor-content">Inactive</p>
+              <p className="font-semibold text-tremor-metric text-red-600">{inactiveCount}</p>
             </div>
             <Settings className="h-8 w-8 text-red-600" />
           </div>
@@ -218,7 +218,7 @@ function MetadataEntitiesPage() {
                       <Database className="h-4 w-4 text-muted-foreground" />
                       <span className="font-medium">{entity.entity_name}</span>
                       {entity.entity_schema && (
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-tremor-label text-tremor-content">
                           ({entity.entity_schema})
                         </span>
                       )}

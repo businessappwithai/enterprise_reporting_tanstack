@@ -5,6 +5,7 @@ import { FieldInstructionEditor } from '@/components/admin/schema-instructions/f
 import { TableInstructionEditor } from '@/components/admin/schema-instructions/table-instruction-editor'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute('/_authed/admin/schema-instructions/')({
   component: SchemaInstructionsPage,
@@ -22,12 +23,7 @@ function SchemaInstructionsPage() {
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      <div>
-        <h1 className="text-3xl font-bold">Schema Instructions Management</h1>
-        <p className="text-sm text-muted-foreground mt-2">
-          Add field and table level instructions to enhance natural language to SQL translation accuracy
-        </p>
-      </div>
+      <PageHeader title="Schema Instructions Management" description="Add field and table level instructions to enhance natural language to SQL translation accuracy" />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Schema Browser */}

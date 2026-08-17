@@ -42,7 +42,7 @@ export function CrossFilterManager({
           </button>
         </Badge>
       ))}
-      <span className="text-xs text-muted-foreground">
+      <span className="text-tremor-label text-tremor-content">
         {activeFilters.length} filter{activeFilters.length !== 1 ? "s" : ""} applied
       </span>
       <Button variant="ghost" size="sm" className="ml-auto h-6 text-xs" onClick={onClearAll}>

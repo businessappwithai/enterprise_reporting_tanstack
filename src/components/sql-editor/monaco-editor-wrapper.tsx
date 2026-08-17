@@ -41,7 +41,7 @@ function MonacoEditorSkeleton({ height }: { height?: string | number }) {
     >
       <div className="flex flex-col items-center gap-2">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
-        <span className="text-sm text-muted-foreground">Loading SQL Editor...</span>
+        <span className="text-tremor-default text-tremor-content">Loading SQL Editor...</span>
       </div>
     </div>
   );

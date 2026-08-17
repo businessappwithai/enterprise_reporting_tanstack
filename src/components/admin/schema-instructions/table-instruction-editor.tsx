@@ -185,7 +185,7 @@ export function TableInstructionEditor({
               rows={3}
               className="font-mono text-xs"
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-tremor-label text-tremor-content">
               Provide JSON array of SQL patterns commonly used with this table
             </p>
           </div>

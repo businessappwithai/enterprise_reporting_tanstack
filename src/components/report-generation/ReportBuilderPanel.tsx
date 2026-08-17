@@ -342,8 +342,8 @@ export function ReportBuilderPanel() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Dynamic Report Generator</h1>
-          <p className="text-muted-foreground">
+          <h1 className="font-semibold text-2xl text-tremor-content-strong">Dynamic Report Generator</h1>
+          <p className="text-tremor-content">
             Describe the report you need in plain English using the chat panel
           </p>
         </div>
@@ -398,7 +398,7 @@ export function ReportBuilderPanel() {
               <CardContent className="flex flex-col items-center justify-center py-16 space-y-4">
                 <Loader2 className="h-10 w-10 animate-spin text-primary" />
                 <p className="text-lg font-medium">Generating report...</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-tremor-default text-tremor-content">
                   Building Excel, PDF, and CSV artifacts. This may take a moment for large datasets.
                 </p>
               </CardContent>
@@ -412,7 +412,7 @@ export function ReportBuilderPanel() {
                   <Download className="h-10 w-10 text-emerald-600" />
                 </div>
                 <p className="text-lg font-medium">Report Generated Successfully</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-tremor-default text-tremor-content">
                   Check the History tab or your notifications for download links.
                   {state.intent?.recipients?.length ? " Email has been sent to recipients." : ""}
                 </p>
@@ -433,7 +433,7 @@ export function ReportBuilderPanel() {
             <Card className="border-destructive">
               <CardContent className="flex flex-col items-center justify-center py-16 space-y-4">
                 <p className="text-lg font-medium text-destructive">Report Generation Failed</p>
-                <p className="text-sm text-muted-foreground">{state.errorMessage}</p>
+                <p className="text-tremor-default text-tremor-content">{state.errorMessage}</p>
                 <Button variant="outline" onClick={() => setState({ phase: "idle" })}>
                   Try Again
                 </Button>

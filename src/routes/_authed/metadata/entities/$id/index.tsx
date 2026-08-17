@@ -202,9 +202,9 @@ function EntityDetailPage() {
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <Database className="h-6 w-6 text-muted-foreground" />
-            <h1 className="text-3xl font-bold">{entity.entity_name}</h1>
+            <h1 className="font-semibold text-2xl text-tremor-content-strong">{entity.entity_name}</h1>
           </div>
-          <p className="text-muted-foreground">
+          <p className="text-tremor-content">
             {entity.entity_type} {entity.entity_schema && `(${entity.entity_schema})`} •{" "}
             {entity.data_source_id}
           </p>
@@ -270,7 +270,7 @@ function EntityDetailPage() {
             <div className="text-center py-12 border rounded-lg">
               <Settings className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-medium mb-2">No fields found</h3>
-              <p className="text-muted-foreground">This entity has no fields defined yet.</p>
+              <p className="text-tremor-content">This entity has no fields defined yet.</p>
             </div>
           )}
         </div>

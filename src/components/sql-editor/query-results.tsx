@@ -138,7 +138,7 @@ export function QueryResults({
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-          <div className="text-muted-foreground">Executing query...</div>
+          <div className="text-tremor-content">Executing query...</div>
         </div>
       </div>
     );
@@ -196,7 +196,7 @@ export function QueryResults({
 
           {/* Execution time */}
           <div className="flex items-center gap-1 text-xs sm:text-sm">
-            <span className="text-muted-foreground">Time:</span>
+            <span className="text-tremor-content">Time:</span>
             <span
               className={
                 result.executionTime > 1000

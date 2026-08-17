@@ -31,6 +31,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatDateTime } from "@/lib/utils";
 import type { JobDefinition, JobExecution } from "@/types/database";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authed/jobs/")({
   component: JobsPage,
@@ -93,11 +94,8 @@ function JobsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Background Jobs</h1>
-          <p className="text-muted-foreground">Monitor and manage background job processing</p>
-        </div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader title="Background Jobs" description="Monitor and manage background job processing" />
         <Button variant="outline" onClick={() => refetchStatus()}>
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
@@ -107,47 +105,47 @@ function JobsPage() {
       <div className="grid gap-4 md:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Waiting</CardTitle>
+            <CardTitle className="text-tremor-default font-medium text-tremor-content">Waiting</CardTitle>
             <Clock className="h-4 w-4 text-amber-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{queueStatus?.waiting || 0}</div>
+            <div className="font-semibold text-tremor-metric text-tremor-content-strong">{queueStatus?.waiting || 0}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active</CardTitle>
+            <CardTitle className="text-tremor-default font-medium text-tremor-content">Active</CardTitle>
             <RefreshCw className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{queueStatus?.active || 0}</div>
+            <div className="font-semibold text-tremor-metric text-tremor-content-strong">{queueStatus?.active || 0}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completed</CardTitle>
+            <CardTitle className="text-tremor-default font-medium text-tremor-content">Completed</CardTitle>
             <CheckCircle className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{queueStatus?.completed || 0}</div>
+            <div className="font-semibold text-tremor-metric text-tremor-content-strong">{queueStatus?.completed || 0}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Failed</CardTitle>
+            <CardTitle className="text-tremor-default font-medium text-tremor-content">Failed</CardTitle>
             <XCircle className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{queueStatus?.failed || 0}</div>
+            <div className="font-semibold text-tremor-metric text-tremor-content-strong">{queueStatus?.failed || 0}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Delayed</CardTitle>
+            <CardTitle className="text-tremor-default font-medium text-tremor-content">Delayed</CardTitle>
             <Pause className="h-4 w-4 text-gray-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{queueStatus?.delayed || 0}</div>
+            <div className="font-semibold text-tremor-metric text-tremor-content-strong">{queueStatus?.delayed || 0}</div>
           </CardContent>
         </Card>
       </div>
@@ -192,10 +190,10 @@ function JobsPage() {
                             {execution.status}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-muted-foreground">
+                        <TableCell className="text-tremor-content">
                           {execution.started_at ? formatDateTime(execution.started_at) : "-"}
                         </TableCell>
-                        <TableCell className="text-muted-foreground">
+                        <TableCell className="text-tremor-content">
                           {execution.completed_at ? formatDateTime(execution.completed_at) : "-"}
                         </TableCell>
                         <TableCell>

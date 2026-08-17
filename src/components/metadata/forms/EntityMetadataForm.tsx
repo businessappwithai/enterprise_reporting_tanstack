@@ -97,7 +97,7 @@ export function EntityMetadataForm({
                   onChange={(e) => field.handleChange(e.target.value)}
                   onBlur={field.handleBlur}
                 />
-                <p className="text-sm text-muted-foreground">
+                <p className="text-tremor-default text-tremor-content">
                   A human-readable description of what this entity represents. Max 5000 characters.
                 </p>
                 {field.state.meta.errors.length > 0 && (
@@ -118,7 +118,7 @@ export function EntityMetadataForm({
                 />
                 <div className="space-y-1 leading-none">
                   <Label htmlFor="is_active">Active</Label>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-tremor-default text-tremor-content">
                     When enabled, this entity will be visible and accessible in the system. Entities
                     are inactive by default.
                   </p>
@@ -138,7 +138,7 @@ export function EntityMetadataForm({
                 />
                 <div className="space-y-1 leading-none">
                   <Label htmlFor="is_hidden">Hidden</Label>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-tremor-default text-tremor-content">
                     When enabled, this entity will be hidden from standard views. Hidden entities
                     are still accessible via direct links or API.
                   </p>

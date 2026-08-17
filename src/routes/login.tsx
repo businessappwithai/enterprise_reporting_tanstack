@@ -124,7 +124,7 @@ function LoginPage() {
               <BarChart3 className="h-6 w-6 text-primary-foreground" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
+          <CardTitle className="font-semibold text-2xl text-tremor-content-strong">Welcome back</CardTitle>
           <CardDescription>Sign in to your Enterprise Reporting account</CardDescription>
         </CardHeader>
 

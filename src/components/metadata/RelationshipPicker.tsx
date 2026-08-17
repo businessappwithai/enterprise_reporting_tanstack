@@ -175,7 +175,7 @@ export function RelationshipPicker({
               </div>
             ) : records.length === 0 ? (
               <div className="flex items-center justify-center py-12 text-center">
-                <p className="text-muted-foreground">No records found</p>
+                <p className="text-tremor-content">No records found</p>
               </div>
             ) : (
               <Table>
@@ -231,7 +231,7 @@ export function RelationshipPicker({
           {/* Pagination */}
           {pageCount > 1 && (
             <div className="flex items-center justify-between mt-4 pt-4 border-t">
-              <div className="text-sm text-muted-foreground">
+              <div className="text-tremor-default text-tremor-content">
                 {total} {total === 1 ? "record" : "records"} found
               </div>
               <div className="flex items-center gap-2">

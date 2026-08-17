@@ -52,7 +52,7 @@ function FieldValue({ value, dataType }: { value: unknown; dataType: string }) {
     return (
       <p className="text-sm break-words whitespace-pre-wrap text-muted-foreground font-mono text-xs">
         {str.substring(0, 300)}
-        <span className="text-muted-foreground">… ({str.length} chars)</span>
+        <span className="text-tremor-content">… ({str.length} chars)</span>
       </p>
     );
   }
@@ -198,7 +198,7 @@ export function RecordViewDialog({
         </div>
 
         <div className="px-4 sm:px-6 py-3 border-t shrink-0 flex items-center justify-between gap-2">
-          <span className="text-xs text-muted-foreground">View only</span>
+          <span className="text-tremor-label text-tremor-content">View only</span>
           <Button variant="outline" size="sm" onClick={onClose}>
             Close
           </Button>

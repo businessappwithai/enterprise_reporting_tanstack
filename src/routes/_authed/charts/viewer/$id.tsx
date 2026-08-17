@@ -74,7 +74,7 @@ function ChartViewerPage() {
   if (isLoadingChart) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-muted-foreground">Loading chart...</div>
+        <div className="text-tremor-content">Loading chart...</div>
       </div>
     );
   }
@@ -82,7 +82,7 @@ function ChartViewerPage() {
   if (!chart) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-muted-foreground">Chart not found</div>
+        <div className="text-tremor-content">Chart not found</div>
       </div>
     );
   }
@@ -126,8 +126,8 @@ function ChartViewerPage() {
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{chart.name}</h1>
-          {chart.description && <p className="text-muted-foreground">{chart.description}</p>}
+          <h1 className="font-semibold text-2xl text-tremor-content-strong">{chart.name}</h1>
+          {chart.description && <p className="text-tremor-content">{chart.description}</p>}
         </div>
 
         <div className="flex items-center gap-2">
@@ -162,7 +162,7 @@ function ChartViewerPage() {
         <CardContent>
           {isLoadingData ? (
             <div className="flex items-center justify-center h-[400px]">
-              <div className="text-muted-foreground">Loading data...</div>
+              <div className="text-tremor-content">Loading data...</div>
             </div>
           ) : dataError ? (
             <div className="flex items-center justify-center h-[400px]">
@@ -172,7 +172,7 @@ function ChartViewerPage() {
             </div>
           ) : !chartData || chartData.rows?.length === 0 ? (
             <div className="flex items-center justify-center h-[400px]">
-              <div className="text-muted-foreground">No data available for this chart</div>
+              <div className="text-tremor-content">No data available for this chart</div>
             </div>
           ) : (
             <>

@@ -35,6 +35,7 @@ import {
 import { useCanCreate, useCanDelete, useCanEdit } from "@/lib/hooks/usePermissions";
 import { formatDateTime } from "@/lib/utils";
 import type { DashboardLayout } from "@/types/database";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authed/dashboards/")({
   component: DashboardsPage,
@@ -150,11 +151,8 @@ function DashboardsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Dashboards</h1>
-          <p className="text-muted-foreground">Create and manage interactive dashboards</p>
-        </div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader title="Dashboards" description="Create and manage interactive dashboards" />
 
         {canCreateDashboard && (
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
@@ -285,7 +283,7 @@ function DashboardsPage() {
                 {dashboards?.map((dashboard) => (
                   <TableRow key={dashboard.id}>
                     <TableCell className="font-medium">{dashboard.name}</TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="text-tremor-content">
                       {dashboard.description || "-"}
                     </TableCell>
                     <TableCell>
@@ -301,10 +299,10 @@ function DashboardsPage() {
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="text-tremor-content">
                       {formatDateTime(dashboard.created_at)}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="text-tremor-content">
                       {formatDateTime(dashboard.updated_at)}
                     </TableCell>
                     <TableCell>

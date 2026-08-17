@@ -89,7 +89,7 @@ function ArtifactDownloadButtons({ reportId }: { reportId: string }) {
 
   const latest = data?.executions?.[0];
   if (!latest?.artifacts?.length)
-    return <span className="text-xs text-muted-foreground">No files</span>;
+    return <span className="text-tremor-label text-tremor-content">No files</span>;
 
   async function triggerDownload(downloadUrl: string, filename: string) {
     const resp = await fetch(downloadUrl, { credentials: "include" });
@@ -174,7 +174,7 @@ export function ReportHistoryPanel({ reports }: Props) {
           </div>
           <div className="text-center space-y-1">
             <p className="text-lg font-medium">No report history</p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-tremor-default text-tremor-content">
               Generate your first report using the chat panel, or ask "Show me my reports from last
               week."
             </p>
@@ -209,7 +209,7 @@ export function ReportHistoryPanel({ reports }: Props) {
                   </p>
                 </div>
               </TableCell>
-              <TableCell className="text-sm text-muted-foreground">
+              <TableCell className="text-tremor-default text-tremor-content">
                 {report.dataSourceName}
               </TableCell>
               <TableCell>
@@ -238,7 +238,7 @@ export function ReportHistoryPanel({ reports }: Props) {
                 {report.lastRunStatus === "complete" ? (
                   <ArtifactDownloadButtons reportId={report.id} />
                 ) : (
-                  <span className="text-xs text-muted-foreground">—</span>
+                  <span className="text-tremor-label text-tremor-content">—</span>
                 )}
               </TableCell>
             </TableRow>
