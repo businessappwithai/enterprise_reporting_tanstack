@@ -20,6 +20,18 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import {
+  getTremorChartPalette,
+  TremorChartLegend,
+  TremorChartTooltip,
+  tremorAreaProps,
+  tremorBarProps,
+  tremorCursorProps,
+  tremorGridProps,
+  tremorLineProps,
+  tremorXAxisProps,
+  tremorYAxisProps,
+} from "@/components/charts/tremor-chart-theme";
 import type { NlChartConfig } from "@/types/database";
 
 interface NlResultsChartProps {
@@ -27,18 +39,9 @@ interface NlResultsChartProps {
   config: NlChartConfig;
 }
 
-const DEFAULT_COLORS = [
-  "#8884d8",
-  "#82ca9d",
-  "#ffc658",
-  "#ff7300",
-  "#a4de6c",
-  "#d0ed57",
-  "#8dd1e1",
-  "#83a6ed",
-  "#8e4585",
-  "#ff6b6b",
-];
+// Series colours follow the Tremor categorical palette
+// (blue → emerald → violet → amber → gray → cyan → pink → lime → fuchsia).
+const DEFAULT_COLORS = getTremorChartPalette(9);
 
 export function NlResultsChart({ data, config }: NlResultsChartProps) {
   const colors = config.colors || DEFAULT_COLORS;
@@ -63,23 +66,24 @@ export function NlResultsChart({ data, config }: NlResultsChartProps) {
       case "bar":
         return (
           <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid {...tremorGridProps} />
             <XAxis
+              {...tremorXAxisProps}
               dataKey={config.xAxis.field}
-              tick={{ fontSize: 12 }}
               angle={-45}
               textAnchor="end"
               height={80}
             />
-            <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip />
-            <Legend />
+            <YAxis {...tremorYAxisProps} />
+            <Tooltip content={<TremorChartTooltip />} cursor={tremorCursorProps} />
+            <Legend content={<TremorChartLegend />} />
             {config.yAxis.map((yField, idx) => (
               <Bar
                 key={yField.field}
                 dataKey={yField.field}
                 name={yField.label}
                 fill={colors[idx % colors.length]}
+                {...tremorBarProps}
               />
             ))}
           </BarChart>
@@ -88,26 +92,24 @@ export function NlResultsChart({ data, config }: NlResultsChartProps) {
       case "line":
         return (
           <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid {...tremorGridProps} />
             <XAxis
+              {...tremorXAxisProps}
               dataKey={config.xAxis.field}
-              tick={{ fontSize: 12 }}
               angle={-45}
               textAnchor="end"
               height={80}
             />
-            <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip />
-            <Legend />
+            <YAxis {...tremorYAxisProps} />
+            <Tooltip content={<TremorChartTooltip />} cursor={tremorCursorProps} />
+            <Legend content={<TremorChartLegend />} />
             {config.yAxis.map((yField, idx) => (
               <Line
                 key={yField.field}
-                type="monotone"
+                {...tremorLineProps}
                 dataKey={yField.field}
                 name={yField.label}
                 stroke={colors[idx % colors.length]}
-                strokeWidth={2}
-                dot={{ r: 3 }}
               />
             ))}
           </LineChart>
@@ -116,26 +118,25 @@ export function NlResultsChart({ data, config }: NlResultsChartProps) {
       case "area":
         return (
           <AreaChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid {...tremorGridProps} />
             <XAxis
+              {...tremorXAxisProps}
               dataKey={config.xAxis.field}
-              tick={{ fontSize: 12 }}
               angle={-45}
               textAnchor="end"
               height={80}
             />
-            <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip />
-            <Legend />
+            <YAxis {...tremorYAxisProps} />
+            <Tooltip content={<TremorChartTooltip />} cursor={tremorCursorProps} />
+            <Legend content={<TremorChartLegend />} />
             {config.yAxis.map((yField, idx) => (
               <Area
                 key={yField.field}
-                type="monotone"
+                {...tremorAreaProps}
                 dataKey={yField.field}
                 name={yField.label}
                 fill={colors[idx % colors.length]}
                 stroke={colors[idx % colors.length]}
-                fillOpacity={0.3}
               />
             ))}
           </AreaChart>
@@ -144,8 +145,8 @@ export function NlResultsChart({ data, config }: NlResultsChartProps) {
       case "pie":
         return (
           <PieChart>
-            <Tooltip />
-            <Legend />
+            <Tooltip content={<TremorChartTooltip />} />
+            <Legend content={<TremorChartLegend />} />
             <Pie
               data={chartData}
               dataKey={config.yAxis[0]?.field || ""}
@@ -168,22 +169,22 @@ export function NlResultsChart({ data, config }: NlResultsChartProps) {
       case "scatter":
         return (
           <ScatterChart>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey={config.xAxis.field} name={config.xAxis.label} tick={{ fontSize: 12 }} />
+            <CartesianGrid {...tremorGridProps} />
+            <XAxis {...tremorXAxisProps} dataKey={config.xAxis.field} name={config.xAxis.label} />
             <YAxis
+              {...tremorYAxisProps}
               dataKey={config.yAxis[0]?.field}
               name={config.yAxis[0]?.label}
-              tick={{ fontSize: 12 }}
             />
-            <Tooltip cursor={{ strokeDasharray: "3 3" }} />
-            <Legend />
+            <Tooltip content={<TremorChartTooltip />} cursor={tremorCursorProps} />
+            <Legend content={<TremorChartLegend />} />
             <Scatter name={config.title} data={chartData} fill={colors[0]} />
           </ScatterChart>
         );
 
       default:
         return (
-          <div className="flex items-center justify-center h-full text-muted-foreground">
+          <div className="flex h-full items-center justify-center text-tremor-default text-tremor-content">
             Unsupported chart type: {config.chartType}
           </div>
         );
@@ -192,11 +193,13 @@ export function NlResultsChart({ data, config }: NlResultsChartProps) {
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-center">{config.title}</h3>
+      <h3 className="text-center text-tremor-title font-medium text-tremor-content-strong">
+        {config.title}
+      </h3>
       <div style={{ width: "100%", height: 400 }}>
         <ResponsiveContainer>{renderChart()}</ResponsiveContainer>
       </div>
-      <p className="text-xs text-center text-muted-foreground">
+      <p className="text-center text-tremor-label text-tremor-content">
         {chartData.length} data points &middot; {config.chartType} chart
       </p>
     </div>

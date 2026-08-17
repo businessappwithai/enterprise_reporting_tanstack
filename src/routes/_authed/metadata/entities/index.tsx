@@ -132,9 +132,9 @@ function MetadataEntitiesPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Active & Visible</p>
-              <p className="text-2xl font-bold text-green-600">{activeCount}</p>
+              <p className="text-2xl font-bold text-emerald-600">{activeCount}</p>
             </div>
-            <Settings className="h-8 w-8 text-green-600" />
+            <Settings className="h-8 w-8 text-emerald-600" />
           </div>
         </div>
         <div className="border rounded-lg p-4">
@@ -229,7 +229,7 @@ function MetadataEntitiesPage() {
                       className={`px-2 py-1 rounded text-xs font-medium ${
                         entity.entity_type === "table"
                           ? "bg-blue-100 text-blue-700"
-                          : "bg-purple-100 text-purple-700"
+                          : "bg-violet-100 text-violet-700"
                       }`}
                     >
                       {entity.entity_type}
@@ -246,7 +246,7 @@ function MetadataEntitiesPage() {
                   <td className="p-4">
                     <div className="flex gap-2">
                       {entity.is_active ? (
-                        <span className="px-2 py-1 rounded text-xs bg-green-100 text-green-700">
+                        <span className="px-2 py-1 rounded text-xs bg-emerald-100 text-emerald-700">
                           Active
                         </span>
                       ) : (

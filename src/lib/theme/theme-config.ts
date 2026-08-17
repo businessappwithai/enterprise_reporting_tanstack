@@ -1,85 +1,111 @@
 /**
- * Swiss Clean Design System Configuration
+ * Tremor Design System Configuration
  *
- * Color Palette based on Swiss Design principles:
- * - Clean, minimal aesthetic
- * - High contrast for accessibility
- * - Professional and timeless
+ * Single source of truth for the design tokens used across the application,
+ * mirroring the Tremor component library (https://github.com/tremorlabs/tremor-npm):
+ * - Blue brand ramp on a neutral gray scale
+ * - White cards on a gray-50 canvas (gray-900 on #131A2B in dark mode)
+ * - Soft elevation instead of heavy borders
+ * - Compact 0.375rem / 0.5rem radius scale
+ *
+ * The Tailwind/CSS side of these tokens lives in `src/styles/globals.css`
+ * (`--tremor-*` custom properties) and `tailwind.config.ts`. Values below are
+ * for JavaScript consumers that cannot read Tailwind classes — chart engines,
+ * PDF/Excel exports and canvas rendering.
  */
 
-export const SWISS_CLEAN_THEME = {
+import { TREMOR_CHART_COLORS, TREMOR_DARK, TREMOR_LIGHT } from "./tremor-colors";
+
+export const TREMOR_THEME = {
   colors: {
     // Light Theme
     light: {
-      background: "#FFFFFF",
-      foreground: "#0D0D0D",
-      card: "#FAFAFA",
-      primary: "#0000FF",
-      secondary: "#F5F5F5",
-      muted: "#F5F5F5",
-      border: "#E8E8E8",
-      destructive: "#E63946",
+      background: TREMOR_LIGHT.background.muted, // app canvas   #F9FAFB
+      foreground: TREMOR_LIGHT.content.strong, // gray-900     #111827
+      card: TREMOR_LIGHT.background.DEFAULT, // white        #FFFFFF
+      primary: TREMOR_LIGHT.brand.DEFAULT, // blue-500     #3B82F6
+      secondary: TREMOR_LIGHT.background.subtle, // gray-100     #F3F4F6
+      muted: TREMOR_LIGHT.background.subtle, // gray-100     #F3F4F6
+      border: TREMOR_LIGHT.border, // gray-200     #E5E7EB
+      destructive: "#EF4444", // red-500
 
       // Status colors
-      info: "#007AFF",
-      success: "#22C55E",
-      warning: "#F59E0B",
-      error: "#E63946",
+      info: "#3B82F6", // blue-500
+      success: "#10B981", // emerald-500
+      warning: "#F59E0B", // amber-500
+      error: "#EF4444", // red-500
     },
     // Dark Theme
     dark: {
-      background: "#141414",
-      foreground: "#F2F2F2",
-      card: "#1F1F1F",
-      primary: "#3399FF",
-      secondary: "#2E2E2E",
-      muted: "#2E2E2E",
-      border: "#383838",
-      destructive: "#CC3333",
+      background: TREMOR_DARK.background.muted, //              #131A2B
+      foreground: TREMOR_DARK.content.strong, // gray-50      #F9FAFB
+      card: TREMOR_DARK.background.DEFAULT, // gray-900     #111827
+      primary: TREMOR_DARK.brand.DEFAULT, // blue-500     #3B82F6
+      secondary: TREMOR_DARK.background.subtle, // gray-800     #1F2937
+      muted: TREMOR_DARK.background.subtle, // gray-800     #1F2937
+      border: TREMOR_DARK.border, // gray-800     #1F2937
+      destructive: "#EF4444", // red-500
 
       // Status colors
-      info: "#3399FF",
-      success: "#22C55E",
+      info: "#3B82F6",
+      success: "#10B981",
       warning: "#F59E0B",
-      error: "#CC3333",
+      error: "#EF4444",
     },
   },
 
-  // Radius tokens
+  /** Tremor radius tokens — `rounded-tremor-small|default|full`. */
   radius: {
     none: "0px",
-    sm: "4px",     // default
-    md: "8px",
-    lg: "12px",
-    xl: "16px",
-    pill: "9999px",
+    small: "0.375rem", // 6px  — buttons, badges, inputs
+    default: "0.5rem", // 8px  — cards, dropdowns, dialogs
+    full: "9999px", // pill — progress bars, avatars
+  },
+
+  /** Tremor elevation tokens — `shadow-tremor-input|card|dropdown`. */
+  shadow: {
+    input: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+    card: "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
+    dropdown: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+  },
+
+  /** Tremor type scale — `text-tremor-label|default|title|metric`. */
+  fontSize: {
+    label: "0.75rem", // 12px — table labels, captions
+    default: "0.875rem", // 14px — body copy
+    title: "1.125rem", // 18px — card titles
+    metric: "1.875rem", // 30px — KPI values
   },
 
   // Sidebar colors
   sidebar: {
     light: {
-      background: "#FFFFFF",
-      foreground: "#666666",
-      primary: "#F5F5F5",
-      border: "#E8E8E8",
-      ring: "#0000FF",
+      background: TREMOR_LIGHT.background.DEFAULT,
+      foreground: TREMOR_LIGHT.content.DEFAULT,
+      primary: TREMOR_LIGHT.brand.faint,
+      border: TREMOR_LIGHT.border,
+      ring: TREMOR_LIGHT.brand.muted,
     },
     dark: {
-      background: "#1A1A1A",
-      foreground: "#999999",
-      primary: "#3399FF",
-      border: "#383838",
-      ring: "#3399FF",
+      background: TREMOR_DARK.background.DEFAULT,
+      foreground: TREMOR_DARK.content.DEFAULT,
+      primary: TREMOR_DARK.brand.faint,
+      border: TREMOR_DARK.border,
+      ring: TREMOR_DARK.brand.muted,
     },
   },
 
-  // Chart colors
+  /** Categorical chart palette, in Tremor's series assignment order. */
   chart: {
-    1: "#0000FF",    // Swiss Blue
-    2: "#22C55E",    // Green
-    3: "#8B5CF6",    // Purple
-    4: "#F59E0B",    // Orange
-    5: "#06B6D4",    // Cyan
+    1: TREMOR_CHART_COLORS[0], // blue-500
+    2: TREMOR_CHART_COLORS[1], // emerald-500
+    3: TREMOR_CHART_COLORS[2], // violet-500
+    4: TREMOR_CHART_COLORS[3], // amber-500
+    5: TREMOR_CHART_COLORS[4], // gray-500
+    6: TREMOR_CHART_COLORS[5], // cyan-500
+    7: TREMOR_CHART_COLORS[6], // pink-500
+    8: TREMOR_CHART_COLORS[7], // lime-500
+    9: TREMOR_CHART_COLORS[8], // fuchsia-500
   },
 } as const;
 

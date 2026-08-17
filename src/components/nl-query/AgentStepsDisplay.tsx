@@ -27,7 +27,7 @@ export function AgentStepsDisplay({ steps, isActive, onClear }: AgentStepsDispla
   const getStepIcon = (status: AgentStep["status"]) => {
     switch (status) {
       case "completed":
-        return <CheckCircle2 className="h-5 w-5 text-green-500" />;
+        return <CheckCircle2 className="h-5 w-5 text-emerald-500" />;
       case "running":
         return <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />;
       case "error":
@@ -82,7 +82,7 @@ export function AgentStepsDisplay({ steps, isActive, onClear }: AgentStepsDispla
               step.status === "error"
                 ? "bg-red-100 dark:bg-red-900/20"
                 : step.status === "completed"
-                  ? "bg-green-100 dark:bg-green-900/20"
+                  ? "bg-emerald-100 dark:bg-emerald-900/20"
                   : step.status === "running"
                     ? "bg-blue-100 dark:bg-blue-900/20"
                     : "bg-gray-100 dark:bg-gray-900/20"

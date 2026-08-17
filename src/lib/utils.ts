@@ -1,5 +1,24 @@
 import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { extendTailwindMerge } from "tailwind-merge";
+
+/**
+ * tailwind-merge, taught about the Tremor scales.
+ *
+ * Without this, `tailwind-merge` cannot tell `text-tremor-metric` (a font size)
+ * from `text-tremor-content-strong` (a colour) — both look like `text-*`, so it
+ * treats them as conflicting and silently drops the size. Registering the custom
+ * scales is what Tremor itself does in `tremorTwMerge`, and it also makes
+ * `rounded-tremor-*` / `shadow-tremor-*` overridable in the usual way.
+ */
+const twMerge = extendTailwindMerge({
+  extend: {
+    classGroups: {
+      "font-size": [{ text: ["tremor-label", "tremor-default", "tremor-title", "tremor-metric"] }],
+      rounded: [{ rounded: ["tremor-small", "tremor-default", "tremor-full"] }],
+      shadow: [{ shadow: ["tremor-input", "tremor-card", "tremor-dropdown"] }],
+    },
+  },
+});
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

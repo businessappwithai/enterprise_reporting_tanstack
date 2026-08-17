@@ -46,7 +46,7 @@ function StatusBadge({ status }: { status: MonitoringExecution["evaluation_statu
   switch (status) {
     case "PASS":
       return (
-        <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-100">
+        <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100">
           PASS
         </Badge>
       );
@@ -58,9 +58,7 @@ function StatusBadge({ status }: { status: MonitoringExecution["evaluation_statu
       );
     case "ESCALATE":
       return (
-        <Badge className="bg-red-100 text-red-800 border-red-200 hover:bg-red-100">
-          ESCALATE
-        </Badge>
+        <Badge className="bg-red-100 text-red-800 border-red-200 hover:bg-red-100">ESCALATE</Badge>
       );
     case "NO_DATA":
       return (
@@ -70,9 +68,7 @@ function StatusBadge({ status }: { status: MonitoringExecution["evaluation_statu
       );
     case "ERROR":
       return (
-        <Badge className="bg-red-100 text-red-800 border-red-200 hover:bg-red-100">
-          ERROR
-        </Badge>
+        <Badge className="bg-red-100 text-red-800 border-red-200 hover:bg-red-100">ERROR</Badge>
       );
     default:
       return <Badge variant="outline">{status}</Badge>;
@@ -87,10 +83,11 @@ function formatThresholdCompare(exec: MonitoringExecution): string {
 function DeltaBadge({ delta }: { delta: number | null | undefined }) {
   if (delta == null) return <span className="text-muted-foreground">—</span>;
   const sign = delta >= 0 ? "+" : "";
-  const color = delta >= 0 ? "text-green-600" : "text-red-600";
+  const color = delta >= 0 ? "text-emerald-600" : "text-red-600";
   return (
     <span className={`font-medium text-sm ${color}`}>
-      {sign}{delta.toFixed(1)}%
+      {sign}
+      {delta.toFixed(1)}%
     </span>
   );
 }
@@ -143,10 +140,7 @@ export function ExecutionHistoryTable({ ruleId }: Props) {
             <SkeletonRows />
           ) : executions.length === 0 ? (
             <TableRow>
-              <TableCell
-                colSpan={7}
-                className="text-center py-10 text-muted-foreground"
-              >
+              <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
                 No execution history yet. This rule has not run yet.
               </TableCell>
             </TableRow>
@@ -160,19 +154,15 @@ export function ExecutionHistoryTable({ ruleId }: Props) {
                   <StatusBadge status={exec.evaluation_status} />
                 </TableCell>
                 <TableCell className="text-sm">
-                  {exec.metric_value != null
-                    ? exec.metric_value.toLocaleString()
-                    : "—"}
+                  {exec.metric_value != null ? exec.metric_value.toLocaleString() : "—"}
                 </TableCell>
-                <TableCell className="text-sm">
-                  {formatThresholdCompare(exec)}
-                </TableCell>
+                <TableCell className="text-sm">{formatThresholdCompare(exec)}</TableCell>
                 <TableCell>
                   <DeltaBadge delta={exec.delta_pct} />
                 </TableCell>
                 <TableCell>
                   {exec.alert_dispatched ? (
-                    <Check className="h-4 w-4 text-green-600" />
+                    <Check className="h-4 w-4 text-emerald-600" />
                   ) : (
                     <Minus className="h-4 w-4 text-muted-foreground" />
                   )}

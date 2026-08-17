@@ -5,36 +5,75 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+/**
+ * Tremor Tabs.
+ *
+ * Tremor ships two tab treatments and this component exposes both:
+ *
+ * - `line` (default) — underlined navigation sitting on a `tremor-border` rule,
+ *   the selected tab picking up a 2px brand underline.
+ * - `solid` — a segmented control on a `background-subtle` track, the selected
+ *   tab lifted onto a white surface with `shadow-tremor-input`.
+ *
+ * Pass the variant on `TabsList`; triggers pick it up through context.
+ */
+type TabsVariant = "line" | "solid";
+
+const TabsVariantContext = React.createContext<TabsVariant>("line");
+
 const Tabs = TabsPrimitive.Root;
 
-const TabsList = React.forwardRef<
-  React.ElementRef<typeof TabsPrimitive.List>,
-  React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
->(({ className, ...props }, ref) => (
-  <TabsPrimitive.List
-    ref={ref}
-    className={cn(
-      "inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground",
-      className
-    )}
-    {...props}
-  />
-));
+const listVariants: Record<TabsVariant, string> = {
+  line: "flex justify-start overflow-x-clip border-b border-tremor-border space-x-4",
+  solid:
+    "inline-flex justify-start overflow-x-clip rounded-tremor-default bg-tremor-background-subtle p-0.5 space-x-1.5",
+};
+
+const triggerVariants: Record<TabsVariant, string> = {
+  line: cn(
+    "-mb-px border-b-2 border-transparent px-2 py-2 text-tremor-content transition duration-100",
+    "hover:border-tremor-content hover:text-tremor-content-emphasis",
+    "data-[state=active]:border-tremor-brand data-[state=active]:text-tremor-brand"
+  ),
+  solid: cn(
+    "rounded-tremor-small border border-transparent px-2.5 py-1 text-tremor-content transition duration-100",
+    "hover:text-tremor-content-emphasis",
+    "data-[state=active]:border-tremor-border data-[state=active]:bg-tremor-background data-[state=active]:text-tremor-brand data-[state=active]:shadow-tremor-input"
+  ),
+};
+
+interface TabsListProps extends React.ComponentPropsWithoutRef<typeof TabsPrimitive.List> {
+  variant?: TabsVariant;
+}
+
+const TabsList = React.forwardRef<React.ElementRef<typeof TabsPrimitive.List>, TabsListProps>(
+  ({ className, variant = "line", ...props }, ref) => (
+    <TabsVariantContext.Provider value={variant}>
+      <TabsPrimitive.List ref={ref} className={cn(listVariants[variant], className)} {...props} />
+    </TabsVariantContext.Provider>
+  )
+);
 TabsList.displayName = TabsPrimitive.List.displayName;
 
 const TabsTrigger = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
->(({ className, ...props }, ref) => (
-  <TabsPrimitive.Trigger
-    ref={ref}
-    className={cn(
-      "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm",
-      className
-    )}
-    {...props}
-  />
-));
+>(({ className, ...props }, ref) => {
+  const variant = React.useContext(TabsVariantContext);
+  return (
+    <TabsPrimitive.Trigger
+      ref={ref}
+      className={cn(
+        "flex max-w-xs items-center gap-2 truncate whitespace-nowrap text-tremor-default font-medium outline-none",
+        "focus-visible:ring-2 focus-visible:ring-tremor-brand-muted",
+        "disabled:pointer-events-none disabled:opacity-50",
+        triggerVariants[variant],
+        className
+      )}
+      {...props}
+    />
+  );
+});
 TabsTrigger.displayName = TabsPrimitive.Trigger.displayName;
 
 const TabsContent = React.forwardRef<
@@ -44,7 +83,7 @@ const TabsContent = React.forwardRef<
   <TabsPrimitive.Content
     ref={ref}
     className={cn(
-      "mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+      "mt-4 outline-none focus-visible:ring-2 focus-visible:ring-tremor-brand-muted",
       className
     )}
     {...props}

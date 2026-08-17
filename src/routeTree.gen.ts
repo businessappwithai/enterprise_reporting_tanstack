@@ -86,6 +86,7 @@ import { Route as ApiAdminPermissionsRouteImport } from './routes/api/admin/perm
 import { Route as ApiAdminLogsPermissionsRouteImport } from './routes/api/admin/logs-permissions'
 import { Route as ApiAdkAnalyzeIntentRouteImport } from './routes/api/adk/analyze-intent'
 import { Route as AuthedSettingsUiRouteImport } from './routes/_authed/settings/ui'
+import { Route as AuthedSettingsDesignSystemRouteImport } from './routes/_authed/settings/design-system'
 import { Route as AuthedMonitoringCreateRouteImport } from './routes/_authed/monitoring/create'
 import { Route as AuthedSettingsEmailIndexRouteImport } from './routes/_authed/settings/email/index'
 import { Route as AuthedReportsGenerateIndexRouteImport } from './routes/_authed/reports/generate/index'
@@ -509,6 +510,12 @@ const AuthedSettingsUiRoute = AuthedSettingsUiRouteImport.update({
   path: '/settings/ui',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedSettingsDesignSystemRoute =
+  AuthedSettingsDesignSystemRouteImport.update({
+    id: '/settings/design-system',
+    path: '/settings/design-system',
+    getParentRoute: () => AuthedRoute,
+  } as any)
 const AuthedMonitoringCreateRoute = AuthedMonitoringCreateRouteImport.update({
   id: '/monitoring/create',
   path: '/monitoring/create',
@@ -728,6 +735,7 @@ export interface FileRoutesByFullPath {
   '/api/queries': typeof ApiQueriesRouteWithChildren
   '/api/reports': typeof ApiReportsRouteWithChildren
   '/monitoring/create': typeof AuthedMonitoringCreateRoute
+  '/settings/design-system': typeof AuthedSettingsDesignSystemRoute
   '/settings/ui': typeof AuthedSettingsUiRoute
   '/api/adk/analyze-intent': typeof ApiAdkAnalyzeIntentRoute
   '/api/admin/logs-permissions': typeof ApiAdminLogsPermissionsRoute
@@ -842,6 +850,7 @@ export interface FileRoutesByTo {
   '/api/queries': typeof ApiQueriesRouteWithChildren
   '/api/reports': typeof ApiReportsRouteWithChildren
   '/monitoring/create': typeof AuthedMonitoringCreateRoute
+  '/settings/design-system': typeof AuthedSettingsDesignSystemRoute
   '/settings/ui': typeof AuthedSettingsUiRoute
   '/api/adk/analyze-intent': typeof ApiAdkAnalyzeIntentRoute
   '/api/admin/logs-permissions': typeof ApiAdminLogsPermissionsRoute
@@ -958,6 +967,7 @@ export interface FileRoutesById {
   '/api/queries': typeof ApiQueriesRouteWithChildren
   '/api/reports': typeof ApiReportsRouteWithChildren
   '/_authed/monitoring/create': typeof AuthedMonitoringCreateRoute
+  '/_authed/settings/design-system': typeof AuthedSettingsDesignSystemRoute
   '/_authed/settings/ui': typeof AuthedSettingsUiRoute
   '/api/adk/analyze-intent': typeof ApiAdkAnalyzeIntentRoute
   '/api/admin/logs-permissions': typeof ApiAdminLogsPermissionsRoute
@@ -1074,6 +1084,7 @@ export interface FileRouteTypes {
     | '/api/queries'
     | '/api/reports'
     | '/monitoring/create'
+    | '/settings/design-system'
     | '/settings/ui'
     | '/api/adk/analyze-intent'
     | '/api/admin/logs-permissions'
@@ -1188,6 +1199,7 @@ export interface FileRouteTypes {
     | '/api/queries'
     | '/api/reports'
     | '/monitoring/create'
+    | '/settings/design-system'
     | '/settings/ui'
     | '/api/adk/analyze-intent'
     | '/api/admin/logs-permissions'
@@ -1303,6 +1315,7 @@ export interface FileRouteTypes {
     | '/api/queries'
     | '/api/reports'
     | '/_authed/monitoring/create'
+    | '/_authed/settings/design-system'
     | '/_authed/settings/ui'
     | '/api/adk/analyze-intent'
     | '/api/admin/logs-permissions'
@@ -1992,6 +2005,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedSettingsUiRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/settings/design-system': {
+      id: '/_authed/settings/design-system'
+      path: '/settings/design-system'
+      fullPath: '/settings/design-system'
+      preLoaderRoute: typeof AuthedSettingsDesignSystemRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/monitoring/create': {
       id: '/_authed/monitoring/create'
       path: '/monitoring/create'
@@ -2279,6 +2299,7 @@ interface AuthedRouteChildren {
   AuthedSystemLogsRoute: typeof AuthedSystemLogsRoute
   AuthedUsersRoute: typeof AuthedUsersRoute
   AuthedMonitoringCreateRoute: typeof AuthedMonitoringCreateRoute
+  AuthedSettingsDesignSystemRoute: typeof AuthedSettingsDesignSystemRoute
   AuthedSettingsUiRoute: typeof AuthedSettingsUiRoute
   AuthedChartsIndexRoute: typeof AuthedChartsIndexRoute
   AuthedDashboardsIndexRoute: typeof AuthedDashboardsIndexRoute
@@ -2317,6 +2338,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedSystemLogsRoute: AuthedSystemLogsRoute,
   AuthedUsersRoute: AuthedUsersRoute,
   AuthedMonitoringCreateRoute: AuthedMonitoringCreateRoute,
+  AuthedSettingsDesignSystemRoute: AuthedSettingsDesignSystemRoute,
   AuthedSettingsUiRoute: AuthedSettingsUiRoute,
   AuthedChartsIndexRoute: AuthedChartsIndexRoute,
   AuthedDashboardsIndexRoute: AuthedDashboardsIndexRoute,

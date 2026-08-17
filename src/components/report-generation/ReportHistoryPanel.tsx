@@ -30,15 +30,33 @@ interface Props {
 function StatusBadge({ status }: { status: string | null }) {
   switch (status) {
     case "complete":
-      return <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-100">Complete</Badge>;
+      return (
+        <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100">
+          Complete
+        </Badge>
+      );
     case "running":
-      return <Badge className="bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100">Running</Badge>;
+      return (
+        <Badge className="bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100">
+          Running
+        </Badge>
+      );
     case "failed":
-      return <Badge className="bg-red-100 text-red-800 border-red-200 hover:bg-red-100">Failed</Badge>;
+      return (
+        <Badge className="bg-red-100 text-red-800 border-red-200 hover:bg-red-100">Failed</Badge>
+      );
     case "permission_revoked":
-      return <Badge className="bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-100">Access Revoked</Badge>;
+      return (
+        <Badge className="bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-100">
+          Access Revoked
+        </Badge>
+      );
     case "no_data":
-      return <Badge className="bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-100">No Data</Badge>;
+      return (
+        <Badge className="bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-100">
+          No Data
+        </Badge>
+      );
     default:
       return <Badge variant="outline">Never Run</Badge>;
   }
@@ -70,7 +88,8 @@ function ArtifactDownloadButtons({ reportId }: { reportId: string }) {
   if (isLoading) return <Loader2 className="h-4 w-4 animate-spin" />;
 
   const latest = data?.executions?.[0];
-  if (!latest?.artifacts?.length) return <span className="text-xs text-muted-foreground">No files</span>;
+  if (!latest?.artifacts?.length)
+    return <span className="text-xs text-muted-foreground">No files</span>;
 
   async function triggerDownload(downloadUrl: string, filename: string) {
     const resp = await fetch(downloadUrl, { credentials: "include" });
@@ -118,20 +137,21 @@ export function ReportHistoryPanel({ reports }: Props) {
     enabled: reports.length === 0,
   });
 
-  const displayReports: ReportHistoryEntry[] = reports.length > 0
-    ? reports
-    : (fetchedReports?.definitions ?? []).map((d: any) => ({
-        id: d.id,
-        title: d.title,
-        nlQuery: d.nl_query,
-        dataSourceName: d.data_source_name ?? "Unknown",
-        chartType: d.chart_type,
-        createdAt: d.created_at,
-        lastRunAt: d.last_run_at,
-        lastRunStatus: d.last_run_status,
-        artifactCount: d.artifactCount ?? 0,
-        formats: d.output_formats ?? [],
-      }));
+  const displayReports: ReportHistoryEntry[] =
+    reports.length > 0
+      ? reports
+      : (fetchedReports?.definitions ?? []).map((d: any) => ({
+          id: d.id,
+          title: d.title,
+          nlQuery: d.nl_query,
+          dataSourceName: d.data_source_name ?? "Unknown",
+          chartType: d.chart_type,
+          createdAt: d.created_at,
+          lastRunAt: d.last_run_at,
+          lastRunStatus: d.last_run_status,
+          artifactCount: d.artifactCount ?? 0,
+          formats: d.output_formats ?? [],
+        }));
 
   if (isLoading && reports.length === 0) {
     return (
@@ -155,7 +175,8 @@ export function ReportHistoryPanel({ reports }: Props) {
           <div className="text-center space-y-1">
             <p className="text-lg font-medium">No report history</p>
             <p className="text-sm text-muted-foreground">
-              Generate your first report using the chat panel, or ask "Show me my reports from last week."
+              Generate your first report using the chat panel, or ask "Show me my reports from last
+              week."
             </p>
           </div>
         </CardContent>
@@ -183,7 +204,9 @@ export function ReportHistoryPanel({ reports }: Props) {
               <TableCell>
                 <div>
                   <p className="font-medium text-sm">{report.title}</p>
-                  <p className="text-xs text-muted-foreground truncate max-w-[200px]">{report.nlQuery}</p>
+                  <p className="text-xs text-muted-foreground truncate max-w-[200px]">
+                    {report.nlQuery}
+                  </p>
                 </div>
               </TableCell>
               <TableCell className="text-sm text-muted-foreground">

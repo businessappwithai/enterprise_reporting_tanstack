@@ -132,7 +132,16 @@ export function ConnectionFormFields({
                 type="button"
                 variant={state.useConnectionString ? "default" : "outline"}
                 className="w-full"
-                onClick={() => set({ useConnectionString: true, host: "", port: "", database: "", user: "", password: "" })}
+                onClick={() =>
+                  set({
+                    useConnectionString: true,
+                    host: "",
+                    port: "",
+                    database: "",
+                    user: "",
+                    password: "",
+                  })
+                }
               >
                 Connection String
               </Button>
@@ -165,10 +174,12 @@ export function ConnectionFormFields({
                 }
               />
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {state.clientType === "pg" && "Example: postgresql://user:pass@localhost:5432/mydb?ssl=require"}
+                {state.clientType === "pg" &&
+                  "Example: postgresql://user:pass@localhost:5432/mydb?ssl=require"}
                 {state.clientType === "mysql" && "Example: mysql://user:pass@localhost:3306/mydb"}
                 {state.clientType === "mssql" && "Example: mssql://user:pass@localhost:1433/mydb"}
-                {state.clientType === "oracledb" && "Example: oracle://user:pass@localhost:1521/mydb"}
+                {state.clientType === "oracledb" &&
+                  "Example: oracle://user:pass@localhost:1521/mydb"}
               </p>
             </div>
           ) : (
@@ -190,7 +201,11 @@ export function ConnectionFormFields({
                     value={state.port}
                     onChange={(e) => set({ port: e.target.value })}
                     placeholder={
-                      state.clientType === "pg" ? "5432" : state.clientType === "mysql" ? "3306" : ""
+                      state.clientType === "pg"
+                        ? "5432"
+                        : state.clientType === "mysql"
+                          ? "3306"
+                          : ""
                     }
                   />
                 </div>
@@ -236,7 +251,7 @@ export function ConnectionFormFields({
         <div
           className={`p-3 rounded-md flex items-center gap-2 ${
             connectionTestResult.success
-              ? "bg-green-500 text-white dark:bg-green-600"
+              ? "bg-emerald-500 text-white dark:bg-emerald-600"
               : "bg-red-500 text-white dark:bg-red-600"
           }`}
         >

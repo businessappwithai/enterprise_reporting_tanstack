@@ -382,7 +382,7 @@ function ReportEditorPage() {
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-semibold tracking-tight">Edit Report</h1>
             {hasUnsavedChanges && (
-              <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
+              <span className="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded-full">
                 Unsaved Changes
               </span>
             )}
@@ -676,7 +676,9 @@ function ReportEditorPage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="export-html">HTML Export</Label>
-                    <p className="text-xs text-muted-foreground">Interactive HTML with search and pagination</p>
+                    <p className="text-xs text-muted-foreground">
+                      Interactive HTML with search and pagination
+                    </p>
                   </div>
                   <Switch
                     id="export-html"
@@ -751,8 +753,7 @@ function ReportEditorPage() {
                     <p className="text-xs text-muted-foreground">
                       Example: {reportName || "Report"}
                       {filenameTemplate.field1 ? "[" + filenameTemplate.field1 + "]" : ""}
-                      {filenameTemplate.field2 ? "[" + filenameTemplate.field2 + "]" : ""}
-                      {" "}.pdf
+                      {filenameTemplate.field2 ? "[" + filenameTemplate.field2 + "]" : ""} .pdf
                     </p>
                   </div>
                 </div>

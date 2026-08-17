@@ -9,13 +9,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
-const multiSelectVariants = cva("m-1 transition ease-in-out delay-150 duration-300", {
+// Tremor-tinted chip styles for the selected values
+const multiSelectVariants = cva("transition-colors duration-100", {
   variants: {
     variant: {
-      default: "border-foreground/10 text-foreground bg-background",
-      secondary: "border-foreground/10 text-foreground bg-secondary",
-      destructive: "border-transparent text-destructive bg-destructive/10",
-      inverted: "inverted",
+      default: "bg-tremor-brand-faint text-tremor-brand-emphasis ring-tremor-brand/20",
+      secondary: "bg-tremor-background-subtle text-tremor-content-emphasis ring-tremor-border",
+      destructive: "bg-red-500/10 text-red-700 dark:text-red-400 ring-red-500/20",
+      neutral: "bg-gray-500/10 text-gray-700 dark:text-gray-400 ring-gray-500/20",
     },
   },
   defaultVariants: {
@@ -90,15 +91,14 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
             <div className="flex w-full items-center justify-between gap-2">
               <div className="flex flex-wrap gap-1">
                 {value.length === 0 ? (
-                  <span className="text-sm text-muted-foreground">{placeholder}</span>
+                  <span className="text-tremor-default text-tremor-content">{placeholder}</span>
                 ) : (
                   value.map((v) => {
                     const option = options.find((o) => o.value === v);
                     return (
                       <Badge
                         key={v}
-                        variant={variant}
-                        className="rounded-sm"
+                        className={cn("cursor-pointer", multiSelectVariants({ variant }))}
                         onClick={(e) => handleRemove(v, e)}
                       >
                         {option?.label || v}
@@ -140,12 +140,12 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
                       if (e.key === "Enter" || e.key === " ") handleSelectOption(option.value);
                     }}
                     aria-selected={isSelected}
-                    className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-accent cursor-pointer select-none"
+                    className="flex items-center gap-2 px-3 py-2 text-tremor-default rounded-tremor-small hover:bg-tremor-background-muted cursor-pointer select-none"
                     onClick={() => handleSelectOption(option.value)}
                   >
                     <div
                       className={cn(
-                        "flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                        "flex h-4 w-4 items-center justify-center rounded-tremor-small border border-tremor-border",
                         isSelected ? "bg-primary text-primary-foreground" : "opacity-50"
                       )}
                     >

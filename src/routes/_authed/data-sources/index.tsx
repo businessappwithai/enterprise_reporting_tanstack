@@ -187,7 +187,10 @@ function DataSourcesPage() {
           });
           return;
         }
-        if (!formState.useConnectionString && (!formState.host || !formState.database || !formState.user)) {
+        if (
+          !formState.useConnectionString &&
+          (!formState.host || !formState.database || !formState.user)
+        ) {
           setConnectionTestResult({
             success: false,
             message: "Please fill in Host, Database, and Username fields",
@@ -360,8 +363,7 @@ function DataSourcesPage() {
       setInspectingDs(null);
     },
     onError: (error) => {
-      const message =
-        error instanceof Error ? error.message : "Failed to inspect schema";
+      const message = error instanceof Error ? error.message : "Failed to inspect schema";
       toast.error(message);
       console.error("Inspect error:", message);
       setInspectingDs(null);
@@ -420,7 +422,7 @@ function DataSourcesPage() {
                 </div>
               )}
               {connectionTestResult?.success && formState.name && (
-                <div className="w-full flex items-center gap-2 text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/10 px-3 py-2 rounded-md">
+                <div className="w-full flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/10 px-3 py-2 rounded-md">
                   <Check className="h-4 w-4" />
                   <span>All set! Click Create to add your data source.</span>
                 </div>
@@ -539,14 +541,14 @@ function DataSourcesPage() {
                   </div>
                 </div>
               ) : (
-                <div className="p-4 rounded-md bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-900/30">
+                <div className="p-4 rounded-md bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-900/30">
                   <div className="flex items-start gap-2">
-                    <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                    <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
                     <div>
-                      <h4 className="text-sm font-semibold text-yellow-800 dark:text-yellow-400">
+                      <h4 className="text-sm font-semibold text-amber-800 dark:text-amber-400">
                         Warning
                       </h4>
-                      <p className="text-sm text-yellow-700 dark:text-yellow-400 mt-1">
+                      <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">
                         This will soft delete the data source. It will be marked as deleted but will
                         remain in the database for audit purposes.
                       </p>
@@ -630,11 +632,19 @@ function DataSourcesPage() {
                     <TableCell className="text-muted-foreground">{ds.description || "-"}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Badge variant={ds.is_deleted ? "secondary" : ds.is_active ? "default" : "secondary"}>
-                          {ds.is_deleted ? "Inactive" : ds.is_active ? "Connected" : "No Connection"}
+                        <Badge
+                          variant={
+                            ds.is_deleted ? "secondary" : ds.is_active ? "default" : "secondary"
+                          }
+                        >
+                          {ds.is_deleted
+                            ? "Inactive"
+                            : ds.is_active
+                              ? "Connected"
+                              : "No Connection"}
                         </Badge>
                         {!!ds.is_inspected && !ds.is_deleted && (
-                          <Badge variant="outline" className="text-green-600 border-green-600">
+                          <Badge variant="outline" className="text-emerald-600 border-emerald-600">
                             <Check className="h-3 w-3 mr-1" />
                             Inspected
                           </Badge>
@@ -656,7 +666,7 @@ function DataSourcesPage() {
                             }}
                             disabled={inspectingDs === ds.id}
                             title="Import schema to enable entity metadata"
-                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                            className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
                           >
                             {inspectingDs === ds.id ? (
                               <Loader2 className="h-4 w-4 animate-spin" />

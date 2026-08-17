@@ -36,7 +36,7 @@ export function MemoryMonitor() {
       <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
         <div
           className={`h-full rounded-full transition-all ${
-            pct > 90 ? "bg-destructive" : pct > 70 ? "bg-yellow-500" : "bg-primary"
+            pct > 90 ? "bg-destructive" : pct > 70 ? "bg-amber-500" : "bg-primary"
           }`}
           style={{ width: `${Math.min(pct, 100)}%` }}
         />

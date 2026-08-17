@@ -1,7 +1,14 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, RefreshCw, AlertCircle, Info, AlertTriangle } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
+  AlertCircle,
+  Info,
+  AlertTriangle,
+} from "lucide-react";
 import { useCallback, useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -96,7 +103,7 @@ export function LogsViewer() {
       case "error":
         return <AlertCircle className="h-4 w-4 text-red-600" />;
       case "warn":
-        return <AlertTriangle className="h-4 w-4 text-yellow-600" />;
+        return <AlertTriangle className="h-4 w-4 text-amber-600" />;
       case "info":
         return <Info className="h-4 w-4 text-blue-600" />;
       default:
@@ -109,7 +116,7 @@ export function LogsViewer() {
       case "error":
         return "bg-red-50 dark:bg-red-900/20";
       case "warn":
-        return "bg-yellow-50 dark:bg-yellow-900/20";
+        return "bg-amber-50 dark:bg-amber-900/20";
       case "info":
         return "bg-blue-50 dark:bg-blue-900/20";
       default:
@@ -121,10 +128,13 @@ export function LogsViewer() {
     <div className="space-y-4">
       {/* Filters */}
       <div className="flex gap-2 items-center flex-wrap">
-        <Select value={levelFilter || "all"} onValueChange={(v) => {
-          setLevelFilter(v === "all" ? null : v);
-          setPage(0);
-        }}>
+        <Select
+          value={levelFilter || "all"}
+          onValueChange={(v) => {
+            setLevelFilter(v === "all" ? null : v);
+            setPage(0);
+          }}
+        >
           <SelectTrigger className="w-40">
             <SelectValue placeholder="Filter by level" />
           </SelectTrigger>
@@ -138,10 +148,13 @@ export function LogsViewer() {
         </Select>
 
         {components.length > 0 && (
-          <Select value={componentFilter || "all"} onValueChange={(v) => {
-            setComponentFilter(v === "all" ? null : v);
-            setPage(0);
-          }}>
+          <Select
+            value={componentFilter || "all"}
+            onValueChange={(v) => {
+              setComponentFilter(v === "all" ? null : v);
+              setPage(0);
+            }}
+          >
             <SelectTrigger className="w-48">
               <SelectValue placeholder="Filter by component" />
             </SelectTrigger>
@@ -157,10 +170,13 @@ export function LogsViewer() {
         )}
 
         {users.length > 0 && (
-          <Select value={userFilter || "all"} onValueChange={(v) => {
-            setUserFilter(v === "all" ? null : v);
-            setPage(0);
-          }}>
+          <Select
+            value={userFilter || "all"}
+            onValueChange={(v) => {
+              setUserFilter(v === "all" ? null : v);
+              setPage(0);
+            }}
+          >
             <SelectTrigger className="w-48">
               <SelectValue placeholder="Filter by user" />
             </SelectTrigger>
@@ -238,9 +254,9 @@ export function LogsViewer() {
                         {(() => {
                           let parsedMetadata: Record<string, unknown> | null = null;
                           try {
-                            if (typeof log.metadata === 'string') {
+                            if (typeof log.metadata === "string") {
                               parsedMetadata = JSON.parse(log.metadata);
-                            } else if (typeof log.metadata === 'object') {
+                            } else if (typeof log.metadata === "object") {
                               parsedMetadata = log.metadata;
                             }
                           } catch (e) {
@@ -251,10 +267,10 @@ export function LogsViewer() {
                             <>
                               {parsedMetadata?.sql && (
                                 <details className="mt-1" open>
-                                  <summary className="text-xs text-purple-600 dark:text-purple-400 cursor-pointer font-medium">
+                                  <summary className="text-xs text-violet-600 dark:text-violet-400 cursor-pointer font-medium">
                                     SQL Query
                                   </summary>
-                                  <pre className="text-xs bg-purple-50 dark:bg-purple-900/20 p-2 rounded mt-1 overflow-auto max-h-40 border border-purple-200 dark:border-purple-800">
+                                  <pre className="text-xs bg-violet-50 dark:bg-violet-900/20 p-2 rounded mt-1 overflow-auto max-h-40 border border-violet-200 dark:border-violet-800">
                                     {parsedMetadata.sql as string}
                                   </pre>
                                 </details>
@@ -267,7 +283,9 @@ export function LogsViewer() {
                                   <pre className="text-xs bg-black/5 dark:bg-white/5 p-2 rounded mt-1 overflow-auto max-h-32">
                                     {JSON.stringify(
                                       Object.fromEntries(
-                                        Object.entries(parsedMetadata).filter(([key]) => key !== 'sql')
+                                        Object.entries(parsedMetadata).filter(
+                                          ([key]) => key !== "sql"
+                                        )
                                       ),
                                       null,
                                       2

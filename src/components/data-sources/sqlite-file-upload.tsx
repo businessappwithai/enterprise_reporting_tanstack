@@ -77,13 +77,13 @@ export function SqliteFileUpload({
       </div>
 
       {fileName && (
-        <div className="rounded-md bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-900/30 p-3">
-          <p className="text-sm font-medium text-green-800 dark:text-green-400 flex items-center gap-2">
+        <div className="rounded-md bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-900/30 p-3">
+          <p className="text-sm font-medium text-emerald-800 dark:text-emerald-400 flex items-center gap-2">
             <Check className="h-4 w-4" />
             {compact ? `Ready to use: ${fileName}` : "File uploaded successfully"}
           </p>
           {!compact && (
-            <p className="text-xs text-green-700 dark:text-green-400 mt-1 font-mono">
+            <p className="text-xs text-emerald-700 dark:text-emerald-400 mt-1 font-mono">
               data/uploads/{fileName}
             </p>
           )}

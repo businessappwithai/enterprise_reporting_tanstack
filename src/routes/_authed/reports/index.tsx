@@ -218,7 +218,7 @@ function ReportsPage() {
                         {(!report.name || report.name === "Draft Report") && (
                           <Badge
                             variant="outline"
-                            className="text-xs bg-yellow-50 text-yellow-700 border-yellow-300"
+                            className="text-xs bg-amber-50 text-amber-700 border-amber-300"
                           >
                             Draft
                           </Badge>

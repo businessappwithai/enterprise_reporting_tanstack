@@ -206,10 +206,7 @@ function SQLEditorPage() {
         setQueryResult(null);
         setWarning(null);
         logger.error("Query execution failed", { error: errorMessage });
-        setQueryLogs((prev) => [
-          `[${timestamp}] Error: ${errorMessage}`,
-          ...prev,
-        ]);
+        setQueryLogs((prev) => [`[${timestamp}] Error: ${errorMessage}`, ...prev]);
         setActiveTab("errors");
       }
     },
@@ -394,7 +391,7 @@ function SQLEditorPage() {
             type="button"
             onClick={() => setSaveQueryModal(true)}
             disabled={!selectedDataSource || !sqlContent.trim()}
-            className="px-3 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-3 py-2 text-sm bg-emerald-600 text-white rounded hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Save
           </button>
@@ -405,12 +402,12 @@ function SQLEditorPage() {
         <div
           className={`mb-4 border rounded p-3 ${
             validationResult.isValid && validationResult.errors.length === 0
-              ? "border-green-300 bg-green-50"
+              ? "border-emerald-300 bg-emerald-50"
               : "border-red-300 bg-red-50"
           }`}
         >
           {validationResult.isValid && validationResult.errors.length === 0 ? (
-            <div className="text-sm text-green-700">
+            <div className="text-sm text-emerald-700">
               <p className="font-medium">SQL is valid</p>
               {validationResult.warnings.length > 0 && (
                 <div className="mt-2">
@@ -491,7 +488,9 @@ function SQLEditorPage() {
             {!isLoadingDataSources && (!dataSources || dataSources.length === 0) && (
               <p className="text-xs text-red-600 dark:text-red-400">
                 No data sources configured.{" "}
-                <a href="/data-sources" className="underline hover:no-underline">Create one</a>
+                <a href="/data-sources" className="underline hover:no-underline">
+                  Create one
+                </a>
               </p>
             )}
           </div>
@@ -650,23 +649,29 @@ function SQLEditorPage() {
             <div className="space-y-3">
               {executionError && (
                 <div className="border border-red-300 bg-red-50 dark:bg-red-900/20 rounded p-3">
-                  <h3 className="font-semibold text-red-700 dark:text-red-400 mb-1 text-sm">Query Error</h3>
+                  <h3 className="font-semibold text-red-700 dark:text-red-400 mb-1 text-sm">
+                    Query Error
+                  </h3>
                   <pre className="text-sm text-red-600 dark:text-red-300 whitespace-pre-wrap overflow-auto">
                     {executionError}
                   </pre>
                 </div>
               )}
               {warning && (
-                <div className="border border-yellow-300 bg-yellow-50 dark:bg-yellow-900/20 rounded p-3">
-                  <h3 className="font-semibold text-yellow-700 dark:text-yellow-400 mb-1 text-sm">Warning</h3>
-                  <p className="text-sm text-yellow-600 dark:text-yellow-300">{warning.message}</p>
-                  <p className="text-sm text-yellow-600 dark:text-yellow-300 mt-1">
+                <div className="border border-amber-300 bg-amber-50 dark:bg-amber-900/20 rounded p-3">
+                  <h3 className="font-semibold text-amber-700 dark:text-amber-400 mb-1 text-sm">
+                    Warning
+                  </h3>
+                  <p className="text-sm text-amber-600 dark:text-amber-300">{warning.message}</p>
+                  <p className="text-sm text-amber-600 dark:text-amber-300 mt-1">
                     Suggestion: {warning.suggestion}
                   </p>
                 </div>
               )}
               {!executionError && !warning && (
-                <div className="text-center py-8 text-muted-foreground text-sm">No errors recorded.</div>
+                <div className="text-center py-8 text-muted-foreground text-sm">
+                  No errors recorded.
+                </div>
               )}
             </div>
           )}
