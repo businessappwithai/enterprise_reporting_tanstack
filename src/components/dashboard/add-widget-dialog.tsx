@@ -172,7 +172,7 @@ export function AddWidgetDialog({ open, onOpenChange, onAddWidget }: AddWidgetDi
                       <SelectItem key={chart.id} value={chart.id}>
                         <div className="flex flex-col">
                           <span className="font-medium">{chart.name}</span>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-tremor-label text-tremor-content">
                             {chart.description || "No description"}
                           </span>
                         </div>
@@ -198,7 +198,7 @@ export function AddWidgetDialog({ open, onOpenChange, onAddWidget }: AddWidgetDi
                       <SelectItem key={report.id} value={report.id}>
                         <div className="flex flex-col">
                           <span className="font-medium">{report.name}</span>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-tremor-label text-tremor-content">
                             {report.description || "No description"}
                           </span>
                         </div>
@@ -211,7 +211,7 @@ export function AddWidgetDialog({ open, onOpenChange, onAddWidget }: AddWidgetDi
 
             {/* Metric Widget */}
             <TabsContent value="metric" className="space-y-4">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-tremor-default text-tremor-content">
                 Metric widgets display a single key value. Configuration for metrics will be
                 available soon.
               </p>

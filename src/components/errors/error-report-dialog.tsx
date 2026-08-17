@@ -121,14 +121,14 @@ export function ErrorReportDialog({ open, onOpenChange, errorLog }: ErrorReportD
                 )}
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-tremor-label text-tremor-content">
               This will be sent to <span className="font-mono">{errorReportingEmail}</span>
             </p>
           </div>
 
           {/* Instructions */}
           <div className="p-3 rounded-lg bg-muted border">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-tremor-default text-tremor-content">
               <strong>What happens next:</strong> Clicking &quot;Send Error Report&quot; will open
               your email client with the error details pre-filled. You can review the contents
               before sending.

@@ -112,7 +112,7 @@ export function FieldMetadataForm({
                   onChange={(e) => fieldApi.handleChange(e.target.value)}
                   onBlur={fieldApi.handleBlur}
                 />
-                <p className="text-sm text-muted-foreground">
+                <p className="text-tremor-default text-tremor-content">
                   A human-readable description of what this field represents. Max 1000 characters.
                 </p>
                 {fieldApi.state.meta.errors.length > 0 && (
@@ -133,7 +133,7 @@ export function FieldMetadataForm({
                 />
                 <div className="space-y-1 leading-none">
                   <Label htmlFor="is_display_field">Display Field</Label>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-tremor-default text-tremor-content">
                     When enabled, this field will be shown in list views and summaries. Typically
                     enabled for name/title fields.
                   </p>
@@ -153,7 +153,7 @@ export function FieldMetadataForm({
                 />
                 <div className="space-y-1 leading-none">
                   <Label htmlFor="is_searchable">Searchable</Label>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-tremor-default text-tremor-content">
                     When enabled, this field will be included in search functionality. Useful for
                     identifier and name fields.
                   </p>
@@ -185,7 +185,7 @@ export function FieldMetadataForm({
                   onChange={(e) => fieldApi.handleChange(parseInt(e.target.value, 10) || 0)}
                   onBlur={fieldApi.handleBlur}
                 />
-                <p className="text-sm text-muted-foreground">
+                <p className="text-tremor-default text-tremor-content">
                   Determines the order in which fields are displayed. Lower numbers appear first.
                 </p>
                 {fieldApi.state.meta.errors.length > 0 && (
@@ -218,7 +218,7 @@ export function FieldMetadataForm({
                       <SelectItem value="popup">Popup (Searchable table)</SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-tremor-default text-tremor-content">
                     How the foreign key relationship should be displayed in forms.
                     <br />
                     <strong>Dropdown:</strong> Shows a select dropdown with referenced entity&apos;s

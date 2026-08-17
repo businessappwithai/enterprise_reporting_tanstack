@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, Link } from "@tanstack/react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authed/admin")({
   component: AdminLayout,
@@ -8,10 +9,7 @@ export const Route = createFileRoute("/_authed/admin")({
 function AdminLayout() {
   return (
     <div className="space-y-6 p-6">
-      <div>
-        <h1 className="text-3xl font-bold">Admin Panel</h1>
-        <p className="text-muted-foreground">Manage system users, roles, and permissions</p>
-      </div>
+      <PageHeader title="Admin Panel" description="Manage system users, roles, and permissions" />
 
       <div className="flex gap-4">
         <Link

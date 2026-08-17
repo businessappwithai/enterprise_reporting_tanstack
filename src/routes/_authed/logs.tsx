@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LogsViewer } from "@/components/logs/logs-viewer";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authed/logs")({
   component: LogsPage,
@@ -8,10 +9,11 @@ export const Route = createFileRoute("/_authed/logs")({
 function LogsPage() {
   return (
     <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">System Logs</h1>
-        <p className="text-muted-foreground">View system logs and debugging information</p>
-      </div>
+      <PageHeader
+        className="mb-6"
+        title="System Logs"
+        description="View system logs and debugging information"
+      />
       <LogsViewer />
     </div>
   );

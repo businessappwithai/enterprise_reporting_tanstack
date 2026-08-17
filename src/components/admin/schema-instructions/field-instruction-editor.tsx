@@ -299,7 +299,7 @@ export function FieldInstructionEditor({
               rows={3}
               className="font-mono text-xs"
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-tremor-label text-tremor-content">
               Validation rules, patterns, and constraints as JSON
             </p>
           </div>

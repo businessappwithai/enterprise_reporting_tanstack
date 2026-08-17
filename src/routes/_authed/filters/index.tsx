@@ -22,6 +22,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { FilterDefinition } from "@/types/database";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authed/filters/")({
   component: FiltersPage,
@@ -232,18 +233,15 @@ function FiltersPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <p className="text-muted-foreground">Loading filters...</p>
+        <p className="text-tremor-content">Loading filters...</p>
       </div>
     );
   }
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Filters</h1>
-          <p className="text-muted-foreground">Manage reusable filters for reports and charts</p>
-        </div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader title="Filters" description="Manage reusable filters for reports and charts" />
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => resetForm()}>
@@ -308,7 +306,7 @@ function FiltersPage() {
               filters?.map((filter) => (
                 <TableRow key={filter.id}>
                   <TableCell className="font-medium">{filter.name}</TableCell>
-                  <TableCell className="text-muted-foreground">
+                  <TableCell className="text-tremor-content">
                     {filter.description || "-"}
                   </TableCell>
                   <TableCell>

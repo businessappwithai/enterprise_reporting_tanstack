@@ -175,7 +175,7 @@ export function HelpDialog({ open, onOpenChange }: HelpDialogProps) {
               <ScrollArea className="flex-1">
                 <div className="p-6 space-y-3">
                   {filtered.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-tremor-default text-tremor-content">
                       No articles found. Try a different search or category.
                     </p>
                   ) : (

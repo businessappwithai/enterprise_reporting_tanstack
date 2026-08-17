@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useDataset } from "@/hooks/useDataset";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import type { DatasetInfo } from "@/types/datasets";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authed/datasets/")({
   component: DatasetsPage,
@@ -81,8 +82,8 @@ function DatasetsPage() {
   if (!wasmEnabled) {
     return (
       <div className="p-6">
-        <h1 className="text-2xl font-bold">Datasets</h1>
-        <p className="mt-2 text-muted-foreground">
+        <h1 className="font-semibold text-2xl text-tremor-content-strong">Datasets</h1>
+        <p className="mt-2 text-tremor-default text-tremor-content">
           WASM mode is not enabled. Enable VITE_WASM_ENABLED to use client-side datasets.
         </p>
       </div>
@@ -91,15 +92,10 @@ function DatasetsPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Datasets</h1>
-          <p className="text-sm text-muted-foreground">
-            Manage datasets loaded in DuckDB-Wasm for client-side analytics.
-          </p>
-        </div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader title="Datasets" description="Manage datasets loaded in DuckDB-Wasm for client-side analytics." />
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">DuckDB: {duckdbStatus}</span>
+          <span className="text-tremor-default text-tremor-content">DuckDB: {duckdbStatus}</span>
           <Button variant="outline" onClick={() => window.location.reload()}>
             Refresh List
           </Button>
@@ -107,7 +103,7 @@ function DatasetsPage() {
       </div>
 
       {isLoadingList ? (
-        <div className="text-sm text-muted-foreground">Loading datasets…</div>
+        <div className="text-tremor-default text-tremor-content">Loading datasets…</div>
       ) : (
         <DatasetManager datasets={merged} onLoad={handleLoad} onUnload={handleUnload} />
       )}

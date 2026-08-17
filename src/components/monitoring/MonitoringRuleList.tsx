@@ -246,7 +246,7 @@ export function MonitoringRuleList() {
         </div>
         <div className="text-center space-y-1">
           <p className="text-lg font-medium">No monitoring rules yet</p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-tremor-default text-tremor-content">
             Create your first monitoring rule to start tracking metrics
           </p>
         </div>
@@ -295,13 +295,13 @@ export function MonitoringRuleList() {
                       rule.threshold_upper_bound
                     )}
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
+                  <TableCell className="text-tremor-default text-tremor-content">
                     {describeCron(rule.schedule_cron)}
                   </TableCell>
                   <TableCell>
                     <StatusBadge status={rule.status} />
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
+                  <TableCell className="text-tremor-default text-tremor-content">
                     {rule.last_run_at ? formatDateTime(rule.last_run_at) : "—"}
                   </TableCell>
                   <TableCell className="text-sm">
@@ -376,7 +376,7 @@ export function MonitoringRuleList() {
 
       {totalPages > 1 && (
         <div className="flex items-center justify-between pt-2">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-tremor-default text-tremor-content">
             Showing {page * pageSize + 1}–{Math.min((page + 1) * pageSize, total)} of {total}
           </p>
           <div className="flex gap-2">

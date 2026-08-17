@@ -319,7 +319,7 @@ export function LogsViewer() {
       {/* Pagination */}
       {data?.pagination && (
         <div className="flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
+          <div className="text-tremor-default text-tremor-content">
             Page {page + 1} • {data.pagination.totalCount} total logs
           </div>
           <div className="flex gap-2">

@@ -13,6 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authed/bull-board")({
   component: QueueManagementPage,
@@ -72,11 +73,8 @@ function QueueManagementPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Queue Management</h1>
-          <p className="text-sm text-muted-foreground">Background jobs powered by Trigger.dev</p>
-        </div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader title="Queue Management" description="Background jobs powered by Trigger.dev" />
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => refetch()}>
             <RefreshCw className="h-4 w-4 mr-2" />
@@ -114,7 +112,7 @@ function QueueManagementPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-xs text-muted-foreground">{task.description}</p>
+                  <p className="text-tremor-label text-tremor-content">{task.description}</p>
                   <div className="mt-2">
                     <Badge variant="secondary" className="text-xs font-mono">
                       {task.id}
@@ -160,7 +158,7 @@ function QueueManagementPage() {
                     <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
                     <div>
                       <p className="text-sm font-medium">{job.name}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-tremor-label text-tremor-content">
                         {job.job_type} · cron:{" "}
                         <span className="font-mono">{job.schedule_cron}</span>
                       </p>
@@ -194,7 +192,7 @@ function QueueManagementPage() {
                 >
                   <div>
                     <p className="text-sm font-medium">{job.name}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-tremor-label text-tremor-content">
                       Type: {job.job_type}
                       {job.schedule_cron ? ` · ${job.schedule_cron}` : " · on-demand"}
                     </p>

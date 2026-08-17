@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PageHeader } from "@/components/layout/page-header";
 import { toast } from "sonner";
 
 interface UISettings {
@@ -55,10 +56,7 @@ function UISettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">UI Settings</h1>
-        <p className="text-muted-foreground">Configure table display and appearance options</p>
-      </div>
+      <PageHeader title="UI Settings" description="Configure table display and appearance options" />
 
       <Card>
         <CardHeader>
@@ -68,7 +66,7 @@ function UISettingsPage() {
         <CardContent className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="stripe-color">Alternating Row Stripe Color</Label>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-tremor-default text-tremor-content">
               Color used for alternating rows in tables for better readability
             </p>
             <div className="flex gap-3 items-center">

@@ -81,7 +81,7 @@ function formatThresholdCompare(exec: MonitoringExecution): string {
 }
 
 function DeltaBadge({ delta }: { delta: number | null | undefined }) {
-  if (delta == null) return <span className="text-muted-foreground">—</span>;
+  if (delta == null) return <span className="text-tremor-content">—</span>;
   const sign = delta >= 0 ? "+" : "";
   const color = delta >= 0 ? "text-emerald-600" : "text-red-600";
   return (
@@ -167,7 +167,7 @@ export function ExecutionHistoryTable({ ruleId }: Props) {
                     <Minus className="h-4 w-4 text-muted-foreground" />
                   )}
                 </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
+                <TableCell className="text-tremor-default text-tremor-content">
                   {exec.execution_ms != null ? `${exec.execution_ms}ms` : "—"}
                 </TableCell>
               </TableRow>

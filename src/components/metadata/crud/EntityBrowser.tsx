@@ -248,7 +248,7 @@ export function EntityBrowser({
         ) : isError ? (
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <p className="text-destructive mb-2">Error loading entities</p>
-            <p className="text-sm text-muted-foreground">{error?.message}</p>
+            <p className="text-tremor-default text-tremor-content">{error?.message}</p>
           </div>
         ) : entities.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-center">
@@ -300,7 +300,7 @@ export function EntityBrowser({
         {/* Pagination */}
         {pageCount > 1 && (
           <div className="flex items-center justify-between space-x-2 py-4">
-            <div className="text-sm text-muted-foreground">
+            <div className="text-tremor-default text-tremor-content">
               Showing {pagination.pageIndex * pagination.pageSize + 1} to{" "}
               {Math.min((pagination.pageIndex + 1) * pagination.pageSize, total)} of {total}{" "}
               entities

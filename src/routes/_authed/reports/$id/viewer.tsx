@@ -88,9 +88,31 @@ function ReportViewerPage() {
   const columns: ColumnDef<ReportRow>[] = useMemo(() => {
     if (!report) return [];
 
+    /**
+     * Fall back to the result set's own columns when the report has no usable
+     * `column_config`. Without this a report saved with an empty (or fully
+     * hidden) column config renders as an empty frame: the row count, search
+     * box and pager all appear, wrapped around a table with no columns.
+     */
+    const columnsFromData = (): ColumnDef<ReportRow>[] => {
+      const firstRow = reportData?.rows?.[0];
+      if (!firstRow) return [];
+      return Object.keys(firstRow).map((field) => ({
+        id: field,
+        accessorKey: field,
+        header: field.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+        cell: (info: { getValue: () => unknown }) => {
+          const value = info.getValue();
+          if (value === null || value === undefined) return "-";
+          if (typeof value === "number") return value.toLocaleString();
+          return String(value);
+        },
+      }));
+    };
+
     try {
       const columnConfig = JSON.parse(report.column_config || "[]");
-      return columnConfig
+      const configured = columnConfig
         .filter((col: ColumnDefinition) => col.visible)
         .map((col: ColumnDefinition) => ({
           id: col.id || col.field,
@@ -103,10 +125,11 @@ function ReportViewerPage() {
             return String(value);
           },
         }));
+      return configured.length > 0 ? configured : columnsFromData();
     } catch {
-      return [];
+      return columnsFromData();
     }
-  }, [report]);
+  }, [report, reportData]);
 
   if (isLoadingReport) {
     return (
@@ -147,9 +170,9 @@ function ReportViewerPage() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold">{report.name}</h1>
+            <h1 className="font-semibold text-2xl text-tremor-content-strong">{report.name}</h1>
             {report.description && (
-              <p className="text-sm text-muted-foreground mt-1">{report.description}</p>
+              <p className="mt-1 text-tremor-default text-tremor-content">{report.description}</p>
             )}
           </div>
         </div>

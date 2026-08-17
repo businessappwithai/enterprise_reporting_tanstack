@@ -196,7 +196,7 @@ export function ExecutionInvestigateModal({ ruleId, ruleName, open, onClose }: P
                     {status}
                   </span>
                   {exec.execution_ms != null && (
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-tremor-label text-tremor-content">
                       · {exec.execution_ms}ms total
                     </span>
                   )}
@@ -353,7 +353,7 @@ export function ExecutionInvestigateModal({ ruleId, ruleName, open, onClose }: P
                   exec.alert_dispatched ? (
                     <span className="text-emerald-600">Yes</span>
                   ) : (
-                    <span className="text-muted-foreground">
+                    <span className="text-tremor-content">
                       {isPass ? "No — threshold passed (notify_on_pass=false)" : "No"}
                     </span>
                   )

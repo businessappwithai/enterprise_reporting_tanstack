@@ -14,6 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { DataSource, SavedQuery } from "@/types/database";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authed/queries/")({
   component: QueriesPage,
@@ -85,10 +86,7 @@ function QueriesPage() {
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">Saved Queries</h1>
-          <p className="text-muted-foreground">Manage your saved SQL queries</p>
-        </div>
+        <PageHeader title="Saved Queries" description="Manage your saved SQL queries" />
         <Button
           onClick={() => navigate({ to: "/sql-editor" })}
           className="bg-blue-600 hover:bg-blue-700"
@@ -147,7 +145,7 @@ function QueriesPage() {
                 <TableCell colSpan={6} className="text-center py-8">
                   {searchTerm ? (
                     <div>
-                      <p className="text-muted-foreground">No queries match your search.</p>
+                      <p className="text-tremor-content">No queries match your search.</p>
                       <Button variant="link" onClick={() => setSearchTerm("")} className="mt-2">
                         Clear search
                       </Button>
@@ -166,16 +164,16 @@ function QueriesPage() {
               filteredQueries.map((query) => (
                 <TableRow key={query.id}>
                   <TableCell className="font-medium">{query.name}</TableCell>
-                  <TableCell className="text-muted-foreground">
+                  <TableCell className="text-tremor-content">
                     {query.description || <span className="italic">No description</span>}
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline">{getDataSourceName(query.data_source_id)}</Badge>
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
+                  <TableCell className="text-tremor-default text-tremor-content">
                     {new Date(query.created_at).toLocaleDateString()}
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
+                  <TableCell className="text-tremor-default text-tremor-content">
                     {new Date(query.updated_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell className="text-right">

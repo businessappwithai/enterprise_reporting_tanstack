@@ -84,8 +84,8 @@ export class ErrorBoundary extends Component<Props, State> {
               </div>
 
               <div className="space-y-2">
-                <h1 className="text-2xl font-bold">Something went wrong</h1>
-                <p className="text-muted-foreground">
+                <h1 className="font-semibold text-2xl text-tremor-content-strong">Something went wrong</h1>
+                <p className="text-tremor-content">
                   An unexpected error has occurred. Our team has been notified and we&apos;re
                   working to fix it.
                 </p>
@@ -107,7 +107,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 </Button>
               </div>
 
-              <p className="text-xs text-muted-foreground">
+              <p className="text-tremor-label text-tremor-content">
                 If this problem persists, please contact your system administrator.
               </p>
             </div>

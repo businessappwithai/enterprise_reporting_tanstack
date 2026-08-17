@@ -60,7 +60,7 @@ export function SqliteFileUpload({
               </p>
             )}
             {compact && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-tremor-label text-tremor-content">
                 Upload to: <code className="bg-muted px-1 py-0.5 rounded">data/uploads/</code>
               </p>
             )}

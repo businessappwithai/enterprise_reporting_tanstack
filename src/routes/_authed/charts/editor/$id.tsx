@@ -11,6 +11,7 @@ import { ChartPreviewPanel } from "@/components/charts/editor/chart-preview-pane
 import { ChartReusableFilters } from "@/components/charts/editor/chart-reusable-filters";
 import { ChartTypeSelector } from "@/components/charts/editor/chart-type-selector";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/layout/page-header";
 import type {
   ChartConfig,
   ChartDefinition,
@@ -251,12 +252,7 @@ function ChartEditorPage() {
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
-            <div>
-              <h1 className="text-2xl font-bold">Chart Editor</h1>
-              <p className="text-sm text-gray-500">
-                {chartId === "new" ? "Create a new chart" : "Edit chart configuration"}
-              </p>
-            </div>
+            <PageHeader title="Chart Editor" description="{chartId === &quot;new&quot; ? &quot;Create a new chart&quot; : &quot;Edit chart configuration&quot;}" />
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={() => setShowPreview(!showPreview)}>

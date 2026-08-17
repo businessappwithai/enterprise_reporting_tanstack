@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authed/settings/email/")({
   component: EmailSettingsPage,
@@ -66,11 +67,8 @@ function EmailSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Email Settings</h1>
-          <p className="text-muted-foreground">Configure email notifications for job completion</p>
-        </div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader title="Email Settings" description="Configure email notifications for job completion" />
         <Button
           variant="outline"
           onClick={() => verifyMutation.mutate()}
@@ -105,7 +103,7 @@ function EmailSettingsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {isLoading ? (
-                  <p className="text-muted-foreground">Loading configuration...</p>
+                  <p className="text-tremor-content">Loading configuration...</p>
                 ) : (
                   <>
                     <div className="space-y-2">
@@ -129,21 +127,21 @@ function EmailSettingsPage() {
                     <div className="space-y-2">
                       <Label>SMTP Host</Label>
                       <Input value={config?.host || ""} disabled placeholder="smtp.gmail.com" />
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-tremor-label text-tremor-content">
                         Set via SMTP_HOST environment variable
                       </p>
                     </div>
                     <div className="space-y-2">
                       <Label>SMTP Port</Label>
                       <Input value={config?.port || ""} disabled placeholder="587" />
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-tremor-label text-tremor-content">
                         Set via SMTP_PORT environment variable
                       </p>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
                         <Label>Use SSL/TLS</Label>
-                        <p className="text-xs text-muted-foreground">Enable secure connection</p>
+                        <p className="text-tremor-label text-tremor-content">Enable secure connection</p>
                       </div>
                       <Switch checked={config?.secure} disabled />
                     </div>
@@ -158,7 +156,7 @@ function EmailSettingsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {isLoading ? (
-                  <p className="text-muted-foreground">Loading configuration...</p>
+                  <p className="text-tremor-content">Loading configuration...</p>
                 ) : (
                   <>
                     <div className="space-y-2">
@@ -168,7 +166,7 @@ function EmailSettingsPage() {
                         disabled
                         placeholder="noreply@example.com"
                       />
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-tremor-label text-tremor-content">
                         Set via EMAIL_FROM environment variable
                       </p>
                     </div>
@@ -179,7 +177,7 @@ function EmailSettingsPage() {
                         disabled
                         placeholder="Enterprise Reporting System"
                       />
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-tremor-label text-tremor-content">
                         Set via EMAIL_FROM_NAME environment variable
                       </p>
                     </div>
@@ -214,8 +212,8 @@ function EmailSettingsPage() {
                   { value: "∞", label: "Automatic Reuse" },
                 ].map(({ value, label }) => (
                   <div key={label} className="bg-muted p-4 rounded-lg">
-                    <p className="text-2xl font-bold">{value}</p>
-                    <p className="text-xs text-muted-foreground">{label}</p>
+                    <p className="font-semibold text-tremor-metric text-tremor-content-strong">{value}</p>
+                    <p className="text-tremor-label text-tremor-content">{label}</p>
                   </div>
                 ))}
               </div>
@@ -261,7 +259,7 @@ function EmailSettingsPage() {
                         <Badge variant="outline">{badge}</Badge>
                       </div>
                       <p className="text-sm text-muted-foreground mb-2">{desc}</p>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-tremor-label text-tremor-content">
                         <strong>Variables:</strong> {vars}
                       </div>
                     </div>
@@ -278,7 +276,7 @@ function EmailSettingsPage() {
               <CardTitle>Send Test Email</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-tremor-default text-tremor-content">
                 Send a test email to verify your SMTP configuration is working correctly.
               </p>
               <div className="space-y-2">

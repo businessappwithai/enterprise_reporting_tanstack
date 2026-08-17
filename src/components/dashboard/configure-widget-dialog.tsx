@@ -102,7 +102,7 @@ export function ConfigureWidgetDialog({ open, onOpenChange, widget }: ConfigureW
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Custom widget title"
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-tremor-label text-tremor-content">
               Leave empty to use the default title from the chart/report
             </p>
           </div>

@@ -1,6 +1,7 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { Bell, Database, Mail, Palette, SwatchBook, Users as UsersIcon } from "lucide-react";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authed/settings/")({
   beforeLoad: () => {
@@ -12,10 +13,7 @@ export const Route = createFileRoute("/_authed/settings/")({
 function SettingsPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">Manage your application settings</p>
-      </div>
+      <PageHeader title="Settings" description="Manage your application settings" />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card className="hover:bg-muted/50 transition-colors cursor-pointer">

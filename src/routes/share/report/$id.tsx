@@ -38,7 +38,7 @@ function PublicReportPage() {
             <CardTitle>Report Not Available</CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
-            <p className="text-muted-foreground">
+            <p className="text-tremor-content">
               This report is not publicly accessible or does not exist.
             </p>
             <Link to="/">
@@ -61,7 +61,7 @@ function PublicReportPage() {
           <div>
             <h1 className="text-2xl font-semibold">{report.name}</h1>
             {report.description && (
-              <p className="text-sm text-muted-foreground">{report.description}</p>
+              <p className="text-tremor-default text-tremor-content">{report.description}</p>
             )}
           </div>
         </div>

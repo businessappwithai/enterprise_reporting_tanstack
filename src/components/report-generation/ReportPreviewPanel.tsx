@@ -39,11 +39,11 @@ export function ReportPreviewPanel({ rows, columns, sql, intent }: Props) {
           </CardHeader>
           <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div>
-              <span className="text-muted-foreground">Chart Type</span>
+              <span className="text-tremor-content">Chart Type</span>
               <p className="font-medium capitalize">{intent.chartType}</p>
             </div>
             <div>
-              <span className="text-muted-foreground">Metrics</span>
+              <span className="text-tremor-content">Metrics</span>
               <div className="flex flex-wrap gap-1 mt-1">
                 {(intent.metrics ?? []).map((m) => (
                   <Badge key={m} variant="outline" className="text-xs font-mono">{m}</Badge>
@@ -51,7 +51,7 @@ export function ReportPreviewPanel({ rows, columns, sql, intent }: Props) {
               </div>
             </div>
             <div>
-              <span className="text-muted-foreground">Dimensions</span>
+              <span className="text-tremor-content">Dimensions</span>
               <div className="flex flex-wrap gap-1 mt-1">
                 {(intent.dimensions ?? []).map((d) => (
                   <Badge key={d} variant="outline" className="text-xs font-mono">{d}</Badge>
@@ -59,7 +59,7 @@ export function ReportPreviewPanel({ rows, columns, sql, intent }: Props) {
               </div>
             </div>
             <div>
-              <span className="text-muted-foreground">Formats</span>
+              <span className="text-tremor-content">Formats</span>
               <div className="flex flex-wrap gap-1 mt-1">
                 {(intent.outputFormats ?? []).map((f) => (
                   <Badge key={f} variant="secondary" className="text-xs uppercase">{f}</Badge>

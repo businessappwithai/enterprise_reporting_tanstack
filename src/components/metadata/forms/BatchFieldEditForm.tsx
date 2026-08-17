@@ -135,7 +135,7 @@ export function BatchFieldEditForm({
                       )}
                     </div>
                   </div>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-tremor-default text-tremor-content">
                     {changes?.is_display_field !== undefined && (
                       <Badge
                         variant={changes.is_display_field ? "default" : "secondary"}

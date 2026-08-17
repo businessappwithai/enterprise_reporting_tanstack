@@ -354,7 +354,7 @@ function ReportEditorPage() {
   if (isLoadingReport) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-muted-foreground">Loading report...</div>
+        <div className="text-tremor-content">Loading report...</div>
       </div>
     );
   }
@@ -362,7 +362,7 @@ function ReportEditorPage() {
   if (!report) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-muted-foreground">Report not found</div>
+        <div className="text-tremor-content">Report not found</div>
       </div>
     );
   }
@@ -387,7 +387,7 @@ function ReportEditorPage() {
               </span>
             )}
           </div>
-          <p className="text-sm text-muted-foreground">Configure report columns and settings</p>
+          <p className="text-tremor-default text-tremor-content">Configure report columns and settings</p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -596,7 +596,7 @@ function ReportEditorPage() {
                             <div key={rf.id} className="flex items-center justify-between p-3">
                               <div className="flex-1">
                                 <div className="font-medium">{filterDef.name}</div>
-                                <div className="text-sm text-muted-foreground">
+                                <div className="text-tremor-default text-tremor-content">
                                   Filter: <code>{filterDef.display_field}</code> →{" "}
                                   <code>{filterDef.value_field}</code> | Target:{" "}
                                   <code>{rf.target_column}</code>
@@ -650,7 +650,7 @@ function ReportEditorPage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="export-csv">CSV Export</Label>
-                    <p className="text-xs text-muted-foreground">Comma-separated values format</p>
+                    <p className="text-tremor-label text-tremor-content">Comma-separated values format</p>
                   </div>
                   <Switch
                     id="export-csv"
@@ -663,7 +663,7 @@ function ReportEditorPage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="export-xlsx">Excel Export</Label>
-                    <p className="text-xs text-muted-foreground">Native Excel format</p>
+                    <p className="text-tremor-label text-tremor-content">Native Excel format</p>
                   </div>
                   <Switch
                     id="export-xlsx"
@@ -676,7 +676,7 @@ function ReportEditorPage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="export-html">HTML Export</Label>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-tremor-label text-tremor-content">
                       Interactive HTML with search and pagination
                     </p>
                   </div>
@@ -691,7 +691,7 @@ function ReportEditorPage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="export-pdf">PDF Export</Label>
-                    <p className="text-xs text-muted-foreground">Portable Document Format</p>
+                    <p className="text-tremor-label text-tremor-content">Portable Document Format</p>
                   </div>
                   <Switch
                     id="export-pdf"
@@ -750,7 +750,7 @@ function ReportEditorPage() {
                     </Select>
                   </div>
                   <div className="p-3 bg-muted rounded-md">
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-tremor-label text-tremor-content">
                       Example: {reportName || "Report"}
                       {filenameTemplate.field1 ? "[" + filenameTemplate.field1 + "]" : ""}
                       {filenameTemplate.field2 ? "[" + filenameTemplate.field2 + "]" : ""} .pdf
@@ -780,7 +780,7 @@ function ReportEditorPage() {
                           onChange={(e) => setColorTheme({ ...colorTheme, [key]: e.target.value })}
                           className="h-9 w-16 rounded cursor-pointer"
                         />
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-tremor-label text-tremor-content">
                           {(colorTheme as Record<string, string>)[key]}
                         </span>
                       </div>

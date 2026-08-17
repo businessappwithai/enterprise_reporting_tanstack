@@ -31,6 +31,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { PermissionLevel, ResourceType } from "@/types/database";
+import { PageHeader } from "@/components/layout/page-header";
 
 const RESOURCE_TYPES: { value: ResourceType; label: string }[] = [
   { value: "dashboard", label: "Dashboard" },
@@ -228,11 +229,8 @@ function PermissionsManagementPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Permission Management</h1>
-          <p className="text-muted-foreground">Manage resource-level permissions for roles</p>
-        </div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader title="Permission Management" description="Manage resource-level permissions for roles" />
         <Button onClick={() => setCreateDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Assign Permission
@@ -268,7 +266,7 @@ function PermissionsManagementPage() {
                     <TableCell className="font-medium">
                       <Badge variant="outline">{permission.role_name}</Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="text-tremor-content">
                       {permission.resource_type ? permission.resource_type.replace(/_/g, " ") : "—"}
                     </TableCell>
                     <TableCell>
@@ -360,7 +358,7 @@ function PermissionsManagementPage() {
                 </SelectContent>
               </Select>
               {!isLoadingResources && Array.isArray(resources) && resources.length === 0 && (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-tremor-default text-tremor-content">
                   No resources available for this type
                 </p>
               )}
@@ -396,7 +394,7 @@ function PermissionsManagementPage() {
                     <SelectItem key={level.value} value={level.value}>
                       <div className="flex flex-col">
                         <span>{level.label}</span>
-                        <span className="text-xs text-muted-foreground">{level.description}</span>
+                        <span className="text-tremor-label text-tremor-content">{level.description}</span>
                       </div>
                     </SelectItem>
                   ))}

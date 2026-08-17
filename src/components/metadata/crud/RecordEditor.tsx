@@ -107,7 +107,7 @@ export function RecordEditor({
     return (
       <Card className="w-full">
         <CardContent className="flex items-center justify-center py-12">
-          <p className="text-muted-foreground">Entity not found</p>
+          <p className="text-tremor-content">Entity not found</p>
         </CardContent>
       </Card>
     );
@@ -156,7 +156,7 @@ export function RecordEditor({
                         checked={Boolean(fieldApi.state.value)}
                         onCheckedChange={(checked) => fieldApi.handleChange(checked)}
                       />
-                      <label htmlFor={field.id} className="text-sm text-muted-foreground">
+                      <label htmlFor={field.id} className="text-tremor-default text-tremor-content">
                         {fieldApi.state.value ? "True" : "False"}
                       </label>
                     </div>
@@ -186,7 +186,7 @@ export function RecordEditor({
                     />
                   )}
                   {field.description && (
-                    <p className="text-sm text-muted-foreground">{field.description}</p>
+                    <p className="text-tremor-default text-tremor-content">{field.description}</p>
                   )}
                   {fieldApi.state.meta.errors.length > 0 && (
                     <p className="text-sm text-destructive">{fieldApi.state.meta.errors[0]}</p>

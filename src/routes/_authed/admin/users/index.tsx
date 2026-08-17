@@ -35,6 +35,7 @@ import {
 import { formatDateTime } from "@/lib/utils";
 import type { Role, User } from "@/types/database";
 import { listUsers, listRoles, createUser, updateUser, deleteUser } from "@/server-fns/admin";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authed/admin/users/")({
   component: UsersManagementPage,
@@ -159,11 +160,8 @@ function UsersManagementPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">User Management</h1>
-          <p className="text-muted-foreground">Manage user accounts and assign roles</p>
-        </div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader title="User Management" description="Manage user accounts and assign roles" />
         <Button onClick={() => setCreateDialogOpen(true)}>
           <UserPlus className="h-4 w-4 mr-2" />
           Create User
@@ -213,7 +211,7 @@ function UsersManagementPage() {
                         ))}
                       </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="text-tremor-content">
                       {formatDateTime(user.created_at)}
                     </TableCell>
                     <TableCell className="text-right">
@@ -316,7 +314,7 @@ function UsersManagementPage() {
               <Label>Current Roles</Label>
               <div className="mt-2 space-y-2">
                 {userRoles.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No roles assigned</p>
+                  <p className="text-tremor-default text-tremor-content">No roles assigned</p>
                 ) : (
                   userRoles.map((ur) => (
                     <div

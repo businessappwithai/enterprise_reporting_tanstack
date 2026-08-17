@@ -273,7 +273,7 @@ function DashboardViewerContent({ dashboardId }: { dashboardId: string }) {
           </Link>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold">{dashboard.name}</h1>
+              <h1 className="font-semibold text-2xl text-tremor-content-strong">{dashboard.name}</h1>
               {dashboard.is_public ? (
                 <Badge variant="secondary" className="flex items-center gap-1">
                   <Globe className="h-3 w-3" />
@@ -287,7 +287,7 @@ function DashboardViewerContent({ dashboardId }: { dashboardId: string }) {
               )}
             </div>
             {dashboard.description && (
-              <p className="text-sm text-muted-foreground">{dashboard.description}</p>
+              <p className="text-tremor-default text-tremor-content">{dashboard.description}</p>
             )}
           </div>
         </div>

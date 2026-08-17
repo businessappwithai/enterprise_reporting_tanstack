@@ -29,6 +29,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { EmailTemplate } from "@/lib/email/email-service";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authed/email-templates/")({
   component: EmailTemplatesPage,
@@ -95,13 +96,8 @@ function EmailTemplatesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Email Templates</h1>
-          <p className="text-muted-foreground">
-            Create and manage email templates with query-based placeholders
-          </p>
-        </div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader title="Email Templates" description="Create and manage email templates with query-based placeholders" />
         <Button onClick={handleCreate}>
           <Plus className="h-4 w-4 mr-2" />
           New Template
@@ -139,7 +135,7 @@ function EmailTemplatesPage() {
                 {templates.map((template) => (
                   <TableRow key={template.id}>
                     <TableCell className="font-medium">{template.name}</TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="text-tremor-content">
                       <code className="text-xs bg-muted px-1 py-0.5 rounded">
                         {template.subject.substring(0, 60)}...
                       </code>
@@ -258,7 +254,7 @@ function EmailTemplatesPage() {
                   </div>
                   <p className="text-sm">{title}</p>
                 </div>
-                <p className="text-xs text-muted-foreground">{desc}</p>
+                <p className="text-tremor-label text-tremor-content">{desc}</p>
               </div>
             ))}
           </div>

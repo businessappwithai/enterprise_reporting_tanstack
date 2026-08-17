@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/table";
 import { formatDateTime } from "@/lib/utils";
 import type { DataSource } from "@/types/database";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authed/data-sources/")({
   component: DataSourcesPage,
@@ -381,13 +382,8 @@ function DataSourcesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Data Sources</h1>
-          <p className="text-muted-foreground">
-            Manage database connections for reports and queries
-          </p>
-        </div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader title="Data Sources" description="Manage database connections for reports and queries" />
 
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogTrigger asChild>
@@ -629,7 +625,7 @@ function DataSourcesPage() {
                     <TableCell>
                       <Badge variant="outline">{ds.client_type}</Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{ds.description || "-"}</TableCell>
+                    <TableCell className="text-tremor-content">{ds.description || "-"}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Badge
@@ -651,7 +647,7 @@ function DataSourcesPage() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="text-tremor-content">
                       {formatDateTime(ds.created_at)}
                     </TableCell>
                     <TableCell>

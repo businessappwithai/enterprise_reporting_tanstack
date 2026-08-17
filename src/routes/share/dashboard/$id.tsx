@@ -38,7 +38,7 @@ function PublicDashboardPage() {
             <CardTitle>Dashboard Not Available</CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
-            <p className="text-muted-foreground">
+            <p className="text-tremor-content">
               This dashboard is not publicly accessible or does not exist.
             </p>
             <Link to="/">
@@ -61,7 +61,7 @@ function PublicDashboardPage() {
           <div>
             <h1 className="text-2xl font-semibold">{dashboard.name}</h1>
             {dashboard.description && (
-              <p className="text-sm text-muted-foreground">{dashboard.description}</p>
+              <p className="text-tremor-default text-tremor-content">{dashboard.description}</p>
             )}
           </div>
         </div>

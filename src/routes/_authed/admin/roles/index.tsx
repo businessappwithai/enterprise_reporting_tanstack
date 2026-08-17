@@ -36,6 +36,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import type { Role } from "@/types/database";
+import { PageHeader } from "@/components/layout/page-header";
 
 interface ResourcePermission {
   id: string;
@@ -322,11 +323,8 @@ function RolesManagementPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Role Management</h1>
-          <p className="text-muted-foreground">Manage roles and their granular permissions</p>
-        </div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader title="Role Management" description="Manage roles and their granular permissions" />
         <Button onClick={() => setCreateDialogOpen(true)}>
           <ShieldPlus className="h-4 w-4 mr-2" />
           Create Role
@@ -361,7 +359,7 @@ function RolesManagementPage() {
                     <TableCell className="font-medium">
                       <Badge variant={getRoleBadgeColor(role.name)}>{role.name}</Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="text-tremor-content">
                       {role.description || "No description"}
                     </TableCell>
                     <TableCell>
@@ -476,7 +474,7 @@ function RolesManagementPage() {
               </TabsContent>
 
               <TabsContent value="resources" className="space-y-4 mt-4">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-tremor-default text-tremor-content">
                   Add specific permissions for individual reports, charts, and dashboards.
                 </p>
 
@@ -679,7 +677,7 @@ function RolesManagementPage() {
               </TabsContent>
 
               <TabsContent value="resources" className="space-y-4 mt-4">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-tremor-default text-tremor-content">
                   Add specific permissions for individual reports, charts, and dashboards.
                 </p>
 

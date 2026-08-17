@@ -27,7 +27,7 @@ export function MemoryMonitor() {
     <div className="space-y-2 rounded-md border p-3 text-sm">
       <div className="flex items-center justify-between">
         <span className="font-medium">Memory</span>
-        <span className="text-muted-foreground">
+        <span className="text-tremor-content">
           {formatBytes(usage.used)} / {formatBytes(usage.limit)}
         </span>
       </div>

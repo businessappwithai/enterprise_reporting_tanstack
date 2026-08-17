@@ -299,7 +299,7 @@ export function NLMonitoringCreator({ onSuccess, onCancel }: Props) {
             placeholder="e.g. 0 8 * * 1"
             className="font-mono"
           />
-          <p className="text-xs text-muted-foreground">{describeCron(scheduleCron)}</p>
+          <p className="text-tremor-label text-tremor-content">{describeCron(scheduleCron)}</p>
         </div>
 
         <div className="space-y-2">
@@ -345,7 +345,7 @@ export function NLMonitoringCreator({ onSuccess, onCancel }: Props) {
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-semibold">Describe Your Monitor</h2>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="mt-1 text-tremor-default text-tremor-content">
           Use plain language to describe what you want to monitor and when to alert.
         </p>
       </div>

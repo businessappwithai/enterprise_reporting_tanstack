@@ -38,7 +38,7 @@ function PublicChartPage() {
             <CardTitle>Chart Not Available</CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
-            <p className="text-muted-foreground">
+            <p className="text-tremor-content">
               This chart is not publicly accessible or does not exist.
             </p>
             <Link to="/">
@@ -61,7 +61,7 @@ function PublicChartPage() {
           <div>
             <h1 className="text-2xl font-semibold">{chart.name}</h1>
             {chart.description && (
-              <p className="text-sm text-muted-foreground">{chart.description}</p>
+              <p className="text-tremor-default text-tremor-content">{chart.description}</p>
             )}
           </div>
         </div>

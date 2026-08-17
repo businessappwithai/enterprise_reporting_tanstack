@@ -51,6 +51,7 @@ import {
 import { useCanCreate, useCanDelete, useCanEdit } from "@/lib/hooks/usePermissions";
 import { formatDateTime } from "@/lib/utils";
 import type { ChartDefinition, ChartType, SavedQuery } from "@/types/database";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authed/charts/")({
   component: ChartsPage,
@@ -145,11 +146,8 @@ function ChartsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Charts</h1>
-          <p className="text-muted-foreground">Create and manage data visualizations</p>
-        </div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader title="Charts" description="Create and manage data visualizations" />
 
         <div className="flex gap-2">
           {canCreateChart && (
@@ -279,7 +277,7 @@ function ChartsPage() {
                         <Badge variant="outline">No Query</Badge>
                       )}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="text-tremor-content">
                       {formatDateTime(chart.created_at)}
                     </TableCell>
                     <TableCell>
