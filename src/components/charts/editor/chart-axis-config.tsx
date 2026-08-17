@@ -75,217 +75,217 @@ export function ChartAxisConfig({
 
   return (
     <EditorPanel title="Axis Configuration" contentClassName="space-y-4">
-        {/* X-Axis */}
-        <div>
-          <div className="flex items-center justify-between">
-            <Label htmlFor="x-axis">X-Axis (Categories) *</Label>
-            {dataMapping.xAxis.field && dataMapping.xAxis.field !== "" && (
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-6 text-xs"
-                onClick={() =>
-                  onDataMappingChange({ ...dataMapping, xAxis: { field: "", label: "" } })
-                }
-              >
-                Clear
-              </Button>
-            )}
-          </div>
-          <Select
-            value={dataMapping.xAxis.field}
-            onValueChange={(value) => {
-              if (value === "__none__") {
-                onDataMappingChange({ ...dataMapping, xAxis: { field: "", label: "" } });
-              } else {
+      {/* X-Axis */}
+      <div>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="x-axis">X-Axis (Categories) *</Label>
+          {dataMapping.xAxis.field && dataMapping.xAxis.field !== "" && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 text-xs"
+              onClick={() =>
+                onDataMappingChange({ ...dataMapping, xAxis: { field: "", label: "" } })
+              }
+            >
+              Clear
+            </Button>
+          )}
+        </div>
+        <Select
+          value={dataMapping.xAxis.field}
+          onValueChange={(value) => {
+            if (value === "__none__") {
+              onDataMappingChange({ ...dataMapping, xAxis: { field: "", label: "" } });
+            } else {
+              onDataMappingChange({
+                ...dataMapping,
+                xAxis: { ...dataMapping.xAxis, field: value, label: value },
+              });
+            }
+          }}
+        >
+          <SelectTrigger id="x-axis">
+            <SelectValue placeholder="Select field..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__none__">— None —</SelectItem>
+            {availableFields.map((field) => (
+              <SelectItem key={field} value={field}>
+                {field}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {dataMapping.xAxis.field &&
+          dataMapping.xAxis.field !== "__none__" &&
+          dataMapping.xAxis.field !== "" && (
+            <Input
+              className="mt-2"
+              value={dataMapping.xAxis.label}
+              onChange={(e) =>
                 onDataMappingChange({
                   ...dataMapping,
-                  xAxis: { ...dataMapping.xAxis, field: value, label: value },
-                });
+                  xAxis: { ...dataMapping.xAxis, label: e.target.value },
+                })
               }
-            }}
-          >
-            <SelectTrigger id="x-axis">
-              <SelectValue placeholder="Select field..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__none__">— None —</SelectItem>
-              {availableFields.map((field) => (
-                <SelectItem key={field} value={field}>
-                  {field}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {dataMapping.xAxis.field &&
-            dataMapping.xAxis.field !== "__none__" &&
-            dataMapping.xAxis.field !== "" && (
-              <Input
-                className="mt-2"
-                value={dataMapping.xAxis.label}
-                onChange={(e) =>
-                  onDataMappingChange({
-                    ...dataMapping,
-                    xAxis: { ...dataMapping.xAxis, label: e.target.value },
-                  })
-                }
-                placeholder="Axis label"
-              />
-            )}
-        </div>
-
-        {/* Y-Axis Series */}
-        <div>
-          <div className="flex items-center justify-between">
-            <Label>Y-Axis (Values) *</Label>
-            <Button size="sm" variant="outline" onClick={addYSeries}>
-              <Plus className="mr-1 h-3 w-3" />
-              Add Series
-            </Button>
-          </div>
-          {dataMapping.yAxis.length === 0 && (
-            <p className="mt-2 text-sm text-gray-500">Add at least one Y-axis series</p>
+              placeholder="Axis label"
+            />
           )}
-          {dataMapping.yAxis.map((series, index) => (
-            <div key={series.field || index} className="mt-2 space-y-2 rounded-lg border p-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">Series {index + 1}</span>
-                  <div className="flex items-center gap-1">
-                    <input
-                      type="color"
-                      value={series.color || chartConfig.colors[index % chartConfig.colors.length]}
-                      onChange={(e) => updateYSeries(index, { color: e.target.value })}
-                      className="h-6 w-8 rounded cursor-pointer border-2"
-                      title="Choose color for this series"
-                    />
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-6 px-2 text-xs"
-                      onClick={() => updateYSeries(index, { color: generateRandomColor() })}
-                      title="Generate random color"
-                    >
-                      🎲 Random
-                    </Button>
-                  </div>
-                </div>
+      </div>
+
+      {/* Y-Axis Series */}
+      <div>
+        <div className="flex items-center justify-between">
+          <Label>Y-Axis (Values) *</Label>
+          <Button size="sm" variant="outline" onClick={addYSeries}>
+            <Plus className="mr-1 h-3 w-3" />
+            Add Series
+          </Button>
+        </div>
+        {dataMapping.yAxis.length === 0 && (
+          <p className="mt-2 text-sm text-gray-500">Add at least one Y-axis series</p>
+        )}
+        {dataMapping.yAxis.map((series, index) => (
+          <div key={series.field || index} className="mt-2 space-y-2 rounded-lg border p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Series {index + 1}</span>
                 <div className="flex items-center gap-1">
+                  <input
+                    type="color"
+                    value={series.color || chartConfig.colors[index % chartConfig.colors.length]}
+                    onChange={(e) => updateYSeries(index, { color: e.target.value })}
+                    className="h-6 w-8 rounded cursor-pointer border-2"
+                    title="Choose color for this series"
+                  />
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-6 text-xs"
-                    onClick={() => updateYSeries(index, { field: "", label: "" })}
+                    className="h-6 px-2 text-xs"
+                    onClick={() => updateYSeries(index, { color: generateRandomColor() })}
+                    title="Generate random color"
                   >
-                    Clear
+                    🎲 Random
                   </Button>
-                  {dataMapping.yAxis.length > 1 && (
-                    <Button size="sm" variant="ghost" onClick={() => removeYSeries(index)}>
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  )}
                 </div>
               </div>
-              <Select
-                value={series.field}
-                onValueChange={(value) => {
-                  if (value === "__none__") {
-                    updateYSeries(index, { field: "", label: "" });
-                  } else {
-                    updateYSeries(index, { field: value, label: value });
-                  }
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select field..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">— None —</SelectItem>
-                  {availableFields.map((field) => (
-                    <SelectItem key={field} value={field}>
-                      {field}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Input
-                value={series.label}
-                onChange={(e) => updateYSeries(index, { label: e.target.value })}
-                placeholder="Series label"
-              />
+              <div className="flex items-center gap-1">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-6 text-xs"
+                  onClick={() => updateYSeries(index, { field: "", label: "" })}
+                >
+                  Clear
+                </Button>
+                {dataMapping.yAxis.length > 1 && (
+                  <Button size="sm" variant="ghost" onClick={() => removeYSeries(index)}>
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
             </div>
-          ))}
-        </div>
-
-        {/* Group By */}
-        <div>
-          <div className="flex items-center justify-between">
-            <Label htmlFor="group-by">Group By (Optional)</Label>
-            {dataMapping.groupBy && (
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-6 text-xs"
-                onClick={() => onDataMappingChange({ ...dataMapping, groupBy: "" })}
-              >
-                Clear
-              </Button>
-            )}
+            <Select
+              value={series.field}
+              onValueChange={(value) => {
+                if (value === "__none__") {
+                  updateYSeries(index, { field: "", label: "" });
+                } else {
+                  updateYSeries(index, { field: value, label: value });
+                }
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select field..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">— None —</SelectItem>
+                {availableFields.map((field) => (
+                  <SelectItem key={field} value={field}>
+                    {field}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              value={series.label}
+              onChange={(e) => updateYSeries(index, { label: e.target.value })}
+              placeholder="Series label"
+            />
           </div>
-          <Select
-            value={dataMapping.groupBy}
-            onValueChange={(value) =>
-              onDataMappingChange({ ...dataMapping, groupBy: value === "__none__" ? "" : value })
-            }
-          >
-            <SelectTrigger id="group-by">
-              <SelectValue placeholder="Select field to group by..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__none__">— None —</SelectItem>
-              {availableFields.map((field) => (
-                <SelectItem key={field} value={field}>
-                  {field}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        ))}
+      </div>
 
-        {/* Color By */}
-        <div>
-          <div className="flex items-center justify-between">
-            <Label htmlFor="color-by">Color By (Optional)</Label>
-            {dataMapping.colorBy && (
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-6 text-xs"
-                onClick={() => onDataMappingChange({ ...dataMapping, colorBy: "" })}
-              >
-                Clear
-              </Button>
-            )}
-          </div>
-          <Select
-            value={dataMapping.colorBy}
-            onValueChange={(value) =>
-              onDataMappingChange({ ...dataMapping, colorBy: value === "__none__" ? "" : value })
-            }
-          >
-            <SelectTrigger id="color-by">
-              <SelectValue placeholder="Select field to color by..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__none__">— None —</SelectItem>
-              {availableFields.map((field) => (
-                <SelectItem key={field} value={field}>
-                  {field}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      {/* Group By */}
+      <div>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="group-by">Group By (Optional)</Label>
+          {dataMapping.groupBy && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 text-xs"
+              onClick={() => onDataMappingChange({ ...dataMapping, groupBy: "" })}
+            >
+              Clear
+            </Button>
+          )}
         </div>
+        <Select
+          value={dataMapping.groupBy}
+          onValueChange={(value) =>
+            onDataMappingChange({ ...dataMapping, groupBy: value === "__none__" ? "" : value })
+          }
+        >
+          <SelectTrigger id="group-by">
+            <SelectValue placeholder="Select field to group by..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__none__">— None —</SelectItem>
+            {availableFields.map((field) => (
+              <SelectItem key={field} value={field}>
+                {field}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Color By */}
+      <div>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="color-by">Color By (Optional)</Label>
+          {dataMapping.colorBy && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 text-xs"
+              onClick={() => onDataMappingChange({ ...dataMapping, colorBy: "" })}
+            >
+              Clear
+            </Button>
+          )}
+        </div>
+        <Select
+          value={dataMapping.colorBy}
+          onValueChange={(value) =>
+            onDataMappingChange({ ...dataMapping, colorBy: value === "__none__" ? "" : value })
+          }
+        >
+          <SelectTrigger id="color-by">
+            <SelectValue placeholder="Select field to color by..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__none__">— None —</SelectItem>
+            {availableFields.map((field) => (
+              <SelectItem key={field} value={field}>
+                {field}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
     </EditorPanel>
   );
 }

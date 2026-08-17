@@ -237,7 +237,7 @@ const ViewItem = memo(function ViewItem({
         ) : (
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
         )}
-        <Eye className="h-4 w-4 text-purple-500" />
+        <Eye className="h-4 w-4 text-violet-500" />
         <span
           role="button"
           tabIndex={0}
@@ -299,7 +299,7 @@ const ColumnItem = memo(function ColumnItem({
       onClick={() => onClick?.(tableName, column.name)}
     >
       {isPrimary ? (
-        <Key className="h-3 w-3 text-yellow-500" />
+        <Key className="h-3 w-3 text-amber-500" />
       ) : (
         <Type className="h-3 w-3 text-muted-foreground" />
       )}

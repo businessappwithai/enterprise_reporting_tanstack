@@ -41,7 +41,11 @@ import type { SQLExecutionResponse } from "@/types/api";
 import type { ChartType, DataMapping, EChartsConfig } from "@/types/charts";
 import type { MetadataEntityWithFields } from "@/types/database";
 
-const CHART_TYPES: { value: ChartType; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+const CHART_TYPES: {
+  value: ChartType;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+}[] = [
   { value: "bar", label: "Bar", icon: BarChart3 },
   { value: "line", label: "Line", icon: LineChart },
   { value: "area", label: "Area", icon: BarChart3 },
@@ -50,9 +54,22 @@ const CHART_TYPES: { value: ChartType; label: string; icon: React.ComponentType<
 ];
 
 const NUMERIC_TYPES = new Set([
-  "integer", "int", "int2", "int4", "int8", "bigint", "smallint",
-  "numeric", "decimal", "real", "float", "float4", "float8",
-  "double precision", "money", "number",
+  "integer",
+  "int",
+  "int2",
+  "int4",
+  "int8",
+  "bigint",
+  "smallint",
+  "numeric",
+  "decimal",
+  "real",
+  "float",
+  "float4",
+  "float8",
+  "double precision",
+  "money",
+  "number",
 ]);
 
 function isNumeric(typeName: string): boolean {
@@ -65,7 +82,8 @@ function autoDetectMapping(result: SQLExecutionResponse): DataMapping {
   const numericCols = cols.filter((c) => isNumeric(c.type)).map((c) => c.name);
   const categoryCols = cols.filter((c) => !isNumeric(c.type)).map((c) => c.name);
   const x = categoryCols[0] ?? cols[0].name;
-  const yRaw = numericCols.length > 0 ? numericCols : cols.filter((c) => c.name !== x).map((c) => c.name);
+  const yRaw =
+    numericCols.length > 0 ? numericCols : cols.filter((c) => c.name !== x).map((c) => c.name);
   const y = yRaw.length === 1 ? yRaw[0] : yRaw.length > 1 ? yRaw : cols[cols.length - 1].name;
   return { x, y };
 }
@@ -116,7 +134,12 @@ export function NlQueryContent() {
           items = allJson.data?.items || allJson.items || [];
         }
       }
-      return items as { id: string; name: string; client_type: string; last_inspected_at?: string | null }[];
+      return items as {
+        id: string;
+        name: string;
+        client_type: string;
+        last_inspected_at?: string | null;
+      }[];
     },
   });
 
@@ -129,14 +152,11 @@ export function NlQueryContent() {
   });
   const dsEntities = (dsEntitiesData?.data?.entities ?? []) as MetadataEntityWithFields[];
 
-  const colTableMap = useMemo(
-    () => parseColumnTableMap(generatedSql ?? ""),
-    [generatedSql],
-  );
+  const colTableMap = useMemo(() => parseColumnTableMap(generatedSql ?? ""), [generatedSql]);
 
   const entityTableNames = useMemo(
     () => new Set(dsEntities.map((e) => e.entity_name?.toLowerCase() ?? "")),
-    [dsEntities],
+    [dsEntities]
   );
 
   const drillableCols = useMemo(
@@ -145,10 +165,10 @@ export function NlQueryContent() {
         ? drillableColumnSet(
             colTableMap,
             queryResult.columns.map((c) => c.name),
-            entityTableNames,
+            entityTableNames
           )
         : new Set<string>(),
-    [queryResult, colTableMap, entityTableNames],
+    [queryResult, colTableMap, entityTableNames]
   );
 
   const columnEntityMap = useMemo(() => {
@@ -157,9 +177,7 @@ export function NlQueryContent() {
     for (const colName of drillableCols) {
       const meta = colTableMap[colName.toLowerCase()] ?? wildcard;
       if (!meta?.tableName) continue;
-      const entity = dsEntities.find(
-        (e) => e.entity_name?.toLowerCase() === meta.tableName,
-      );
+      const entity = dsEntities.find((e) => e.entity_name?.toLowerCase() === meta.tableName);
       if (entity) map[colName] = entity;
     }
     return map;
@@ -172,7 +190,10 @@ export function NlQueryContent() {
       const res = await fetch(`/api/nl-query/schema?data_source_id=${dataSourceId}`);
       if (!res.ok) return null;
       const json = await res.json();
-      return json.data as { schemaText: string; tables: { name: string; columns: string[] }[] } | null;
+      return json.data as {
+        schemaText: string;
+        tables: { name: string; columns: string[] }[];
+      } | null;
     },
     enabled: !!dataSourceId,
     staleTime: 5 * 60 * 1000,
@@ -218,82 +239,92 @@ export function NlQueryContent() {
 
   const [rerunningId, setRerunningId] = useState<string | null>(null);
 
-  const rerunSavedQuery = useCallback(async (entry: HistoryEntry) => {
-    if (!dataSourceId) {
-      toast.error("No data source selected");
-      return;
-    }
-    setRerunningId(entry.id);
-    try {
-      const res = await fetch("/api/nl-query/execute", {
+  const rerunSavedQuery = useCallback(
+    async (entry: HistoryEntry) => {
+      if (!dataSourceId) {
+        toast.error("No data source selected");
+        return;
+      }
+      setRerunningId(entry.id);
+      try {
+        const res = await fetch("/api/nl-query/execute", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            query: entry.nl_question,
+            data_source_id: entry.data_source_id || dataSourceId,
+            generated_sql: entry.generated_sql,
+          }),
+        });
+        const json = await res.json();
+        if (!json.success) {
+          toast.error(json.error?.message || "Query execution failed");
+          return;
+        }
+        const pipelineResult = json.data;
+        if (pipelineResult?.accessGranted === false) {
+          toast.error("Access denied to one or more entities");
+          return;
+        }
+        if (pipelineResult?.queryResults) {
+          const cols = pipelineResult.queryResults.columns || [];
+          const rows = pipelineResult.queryResults.rows || [];
+          const totalRows = pipelineResult.queryResults.totalRows || rows.length;
+          const execTime = pipelineResult.queryResults.executionTimeMs || 0;
+          const sqlResult: SQLExecutionResponse = {
+            columns: cols.map((name: string) => ({ name, type: "text" })),
+            rows,
+            rowCount: totalRows,
+            executionTime: execTime,
+          };
+          setQuestion(entry.nl_question);
+          setGeneratedSql(entry.generated_sql);
+          setQueryResult(sqlResult);
+          const mapping = autoDetectMapping(sqlResult);
+          setXCol((mapping.x as string) ?? "");
+          setYCol(
+            typeof mapping.y === "string" ? mapping.y : Array.isArray(mapping.y) ? mapping.y[0] : ""
+          );
+          setResultView("table");
+          setSqlOffset(0);
+          toast.success(`Query re-executed: ${totalRows} rows in ${execTime}ms`);
+        } else if (pipelineResult?.error) {
+          toast.error(pipelineResult.error);
+        }
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Failed to re-execute query");
+      } finally {
+        setRerunningId(null);
+      }
+    },
+    [dataSourceId]
+  );
+
+  const executeSQLFn = useCallback(
+    async (sqlText: string, offset = 0): Promise<SQLExecutionResponse> => {
+      const res = await fetch("/api/sql/execute", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: entry.nl_question,
-          data_source_id: entry.data_source_id || dataSourceId,
-          generated_sql: entry.generated_sql,
-        }),
+        body: JSON.stringify({ dataSourceId, sql: sqlText, limit: 100, offset }),
       });
+      if (!res.ok) throw new Error("Failed to execute SQL");
       const json = await res.json();
-      if (!json.success) {
-        toast.error(json.error?.message || "Query execution failed");
-        return;
-      }
-      const pipelineResult = json.data;
-      if (pipelineResult?.accessGranted === false) {
-        toast.error("Access denied to one or more entities");
-        return;
-      }
-      if (pipelineResult?.queryResults) {
-        const cols = pipelineResult.queryResults.columns || [];
-        const rows = pipelineResult.queryResults.rows || [];
-        const totalRows = pipelineResult.queryResults.totalRows || rows.length;
-        const execTime = pipelineResult.queryResults.executionTimeMs || 0;
-        const sqlResult: SQLExecutionResponse = {
-          columns: cols.map((name: string) => ({ name, type: "text" })),
-          rows,
-          rowCount: totalRows,
-          executionTime: execTime,
-        };
-        setQuestion(entry.nl_question);
-        setGeneratedSql(entry.generated_sql);
-        setQueryResult(sqlResult);
-        const mapping = autoDetectMapping(sqlResult);
-        setXCol(mapping.x as string ?? "");
-        setYCol(typeof mapping.y === "string" ? mapping.y : Array.isArray(mapping.y) ? mapping.y[0] : "");
-        setResultView("table");
-        setSqlOffset(0);
-        toast.success(`Query re-executed: ${totalRows} rows in ${execTime}ms`);
-      } else if (pipelineResult?.error) {
-        toast.error(pipelineResult.error);
-      }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to re-execute query");
-    } finally {
-      setRerunningId(null);
-    }
-  }, [dataSourceId]);
-
-  const executeSQLFn = useCallback(async (sqlText: string, offset = 0): Promise<SQLExecutionResponse> => {
-    const res = await fetch("/api/sql/execute", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ dataSourceId, sql: sqlText, limit: 100, offset }),
-    });
-    if (!res.ok) throw new Error("Failed to execute SQL");
-    const json = await res.json();
-    if (!json.success) throw new Error(json.error?.message || "Execution failed");
-    return json.data as SQLExecutionResponse;
-  }, [dataSourceId]);
+      if (!json.success) throw new Error(json.error?.message || "Execution failed");
+      return json.data as SQLExecutionResponse;
+    },
+    [dataSourceId]
+  );
 
   const handlePageChange = (offset: number) => {
     setSqlOffset(offset);
     if (generatedSql) {
-      executeSQLFn(generatedSql, offset).then((data) => {
-        setQueryResult(data);
-      }).catch((err) => {
-        toast.error(err instanceof Error ? err.message : "Pagination failed");
-      });
+      executeSQLFn(generatedSql, offset)
+        .then((data) => {
+          setQueryResult(data);
+        })
+        .catch((err) => {
+          toast.error(err instanceof Error ? err.message : "Pagination failed");
+        });
     }
   };
 
@@ -323,7 +354,9 @@ export function NlQueryContent() {
       },
     ],
     render: ({ status, result }) => {
-      const typedResult = result as { context?: string; steps?: { name: string; status: string; detail?: string }[] } | undefined;
+      const typedResult = result as
+        | { context?: string; steps?: { name: string; status: string; detail?: string }[] }
+        | undefined;
       if (status !== "complete") {
         return (
           <div className="space-y-1 p-3 bg-muted rounded-lg text-sm">
@@ -344,18 +377,21 @@ export function NlQueryContent() {
       return (
         <div className="space-y-1 p-3 bg-muted rounded-lg text-sm">
           <div className="flex items-center gap-2 font-medium">
-            <CheckCircle className="h-3.5 w-3.5 text-green-600" />
+            <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />
             <span>RAG Pipeline</span>
           </div>
           <div className="ml-6 text-muted-foreground space-y-0.5">
             {steps.map((s, i) => (
               <div key={i} className="flex items-center gap-1.5">
                 {s.status === "done" ? (
-                  <CheckCircle className="h-3 w-3 text-green-500" />
+                  <CheckCircle className="h-3 w-3 text-emerald-500" />
                 ) : (
-                  <AlertCircle className="h-3 w-3 text-yellow-500" />
+                  <AlertCircle className="h-3 w-3 text-amber-500" />
                 )}
-                <span>{s.name}{s.detail ? `: ${s.detail}` : ""}</span>
+                <span>
+                  {s.name}
+                  {s.detail ? `: ${s.detail}` : ""}
+                </span>
               </div>
             ))}
           </div>
@@ -368,7 +404,12 @@ export function NlQueryContent() {
         const res = await fetch("/api/nl-query/rag-context", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query, data_source_id: dataSourceId, context_budget: 4000, top_k_queries: 3 }),
+          body: JSON.stringify({
+            query,
+            data_source_id: dataSourceId,
+            context_budget: 4000,
+            top_k_queries: 3,
+          }),
         });
         const data = await res.json();
         if (data.success && data.data) {
@@ -377,9 +418,15 @@ export function NlQueryContent() {
             steps: data.data.modules || [],
           };
         }
-        return { context: "No similar queries found. Use the table names from schema.", steps: [{ name: "RAG", status: "empty", detail: "No matches" }] };
+        return {
+          context: "No similar queries found. Use the table names from schema.",
+          steps: [{ name: "RAG", status: "empty", detail: "No matches" }],
+        };
       } catch {
-        return { context: "RAG unavailable. Use table names from schema.", steps: [{ name: "RAG", status: "error", detail: "Service unavailable" }] };
+        return {
+          context: "RAG unavailable. Use table names from schema.",
+          steps: [{ name: "RAG", status: "error", detail: "Service unavailable" }],
+        };
       }
     },
   });
@@ -392,13 +439,15 @@ export function NlQueryContent() {
       {
         name: "query",
         type: "string",
-        description: 'The natural language question (e.g., "Show me top 10 patients by admissions")',
+        description:
+          'The natural language question (e.g., "Show me top 10 patients by admissions")',
         required: true,
       },
       {
         name: "generatedSql",
         type: "string",
-        description: "The SQL query to execute, generated from the natural language question based on the schema context",
+        description:
+          "The SQL query to execute, generated from the natural language question based on the schema context",
         required: true,
       },
     ],
@@ -411,7 +460,15 @@ export function NlQueryContent() {
           </div>
         );
       }
-      const typedResult = result as { error?: string; accessGranted?: boolean; rowCount?: number; executionTimeMs?: number; deniedEntities?: string[] } | undefined;
+      const typedResult = result as
+        | {
+            error?: string;
+            accessGranted?: boolean;
+            rowCount?: number;
+            executionTimeMs?: number;
+            deniedEntities?: string[];
+          }
+        | undefined;
       if (typedResult?.error) {
         return (
           <div className="flex items-center gap-2 p-3 bg-destructive/10 text-destructive rounded-lg">
@@ -425,16 +482,18 @@ export function NlQueryContent() {
           <div className="flex items-center gap-2 p-3 bg-destructive/10 text-destructive rounded-lg">
             <AlertCircle className="h-4 w-4" />
             <span className="text-sm">
-              Access denied to entities: {typedResult.deniedEntities?.join(", ") || "unknown"}. Contact your administrator.
+              Access denied to entities: {typedResult.deniedEntities?.join(", ") || "unknown"}.
+              Contact your administrator.
             </span>
           </div>
         );
       }
       return (
-        <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-          <CheckCircle className="h-4 w-4 text-green-600" />
+        <div className="flex items-center gap-2 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
+          <CheckCircle className="h-4 w-4 text-emerald-600" />
           <span className="text-sm">
-            Query returned {typedResult?.rowCount ?? 0} rows ({typedResult?.executionTimeMs ?? 0}ms). Results are shown below.
+            Query returned {typedResult?.rowCount ?? 0} rows ({typedResult?.executionTimeMs ?? 0}
+            ms). Results are shown below.
           </span>
         </div>
       );
@@ -464,9 +523,11 @@ export function NlQueryContent() {
         if (pipelineResult?.accessGranted === false) {
           return {
             accessGranted: false,
-            deniedEntities: pipelineResult.parsedEntities?.filter((_: string, i: number) =>
-              pipelineResult.accessCheckResults?.[i]?.hasAccess === false
-            ) || [],
+            deniedEntities:
+              pipelineResult.parsedEntities?.filter(
+                (_: string, i: number) =>
+                  pipelineResult.accessCheckResults?.[i]?.hasAccess === false
+              ) || [],
             error: pipelineResult.error,
           };
         }
@@ -488,8 +549,10 @@ export function NlQueryContent() {
           setGeneratedSql(sqlFromAI);
           setQueryResult(sqlResult);
           const mapping = autoDetectMapping(sqlResult);
-          setXCol(mapping.x as string ?? "");
-          setYCol(typeof mapping.y === "string" ? mapping.y : Array.isArray(mapping.y) ? mapping.y[0] : "");
+          setXCol((mapping.x as string) ?? "");
+          setYCol(
+            typeof mapping.y === "string" ? mapping.y : Array.isArray(mapping.y) ? mapping.y[0] : ""
+          );
           setResultView("table");
           setSqlOffset(0);
           const preview = rows.slice(0, 10);
@@ -531,7 +594,8 @@ export function NlQueryContent() {
 
   useCopilotAction({
     name: "generateChart",
-    description: "Switch the result view to a chart visualization. Use after executing a query when the user asks for a chart, graph, or visualization.",
+    description:
+      "Switch the result view to a chart visualization. Use after executing a query when the user asks for a chart, graph, or visualization.",
     parameters: [
       {
         name: "chartType",
@@ -628,10 +692,15 @@ export function NlQueryContent() {
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
                 No inspected data sources found. Go to{" "}
-                <Button variant="link" className="p-0 h-auto" onClick={() => (window.location.href = "/data-sources")}>
+                <Button
+                  variant="link"
+                  className="p-0 h-auto"
+                  onClick={() => (window.location.href = "/data-sources")}
+                >
                   Data Sources
-                </Button>
-                {" "}and click <strong>Inspect Schema</strong> on a configured data source to use it here.
+                </Button>{" "}
+                and click <strong>Inspect Schema</strong> on a configured data source to use it
+                here.
               </AlertDescription>
             </Alert>
           </CardContent>
@@ -640,8 +709,13 @@ export function NlQueryContent() {
         <Card>
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-muted-foreground shrink-0">Data Source</span>
-              <Select value={selectedDsId || dataSources[0]?.id || ""} onValueChange={setSelectedDsId}>
+              <span className="text-sm font-medium text-muted-foreground shrink-0">
+                Data Source
+              </span>
+              <Select
+                value={selectedDsId || dataSources[0]?.id || ""}
+                onValueChange={setSelectedDsId}
+              >
                 <SelectTrigger className="w-full sm:w-80">
                   <SelectValue placeholder="Select data source" />
                 </SelectTrigger>
@@ -701,7 +775,10 @@ export function NlQueryContent() {
                   variant="ghost"
                   size="sm"
                   className="h-8 px-2 text-xs"
-                  onClick={() => { setHistorySearch(""); setHistorySearchInput(""); }}
+                  onClick={() => {
+                    setHistorySearch("");
+                    setHistorySearchInput("");
+                  }}
                 >
                   Clear
                 </Button>
@@ -750,18 +827,28 @@ export function NlQueryContent() {
                       </Button>
                     </div>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      <Badge variant="outline" className="text-xs">{entry.role_name}</Badge>
+                      <Badge variant="outline" className="text-xs">
+                        {entry.role_name}
+                      </Badge>
                       {entry.user_name && (
-                        <Badge variant="secondary" className="text-xs">{entry.user_name}</Badge>
+                        <Badge variant="secondary" className="text-xs">
+                          {entry.user_name}
+                        </Badge>
                       )}
                       {entry.data_source_name && (
-                        <Badge variant="secondary" className="text-xs">{entry.data_source_name}</Badge>
+                        <Badge variant="secondary" className="text-xs">
+                          {entry.data_source_name}
+                        </Badge>
                       )}
                       {entry.row_count != null && (
-                        <span className="text-xs text-muted-foreground">{entry.row_count} rows</span>
+                        <span className="text-xs text-muted-foreground">
+                          {entry.row_count} rows
+                        </span>
                       )}
                       {entry.execution_time_ms != null && (
-                        <span className="text-xs text-muted-foreground">{entry.execution_time_ms}ms</span>
+                        <span className="text-xs text-muted-foreground">
+                          {entry.execution_time_ms}ms
+                        </span>
                       )}
                       <span className="text-xs text-muted-foreground ml-auto">
                         {new Date(entry.created_at).toLocaleString()}
@@ -785,7 +872,8 @@ export function NlQueryContent() {
                 Results
               </CardTitle>
               <Badge variant="outline" className="text-xs">
-                {(queryResult.pagination?.totalRows ?? queryResult.rowCount).toLocaleString()} row{(queryResult.pagination?.totalRows ?? queryResult.rowCount) !== 1 ? "s" : ""}
+                {(queryResult.pagination?.totalRows ?? queryResult.rowCount).toLocaleString()} row
+                {(queryResult.pagination?.totalRows ?? queryResult.rowCount) !== 1 ? "s" : ""}
               </Badge>
             </div>
             <Button
@@ -795,7 +883,11 @@ export function NlQueryContent() {
               onClick={() => saveToHistory()}
               disabled={isSaving || !generatedSql}
             >
-              {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+              {isSaving ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Save className="h-3.5 w-3.5" />
+              )}
               <span className="hidden sm:inline ml-1">Save</span>
             </Button>
           </div>
@@ -865,7 +957,10 @@ export function NlQueryContent() {
                   key={value}
                   size="sm"
                   variant={resultView === "chart" && chartType === value ? "default" : "outline"}
-                  onClick={() => { setChartType(value); setResultView("chart"); }}
+                  onClick={() => {
+                    setChartType(value);
+                    setResultView("chart");
+                  }}
                   className="h-8"
                 >
                   <Icon className="h-3.5 w-3.5 mr-1.5" />
@@ -882,13 +977,17 @@ export function NlQueryContent() {
                   result={queryResult}
                   onPageChange={handlePageChange}
                   drillableColumns={drillableCols.size > 0 ? drillableCols : undefined}
-                  onCellClick={drillableCols.size > 0 ? (row, colName) => {
-                    const entity = columnEntityMap[colName];
-                    if (entity) {
-                      setDrillRow(row);
-                      setDrillEntity(entity);
-                    }
-                  } : undefined}
+                  onCellClick={
+                    drillableCols.size > 0
+                      ? (row, colName) => {
+                          const entity = columnEntityMap[colName];
+                          if (entity) {
+                            setDrillRow(row);
+                            setDrillEntity(entity);
+                          }
+                        }
+                      : undefined
+                  }
                 />
                 {drillableCols.size > 0 && (
                   <p className="text-xs text-muted-foreground px-3 pb-2 pt-1">
@@ -908,7 +1007,9 @@ export function NlQueryContent() {
                         </SelectTrigger>
                         <SelectContent>
                           {allColumns.map((c) => (
-                            <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>
+                            <SelectItem key={c.name} value={c.name}>
+                              {c.name}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -924,7 +1025,9 @@ export function NlQueryContent() {
                       </SelectTrigger>
                       <SelectContent>
                         {allColumns.map((c) => (
-                          <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>
+                          <SelectItem key={c.name} value={c.name}>
+                            {c.name}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -952,7 +1055,8 @@ export function NlQueryContent() {
             <Table2 className="h-12 w-12 text-muted-foreground/40 mb-4" />
             <p className="text-lg font-medium text-muted-foreground">No results yet</p>
             <p className="text-sm text-muted-foreground/70 mt-1 max-w-md">
-              Open the chat sidebar and ask a question about your data. Try: &quot;Show me total patients by gender&quot; or &quot;What are the top 10 diagnoses?&quot;
+              Open the chat sidebar and ask a question about your data. Try: &quot;Show me total
+              patients by gender&quot; or &quot;What are the top 10 diagnoses?&quot;
             </p>
           </CardContent>
         </Card>
@@ -961,7 +1065,10 @@ export function NlQueryContent() {
       {drillRow && drillEntity && dataSourceId && (
         <RecordViewDialog
           open={!!drillRow}
-          onClose={() => { setDrillRow(null); setDrillEntity(null); }}
+          onClose={() => {
+            setDrillRow(null);
+            setDrillEntity(null);
+          }}
           dataSourceId={dataSourceId}
           entityId={drillEntity.id}
           record={drillRow}

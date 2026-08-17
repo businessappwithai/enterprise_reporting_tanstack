@@ -1,16 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import {
-  Bell,
-  Check,
-  CheckCheck,
-  Loader2,
-  LogOut,
-  Menu,
-  Settings,
-  User,
-  X,
-} from "lucide-react";
+import { Bell, Check, CheckCheck, Loader2, LogOut, Menu, Settings, User, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -156,18 +146,18 @@ export function Header({ user, onMobileMenuToggle, mobileMenuOpen }: HeaderProps
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case "error":
-        return <X className="h-4 w-4 text-destructive" />;
+        return <X className="h-4 w-4 text-red-500" />;
       case "warning":
-        return <div className="h-4 w-4 rounded-full bg-yellow-500" />;
+        return <div className="h-4 w-4 rounded-tremor-full bg-amber-500" />;
       case "success":
-        return <Check className="h-4 w-4 text-green-500" />;
+        return <Check className="h-4 w-4 text-emerald-500" />;
       default:
-        return <div className="h-4 w-4 rounded-full bg-blue-500" />;
+        return <div className="h-4 w-4 rounded-tremor-full bg-blue-500" />;
     }
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background px-6">
+    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-tremor-border bg-tremor-background px-6">
       <div className="flex items-center gap-3">
         {/* Mobile Menu Toggle */}
         <Button
@@ -177,7 +167,7 @@ export function Header({ user, onMobileMenuToggle, mobileMenuOpen }: HeaderProps
           onClick={onMobileMenuToggle}
           aria-label="Toggle menu"
         >
-          <Menu className={`h-5 w-5 transition-transform ${mobileMenuOpen ? 'rotate-90' : ''}`} />
+          <Menu className={`h-5 w-5 transition-transform ${mobileMenuOpen ? "rotate-90" : ""}`} />
         </Button>
       </div>
 
@@ -189,12 +179,12 @@ export function Header({ user, onMobileMenuToggle, mobileMenuOpen }: HeaderProps
         {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative rounded-md h-9 w-9">
+            <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-tremor-small">
               <Bell className="h-4 w-4" />
               {unreadCount > 0 && (
                 <Badge
                   variant="destructive"
-                  className="absolute -right-1 -top-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center"
+                  className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-tremor-full p-0 text-tremor-label"
                 >
                   {unreadCount > 9 ? "9+" : unreadCount}
                 </Badge>
@@ -203,13 +193,13 @@ export function Header({ user, onMobileMenuToggle, mobileMenuOpen }: HeaderProps
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-80 p-0" align="end">
-            <DropdownMenuLabel className="border-b p-4">
+            <DropdownMenuLabel className="border-b border-tremor-border p-4">
               <div className="flex items-center justify-between">
                 <span className="font-semibold">Notifications</span>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 text-xs"
+                  className="h-8 text-tremor-label"
                   onClick={() => setShowReadNotifications(!showReadNotifications)}
                 >
                   {showReadNotifications ? "Hide Read" : "Show All"}
@@ -219,10 +209,12 @@ export function Header({ user, onMobileMenuToggle, mobileMenuOpen }: HeaderProps
 
             {isLoadingNotifications ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <Loader2 className="h-6 w-6 animate-spin text-tremor-content" />
               </div>
             ) : safeNotifications.length === 0 ? (
-              <div className="py-8 text-center text-sm text-muted-foreground">No notifications</div>
+              <div className="py-8 text-center text-tremor-default text-tremor-content">
+                No notifications
+              </div>
             ) : (
               <>
                 <ScrollArea className="h-96">
@@ -237,9 +229,13 @@ export function Header({ user, onMobileMenuToggle, mobileMenuOpen }: HeaderProps
                         <div className="flex items-start gap-3">
                           <div className="mt-0.5">{getNotificationIcon(notification.type)}</div>
                           <div className="flex-1 space-y-1">
-                            <p className="text-sm font-medium leading-none">{notification.title}</p>
-                            <p className="text-xs text-muted-foreground">{notification.message}</p>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-tremor-default font-medium leading-none text-tremor-content-strong">
+                              {notification.title}
+                            </p>
+                            <p className="text-tremor-label text-tremor-content">
+                              {notification.message}
+                            </p>
+                            <p className="text-tremor-label text-tremor-content">
                               {new Date(notification.created_at).toLocaleString()}
                             </p>
                           </div>
@@ -291,18 +287,22 @@ export function Header({ user, onMobileMenuToggle, mobileMenuOpen }: HeaderProps
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-9 w-9 rounded-md p-0">
+            <Button variant="ghost" className="relative h-9 w-9 rounded-tremor-small p-0">
               <Avatar className="h-8 w-8">
                 <AvatarImage src={user.image || undefined} alt={user.name || "User"} />
-                <AvatarFallback className="rounded-md text-xs">{initials}</AvatarFallback>
+                <AvatarFallback className="rounded-tremor-small text-tremor-label">
+                  {initials}
+                </AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56" align="end" forceMount>
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{user.name}</p>
-                <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                <p className="text-tremor-default font-medium leading-none text-tremor-content-strong">
+                  {user.name}
+                </p>
+                <p className="text-tremor-label leading-none text-tremor-content">{user.email}</p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
@@ -318,7 +318,7 @@ export function Header({ user, onMobileMenuToggle, mobileMenuOpen }: HeaderProps
             <DropdownMenuItem
               onClick={() => logoutMutation.mutate()}
               disabled={logoutMutation.isPending}
-              className="text-destructive focus:text-destructive"
+              className="text-red-500 focus:text-red-600"
             >
               <LogOut className="mr-2 h-4 w-4" />
               <span>{logoutMutation.isPending ? "Logging out..." : "Log out"}</span>

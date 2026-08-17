@@ -44,6 +44,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getTremorChartPalette } from "@/lib/theme/tremor-colors";
 import {
   useActiveDataSources,
   useDataSourceSchema,
@@ -180,8 +181,8 @@ export function NlQueryWorkspace() {
 
       const pipelineResult = typedResult as NlQueryPipelineResult | undefined;
       return (
-        <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-          <CheckCircle2 className="h-4 w-4 text-green-600" />
+        <div className="flex items-center gap-2 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
+          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
           <span className="text-sm">
             Query returned {pipelineResult?.queryResults?.totalRows || 0} rows in{" "}
             {pipelineResult?.queryResults?.executionTimeMs || 0}ms. View results in the table below.
@@ -274,7 +275,7 @@ export function NlQueryWorkspace() {
         title,
         xAxis: { field: xAxisField, label: xAxisField },
         yAxis: yFields.map((f: string) => ({ field: f, label: f })),
-        colors: ["#8884d8", "#82ca9d", "#ffc658", "#ff7300", "#a4de6c"],
+        colors: getTremorChartPalette(5),
       };
 
       setChartConfig(config);
@@ -451,7 +452,7 @@ ${schemaInfo ? `It has ${schemaInfo.tableCount} tables and ${schemaInfo.viewCoun
                   {executeMutation.isPending ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
                   ) : queryResult?.accessGranted ? (
-                    <CheckCircle2 className="h-5 w-5 text-green-600" />
+                    <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                   ) : (
                     <XCircle className="h-5 w-5 text-destructive" />
                   )}

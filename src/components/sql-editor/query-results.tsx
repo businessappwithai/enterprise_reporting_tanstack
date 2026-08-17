@@ -37,7 +37,14 @@ interface QueryResultsProps {
 
 const ROW_HEIGHT = 40; // Height of each row in pixels
 
-export function QueryResults({ result, isLoading, error, onPageChange, onCellClick, drillableColumns }: QueryResultsProps) {
+export function QueryResults({
+  result,
+  isLoading,
+  error,
+  onPageChange,
+  onCellClick,
+  drillableColumns,
+}: QueryResultsProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const virtualizerRef = useRef<Virtualizer<HTMLDivElement, Element> | null>(null);
@@ -173,10 +180,15 @@ export function QueryResults({ result, isLoading, error, onPageChange, onCellCli
           {/* Row counts */}
           <div className="flex items-center gap-2 flex-wrap">
             <Badge variant="secondary" className="text-xs sm:text-sm py-0.5 sm:py-1">
-              {pagination?.totalRows || result.rowCount} row{(pagination?.totalRows || result.rowCount) !== 1 ? "s" : ""}
+              {pagination?.totalRows || result.rowCount} row
+              {(pagination?.totalRows || result.rowCount) !== 1 ? "s" : ""}
             </Badge>
             {pagination?.serverSide && (
-              <Badge variant="outline" className="text-xs py-0.5" title="Data fetched from server in pages">
+              <Badge
+                variant="outline"
+                className="text-xs py-0.5"
+                title="Data fetched from server in pages"
+              >
                 Paginated
               </Badge>
             )}
@@ -188,8 +200,8 @@ export function QueryResults({ result, isLoading, error, onPageChange, onCellCli
             <span
               className={
                 result.executionTime > 1000
-                  ? "text-yellow-600 dark:text-yellow-400 font-medium"
-                  : "text-green-600 dark:text-green-400 font-medium"
+                  ? "text-amber-600 dark:text-amber-400 font-medium"
+                  : "text-emerald-600 dark:text-emerald-400 font-medium"
               }
             >
               {result.executionTime}ms
@@ -224,7 +236,9 @@ export function QueryResults({ result, isLoading, error, onPageChange, onCellCli
 
         {result.truncated && (
           <div className="mt-1.5">
-            <Badge variant="warning" className="text-xs">Results truncated at limit</Badge>
+            <Badge variant="warning" className="text-xs">
+              Results truncated at limit
+            </Badge>
           </div>
         )}
       </div>
@@ -240,17 +254,28 @@ export function QueryResults({ result, isLoading, error, onPageChange, onCellCli
             if (!el) return;
             const body = el.parentElement?.querySelector<HTMLDivElement>(".table-body-scroll");
             if (!body) return;
-            const syncHeader = () => { el.scrollLeft = body.scrollLeft; };
+            const syncHeader = () => {
+              el.scrollLeft = body.scrollLeft;
+            };
             body.addEventListener("scroll", syncHeader, { passive: true });
             return () => body.removeEventListener("scroll", syncHeader);
           }}
         >
-          <Table style={{ borderCollapse: "separate", borderSpacing: "0", minWidth: `${minTableWidth}px` }}>
+          <Table
+            style={{
+              borderCollapse: "separate",
+              borderSpacing: "0",
+              minWidth: `${minTableWidth}px`,
+            }}
+          >
             <TableHeader className="bg-background">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id} className="whitespace-nowrap bg-background h-9 text-xs sm:text-sm">
+                    <TableHead
+                      key={header.id}
+                      className="whitespace-nowrap bg-background h-9 text-xs sm:text-sm"
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(header.column.columnDef.header, header.getContext())}
@@ -265,10 +290,19 @@ export function QueryResults({ result, isLoading, error, onPageChange, onCellCli
         {/* Scrollable Body */}
         <div ref={tableContainerRef} className="table-body-scroll flex-1 overflow-auto min-h-0">
           {rowModel.rows.length === 0 ? (
-            <Table style={{ borderCollapse: "separate", borderSpacing: "0", minWidth: `${minTableWidth}px` }}>
+            <Table
+              style={{
+                borderCollapse: "separate",
+                borderSpacing: "0",
+                minWidth: `${minTableWidth}px`,
+              }}
+            >
               <TableBody>
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="text-center text-muted-foreground py-8">
+                  <TableCell
+                    colSpan={columns.length}
+                    className="text-center text-muted-foreground py-8"
+                  >
                     No results
                   </TableCell>
                 </TableRow>
@@ -317,7 +351,11 @@ export function QueryResults({ result, isLoading, error, onPageChange, onCellCli
                               key={cell.id}
                               className={`font-mono text-xs sm:text-sm border-b py-1.5 sm:py-2 whitespace-nowrap${isDrillable ? " cursor-pointer hover:bg-accent/60 hover:underline decoration-dotted underline-offset-2 select-none active:bg-accent" : ""}`}
                               style={{ boxSizing: "border-box" }}
-                              onClick={isDrillable && onCellClick ? () => onCellClick(row.original, colName) : undefined}
+                              onClick={
+                                isDrillable && onCellClick
+                                  ? () => onCellClick(row.original, colName)
+                                  : undefined
+                              }
                               title={isDrillable ? "Tap to view record" : undefined}
                             >
                               {flexRender(cell.column.columnDef.cell, cell.getContext())}

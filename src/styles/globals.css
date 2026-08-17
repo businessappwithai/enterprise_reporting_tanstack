@@ -6,109 +6,179 @@
 
 @layer base {
   :root {
-    /* Swiss Clean Design System - Light Theme */
-    --background: 0 0% 100%; /* #FFFFFF */
-    --foreground: 0 0% 5%; /* #0D0D0D - Dark Gray */
-    --card: 0 0% 98%; /* #FAFAFA - Light Gray */
-    --card-foreground: 0 0% 5%; /* #0D0D0D */
-    --popover: 0 0% 100%; /* #FFFFFF */
-    --popover-foreground: 0 0% 5%; /* #0D0D0D */
-    --primary: 240 100% 50%; /* #0000FF - Swiss Blue */
-    --primary-foreground: 0 0% 100%; /* #FFFFFF */
-    --secondary: 0 0% 96%; /* #F5F5F5 */
-    --secondary-foreground: 0 0% 5%; /* #0D0D0D */
-    --muted: 0 0% 96%; /* #F5F5F5 */
-    --muted-foreground: 0 0% 40%; /* #666666 */
-    --accent: 0 0% 96%; /* #F5F5F5 */
-    --accent-foreground: 0 0% 5%; /* #0D0D0D */
-    --destructive: 0 84% 60%; /* #E63946 */
-    --destructive-foreground: 0 0% 100%; /* #FFFFFF */
-    --border: 0 0% 91%; /* #E8E8E8 */
-    --input: 0 0% 91%; /* #E8E8E8 */
-    --ring: 240 100% 50%; /* #0000FF */
-    --radius: 0.25rem; /* 4px - Swiss Clean radius */
-    --radius-sm: 0.25rem; /* 4px */
-    --radius-md: 0.5rem; /* 8px */
-    --radius-lg: 0.75rem; /* 12px */
-    --radius-xl: 1rem; /* 16px */
-    --radius-2xl: 9999px; /* pill radius */
+    /* ═══════════════════════════════════════════════════════════════════════
+       Tremor Design System — light mode
+       Token values mirror the `tremor` namespace of the Tailwind preset shipped
+       with https://github.com/tremorlabs/tremor-npm (Tailwind blue/gray scale).
+       ═══════════════════════════════════════════════════════════════════════ */
 
-    /* Swiss Status Colors - Light */
-    --color-info: 210 100% 50%; /* #007AFF - Blue */
-    --color-info-foreground: 0 0% 100%; /* #FFFFFF */
-    --color-success: 142 76% 36%; /* #22C55E - Green */
-    --color-success-foreground: 0 0% 100%; /* #FFFFFF */
-    --color-warning: 35 95% 58%; /* #F59E0B - Orange */
-    --color-warning-foreground: 0 0% 100%; /* #FFFFFF */
-    --color-error: 0 84% 60%; /* #E63946 - Red */
-    --color-error-foreground: 0 0% 100%; /* #FFFFFF */
+    /* Tremor brand (blue) */
+    --tremor-brand-faint: 214 100% 97%; /* blue-50  #EFF6FF */
+    --tremor-brand-muted: 213 97% 87%; /* blue-200 #BFDBFE */
+    --tremor-brand-subtle: 213 94% 68%; /* blue-400 #60A5FA */
+    --tremor-brand: 217 91% 60%; /* blue-500 #3B82F6 */
+    --tremor-brand-emphasis: 224 76% 48%; /* blue-700 #1D4ED8 */
+    --tremor-brand-inverted: 0 0% 100%; /* white   #FFFFFF */
 
-    /* Swiss Sidebar Colors - Light */
-    --sidebar: 0 0% 100%; /* #FFFFFF */
-    --sidebar-foreground: 0 0% 40%; /* #666666 */
-    --sidebar-primary: 0 0% 96%; /* #F5F5F5 */
-    --sidebar-primary-foreground: 0 0% 5%; /* #0D0D0D */
-    --sidebar-accent: 0 0% 96%; /* #F5F5F5 */
-    --sidebar-accent-foreground: 0 0% 5%; /* #0D0D0D */
-    --sidebar-border: 0 0% 91%; /* #E8E8E8 */
-    --sidebar-ring: 240 100% 50%; /* #0000FF */
+    /* Tremor surfaces */
+    --tremor-background-muted: 210 20% 98%; /* gray-50  #F9FAFB */
+    --tremor-background-subtle: 220 14% 96%; /* gray-100 #F3F4F6 */
+    --tremor-background: 0 0% 100%; /* white    #FFFFFF */
+    --tremor-background-emphasis: 217 19% 27%; /* gray-700 #374151 */
 
-    /* Chart colors - Swiss palette */
-    --chart-1: 240 100% 50%; /* Swiss Blue */
-    --chart-2: 142 76% 36%; /* Green */
-    --chart-3: 280 70% 50%; /* Purple */
-    --chart-4: 35 95% 58%; /* Orange */
-    --chart-5: 190 80% 45%; /* Cyan */
+    /* Tremor lines */
+    --tremor-border: 220 13% 91%; /* gray-200 #E5E7EB */
+    --tremor-ring: 220 13% 91%; /* gray-200 #E5E7EB */
+
+    /* Tremor content (text) */
+    --tremor-content-subtle: 218 11% 65%; /* gray-400 #9CA3AF */
+    --tremor-content: 220 9% 46%; /* gray-500 #6B7280 */
+    --tremor-content-emphasis: 217 19% 27%; /* gray-700 #374151 */
+    --tremor-content-strong: 221 39% 11%; /* gray-900 #111827 */
+    --tremor-content-inverted: 0 0% 100%; /* white    #FFFFFF */
+
+    /* ── Semantic aliases → Tremor tokens ───────────────────────────────── */
+    --background: var(--tremor-background-muted); /* app canvas */
+    --foreground: var(--tremor-content-strong);
+    --card: var(--tremor-background);
+    --card-foreground: var(--tremor-content-strong);
+    --popover: var(--tremor-background);
+    --popover-foreground: var(--tremor-content-strong);
+    --primary: var(--tremor-brand);
+    --primary-foreground: var(--tremor-brand-inverted);
+    --secondary: var(--tremor-background-subtle);
+    --secondary-foreground: var(--tremor-content-emphasis);
+    --muted: var(--tremor-background-subtle);
+    --muted-foreground: var(--tremor-content);
+    --accent: var(--tremor-background-subtle);
+    --accent-foreground: var(--tremor-content-emphasis);
+    --destructive: 0 84% 60%; /* red-500 #EF4444 */
+    --destructive-foreground: 0 0% 100%;
+    --border: var(--tremor-border);
+    --input: var(--tremor-border);
+    --ring: var(--tremor-brand-muted); /* Tremor focus ring */
+
+    /* Tremor radius scale */
+    --radius: 0.5rem; /* rounded-tremor-default */
+    --radius-sm: 0.375rem; /* rounded-tremor-small */
+    --radius-md: 0.5rem; /* rounded-tremor-default */
+    --radius-lg: 0.5rem; /* rounded-tremor-default */
+    --radius-xl: 0.75rem;
+    --radius-2xl: 9999px; /* rounded-tremor-full */
+
+    /* Status colors — Tremor semantic palette */
+    --color-info: 217 91% 60%; /* blue-500    #3B82F6 */
+    --color-info-foreground: 0 0% 100%;
+    --color-success: 160 84% 39%; /* emerald-500 #10B981 */
+    --color-success-foreground: 0 0% 100%;
+    --color-warning: 38 92% 50%; /* amber-500   #F59E0B */
+    --color-warning-foreground: 0 0% 100%;
+    --color-error: 0 84% 60%; /* red-500     #EF4444 */
+    --color-error-foreground: 0 0% 100%;
+
+    /* Sidebar — Tremor surfaces */
+    --sidebar: var(--tremor-background);
+    --sidebar-foreground: var(--tremor-content);
+    --sidebar-primary: var(--tremor-brand-faint);
+    --sidebar-primary-foreground: var(--tremor-brand-emphasis);
+    --sidebar-accent: var(--tremor-background-subtle);
+    --sidebar-accent-foreground: var(--tremor-content-emphasis);
+    --sidebar-border: var(--tremor-border);
+    --sidebar-ring: var(--tremor-brand-muted);
+
+    /* Chart palette — Tremor categorical order (AvailableChartColors) */
+    --chart-1: 217 91% 60%; /* blue-500    #3B82F6 */
+    --chart-2: 160 84% 39%; /* emerald-500 #10B981 */
+    --chart-3: 258 90% 66%; /* violet-500  #8B5CF6 */
+    --chart-4: 38 92% 50%; /* amber-500   #F59E0B */
+    --chart-5: 220 9% 46%; /* gray-500    #6B7280 */
+    --chart-6: 189 94% 43%; /* cyan-500    #06B6D4 */
+    --chart-7: 330 81% 60%; /* pink-500    #EC4899 */
+    --chart-8: 84 81% 44%; /* lime-500    #84CC16 */
+    --chart-9: 292 84% 61%; /* fuchsia-500 #D946EF */
   }
 
   .dark {
-    /* Swiss Clean Design System - Dark Theme */
-    --background: 0 0% 8%; /* #141414 - Very Dark Gray */
-    --foreground: 0 0% 95%; /* #F2F2F2 */
-    --card: 0 0% 12%; /* #1F1F1F */
-    --card-foreground: 0 0% 95%; /* #F2F2F2 */
-    --popover: 0 0% 12%; /* #1F1F1F */
-    --popover-foreground: 0 0% 95%; /* #F2F2F2 */
-    --primary: 220 100% 60%; /* #3399FF - Lighter Blue for Dark */
-    --primary-foreground: 0 0% 100%; /* #FFFFFF */
-    --secondary: 0 0% 18%; /* #2E2E2E */
-    --secondary-foreground: 0 0% 95%; /* #F2F2F2 */
-    --muted: 0 0% 18%; /* #2E2E2E */
-    --muted-foreground: 0 0% 55%; /* #8C8C8C */
-    --accent: 0 0% 18%; /* #2E2E2E */
-    --accent-foreground: 0 0% 95%; /* #F2F2F2 */
-    --destructive: 0 72% 51%; /* #CC3333 */
-    --destructive-foreground: 0 0% 100%; /* #FFFFFF */
-    --border: 0 0% 22%; /* #383838 */
-    --input: 0 0% 22%; /* #383838 */
-    --ring: 220 100% 60%; /* #3399FF */
+    /* ═══════════════════════════════════════════════════════════════════════
+       Tremor Design System — dark mode (`dark-tremor` namespace)
+       ═══════════════════════════════════════════════════════════════════════ */
 
-    /* Swiss Status Colors - Dark */
-    --color-info: 220 100% 60%; /* #3399FF */
-    --color-info-foreground: 0 0% 100%; /* #FFFFFF */
-    --color-success: 142 76% 46%; /* #22C55E */
-    --color-success-foreground: 0 0% 100%; /* #FFFFFF */
-    --color-warning: 35 95% 58%; /* #F59E0B */
-    --color-warning-foreground: 0 0% 100%; /* #FFFFFF */
-    --color-error: 0 72% 51%; /* #CC3333 */
-    --color-error-foreground: 0 0% 100%; /* #FFFFFF */
+    /* Tremor brand (blue) */
+    --tremor-brand-faint: 226 58% 10%; /*          #0B1229 */
+    --tremor-brand-muted: 226 57% 21%; /* blue-950 #172554 */
+    --tremor-brand-subtle: 226 71% 40%; /* blue-800 #1E40AF */
+    --tremor-brand: 217 91% 60%; /* blue-500 #3B82F6 */
+    --tremor-brand-emphasis: 213 94% 68%; /* blue-400 #60A5FA */
+    --tremor-brand-inverted: 226 57% 21%; /* blue-950 #172554 */
 
-    /* Swiss Sidebar Colors - Dark */
-    --sidebar: 0 0% 10%; /* #1A1A1A */
-    --sidebar-foreground: 0 0% 60%; /* #999999 */
-    --sidebar-primary: 220 100% 60%; /* #3399FF */
-    --sidebar-primary-foreground: 0 0% 100%; /* #FFFFFF */
-    --sidebar-accent: 0 0% 18%; /* #2E2E2E */
-    --sidebar-accent-foreground: 0 0% 95%; /* #F2F2F2 */
-    --sidebar-border: 0 0% 22%; /* #383838 */
-    --sidebar-ring: 220 100% 60%; /* #3399FF */
+    /* Tremor surfaces */
+    --tremor-background-muted: 222 39% 12%; /*          #131A2B */
+    --tremor-background-subtle: 215 28% 17%; /* gray-800 #1F2937 */
+    --tremor-background: 221 39% 11%; /* gray-900 #111827 */
+    --tremor-background-emphasis: 216 12% 84%; /* gray-300 #D1D5DB */
 
-    /* Chart colors - Dark Swiss palette */
-    --chart-1: 220 100% 60%; /* Lighter Blue */
-    --chart-2: 142 76% 46%; /* Green */
-    --chart-3: 280 70% 60%; /* Purple */
-    --chart-4: 35 95% 58%; /* Orange */
-    --chart-5: 190 80% 55%; /* Cyan */
+    /* Tremor lines */
+    --tremor-border: 215 28% 17%; /* gray-800 #1F2937 */
+    --tremor-ring: 215 28% 17%; /* gray-800 #1F2937 */
+
+    /* Tremor content (text) */
+    --tremor-content-subtle: 215 14% 34%; /* gray-600 #4B5563 */
+    --tremor-content: 220 9% 46%; /* gray-500 #6B7280 */
+    --tremor-content-emphasis: 220 13% 91%; /* gray-200 #E5E7EB */
+    --tremor-content-strong: 210 20% 98%; /* gray-50  #F9FAFB */
+    --tremor-content-inverted: 224 71% 4%; /* gray-950 #030712 */
+
+    /* ── Semantic aliases → Tremor tokens ───────────────────────────────── */
+    --background: var(--tremor-background-muted);
+    --foreground: var(--tremor-content-strong);
+    --card: var(--tremor-background);
+    --card-foreground: var(--tremor-content-strong);
+    --popover: var(--tremor-background);
+    --popover-foreground: var(--tremor-content-strong);
+    --primary: var(--tremor-brand);
+    --primary-foreground: var(--tremor-brand-inverted);
+    --secondary: var(--tremor-background-subtle);
+    --secondary-foreground: var(--tremor-content-emphasis);
+    --muted: var(--tremor-background-subtle);
+    --muted-foreground: var(--tremor-content);
+    --accent: var(--tremor-background-subtle);
+    --accent-foreground: var(--tremor-content-emphasis);
+    --destructive: 0 84% 60%; /* red-500 #EF4444 */
+    --destructive-foreground: 0 0% 100%;
+    --border: var(--tremor-border);
+    --input: var(--tremor-border);
+    --ring: var(--tremor-brand-muted);
+
+    /* Status colors — Tremor semantic palette */
+    --color-info: 217 91% 60%;
+    --color-info-foreground: 0 0% 100%;
+    --color-success: 160 84% 39%;
+    --color-success-foreground: 0 0% 100%;
+    --color-warning: 38 92% 50%;
+    --color-warning-foreground: 0 0% 100%;
+    --color-error: 0 84% 60%;
+    --color-error-foreground: 0 0% 100%;
+
+    /* Sidebar — Tremor surfaces */
+    --sidebar: var(--tremor-background);
+    --sidebar-foreground: var(--tremor-content);
+    --sidebar-primary: var(--tremor-brand-faint);
+    --sidebar-primary-foreground: var(--tremor-brand-emphasis);
+    --sidebar-accent: var(--tremor-background-subtle);
+    --sidebar-accent-foreground: var(--tremor-content-emphasis);
+    --sidebar-border: var(--tremor-border);
+    --sidebar-ring: var(--tremor-brand-muted);
+
+    /* Chart palette — Tremor categorical order */
+    --chart-1: 217 91% 60%;
+    --chart-2: 160 84% 39%;
+    --chart-3: 258 90% 66%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 220 9% 46%;
+    --chart-6: 189 94% 43%;
+    --chart-7: 330 81% 60%;
+    --chart-8: 84 81% 44%;
+    --chart-9: 292 84% 61%;
   }
 }
 
@@ -117,13 +187,24 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    /* Tremor sets the app canvas to background-muted and the default body copy
+       to text-tremor-default / content-emphasis. */
+    @apply bg-background text-tremor-default text-tremor-content-emphasis antialiased;
+  }
+  /* Tremor headings use content-strong */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply text-tremor-content-strong;
   }
 }
 
 /* Monaco Editor Customizations */
 .monaco-editor {
-  @apply rounded-md border;
+  @apply rounded-tremor-default border border-tremor-border;
 }
 
 /* Monaco Editor Wrapper - Create isolation from browser extensions */
@@ -364,25 +445,25 @@
     @apply text-primary hover:underline;
   }
 
-  /* Callout boxes */
+  /* Callout boxes — Tremor Callout treatment (border-l-4, 10% tinted surface) */
   .callout-blue {
-    @apply bg-blue-50 dark:bg-blue-950/30 border-l-4 border-blue-500 p-4 rounded-r-md my-4;
+    @apply bg-blue-500/10 border-l-4 border-blue-700 text-blue-700 dark:text-blue-400;
   }
 
   .callout-green {
-    @apply bg-green-50 dark:bg-green-950/30 border-l-4 border-green-500 p-4 rounded-r-md my-4;
+    @apply bg-emerald-500/10 border-l-4 border-emerald-700 text-emerald-700 dark:text-emerald-400;
   }
 
   .callout-orange {
-    @apply bg-orange-50 dark:bg-orange-950/30 border-l-4 border-orange-500 p-4 rounded-r-md my-4;
+    @apply bg-amber-500/10 border-l-4 border-amber-700 text-amber-700 dark:text-amber-400;
   }
 
   .callout-red {
-    @apply bg-red-50 dark:bg-red-950/30 border-l-4 border-red-500 p-4 rounded-r-md my-4;
+    @apply bg-red-500/10 border-l-4 border-red-700 text-red-700 dark:text-red-400;
   }
 
   .callout-purple {
-    @apply bg-purple-50 dark:bg-purple-950/30 border-l-4 border-purple-500 p-4 rounded-r-md my-4;
+    @apply bg-violet-500/10 border-l-4 border-violet-700 text-violet-700 dark:text-violet-400;
   }
 
   .callout-blue,
@@ -390,7 +471,7 @@
   .callout-orange,
   .callout-red,
   .callout-purple {
-    @apply text-sm;
+    @apply my-4 flex flex-col overflow-hidden rounded-tremor-default py-3 pr-3 pl-4 text-tremor-default;
   }
 
   .callout-blue p,

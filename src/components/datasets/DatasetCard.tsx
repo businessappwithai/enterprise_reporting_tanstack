@@ -33,9 +33,9 @@ export function DatasetCard({ dataset, onRefresh, onUnload, onLoad }: DatasetCar
   const isLoaded = dataset.memorySize > 0;
   const statusColor =
     dataset.cacheStatus === "cached"
-      ? "bg-green-500"
+      ? "bg-emerald-500"
       : dataset.cacheStatus === "stale"
-        ? "bg-yellow-500"
+        ? "bg-amber-500"
         : "bg-gray-400";
 
   return (

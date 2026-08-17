@@ -54,7 +54,7 @@ interface Props {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  PASS: "text-green-600",
+  PASS: "text-emerald-600",
   BREACH: "text-orange-600",
   ESCALATE: "text-red-600",
   NO_DATA: "text-gray-500",
@@ -63,7 +63,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const STATUS_BG: Record<string, string> = {
-  PASS: "bg-green-50 border-green-200",
+  PASS: "bg-emerald-50 border-emerald-200",
   BREACH: "bg-orange-50 border-orange-200",
   ESCALATE: "bg-red-50 border-red-200",
   NO_DATA: "bg-gray-50 border-gray-200",
@@ -73,8 +73,8 @@ const STATUS_BG: Record<string, string> = {
 
 function StepIcon({ ok, error }: { ok: boolean; error?: boolean }) {
   if (error) return <XCircle className="h-5 w-5 text-red-500 shrink-0" />;
-  if (ok) return <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />;
-  return <AlertTriangle className="h-5 w-5 text-yellow-500 shrink-0" />;
+  if (ok) return <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />;
+  return <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0" />;
 }
 
 function Step({
@@ -115,9 +115,7 @@ function Step({
           ))}
       </button>
       {open && children && (
-        <div className="px-4 py-3 border-t text-sm space-y-2 bg-background">
-          {children}
-        </div>
+        <div className="px-4 py-3 border-t text-sm space-y-2 bg-background">{children}</div>
       )}
     </div>
   );
@@ -189,7 +187,9 @@ export function ExecutionInvestigateModal({ ruleId, ruleName, open, onClose }: P
             <div
               className={`rounded-lg border px-4 py-3 flex items-center gap-3 ${STATUS_BG[status] ?? "bg-muted border-muted"}`}
             >
-              <TrendingUp className={`h-5 w-5 ${STATUS_COLORS[status] ?? "text-muted-foreground"}`} />
+              <TrendingUp
+                className={`h-5 w-5 ${STATUS_COLORS[status] ?? "text-muted-foreground"}`}
+              />
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <span className={`font-bold text-sm ${STATUS_COLORS[status] ?? ""}`}>
@@ -212,8 +212,14 @@ export function ExecutionInvestigateModal({ ruleId, ruleName, open, onClose }: P
 
             {/* Step 1: Rule loaded */}
             <Step num={1} title="Rule Loaded" icon={<Database className="h-4 w-4" />} ok={true}>
-              <KV label="Rule ID" value={<span className="font-mono text-xs">{exec.monitoring_rule_id}</span>} />
-              <KV label="Execution ID" value={<span className="font-mono text-xs">{exec.id}</span>} />
+              <KV
+                label="Rule ID"
+                value={<span className="font-mono text-xs">{exec.monitoring_rule_id}</span>}
+              />
+              <KV
+                label="Execution ID"
+                value={<span className="font-mono text-xs">{exec.id}</span>}
+              />
               <KV label="Triggered at" value={formatDateTime(exec.executed_at)} />
             </Step>
 
@@ -231,7 +237,7 @@ export function ExecutionInvestigateModal({ ruleId, ruleName, open, onClose }: P
                   status === "RBAC_DRIFT" ? (
                     <span className="text-red-600">Permission revoked — rule auto-paused</span>
                   ) : (
-                    <span className="text-green-600">Access granted</span>
+                    <span className="text-emerald-600">Access granted</span>
                   )
                 }
               />
@@ -280,10 +286,14 @@ export function ExecutionInvestigateModal({ ruleId, ruleName, open, onClose }: P
                 label="Metric value"
                 value={
                   exec.metric_value != null ? (
-                    <span className={`font-bold ${isBreached ? "text-red-600" : isPass ? "text-green-600" : ""}`}>
+                    <span
+                      className={`font-bold ${isBreached ? "text-red-600" : isPass ? "text-emerald-600" : ""}`}
+                    >
                       {exec.metric_value.toLocaleString()}
                     </span>
-                  ) : "—"
+                  ) : (
+                    "—"
+                  )
                 }
               />
               {exec.previous_metric_value != null && (
@@ -293,8 +303,9 @@ export function ExecutionInvestigateModal({ ruleId, ruleName, open, onClose }: P
                 <KV
                   label="Change"
                   value={
-                    <span className={exec.delta_pct >= 0 ? "text-green-600" : "text-red-600"}>
-                      {exec.delta_pct >= 0 ? "+" : ""}{exec.delta_pct.toFixed(2)}%
+                    <span className={exec.delta_pct >= 0 ? "text-emerald-600" : "text-red-600"}>
+                      {exec.delta_pct >= 0 ? "+" : ""}
+                      {exec.delta_pct.toFixed(2)}%
                     </span>
                   }
                 />
@@ -306,10 +317,11 @@ export function ExecutionInvestigateModal({ ruleId, ruleName, open, onClose }: P
                     <span className="text-gray-500">No data returned from query</span>
                   ) : isBreached ? (
                     <span className="text-red-600 font-bold">
-                      Threshold breached — {status === "ESCALATE" ? "critical escalation" : "warning"}
+                      Threshold breached —{" "}
+                      {status === "ESCALATE" ? "critical escalation" : "warning"}
                     </span>
                   ) : isPass ? (
-                    <span className="text-green-600">Threshold satisfied — no alert needed</span>
+                    <span className="text-emerald-600">Threshold satisfied — no alert needed</span>
                   ) : (
                     <span>{status}</span>
                   )
@@ -337,13 +349,15 @@ export function ExecutionInvestigateModal({ ruleId, ruleName, open, onClose }: P
             >
               <KV
                 label="Alert sent"
-                value={exec.alert_dispatched ? (
-                  <span className="text-green-600">Yes</span>
-                ) : (
-                  <span className="text-muted-foreground">
-                    {isPass ? "No — threshold passed (notify_on_pass=false)" : "No"}
-                  </span>
-                )}
+                value={
+                  exec.alert_dispatched ? (
+                    <span className="text-emerald-600">Yes</span>
+                  ) : (
+                    <span className="text-muted-foreground">
+                      {isPass ? "No — threshold passed (notify_on_pass=false)" : "No"}
+                    </span>
+                  )
+                }
               />
               {exec.alert_dispatched && exec.alert_channels_used?.length > 0 && (
                 <KV
@@ -351,14 +365,19 @@ export function ExecutionInvestigateModal({ ruleId, ruleName, open, onClose }: P
                   value={
                     <div className="flex gap-1 flex-wrap">
                       {exec.alert_channels_used.map((ch) => (
-                        <Badge key={ch} variant="outline" className="text-xs">{ch}</Badge>
+                        <Badge key={ch} variant="outline" className="text-xs">
+                          {ch}
+                        </Badge>
                       ))}
                     </div>
                   }
                 />
               )}
               {exec.alert_dispatched && exec.alert_recipients_sent?.length > 0 && (
-                <KV label="Recipients" value={`${exec.alert_recipients_sent.length} recipient(s)`} />
+                <KV
+                  label="Recipients"
+                  value={`${exec.alert_recipients_sent.length} recipient(s)`}
+                />
               )}
               {exec.alert_sent_at && (
                 <KV label="Sent at" value={formatDateTime(exec.alert_sent_at)} />

@@ -299,7 +299,7 @@ function EmailSettingsPage() {
                 <Send className="h-4 w-4 mr-2" />
                 {testMutation.isPending ? "Sending..." : "Send Test Email"}
               </Button>
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
                 <h4 className="font-medium text-sm mb-2">💡 Tips</h4>
                 <ul className="text-xs space-y-1 list-disc list-inside text-muted-foreground">
                   <li>Send to your own email first to test configuration</li>

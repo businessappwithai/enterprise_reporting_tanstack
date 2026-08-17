@@ -109,7 +109,7 @@ export function ShareDialog({
             </div>
             <div className="flex items-center gap-3">
               {isPublic ? (
-                <Globe className="h-5 w-5 text-green-600" />
+                <Globe className="h-5 w-5 text-emerald-600" />
               ) : (
                 <Lock className="h-5 w-5 text-muted-foreground" />
               )}

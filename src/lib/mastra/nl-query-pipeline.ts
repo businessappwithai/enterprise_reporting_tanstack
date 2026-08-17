@@ -82,7 +82,7 @@ Generate a JSON object with this exact structure (no markdown, no explanation, O
   "title": "descriptive chart title",
   "xAxis": { "field": "column_name", "label": "Display Label" },
   "yAxis": [{ "field": "column_name", "label": "Display Label" }],
-  "colors": ["#8884d8", "#82ca9d", "#ffc658"]
+  "colors": ["#3b82f6", "#10b981", "#8b5cf6"]
 }
 
 JSON:`;

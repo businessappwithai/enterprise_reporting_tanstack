@@ -1,6 +1,6 @@
 "use client";
 
-import { useTheme } from "@/lib/theme/use-theme";
+import { Monitor, Moon, Sun } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -8,20 +8,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Sun, Moon, Monitor } from "lucide-react";
+import { useTheme } from "@/lib/theme/use-theme";
 
 /**
  * Theme Selector Component
- * Allows users to switch between light, dark, and system themes
- * Swiss Clean Design with intuitive icons
+ * Switches between light, dark and system themes.
+ *
+ * "System" is a real option here: the provider runs with `enableSystem`, so an
+ * unset preference follows `prefers-color-scheme`. Bind to `theme` (the stored
+ * preference) rather than `resolvedTheme`, or picking "System" would immediately
+ * display as Light or Dark instead.
  */
 export function ThemeSelector() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <Select value={theme === "dark" ? "dark" : "light"} onValueChange={setTheme}>
-      <SelectTrigger className="w-48">
-        <SelectValue placeholder="Swiss-Clean Design" />
+    <Select value={theme ?? "system"} onValueChange={setTheme}>
+      <SelectTrigger className="w-48" aria-label="Theme">
+        <SelectValue placeholder="Theme" />
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="light">
@@ -34,6 +38,12 @@ export function ThemeSelector() {
           <div className="flex items-center gap-2">
             <Moon className="h-4 w-4" />
             <span>Dark Theme</span>
+          </div>
+        </SelectItem>
+        <SelectItem value="system">
+          <div className="flex items-center gap-2">
+            <Monitor className="h-4 w-4" />
+            <span>System</span>
           </div>
         </SelectItem>
       </SelectContent>

@@ -1,12 +1,15 @@
-# Swiss Clean Design Theme System
+# Tremor Design Theme System
 
-A comprehensive theme provider for Enterprise Reporting System using the Swiss Clean Design principles.
+Theme provider for the Enterprise Reporting System, implementing the
+[Tremor](https://github.com/tremorlabs/tremor-npm) design system.
+
+See `docs/TREMOR_DESIGN_SYSTEM.md` for the token reference and component catalogue.
 
 ## Features
 
 - **Light & Dark Themes**: Full light and dark mode support with system preference detection
 - **SSR Optimized**: Prevents flash of unstyled content (FOUC) with inline initialization script
-- **Swiss Clean Design**: Professional, minimal color palette with high contrast
+- **Tremor Design System**: Blue brand ramp on a neutral gray scale, soft elevation, compact radii
 - **Persistent Storage**: User theme preference saved to localStorage
 - **Smooth Transitions**: Configurable transition on theme change
 - **Type-Safe**: Full TypeScript support with theme types
@@ -94,59 +97,74 @@ export const THEME_CONFIG = {
 };
 ```
 
-## Swiss Clean Design Colors
+## Tremor Colors
 
 ### Light Theme
-- **Background**: #FFFFFF (white)
-- **Foreground**: #0D0D0D (dark gray)
-- **Primary**: #0000FF (Swiss blue)
-- **Secondary**: #F5F5F5 (light gray)
-- **Borders**: #E8E8E8 (light gray)
+- **Canvas**: #F9FAFB (gray-50) — the page background
+- **Card**: #FFFFFF (white) — surfaces sit above the canvas
+- **Content**: #111827 strong / #374151 emphasis / #6B7280 default (gray-900/700/500)
+- **Brand**: #3B82F6 (blue-500), #1D4ED8 on hover (blue-700)
+- **Borders**: #E5E7EB (gray-200)
 
 ### Dark Theme
-- **Background**: #141414 (very dark gray)
-- **Foreground**: #F2F2F2 (light gray)
-- **Primary**: #3399FF (lighter blue)
-- **Secondary**: #2E2E2E (dark gray)
-- **Borders**: #383838 (medium dark gray)
+- **Canvas**: #131A2B — the page background
+- **Card**: #111827 (gray-900)
+- **Content**: #F9FAFB strong / #E5E7EB emphasis / #6B7280 default
+- **Brand**: #3B82F6 (blue-500), #60A5FA on hover (blue-400)
+- **Borders**: #1F2937 (gray-800)
 
 ## CSS Variables
 
-All colors are available as CSS variables in `src/styles/globals.css`:
+Tokens are defined as `--tremor-*` custom properties in `src/styles/globals.css`
+and re-exported through the semantic aliases the component tree already uses:
 
 ```css
 :root {
-  --background: 0 0% 100%;
-  --foreground: 0 0% 5%;
-  --primary: 240 100% 50%;
-  /* ... more variables */
+  --tremor-brand: 217 91% 60%;          /* blue-500  */
+  --tremor-background: 0 0% 100%;       /* white     */
+  --tremor-background-muted: 210 20% 98%; /* gray-50 */
+  --tremor-border: 220 13% 91%;         /* gray-200  */
+  --tremor-content-strong: 221 39% 11%; /* gray-900  */
+
+  /* semantic aliases point at the same values */
+  --background: var(--tremor-background-muted);
+  --card: var(--tremor-background);
+  --primary: var(--tremor-brand);
 }
 
 .dark {
-  --background: 0 0% 8%;
-  --foreground: 0 0% 95%;
-  --primary: 220 100% 60%;
-  /* ... more variables */
+  /* the same token names, redefined for dark mode */
+  --tremor-background: 221 39% 11%;     /* gray-900 */
+  --tremor-border: 215 28% 17%;         /* gray-800 */
 }
 ```
 
+Because the variables swap under `.dark`, `bg-tremor-background` is correct in
+both themes without a `dark:` variant. Tremor's own `dark:bg-dark-tremor-*`
+class names are also registered, so markup copied from the Tremor docs works
+unchanged.
+
 ## Usage in Components
 
-### Using CSS Variables
+### Preferred: Tremor tokens
 ```tsx
-<div className="bg-background text-foreground">
-  <button className="bg-primary text-primary-foreground">
-    Click me
-  </button>
+<div className="rounded-tremor-default bg-tremor-background p-6 shadow-tremor-card ring-1 ring-tremor-ring">
+  <p className="text-tremor-default text-tremor-content">Reports run</p>
+  <p className="text-tremor-metric font-semibold text-tremor-content-strong">12,480</p>
 </div>
 ```
 
-### Using Tailwind Classes
+### Also valid: semantic aliases
 ```tsx
-<div className="bg-background text-foreground dark:bg-black dark:text-white">
-  Content
+<div className="bg-card text-foreground">
+  <button className="bg-primary text-primary-foreground">Click me</button>
 </div>
 ```
+
+Note: `cn()` in `src/lib/utils.ts` registers the Tremor font-size, radius and
+shadow scales with `tailwind-merge`. Without that registration `tailwind-merge`
+would read `text-tremor-metric` as a colour class and drop it — do not swap `cn`
+for a plain `twMerge`.
 
 ## Implementation Details
 
@@ -193,7 +211,7 @@ Modify `src/styles/globals.css`:
   }
 
   .brand-theme {
-    /* Custom brand theme */
+    /* Override the --tremor-* tokens for a custom brand */
   }
 }
 ```

@@ -90,11 +90,7 @@ export function describeCron(cron: string): string {
   return map[cron] ?? cron;
 }
 
-function formatThreshold(
-  operator: string,
-  value: number,
-  upperBound?: number | null
-): string {
+function formatThreshold(operator: string, value: number, upperBound?: number | null): string {
   const fmt = (n: number) => n.toLocaleString();
   switch (operator) {
     case "lt":
@@ -119,23 +115,19 @@ function formatThreshold(
 function StatusBadge({ status }: { status: MonitoringRule["status"] }) {
   if (status === "active") {
     return (
-      <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-100">
+      <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100">
         Active
       </Badge>
     );
   }
   if (status === "paused") {
     return (
-      <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100">
+      <Badge className="bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-100">
         Paused
       </Badge>
     );
   }
-  return (
-    <Badge className="bg-red-100 text-red-800 border-red-200 hover:bg-red-100">
-      Error
-    </Badge>
-  );
+  return <Badge className="bg-red-100 text-red-800 border-red-200 hover:bg-red-100">Error</Badge>;
 }
 
 function SkeletonRows() {
@@ -165,22 +157,14 @@ export function MonitoringRuleList() {
   const { data, isLoading } = useQuery<MonitoringRulesResponse>({
     queryKey: ["monitoring-rules", page, pageSize],
     queryFn: async () => {
-      const res = await fetch(
-        `/api/monitoring/rules?page=${page}&pageSize=${pageSize}`
-      );
+      const res = await fetch(`/api/monitoring/rules?page=${page}&pageSize=${pageSize}`);
       if (!res.ok) throw new Error("Failed to fetch monitoring rules");
       return res.json();
     },
   });
 
   const toggleMutation = useMutation({
-    mutationFn: async ({
-      id,
-      action,
-    }: {
-      id: string;
-      action: "pause" | "resume";
-    }) => {
+    mutationFn: async ({ id, action }: { id: string; action: "pause" | "resume" }) => {
       const res = await fetch(`/api/monitoring/rules/${id}?action=${action}`, {
         method: "PATCH",
       });
@@ -223,7 +207,9 @@ export function MonitoringRuleList() {
         method: "PATCH",
       });
       if (!res.ok) throw new Error("Failed to run rule");
-      return res.json() as Promise<{ result: { status: string; metricValue?: number | null; error?: string } }>;
+      return res.json() as Promise<{
+        result: { status: string; metricValue?: number | null; error?: string };
+      }>;
     },
     onSuccess: (data, id) => {
       const { result } = data;
@@ -301,9 +287,7 @@ export function MonitoringRuleList() {
                   <TableCell className="text-muted-foreground text-sm">
                     {rule.data_source_name ?? rule.data_source_id}
                   </TableCell>
-                  <TableCell className="font-mono text-sm">
-                    {rule.metric_column}
-                  </TableCell>
+                  <TableCell className="font-mono text-sm">{rule.metric_column}</TableCell>
                   <TableCell className="text-sm">
                     {formatThreshold(
                       rule.threshold_operator,
@@ -321,9 +305,7 @@ export function MonitoringRuleList() {
                     {rule.last_run_at ? formatDateTime(rule.last_run_at) : "—"}
                   </TableCell>
                   <TableCell className="text-sm">
-                    {rule.last_metric_value != null
-                      ? rule.last_metric_value.toLocaleString()
-                      : "—"}
+                    {rule.last_metric_value != null ? rule.last_metric_value.toLocaleString() : "—"}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-end gap-1">
@@ -363,13 +345,10 @@ export function MonitoringRuleList() {
                         onClick={() =>
                           toggleMutation.mutate({
                             id: rule.id,
-                            action:
-                              rule.status === "active" ? "pause" : "resume",
+                            action: rule.status === "active" ? "pause" : "resume",
                           })
                         }
-                        title={
-                          rule.status === "active" ? "Pause rule" : "Resume rule"
-                        }
+                        title={rule.status === "active" ? "Pause rule" : "Resume rule"}
                       >
                         {rule.status === "active" ? (
                           <Pause className="h-4 w-4" />
@@ -398,8 +377,7 @@ export function MonitoringRuleList() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between pt-2">
           <p className="text-sm text-muted-foreground">
-            Showing {page * pageSize + 1}–
-            {Math.min((page + 1) * pageSize, total)} of {total}
+            Showing {page * pageSize + 1}–{Math.min((page + 1) * pageSize, total)} of {total}
           </p>
           <div className="flex gap-2">
             <Button
@@ -434,13 +412,9 @@ export function MonitoringRuleList() {
               <History className="h-5 w-5" />
               Execution History
             </DialogTitle>
-            <DialogDescription>
-              Recent executions for this monitoring rule
-            </DialogDescription>
+            <DialogDescription>Recent executions for this monitoring rule</DialogDescription>
           </DialogHeader>
-          {historyRuleId && (
-            <ExecutionHistoryTable ruleId={historyRuleId} />
-          )}
+          {historyRuleId && <ExecutionHistoryTable ruleId={historyRuleId} />}
         </DialogContent>
       </Dialog>
 
@@ -453,10 +427,7 @@ export function MonitoringRuleList() {
         />
       )}
 
-      <Dialog
-        open={deleteRuleId !== null}
-        onOpenChange={(open) => !open && setDeleteRuleId(null)}
-      >
+      <Dialog open={deleteRuleId !== null} onOpenChange={(open) => !open && setDeleteRuleId(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -464,9 +435,8 @@ export function MonitoringRuleList() {
               Delete Monitoring Rule
             </DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete{" "}
-              <strong>{ruleToDelete?.name}</strong>? This will also remove all
-              execution history. This action cannot be undone.
+              Are you sure you want to delete <strong>{ruleToDelete?.name}</strong>? This will also
+              remove all execution history. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

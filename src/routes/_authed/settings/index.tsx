@@ -1,5 +1,5 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { Bell, Database, Mail, Palette, Users as UsersIcon } from "lucide-react";
+import { Bell, Database, Mail, Palette, SwatchBook, Users as UsersIcon } from "lucide-react";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const Route = createFileRoute("/_authed/settings/")({
@@ -50,7 +50,7 @@ function SettingsPage() {
           </CardHeader>
         </Card>
 
-        <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
+        <Card className="hover:bg-tremor-background-muted transition-colors cursor-pointer">
           <Link to="/settings/ui">
             <CardHeader>
               <div className="flex items-center gap-2">
@@ -58,6 +58,20 @@ function SettingsPage() {
                 <CardTitle>UI Settings</CardTitle>
               </div>
               <CardDescription>Configure table display and appearance</CardDescription>
+            </CardHeader>
+          </Link>
+        </Card>
+
+        <Card className="hover:bg-tremor-background-muted transition-colors cursor-pointer">
+          <Link to="/settings/design-system">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <SwatchBook className="h-5 w-5" />
+                <CardTitle>Design System</CardTitle>
+              </div>
+              <CardDescription>
+                Tremor tokens and components as they render in this application
+              </CardDescription>
             </CardHeader>
           </Link>
         </Card>

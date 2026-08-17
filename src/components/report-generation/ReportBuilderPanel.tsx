@@ -47,11 +47,12 @@ export function ReportBuilderPanel() {
   useCopilotReadable({
     description: "Available data sources the user can generate reports from",
     value: {
-      dataSources: dataSources?.dataSources?.map((ds: any) => ({
-        id: ds.id,
-        name: ds.name,
-        type: ds.type,
-      })) ?? [],
+      dataSources:
+        dataSources?.dataSources?.map((ds: any) => ({
+          id: ds.id,
+          name: ds.name,
+          type: ds.type,
+        })) ?? [],
       currentPhase: state.phase,
       hasPreview: !!state.previewRows,
     },
@@ -61,7 +62,8 @@ export function ReportBuilderPanel() {
 
   useCopilotAction({
     name: "buildReport",
-    description: "Analyze a natural language report request and show a data preview. Use this when the user describes a report they want.",
+    description:
+      "Analyze a natural language report request and show a data preview. Use this when the user describes a report they want.",
     parameters: [
       {
         name: "query",
@@ -140,7 +142,8 @@ export function ReportBuilderPanel() {
 
   useCopilotAction({
     name: "confirmReport",
-    description: "Confirm and generate the previewed report. Only use after buildReport has shown a preview.",
+    description:
+      "Confirm and generate the previewed report. Only use after buildReport has shown a preview.",
     parameters: [
       {
         name: "title",
@@ -243,7 +246,8 @@ export function ReportBuilderPanel() {
 
   useCopilotAction({
     name: "listReports",
-    description: "List previously generated reports. Use when the user asks about past reports or report history.",
+    description:
+      "List previously generated reports. Use when the user asks about past reports or report history.",
     parameters: [
       {
         name: "since",
@@ -371,8 +375,9 @@ export function ReportBuilderPanel() {
                 <div className="text-center space-y-1">
                   <p className="text-lg font-medium">No report in progress</p>
                   <p className="text-sm text-muted-foreground max-w-md">
-                    Use the chat panel to describe the report you want. For example:
-                    "Generate a monthly summary of patient admissions by department for Q1 2026 as a PDF with a bar chart."
+                    Use the chat panel to describe the report you want. For example: "Generate a
+                    monthly summary of patient admissions by department for Q1 2026 as a PDF with a
+                    bar chart."
                   </p>
                 </div>
               </CardContent>
@@ -403,15 +408,21 @@ export function ReportBuilderPanel() {
           {state.phase === "complete" && (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-16 space-y-4">
-                <div className="rounded-full bg-green-100 p-6">
-                  <Download className="h-10 w-10 text-green-600" />
+                <div className="rounded-full bg-emerald-100 p-6">
+                  <Download className="h-10 w-10 text-emerald-600" />
                 </div>
                 <p className="text-lg font-medium">Report Generated Successfully</p>
                 <p className="text-sm text-muted-foreground">
                   Check the History tab or your notifications for download links.
                   {state.intent?.recipients?.length ? " Email has been sent to recipients." : ""}
                 </p>
-                <Button variant="outline" onClick={() => { setState({ phase: "idle" }); setActiveTab("history"); }}>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setState({ phase: "idle" });
+                    setActiveTab("history");
+                  }}
+                >
                   View History
                 </Button>
               </CardContent>
@@ -443,12 +454,12 @@ function PhaseIndicator({ phase }: { phase: ReportBuilderState["phase"] }) {
   const labels: Record<string, { text: string; color: string }> = {
     idle: { text: "Ready", color: "bg-gray-100 text-gray-600" },
     classifying: { text: "Analyzing...", color: "bg-blue-100 text-blue-600" },
-    rbac_check: { text: "Checking access...", color: "bg-yellow-100 text-yellow-600" },
+    rbac_check: { text: "Checking access...", color: "bg-amber-100 text-amber-600" },
     generating_sql: { text: "Generating SQL...", color: "bg-blue-100 text-blue-600" },
-    preview_ready: { text: "Preview Ready", color: "bg-green-100 text-green-600" },
+    preview_ready: { text: "Preview Ready", color: "bg-emerald-100 text-emerald-600" },
     confirmed: { text: "Confirmed", color: "bg-blue-100 text-blue-600" },
-    generating: { text: "Generating...", color: "bg-purple-100 text-purple-600" },
-    complete: { text: "Complete", color: "bg-green-100 text-green-600" },
+    generating: { text: "Generating...", color: "bg-violet-100 text-violet-600" },
+    complete: { text: "Complete", color: "bg-emerald-100 text-emerald-600" },
     error: { text: "Error", color: "bg-red-100 text-red-600" },
   };
 

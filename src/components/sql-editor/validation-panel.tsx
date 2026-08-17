@@ -22,7 +22,7 @@ export function ValidationPanel({ validation, className }: ValidationPanelProps)
       {/* Status indicator */}
       <div className="flex items-center gap-2">
         {validation.isValid ? (
-          <div className="flex items-center gap-1 text-green-600">
+          <div className="flex items-center gap-1 text-emerald-600">
             <CheckCircle className="h-4 w-4" />
             <span className="text-sm font-medium">Valid SQL</span>
           </div>
@@ -34,7 +34,7 @@ export function ValidationPanel({ validation, className }: ValidationPanelProps)
         )}
 
         {hasWarnings && (
-          <div className="flex items-center gap-1 text-yellow-600">
+          <div className="flex items-center gap-1 text-amber-600">
             <AlertTriangle className="h-4 w-4" />
             <span className="text-sm">
               {validation.warnings.length} warning
@@ -96,13 +96,13 @@ function WarningItem({ warning }: { warning: SQLWarning }) {
       case "style":
         return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
       default:
-        return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
+        return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
     }
   };
 
   return (
-    <div className="flex items-start gap-2 p-2 rounded-md bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-900/30">
-      <AlertTriangle className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+    <div className="flex items-start gap-2 p-2 rounded-md bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-900/30">
+      <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
       <div className="flex-1">
         <div className="flex items-center gap-2">
           <span
@@ -111,7 +111,7 @@ function WarningItem({ warning }: { warning: SQLWarning }) {
             {warning.type}
           </span>
         </div>
-        <p className="text-sm text-yellow-700 dark:text-yellow-400 mt-1">{warning.message}</p>
+        <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">{warning.message}</p>
       </div>
     </div>
   );

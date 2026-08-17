@@ -55,9 +55,9 @@ export function WarningBanner({ warning, onDismiss, onAction, actionLabel }: War
     warning: {
       icon: AlertTriangle,
       variant: "default" as const,
-      iconColor: "text-yellow-500",
-      bgColor: "bg-yellow-50 dark:bg-yellow-950/20",
-      borderColor: "border-yellow-200 dark:border-yellow-900/30",
+      iconColor: "text-amber-500",
+      bgColor: "bg-amber-50 dark:bg-amber-950/20",
+      borderColor: "border-amber-200 dark:border-amber-900/30",
     },
     critical: {
       icon: AlertTriangle,
@@ -84,7 +84,7 @@ export function WarningBanner({ warning, onDismiss, onAction, actionLabel }: War
             warning.severity === "critical"
               ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
               : warning.severity === "warning"
-                ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+                ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
                 : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
           }`}
         >

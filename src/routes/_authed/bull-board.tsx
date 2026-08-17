@@ -31,14 +31,14 @@ const TRIGGER_TASKS = [
     label: "Data Export",
     description: "Exports query results to files",
     icon: Activity,
-    color: "text-green-500",
+    color: "text-emerald-500",
   },
   {
     id: "email:batch",
     label: "Email Batch",
     description: "Sends batch emails with attachments",
     icon: Mail,
-    color: "text-purple-500",
+    color: "text-violet-500",
   },
   {
     id: "scheduled:refresh",
@@ -50,11 +50,13 @@ const TRIGGER_TASKS = [
 ];
 
 function QueueManagementPage() {
-  const triggerApiUrl = typeof window !== "undefined"
-    ? undefined
-    : process.env.TRIGGER_API_URL;
+  const triggerApiUrl = typeof window !== "undefined" ? undefined : process.env.TRIGGER_API_URL;
 
-  const { data: jobs = [], isLoading, refetch } = useQuery({
+  const {
+    data: jobs = [],
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["job-definitions"],
     queryFn: async () => {
       const res = await fetch("/api/jobs?pageSize=50");
@@ -73,9 +75,7 @@ function QueueManagementPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Queue Management</h1>
-          <p className="text-sm text-muted-foreground">
-            Background jobs powered by Trigger.dev
-          </p>
+          <p className="text-sm text-muted-foreground">Background jobs powered by Trigger.dev</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => refetch()}>
@@ -84,11 +84,7 @@ function QueueManagementPage() {
           </Button>
           {process.env.TRIGGER_API_URL && (
             <Button variant="outline" size="sm" asChild>
-              <a
-                href={process.env.TRIGGER_API_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <a href={process.env.TRIGGER_API_URL} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Trigger.dev Dashboard
               </a>
@@ -148,9 +144,7 @@ function QueueManagementPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground text-sm">
-              Loading jobs...
-            </div>
+            <div className="text-center py-8 text-muted-foreground text-sm">Loading jobs...</div>
           ) : scheduledJobs.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground text-sm">
               No scheduled jobs configured. Create one from the Jobs page.
@@ -163,11 +157,12 @@ function QueueManagementPage() {
                   className="flex items-center justify-between p-3 border rounded-lg"
                 >
                   <div className="flex items-center gap-3">
-                    <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
                     <div>
                       <p className="text-sm font-medium">{job.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {job.job_type} · cron: <span className="font-mono">{job.schedule_cron}</span>
+                        {job.job_type} · cron:{" "}
+                        <span className="font-mono">{job.schedule_cron}</span>
                       </p>
                     </div>
                   </div>
@@ -186,7 +181,9 @@ function QueueManagementPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">All Job Definitions</CardTitle>
-            <CardDescription>{activeJobs.length} active job definition{activeJobs.length !== 1 ? "s" : ""}</CardDescription>
+            <CardDescription>
+              {activeJobs.length} active job definition{activeJobs.length !== 1 ? "s" : ""}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -224,7 +221,8 @@ function QueueManagementPage() {
             >
               Trigger.dev dashboard
             </a>
-            . For local development, set <span className="font-mono">TRIGGER_API_URL</span> to your Mastra.ai server.
+            . For local development, set <span className="font-mono">TRIGGER_API_URL</span> to your
+            Mastra.ai server.
           </p>
         </CardContent>
       </Card>

@@ -106,7 +106,9 @@ export function NLMonitoringCreator({ onSuccess, onCancel }: Props) {
       const data = await res.json();
       if (!res.ok || !data.success) {
         if (data.clarificationNeeded) {
-          throw new Error(data.clarificationPrompt ?? "Please provide more detail about what you want to monitor.");
+          throw new Error(
+            data.clarificationPrompt ?? "Please provide more detail about what you want to monitor."
+          );
         }
         throw new Error(data.error ?? data.error?.message ?? "Failed to analyze intent");
       }
@@ -128,7 +130,11 @@ export function NLMonitoringCreator({ onSuccess, onCancel }: Props) {
       setThresholdUpper(intent.threshold_upper_bound);
       setScheduleCron(intent.schedule_cron ?? "0 8 * * 1");
       if (preview?.alertChannels?.length) {
-        setAlertChannels(preview.alertChannels.filter((c: string): c is AlertChannel => ["email", "in_app", "webhook"].includes(c)));
+        setAlertChannels(
+          preview.alertChannels.filter((c: string): c is AlertChannel =>
+            ["email", "in_app", "webhook"].includes(c)
+          )
+        );
       }
       setStep(2);
     } catch (e) {
@@ -180,17 +186,15 @@ export function NLMonitoringCreator({ onSuccess, onCancel }: Props) {
 
   function toggleChannel(channel: AlertChannel) {
     setAlertChannels((prev) =>
-      prev.includes(channel)
-        ? prev.filter((c) => c !== channel)
-        : [...prev, channel]
+      prev.includes(channel) ? prev.filter((c) => c !== channel) : [...prev, channel]
     );
   }
 
   if (step === 3 && successResult) {
     return (
       <div className="flex flex-col items-center justify-center py-12 space-y-6 text-center">
-        <div className="rounded-full bg-green-100 p-5">
-          <CheckCircle2 className="h-12 w-12 text-green-600" />
+        <div className="rounded-full bg-emerald-100 p-5">
+          <CheckCircle2 className="h-12 w-12 text-emerald-600" />
         </div>
         <div className="space-y-2">
           <h2 className="text-xl font-semibold">Monitoring rule created!</h2>
@@ -203,9 +207,7 @@ export function NLMonitoringCreator({ onSuccess, onCancel }: Props) {
             </p>
           )}
         </div>
-        <Button onClick={() => onSuccess(successResult)}>
-          View All Rules
-        </Button>
+        <Button onClick={() => onSuccess(successResult)}>View All Rules</Button>
       </div>
     );
   }
@@ -228,7 +230,9 @@ export function NLMonitoringCreator({ onSuccess, onCancel }: Props) {
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="rule-name" className="text-sm font-medium">Rule Name</Label>
+          <Label htmlFor="rule-name" className="text-sm font-medium">
+            Rule Name
+          </Label>
           <input
             id="rule-name"
             value={ruleName}
@@ -241,9 +245,7 @@ export function NLMonitoringCreator({ onSuccess, onCancel }: Props) {
           <Label className="text-sm font-medium">Detected Intent</Label>
           <div className="flex flex-wrap gap-2">
             {(parsedIntent.metric || metricColumn) && (
-              <Badge variant="secondary">
-                Metric: {parsedIntent.metric || metricColumn}
-              </Badge>
+              <Badge variant="secondary">Metric: {parsedIntent.metric || metricColumn}</Badge>
             )}
             {parsedIntent.threshold_operator && (
               <Badge variant="secondary">
@@ -297,9 +299,7 @@ export function NLMonitoringCreator({ onSuccess, onCancel }: Props) {
             placeholder="e.g. 0 8 * * 1"
             className="font-mono"
           />
-          <p className="text-xs text-muted-foreground">
-            {describeCron(scheduleCron)}
-          </p>
+          <p className="text-xs text-muted-foreground">{describeCron(scheduleCron)}</p>
         </div>
 
         <div className="space-y-2">
@@ -312,11 +312,10 @@ export function NLMonitoringCreator({ onSuccess, onCancel }: Props) {
                   checked={alertChannels.includes(ch)}
                   onCheckedChange={() => toggleChannel(ch)}
                 />
-                <Label
-                  htmlFor={`channel-${ch}`}
-                  className="font-normal capitalize cursor-pointer"
-                >
-                  {ch === "in_app" ? "In-App Notification" : ch.charAt(0).toUpperCase() + ch.slice(1)}
+                <Label htmlFor={`channel-${ch}`} className="font-normal capitalize cursor-pointer">
+                  {ch === "in_app"
+                    ? "In-App Notification"
+                    : ch.charAt(0).toUpperCase() + ch.slice(1)}
                 </Label>
               </div>
             ))}
@@ -324,18 +323,10 @@ export function NLMonitoringCreator({ onSuccess, onCancel }: Props) {
         </div>
 
         <div className="flex gap-3 pt-2">
-          <Button
-            variant="outline"
-            onClick={() => setStep(1)}
-            disabled={createLoading}
-          >
+          <Button variant="outline" onClick={() => setStep(1)} disabled={createLoading}>
             Back
           </Button>
-          <Button
-            onClick={handleCreate}
-            disabled={createLoading}
-            className="flex-1"
-          >
+          <Button onClick={handleCreate} disabled={createLoading} className="flex-1">
             {createLoading ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -406,9 +397,7 @@ export function NLMonitoringCreator({ onSuccess, onCancel }: Props) {
               dataSources.map((ds) => (
                 <SelectItem key={ds.id} value={ds.id}>
                   <span className="font-medium">{ds.name}</span>
-                  <span className="text-muted-foreground ml-2 text-xs">
-                    ({ds.client_type})
-                  </span>
+                  <span className="text-muted-foreground ml-2 text-xs">({ds.client_type})</span>
                 </SelectItem>
               ))
             )}
