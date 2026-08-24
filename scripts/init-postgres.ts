@@ -472,6 +472,38 @@ try {
     await client.query(table);
   }
 
+  // Enable pgvector and create RAG embedding tables
+  await client.query(`CREATE EXTENSION IF NOT EXISTS vector`);
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS nl_query_embeddings (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      data_source_id TEXT NOT NULL,
+      natural_language_query TEXT NOT NULL,
+      generated_sql TEXT NOT NULL,
+      explanation TEXT,
+      query_hash TEXT NOT NULL,
+      embedding vector(384) NOT NULL,
+      row_count INTEGER,
+      execution_time_ms INTEGER,
+      success BOOLEAN NOT NULL DEFAULT true,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE (data_source_id, query_hash)
+    )
+  `);
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS nl_schema_embeddings (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      data_source_id TEXT NOT NULL,
+      table_name TEXT NOT NULL,
+      schema_text TEXT NOT NULL,
+      sample_data JSONB,
+      embedding vector(384) NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE (data_source_id, table_name)
+    )
+  `);
+
   console.log("Creating indexes...");
 
   // Create indexes
