@@ -21,6 +21,6 @@ export default defineConfig({
     },
   },
   ssr: {
-    noExternal: ['@tanstack/react-router', '@tanstack/react-start'],
+    noExternal: ['@tanstack/react-router', '@tanstack/react-start', /^@radix-ui/],
   },
 })
