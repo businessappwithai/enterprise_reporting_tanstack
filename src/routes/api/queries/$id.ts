@@ -60,7 +60,7 @@ export const Route = createFileRoute('/api/queries/$id')({
           }
 
           const sessionRoles: string[] = (session.user as any).roles ?? [];
-          const isAdmin = sessionRoles.some((r: string) => r.toLowerCase() === 'admin');
+          const isAdmin = sessionRoles.some((r: string) => r.toLowerCase().includes('admin'));
           if (!isAdmin && existingQuery.created_by !== session.user.id) {
             return json({ success: false, error: { message: 'Unauthorized' } }, { status: 403 })
           }
@@ -105,7 +105,7 @@ export const Route = createFileRoute('/api/queries/$id')({
           }
 
           const deleteRoles: string[] = (session.user as any).roles ?? [];
-          const isDeleteAdmin = deleteRoles.some((r: string) => r.toLowerCase() === 'admin');
+          const isDeleteAdmin = deleteRoles.some((r: string) => r.toLowerCase().includes('admin'));
           if (!isDeleteAdmin && existingQuery.created_by !== session.user.id) {
             return json({ success: false, error: { message: 'Unauthorized' } }, { status: 403 })
           }

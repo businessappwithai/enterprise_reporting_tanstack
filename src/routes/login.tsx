@@ -95,8 +95,7 @@ function LoginPage() {
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function doLogin() {
     const email = emailRef.current?.value ?? "";
     const password = passwordRef.current?.value ?? "";
     if (!email || !password) return;
@@ -105,7 +104,6 @@ function LoginPage() {
     setIsSubmitting(true);
     try {
       await loginFn({ data: { email, password } });
-      // Clear all cached queries so the new user gets fresh data (permissions, etc.)
       queryClient.clear();
       await navigate({ to: "/dashboard" });
     } catch (err: unknown) {
@@ -113,6 +111,10 @@ function LoginPage() {
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter") doLogin();
   }
 
   return (
@@ -128,45 +130,54 @@ function LoginPage() {
           <CardDescription>Sign in to your Enterprise Reporting account</CardDescription>
         </CardHeader>
 
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            {serverError && (
-              <Alert variant="destructive">
-                <AlertDescription>{serverError}</AlertDescription>
-              </Alert>
-            )}
+        <CardContent className="space-y-4">
+          {serverError && (
+            <Alert variant="destructive">
+              <AlertDescription>{serverError}</AlertDescription>
+            </Alert>
+          )}
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                ref={emailRef}
-                type="email"
-                placeholder="name@example.com"
-                required
-                disabled={isSubmitting}
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              name="email"
+              ref={emailRef}
+              type="email"
+              placeholder="name@example.com"
+              autoComplete="email"
+              required
+              disabled={isSubmitting}
+              onKeyDown={handleKeyDown}
+            />
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                ref={passwordRef}
-                type="password"
-                required
-                disabled={isSubmitting}
-              />
-            </div>
-          </CardContent>
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              name="password"
+              ref={passwordRef}
+              type="password"
+              autoComplete="current-password"
+              required
+              disabled={isSubmitting}
+              onKeyDown={handleKeyDown}
+            />
+          </div>
+        </CardContent>
 
-          <CardFooter>
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Sign In
-            </Button>
-          </CardFooter>
-        </form>
+        <CardFooter>
+          <Button
+            type="button"
+            className="w-full"
+            disabled={isSubmitting}
+            onClick={doLogin}
+          >
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Sign In
+          </Button>
+        </CardFooter>
       </Card>
     </div>
   );

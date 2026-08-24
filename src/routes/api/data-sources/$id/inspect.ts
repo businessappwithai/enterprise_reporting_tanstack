@@ -43,7 +43,7 @@ export const Route = createFileRoute("/api/data-sources/$id/inspect")({
 
           // Allow owner or admins to inspect
           const userRoles: string[] = session.user.roles || [];
-          const isAdmin = userRoles.some((r) => r.toLowerCase() === "admin");
+          const isAdmin = userRoles.some((r) => r.toLowerCase().includes('admin'));
           const isOwner = dataSource.created_by === session.user.id;
 
           if (!isAdmin && !isOwner) {

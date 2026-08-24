@@ -669,7 +669,7 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
     .select(db.fn.count<number>("id").as("count"))
     .executeTakeFirst();
 
-  if (!userCount || userCount.count === 0) {
+  if (!userCount || Number(userCount.count) === 0) {
     await db
       .insertInto("users")
       .values({

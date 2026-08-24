@@ -31,7 +31,7 @@ export const Route = createFileRoute("/api/monitoring/rules/$id/executions")({
           const pageSize = Math.min(100, Math.max(1, parseInt(url.searchParams.get("pageSize") ?? "20", 10)));
 
           const db = getDb();
-          const isAdmin = session.user.roles.some((r: string) => r.toLowerCase() === "admin");
+          const isAdmin = session.user.roles.some((r: string) => r.toLowerCase().includes('admin'));
 
           const rule = await (db as any)
             .selectFrom("monitoring_rules")

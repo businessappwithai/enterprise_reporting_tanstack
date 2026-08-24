@@ -56,7 +56,7 @@ export const Route = createFileRoute("/api/monitoring/rules")({
           const page = Math.max(0, parseInt(url.searchParams.get("page") ?? "0", 10));
           const pageSize = Math.min(100, Math.max(1, parseInt(url.searchParams.get("pageSize") ?? "20", 10)));
           const statusFilter = url.searchParams.get("status") ?? "active";
-          const isAdmin = session.user.roles.some((r: string) => r.toLowerCase() === "admin");
+          const isAdmin = session.user.roles.some((r: string) => r.toLowerCase().includes('admin'));
           const db = getDb();
 
           let query = (db as any)

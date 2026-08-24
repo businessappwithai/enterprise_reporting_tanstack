@@ -46,7 +46,7 @@ export const Route = createFileRoute("/api/monitoring/rules/$id")({
           if (!session?.user) return json({ error: "Unauthorized" }, { status: 401 });
           const { id } = params;
           const db = getDb();
-          const isAdmin = session.user.roles.some((r: string) => r.toLowerCase() === "admin");
+          const isAdmin = session.user.roles.some((r: string) => r.toLowerCase().includes('admin'));
 
           const rule = await (db as any)
             .selectFrom("monitoring_rules")
@@ -68,7 +68,7 @@ export const Route = createFileRoute("/api/monitoring/rules/$id")({
           if (!session?.user) return json({ error: "Unauthorized" }, { status: 401 });
           const { id } = params;
           const db = getDb();
-          const isAdmin = session.user.roles.some((r: string) => r.toLowerCase() === "admin");
+          const isAdmin = session.user.roles.some((r: string) => r.toLowerCase().includes('admin'));
 
           const existing = await (db as any)
             .selectFrom("monitoring_rules").where("id", "=", id).selectAll().executeTakeFirst() as Record<string, unknown> | undefined;
@@ -120,7 +120,7 @@ export const Route = createFileRoute("/api/monitoring/rules/$id")({
           if (!session?.user) return json({ error: "Unauthorized" }, { status: 401 });
           const { id } = params;
           const db = getDb();
-          const isAdmin = session.user.roles.some((r: string) => r.toLowerCase() === "admin");
+          const isAdmin = session.user.roles.some((r: string) => r.toLowerCase().includes('admin'));
 
           const rule = await (db as any)
             .selectFrom("monitoring_rules").where("id", "=", id).selectAll().executeTakeFirst() as Record<string, unknown> | undefined;
@@ -155,7 +155,7 @@ export const Route = createFileRoute("/api/monitoring/rules/$id")({
           const url = new URL(request.url);
           const action = url.searchParams.get("action");
           const db = getDb();
-          const isAdmin = session.user.roles.some((r: string) => r.toLowerCase() === "admin");
+          const isAdmin = session.user.roles.some((r: string) => r.toLowerCase().includes('admin'));
 
           const rule = await (db as any)
             .selectFrom("monitoring_rules").where("id", "=", id).selectAll().executeTakeFirst() as Record<string, unknown> | undefined;

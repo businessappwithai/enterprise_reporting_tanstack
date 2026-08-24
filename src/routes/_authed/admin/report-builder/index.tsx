@@ -7,7 +7,7 @@ import { NlBuilderPanel } from "@/components/admin/NlBuilderPanel";
 export const Route = createFileRoute("/_authed/admin/report-builder/")({
   beforeLoad: ({ context }) => {
     const roles: string[] = (context as { session?: { user?: { roles?: string[] } } }).session?.user?.roles ?? [];
-    const isAdmin = roles.some((r) => r.toLowerCase() === "admin");
+    const isAdmin = roles.some((r) => r.toLowerCase().includes("admin"));
     if (!isAdmin) throw redirect({ to: "/dashboard" });
   },
   component: NlReportBuilderPage,

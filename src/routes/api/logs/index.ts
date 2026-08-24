@@ -87,7 +87,7 @@ export const Route = createFileRoute("/api/logs/")({
 
           // Determine admin status from session roles (roles are stored as strings)
           const sessionRoles: string[] = (session.user as any).roles ?? [];
-          const isAdmin = sessionRoles.some((r) => r.toLowerCase() === "admin");
+          const isAdmin = sessionRoles.some((r) => r.toLowerCase().includes('admin'));
 
           // Non-admins can only see their own logs
           const filterByUserId = userId && isAdmin ? userId : session.user.id;
