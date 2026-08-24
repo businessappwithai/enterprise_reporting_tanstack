@@ -43,6 +43,10 @@ import { formatDateTime } from "@/lib/utils";
 import type { DataSource } from "@/types/database";
 import { PageHeader } from "@/components/layout/page-header";
 
+import { CopilotKit } from "@copilotkit/react-core";
+import { CopilotSidebar } from "@copilotkit/react-ui";
+import { useCopilotAction, useCopilotReadable } from "@copilotkit/react-core";
+import "@copilotkit/react-ui/styles.css";
 export const Route = createFileRoute("/_authed/data-sources/")({
   component: DataSourcesPage,
 });
@@ -77,7 +81,7 @@ function buildConnectionConfig(state: ConnectionFormState) {
   };
 }
 
-function DataSourcesPage() {
+function DataSourcesContent() {
   const queryClient = useQueryClient();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -380,7 +384,96 @@ function DataSourcesPage() {
   };
   const testDisabled = isTestConnectionDisabled({ state: formState, testing: testingConnection });
 
+
+  // ── CopilotKit ─────────────────────────────────────────────────────────
+  useCopilotReadable({
+    description: "Current data source connections configured in the system",
+    value: (dataSources ?? []).map((ds) => ({
+      id: ds.id,
+      name: ds.name,
+      type: ds.client_type,
+      isActive: ds.is_active,
+      isInspected: ds.is_inspected,
+      lastInspectedAt: ds.last_inspected_at,
+    })),
+  });
+
+  useCopilotAction({
+    name: "openAddDataSourceForm",
+    description: "Open the Add Data Source dialog, optionally pre-explaining what fields to fill in for a specific database type.",
+    parameters: [
+      { name: "dbType", type: "string", description: "Database type: pg (PostgreSQL), mysql (MySQL/MariaDB), mssql (SQL Server), sqlite3", required: false },
+      { name: "host", type: "string", description: "Database host", required: false },
+      { name: "port", type: "string", description: "Database port", required: false },
+      { name: "database", type: "string", description: "Database name", required: false },
+      { name: "user", type: "string", description: "Database username", required: false },
+    ],
+    handler: async ({ dbType, host, port, database, user }) => {
+      setCreateDialogOpen(true);
+      if (dbType) {
+        setFormState((prev) => ({
+          ...prev,
+          clientType: (dbType as ConnectionFormState["clientType"]) || prev.clientType,
+          host: host || prev.host,
+          port: port || prev.port,
+          database: database || prev.database,
+          user: user || prev.user,
+        }));
+      }
+      return `Add Data Source dialog opened${dbType ? ` with type set to ${dbType}` : ""}. Fill in the remaining fields and click Save.`;
+    },
+  });
+  useCopilotAction({
+    name: "explainDatabaseSetup",
+    description: "Explain what connection fields are required for a specific database type, and any tips for connecting.",
+    parameters: [
+      { name: "dbType", type: "string", description: "pg, mysql, mssql, or sqlite3", required: true },
+    ],
+    handler: async ({ dbType }) => {
+      const guides: Record<string, string> = {
+        pg: "PostgreSQL: host (e.g. localhost), port (5432), database name, user, password. For cloud (Supabase, Neon, RDS), use the connection string option.",
+        mysql: "MySQL/MariaDB: host, port (3306), database, user, password. Ensure the user has SELECT privileges on the target database.",
+        mssql: "SQL Server: host, port (1433), database, user, password. Use Windows Auth by leaving user/password empty if server allows it.",
+        sqlite3: "SQLite: upload the .db file using the file upload option. No host/user needed.",
+      };
+      return guides[dbType] || "Supported types: pg, mysql, mssql, sqlite3.";
+    },
+  });
+  useCopilotAction({
+    name: "inspectDataSource",
+    description: "Trigger schema inspection for a data source to update table/column metadata used by SQL editor and NL query.",
+    parameters: [
+      { name: "dataSourceId", type: "string", description: "ID of the data source to inspect", required: true },
+    ],
+    handler: async ({ dataSourceId }) => {
+      setInspectingDs(dataSourceId);
+      try {
+        const res = await fetch(`/api/data-sources/${dataSourceId}/inspect`, { method: "POST" });
+        const data = await res.json();
+        if (data.success) {
+          queryClient.invalidateQueries({ queryKey: ["data-sources"] });
+          return `Schema inspection complete for data source ${dataSourceId}. Tables and columns are now updated.`;
+        }
+        return `Inspection failed: ${data.error?.message || "Unknown error"}`;
+      } catch (err) {
+        return `Error: ${err instanceof Error ? err.message : String(err)}`;
+      } finally {
+        setInspectingDs(null);
+      }
+    },
+  });
+  // ────────────────────────────────────────────────────────────────────────
+
   return (
+    <CopilotSidebar
+      instructions='You are a database connection assistant. Help users connect and manage data sources.\n\nWORKFLOW:\n1. When a user wants to add a data source, call explainDatabaseSetup to tell them what fields they need, then openAddDataSourceForm with the pre-filled values.\n2. After a data source is added, suggest running inspectDataSource to load schema metadata.\n3. Answer questions about connection troubleshooting (firewall rules, credentials, SSL, etc.).\n\nTIPS:\n- PostgreSQL default port: 5432\n- MySQL default port: 3306\n- SQL Server default port: 1433\n- For cloud databases, recommend using the connection string option.'
+      defaultOpen={false}
+      labels={{
+        title: "Data Source Assistant",
+        initial: "I can help you connect a new database, troubleshoot connections, or explain what fields to fill in.",
+        placeholder: "e.g. How do I connect a PostgreSQL database on AWS RDS?",
+      }}
+    >
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <PageHeader title="Data Sources" description="Manage database connections for reports and queries" />
@@ -710,5 +803,15 @@ function DataSourcesPage() {
         </CardContent>
       </Card>
     </div>
+    </CopilotSidebar>
+  );
+}
+
+
+function DataSourcesPage() {
+  return (
+    <CopilotKit runtimeUrl="/api/copilotkit">
+      <DataSourcesContent />
+    </CopilotKit>
   );
 }

@@ -15,8 +15,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/layout/page-header";
 
+import { CopilotKit } from "@copilotkit/react-core";
+import { CopilotSidebar } from "@copilotkit/react-ui";
+import { useCopilotAction, useCopilotReadable } from "@copilotkit/react-core";
+import "@copilotkit/react-ui/styles.css";
+
 export const Route = createFileRoute("/_authed/trigger-board")({
-  component: QueueManagementPage,
+  component: TriggerBoardPage,
 });
 
 const TRIGGER_TASKS = [
@@ -50,14 +55,8 @@ const TRIGGER_TASKS = [
   },
 ];
 
-function QueueManagementPage() {
-  const triggerApiUrl = typeof window !== "undefined" ? undefined : process.env.TRIGGER_API_URL;
-
-  const {
-    data: jobs = [],
-    isLoading,
-    refetch,
-  } = useQuery({
+function QueueManagementContent() {
+  const { data: jobs = [], isLoading, refetch } = useQuery({
     queryKey: ["job-definitions"],
     queryFn: async () => {
       const res = await fetch("/api/jobs?pageSize=50");
@@ -71,20 +70,86 @@ function QueueManagementPage() {
   const activeJobs = jobs.filter((j: any) => j.is_active && !j.is_deleted);
   const scheduledJobs = activeJobs.filter((j: any) => j.schedule_cron);
 
+  useCopilotReadable({
+    description: "Registered Trigger.dev task types available in this application",
+    value: TRIGGER_TASKS.map((t) => ({ id: t.id, label: t.label, description: t.description })),
+  });
+
+  useCopilotReadable({
+    description: "Active scheduled job definitions",
+    value: scheduledJobs.map((j: any) => ({
+      id: j.id,
+      name: j.name,
+      type: j.job_type,
+      cron: j.schedule_cron,
+    })),
+  });
+
+  useCopilotAction({
+    name: "createScheduledJob",
+    description: "Create a new scheduled job definition. Ask the user for the job name, type (report:generate, data:export, email:batch, scheduled:refresh), and cron schedule if not provided.",
+    parameters: [
+      { name: "name", type: "string", description: "Job name", required: true },
+      { name: "jobType", type: "string", description: "Task type ID (e.g. report:generate, email:batch)", required: true },
+      { name: "cron", type: "string", description: "Cron schedule expression (e.g. '0 8 * * *' for daily 8am)", required: false },
+    ],
+    handler: async ({ name, jobType, cron }) => {
+      const res = await fetch("/api/jobs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, job_type: jobType, schedule_cron: cron || null, is_active: true }),
+      });
+      if (!res.ok) return `Failed to create job: HTTP ${res.status}`;
+      refetch();
+      return `Job "${name}" (${jobType}) created${cron ? ` with schedule: ${cron}` : " as on-demand"}.`;
+    },
+  });
+
+  useCopilotAction({
+    name: "explainTriggerTask",
+    description: "Explain what a registered Trigger.dev task type does and when to use it",
+    parameters: [
+      { name: "taskId", type: "string", description: "Task ID (e.g. report:generate)", required: true },
+    ],
+    handler: async ({ taskId }) => {
+      const task = TRIGGER_TASKS.find((t) => t.id === taskId);
+      if (!task) return `Unknown task ID: ${taskId}. Available: ${TRIGGER_TASKS.map((t) => t.id).join(", ")}`;
+      return `${task.label} (${task.id}): ${task.description}. This task runs in the background via Trigger.dev and can be scheduled with a cron expression or triggered on-demand.`;
+    },
+  });
+
+  useCopilotAction({
+    name: "explainCronSyntax",
+    description: "Explain cron schedule syntax and give examples for common patterns like daily, hourly, weekly",
+    parameters: [
+      { name: "pattern", type: "string", description: "Natural language pattern like 'daily', 'every Monday', 'hourly'", required: false },
+    ],
+    handler: async ({ pattern }) => {
+      const examples: Record<string, string> = {
+        daily: "0 8 * * * — every day at 8am",
+        hourly: "0 * * * * — every hour at :00",
+        weekly: "0 9 * * 1 — every Monday at 9am",
+        monthly: "0 0 1 * * — 1st of every month at midnight",
+        "every 15 minutes": "*/15 * * * * — every 15 minutes",
+      };
+      if (pattern && examples[pattern.toLowerCase()]) return examples[pattern.toLowerCase()];
+      return `Cron format: [minute] [hour] [day-of-month] [month] [day-of-week]\nExamples:\n${Object.values(examples).join("\n")}`;
+    },
+  });
+
   return (
+    <CopilotSidebar
+      instructions="You are a background job scheduling assistant for Trigger.dev.\nHelp users understand the registered task types, create scheduled jobs, and interpret cron schedules.\nWhen the user describes a job they want, call createScheduledJob with the appropriate task type and cron.\nIf they ask about cron syntax, call explainCronSyntax.\nAvailable task types: report:generate, data:export, email:batch, scheduled:refresh."
+      defaultOpen={false}
+      labels={{
+        title: "Trigger Board Assistant",
+        initial: "Ask me to schedule a job, explain a task type, or help with cron syntax.",
+        placeholder: "e.g. Schedule a daily report export at 7am…",
+      }}
+    >
     <div className="space-y-6">
-<<<<<<< HEAD:src/routes/_authed/bull-board.tsx
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <PageHeader title="Queue Management" description="Background jobs powered by Trigger.dev" />
-=======
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Trigger Board</h1>
-          <p className="text-sm text-muted-foreground">
-            Background jobs powered by Trigger.dev
-          </p>
-        </div>
->>>>>>> 9a15cb5 (feat: add CopilotKit NL assistant to 5 pages + rename Bull Board → Trigger Board):src/routes/_authed/trigger-board.tsx
+        <PageHeader title="Trigger Board" description="Background jobs powered by Trigger.dev" />
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => refetch()}>
             <RefreshCw className="h-4 w-4 mr-2" />
@@ -235,5 +300,14 @@ function QueueManagementPage() {
         </CardContent>
       </Card>
     </div>
+    </CopilotSidebar>
+  );
+}
+
+function TriggerBoardPage() {
+  return (
+    <CopilotKit runtimeUrl="/api/copilotkit">
+      <QueueManagementContent />
+    </CopilotKit>
   );
 }
