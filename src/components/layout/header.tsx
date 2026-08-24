@@ -56,7 +56,7 @@ export function Header({ user, onMobileMenuToggle, mobileMenuOpen }: HeaderProps
     queryKey: ["notifications", showReadNotifications],
     queryFn: async () => {
       try {
-        const result = await fetchNotificationsFn({ includeRead: showReadNotifications });
+        const result = await fetchNotificationsFn({ data: { includeRead: showReadNotifications } });
         if (!result.success) {
           if (result.error !== "Unauthorized") {
             console.warn("Failed to fetch notifications:", result.error);
@@ -79,7 +79,7 @@ export function Header({ user, onMobileMenuToggle, mobileMenuOpen }: HeaderProps
   // Mark as read mutation
   const markAsReadMutation = useMutation({
     mutationFn: async (id: string) => {
-      const result = await markNotificationAsReadFn({ id });
+      const result = await markNotificationAsReadFn({ data: { id } });
       if (!result.success) {
         throw new Error(result.error || "Failed to mark notification as read");
       }
@@ -112,7 +112,7 @@ export function Header({ user, onMobileMenuToggle, mobileMenuOpen }: HeaderProps
   // Delete notification mutation
   const deleteNotificationMutation = useMutation({
     mutationFn: async (id: string) => {
-      const result = await deleteNotificationFn({ id });
+      const result = await deleteNotificationFn({ data: { id } });
       if (!result.success) {
         throw new Error(result.error || "Failed to delete notification");
       }

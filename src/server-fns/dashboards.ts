@@ -21,7 +21,7 @@ import {
 import { withErrorHandler } from "@/lib/server-fns/with-error-handler";
 
 export const listDashboards = createServerFn({ method: "GET" })
-  .validator(paginationInputSchema)
+  .inputValidator(paginationInputSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(
       async () => {
@@ -64,7 +64,7 @@ export const listDashboards = createServerFn({ method: "GET" })
   });
 
 export const getDashboard = createServerFn({ method: "GET" })
-  .validator(getDashboardSchema)
+  .inputValidator(getDashboardSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(
       async () => {
@@ -98,7 +98,7 @@ export const getDashboard = createServerFn({ method: "GET" })
   });
 
 export const createDashboard = createServerFn({ method: "POST" })
-  .validator(createDashboardSchema)
+  .inputValidator(createDashboardSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(
       async () => {
@@ -161,7 +161,7 @@ export const createDashboard = createServerFn({ method: "POST" })
   });
 
 export const updateDashboard = createServerFn({ method: "PUT" })
-  .validator(updateDashboardSchema)
+  .inputValidator(updateDashboardSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(
       async () => {
@@ -218,7 +218,7 @@ export const updateDashboard = createServerFn({ method: "PUT" })
   });
 
 export const deleteDashboard = createServerFn({ method: "DELETE" })
-  .validator(getDashboardSchema)
+  .inputValidator(getDashboardSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(
       async () => {
@@ -252,7 +252,7 @@ export const deleteDashboard = createServerFn({ method: "DELETE" })
   });
 
 export const addWidget = createServerFn({ method: "POST" })
-  .validator(addWidgetSchema)
+  .inputValidator(addWidgetSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(
       async () => {
@@ -315,7 +315,7 @@ export const addWidget = createServerFn({ method: "POST" })
   });
 
 export const updateWidget = createServerFn({ method: "PUT" })
-  .validator(updateWidgetSchema)
+  .inputValidator(updateWidgetSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(
       async () => {
@@ -383,7 +383,7 @@ export const updateWidget = createServerFn({ method: "PUT" })
   });
 
 export const removeWidget = createServerFn({ method: "DELETE" })
-  .validator(removeWidgetSchema)
+  .inputValidator(removeWidgetSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(
       async () => {

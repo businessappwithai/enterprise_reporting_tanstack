@@ -42,7 +42,7 @@ export const listDataSources = createServerFn({ method: "GET" }).handler(async (
 });
 
 export const getDataSource = createServerFn({ method: "GET" })
-  .validator(z.object({ id: uuidSchema }))
+  .inputValidator(z.object({ id: uuidSchema }))
   .handler(async ({ data: input }) => {
     return withErrorHandler(
       async () => {
@@ -98,7 +98,7 @@ export const getDataSource = createServerFn({ method: "GET" })
   });
 
 export const createDataSource = createServerFn({ method: "POST" })
-  .validator(createDataSourceSchema)
+  .inputValidator(createDataSourceSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(
       async () => {
@@ -153,7 +153,7 @@ export const createDataSource = createServerFn({ method: "POST" })
   });
 
 export const updateDataSource = createServerFn({ method: "PUT" })
-  .validator(updateDataSourceSchema)
+  .inputValidator(updateDataSourceSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(
       async () => {
@@ -218,7 +218,7 @@ export const updateDataSource = createServerFn({ method: "PUT" })
   });
 
 export const deleteDataSource = createServerFn({ method: "DELETE" })
-  .validator(z.object({ id: uuidSchema }))
+  .inputValidator(z.object({ id: uuidSchema }))
   .handler(async ({ data: input }) => {
     return withErrorHandler(
       async () => {

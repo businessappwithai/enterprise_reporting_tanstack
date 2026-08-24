@@ -12,7 +12,7 @@ async function getSession() {
 }
 
 export const fetchNotificationsFn = createServerFn({ method: "GET" })
-  .validator((data: { includeRead?: boolean }) => data)
+  .inputValidator((data: { includeRead?: boolean }) => data)
   .handler(async ({ data: { includeRead = false } }) => {
     try {
       const session = await getSession();
@@ -44,7 +44,7 @@ export const fetchNotificationsFn = createServerFn({ method: "GET" })
   });
 
 export const markNotificationAsReadFn = createServerFn({ method: "POST" })
-  .validator((data: { id: string }) => data)
+  .inputValidator((data: { id: string }) => data)
   .handler(async ({ data: { id } }) => {
     try {
       const session = await getSession();
@@ -98,7 +98,7 @@ export const markAllNotificationsAsReadFn = createServerFn({ method: "POST" }).h
 );
 
 export const deleteNotificationFn = createServerFn({ method: "POST" })
-  .validator((data: { id: string }) => data)
+  .inputValidator((data: { id: string }) => data)
   .handler(async ({ data: { id } }) => {
     try {
       const session = await getSession();

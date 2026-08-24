@@ -21,7 +21,7 @@ import {
 import { withErrorHandler } from "@/lib/server-fns/with-error-handler";
 
 export const listCharts = createServerFn({ method: "GET" })
-  .validator(paginationInputSchema)
+  .inputValidator(paginationInputSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(
       async () => {
@@ -58,7 +58,7 @@ export const listCharts = createServerFn({ method: "GET" })
   });
 
 export const getChart = createServerFn({ method: "GET" })
-  .validator(getChartSchema)
+  .inputValidator(getChartSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(
       async () => {
@@ -92,7 +92,7 @@ export const getChart = createServerFn({ method: "GET" })
   });
 
 export const createChart = createServerFn({ method: "POST" })
-  .validator(createChartSchema)
+  .inputValidator(createChartSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(
       async () => {
@@ -154,7 +154,7 @@ export const createChart = createServerFn({ method: "POST" })
   });
 
 export const updateChart = createServerFn({ method: "PUT" })
-  .validator(updateChartSchema)
+  .inputValidator(updateChartSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(
       async () => {
@@ -212,7 +212,7 @@ export const updateChart = createServerFn({ method: "PUT" })
   });
 
 export const deleteChart = createServerFn({ method: "DELETE" })
-  .validator(getChartSchema)
+  .inputValidator(getChartSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(
       async () => {
