@@ -11,8 +11,9 @@ async function getSession() {
   return verifySession(token);
 }
 
-export const fetchNotificationsFn = createServerFn({ method: "GET" }).handler(
-  async ({ includeRead = false }: { includeRead?: boolean }) => {
+export const fetchNotificationsFn = createServerFn({ method: "GET" })
+  .validator((data: { includeRead?: boolean }) => data)
+  .handler(async ({ data: { includeRead = false } }) => {
     try {
       const session = await getSession();
       if (!session?.user) {
@@ -40,11 +41,11 @@ export const fetchNotificationsFn = createServerFn({ method: "GET" }).handler(
         error: error instanceof Error ? error.message : "Failed to fetch notifications",
       };
     }
-  }
-);
+  });
 
-export const markNotificationAsReadFn = createServerFn({ method: "POST" }).handler(
-  async ({ id }: { id: string }) => {
+export const markNotificationAsReadFn = createServerFn({ method: "POST" })
+  .validator((data: { id: string }) => data)
+  .handler(async ({ data: { id } }) => {
     try {
       const session = await getSession();
       if (!session?.user) {
@@ -67,8 +68,7 @@ export const markNotificationAsReadFn = createServerFn({ method: "POST" }).handl
         error: error instanceof Error ? error.message : "Failed to update notification",
       };
     }
-  }
-);
+  });
 
 export const markAllNotificationsAsReadFn = createServerFn({ method: "POST" }).handler(
   async () => {
@@ -97,8 +97,9 @@ export const markAllNotificationsAsReadFn = createServerFn({ method: "POST" }).h
   }
 );
 
-export const deleteNotificationFn = createServerFn({ method: "POST" }).handler(
-  async ({ id }: { id: string }) => {
+export const deleteNotificationFn = createServerFn({ method: "POST" })
+  .validator((data: { id: string }) => data)
+  .handler(async ({ data: { id } }) => {
     try {
       const session = await getSession();
       if (!session?.user) {
@@ -120,5 +121,4 @@ export const deleteNotificationFn = createServerFn({ method: "POST" }).handler(
         error: error instanceof Error ? error.message : "Failed to delete notification",
       };
     }
-  }
-);
+  });
