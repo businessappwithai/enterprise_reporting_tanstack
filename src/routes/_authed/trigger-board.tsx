@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/layout/page-header";
 
-export const Route = createFileRoute("/_authed/bull-board")({
+export const Route = createFileRoute("/_authed/trigger-board")({
   component: QueueManagementPage,
 });
 
@@ -73,8 +73,18 @@ function QueueManagementPage() {
 
   return (
     <div className="space-y-6">
+<<<<<<< HEAD:src/routes/_authed/bull-board.tsx
       <div className="flex flex-wrap items-start justify-between gap-3">
         <PageHeader title="Queue Management" description="Background jobs powered by Trigger.dev" />
+=======
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Trigger Board</h1>
+          <p className="text-sm text-muted-foreground">
+            Background jobs powered by Trigger.dev
+          </p>
+        </div>
+>>>>>>> 9a15cb5 (feat: add CopilotKit NL assistant to 5 pages + rename Bull Board → Trigger Board):src/routes/_authed/trigger-board.tsx
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => refetch()}>
             <RefreshCw className="h-4 w-4 mr-2" />

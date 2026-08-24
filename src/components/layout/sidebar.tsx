@@ -67,7 +67,7 @@ const adminNavItems = [
     icon: Database,
     permissionKey: "data_source" as const,
   },
-  { href: "/bull-board", label: "Queue Management", icon: Layers, permissionKey: "queue" as const },
+  { href: "/trigger-board", label: "Trigger Board", icon: Layers, permissionKey: "queue" as const },
   { href: "/logs", label: "System Logs", icon: SquareTerminal, permissionKey: "log" as const },
   { href: "/admin/users", label: "Users", icon: Users, permissionKey: "user" as const },
   { href: "/admin/roles", label: "Roles", icon: Shield, permissionKey: "role" as const },

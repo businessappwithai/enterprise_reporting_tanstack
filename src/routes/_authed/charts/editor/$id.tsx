@@ -21,11 +21,15 @@ import type {
   SavedQuery,
 } from "@/types/database";
 
+import { CopilotKit } from "@copilotkit/react-core";
+import { CopilotSidebar } from "@copilotkit/react-ui";
+import { useCopilotAction, useCopilotReadable } from "@copilotkit/react-core";
+import "@copilotkit/react-ui/styles.css";
 export const Route = createFileRoute("/_authed/charts/editor/$id")({
   component: ChartEditorPage,
 });
 
-function ChartEditorPage() {
+function ChartEditorContent() {
   const { id: chartId } = Route.useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -242,7 +246,80 @@ function ChartEditorPage() {
     },
   });
 
+
+  // ── CopilotKit ─────────────────────────────────────────────────────────
+  useCopilotReadable({
+    description: "Available saved queries for the chart",
+    value: (queries ?? []).map((q) => ({ id: q.id, name: q.name, dataSourceId: q.data_source_id })),
+  });
+  useCopilotReadable({
+    description: "Current chart configuration",
+    value: { chartType, chartName, chartDescription, selectedQueryId, dataMapping, chartConfig },
+  });
+
+  useCopilotAction({
+    name: "setChartType",
+    description: "Change the chart type (bar, line, pie, area, scatter, heatmap, gauge, funnel, treemap)",
+    parameters: [
+      { name: "chartType", type: "string", description: "One of: bar, line, pie, area, scatter, heatmap, gauge, funnel, treemap", required: true },
+    ],
+    handler: async ({ chartType: ct }) => {
+      setChartType(ct as ChartType);
+      return `Chart type set to ${ct}.`;
+    },
+  });
+  useCopilotAction({
+    name: "setChartName",
+    description: "Set the chart name and optional description",
+    parameters: [
+      { name: "name", type: "string", description: "Chart name", required: true },
+      { name: "description", type: "string", description: "Chart description", required: false },
+    ],
+    handler: async ({ name: n, description: d }) => {
+      setChartName(n);
+      if (d) setChartDescription(d);
+      return `Chart named "${n}".`;
+    },
+  });
+  useCopilotAction({
+    name: "selectQuery",
+    description: "Select which saved query provides data for this chart",
+    parameters: [
+      { name: "queryId", type: "string", description: "Saved query ID from the available list", required: true },
+    ],
+    handler: async ({ queryId }) => {
+      setSelectedQueryId(queryId);
+      return `Query ${queryId} selected.`;
+    },
+  });
+  useCopilotAction({
+    name: "setAxisMapping",
+    description: "Configure which columns map to the X and Y axes",
+    parameters: [
+      { name: "xField", type: "string", description: "Column name for the X axis / category", required: true },
+      { name: "yFields", type: "string[]", description: "Column names for Y axis / values", required: true },
+    ],
+    handler: async ({ xField, yFields }) => {
+      setDataMapping((prev) => ({
+        ...prev,
+        xAxis: { ...prev.xAxis, field: xField },
+        yAxis: yFields.map((f) => ({ field: f, label: f, aggregation: "sum" as const })),
+      }));
+      return `Axis mapping set: x=${xField}, y=[${yFields.join(",")}].`;
+    },
+  });
+  // ────────────────────────────────────────────────────────────────────────
+
   return (
+    <CopilotSidebar
+      instructions={'You are a chart configuration assistant. Help users configure charts.\nWORKFLOW:\n1. Ask what data they want to visualise.\n2. Suggest an appropriate chart type based on the data (bar for comparisons, line for trends, pie for proportions).\n3. Call selectQuery to pick the saved query with the data.\n4. Call setAxisMapping with column names from the query.\n5. Call setChartType and setChartName.\n6. Tell the user to click Save when done.\nRULES: Never invent column names — only use columns the user mentions or that appear in the query.'}
+      defaultOpen={false}
+      labels={{
+        title: "Chart Assistant",
+        initial: "Describe the chart you want to create and I\'ll configure it for you.",
+        placeholder: "e.g. Bar chart of revenue by region…",
+      }}
+    >
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="mx-auto max-w-7xl space-y-6">
         <div className="flex items-center justify-between">
@@ -327,5 +404,15 @@ function ChartEditorPage() {
         </div>
       </div>
     </div>
+    </CopilotSidebar>
+  );
+}
+
+
+function ChartEditorPage() {
+  return (
+    <CopilotKit runtimeUrl="/api/copilotkit">
+      <ChartEditorContent />
+    </CopilotKit>
   );
 }

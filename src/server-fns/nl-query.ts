@@ -484,3 +484,47 @@ export const executeNLQueryWithOverride = createServerFn({
     };
   }
 });
+
+// ---------------------------------------------------------------------------
+// nlGenerateSQL — translate NL to SQL without execution (for SQL editor / reports)
+// ---------------------------------------------------------------------------
+
+export const nlGenerateSQL = createServerFn({ method: "POST" })
+  .inputValidator((data: { nlDescription: string; dataSourceId: string }) => data)
+  .handler(async ({ data }) => {
+    const session = await requireAuth();
+    const { nlDescription, dataSourceId } = data;
+
+    const db = getDb();
+    const ds = await db
+      .selectFrom("data_sources")
+      .selectAll()
+      .where("id", "=", dataSourceId)
+      .where("is_active", "=", true as unknown as string)
+      .executeTakeFirst();
+
+    if (!ds) return { success: false as const, error: "Data source not found" };
+
+    try {
+      const schema = await getSchemaMetadata(ds as any);
+
+      let contextPrompt = "";
+      try {
+        contextPrompt = await buildMastraContextPrompt(dataSourceId, session.user.id, nlDescription, JSON.stringify(schema));
+      } catch { /* non-fatal */ }
+
+      if (await isMastraAvailable()) {
+        const result = await translateViaMastra(nlDescription, schema, {}, contextPrompt);
+        if (result?.sql) return { success: true as const, sql: result.sql, confidence: result.confidence ?? 0.8 };
+      }
+
+      if (await isLlamaReasoningAvailable()) {
+        const result = await translateNLToSQLViaLlama(nlDescription, schema);
+        if (result?.sql) return { success: true as const, sql: result.sql, confidence: result.confidence ?? 0.7 };
+      }
+
+      return { success: false as const, error: "No NL→SQL backend available. Start Mastra or llama.cpp." };
+    } catch (err) {
+      return { success: false as const, error: err instanceof Error ? err.message : "Unknown error" };
+    }
+  });

@@ -16,13 +16,21 @@ import { SchemaBrowser } from "@/components/sql-editor/schema-browser";
 import { sqlEditorConfig } from "@/lib/config/pagination";
 import type { SQLExecutionResponse } from "@/types/api";
 import type { DataSource } from "@/types/database";
+<<<<<<< HEAD
 import { PageHeader } from "@/components/layout/page-header";
+=======
+import { CopilotKit } from "@copilotkit/react-core";
+import { CopilotSidebar } from "@copilotkit/react-ui";
+import { useCopilotAction, useCopilotReadable } from "@copilotkit/react-core";
+import "@copilotkit/react-ui/styles.css";
+
+>>>>>>> 9a15cb5 (feat: add CopilotKit NL assistant to 5 pages + rename Bull Board → Trigger Board)
 
 export const Route = createFileRoute("/_authed/sql-editor")({
   component: SQLEditorPage,
 });
 
-function SQLEditorPage() {
+function SQLEditorContent() {
   const search = Route.useSearch() as { queryId?: string };
   const queryClient = useQueryClient();
   const logger = useLogger({ component: "SQL Editor" });
@@ -362,7 +370,81 @@ function SQLEditorPage() {
     saveQueryMutation.mutate({ name: queryName, description: queryDescription });
   };
 
+  // ── CopilotKit context ──────────────────────────────────────────────────
+  useCopilotReadable({
+    description: "Available data sources for SQL queries",
+    value: (dataSources ?? []).map((ds) => ({ id: ds.id, name: ds.name, type: ds.client_type })),
+  });
+  useCopilotReadable({
+    description: "Currently selected data source ID",
+    value: selectedDataSource,
+  });
+  useCopilotReadable({
+    description: "Current SQL in the editor",
+    value: sqlContent || "(empty)",
+  });
+
+  useCopilotAction({
+    name: "applySQL",
+    description: "Insert generated SQL into the editor. Generate the SQL first based on the user's description and the schema context, then call this to apply it.",
+    parameters: [
+      { name: "sql", type: "string", description: "Complete SQL query to insert", required: true },
+    ],
+    handler: async ({ sql }) => {
+      setSqlContent(sql);
+      return "SQL applied to the editor. The user can now click 'Run Query' to execute it.";
+    },
+  });
+  useCopilotAction({
+    name: "selectDataSource",
+    description: "Select a data source by ID so the user can run queries against it.",
+    parameters: [
+      { name: "dataSourceId", type: "string", description: "Data source ID from the available list", required: true },
+    ],
+    handler: async ({ dataSourceId }) => {
+      setSelectedDataSource(dataSourceId);
+      return `Data source ${dataSourceId} selected.`;
+    },
+  });
+  useCopilotAction({
+    name: "executeQuery",
+    description: "Execute the current SQL query in the editor.",
+    parameters: [],
+    handler: async () => {
+      if (!selectedDataSource) return "No data source selected — ask the user to pick one first.";
+      if (!sqlContent.trim()) return "Editor is empty — apply SQL first.";
+      handleExecute();
+      return "Query execution triggered.";
+    },
+  });
+  // ────────────────────────────────────────────────────────────────────────
+
+
+  const SQL_EDITOR_INSTRUCTIONS = `You are an AI SQL assistant embedded in a SQL editor.
+Your job is to help the user write, understand, and run SQL queries against their database.
+
+WORKFLOW:
+1. When the user describes what data they want, generate correct SQL and call applySQL to insert it.
+2. If no data source is selected, call selectDataSource first using the available data sources list.
+3. After applying SQL, offer to execute it by calling executeQuery.
+4. Explain what each query does in simple terms.
+5. Help debug errors by rewriting the SQL when the user pastes error messages.
+
+RULES:
+- Always write safe SELECT queries unless the user explicitly asks for DML.
+- Use LIMIT clauses on large tables (suggest LIMIT 100 as default).
+- Never fabricate column names — use only what appears in the schema context.`;
+
   return (
+    <CopilotSidebar
+      instructions={SQL_EDITOR_INSTRUCTIONS}
+      defaultOpen={false}
+      labels={{
+        title: "SQL Assistant",
+        initial: "Hi! Describe what data you want and I'll write the SQL for you. You can also paste errors for me to fix.",
+        placeholder: "Describe what you need or paste an error…",
+      }}
+    >
     <div className="p-3 sm:p-6">
       {/* Header — stacks on mobile, row on sm+ */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
@@ -772,5 +854,14 @@ function SQLEditorPage() {
         </div>
       )}
     </div>
+    </CopilotSidebar>
+  );
+}
+
+function SQLEditorPage() {
+  return (
+    <CopilotKit runtimeUrl="/api/copilotkit">
+      <SQLEditorContent />
+    </CopilotKit>
   );
 }

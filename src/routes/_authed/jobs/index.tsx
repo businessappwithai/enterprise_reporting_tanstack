@@ -33,6 +33,10 @@ import { formatDateTime } from "@/lib/utils";
 import type { JobDefinition, JobExecution } from "@/types/database";
 import { PageHeader } from "@/components/layout/page-header";
 
+import { CopilotKit } from "@copilotkit/react-core";
+import { CopilotSidebar } from "@copilotkit/react-ui";
+import { useCopilotAction, useCopilotReadable } from "@copilotkit/react-core";
+import "@copilotkit/react-ui/styles.css";
 export const Route = createFileRoute("/_authed/jobs/")({
   component: JobsPage,
 });
@@ -45,7 +49,7 @@ const statusIcons: Record<string, React.ReactNode> = {
   cancelled: <Pause className="h-4 w-4" />,
 };
 
-function JobsPage() {
+function JobsContent() {
   const queryClient = useQueryClient();
 
   const { data: queueStatus, refetch: refetchStatus } = useQuery({
@@ -92,7 +96,70 @@ function JobsPage() {
     },
   });
 
+
+  // ── CopilotKit ─────────────────────────────────────────────────────────
+  useCopilotReadable({
+    description: "Current background job definitions",
+    value: (jobDefinitions ?? []).map((j) => ({ id: j.id, name: j.name, type: j.job_type, schedule: j.schedule_cron, isActive: j.is_active })),
+  });
+  useCopilotReadable({
+    description: "Recent job executions",
+    value: (recentExecutions ?? []).slice(0, 5).map((e) => ({ jobId: e.job_definition_id, status: e.status, startedAt: e.started_at })),
+  });
+  useCopilotReadable({
+    description: "Queue status (pending/active/completed/failed job counts)",
+    value: queueStatus,
+  });
+
+  useCopilotAction({
+    name: "createJobFromNL",
+    description: "Create a new background job from a natural language description. Supports report export and email delivery jobs.",
+    parameters: [
+      { name: "jobName", type: "string", description: "Job name", required: true },
+      { name: "jobType", type: "string", description: "Job type: report_export, email_delivery, data_sync, or monitoring", required: true },
+      { name: "cronExpression", type: "string", description: "Cron expression (e.g. 0 8 * * 1 for every Monday at 8am)", required: true },
+      { name: "description", type: "string", description: "What this job does", required: false },
+    ],
+    handler: async ({ jobName, jobType, cronExpression, description }) => {
+      try {
+        const res = await fetch("/api/jobs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: jobName, description, jobType, scheduleCron: cronExpression }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          queryClient.invalidateQueries({ queryKey: ["job-definitions"] });
+          return `Job "${jobName}" created with schedule "${cronExpression}".`;
+        }
+        return `Failed to create job: ${data.error?.message || "Unknown error"}`;
+      } catch (err) {
+        return `Error: ${err instanceof Error ? err.message : String(err)}`;
+      }
+    },
+  });
+  useCopilotAction({
+    name: "explainCron",
+    description: "Explain a cron expression in plain English or convert a schedule description to cron syntax",
+    parameters: [
+      { name: "schedule", type: "string", description: "Either a cron expression or a plain English schedule like 'every Monday at 8am'", required: true },
+    ],
+    handler: async ({ schedule }) => {
+      return `Schedule interpretation for: ${schedule}. Common cron patterns: daily at 8am = "0 8 * * *", every Monday = "0 8 * * 1", hourly = "0 * * * *", every 15min = "*/15 * * * *".`;
+    },
+  });
+  // ────────────────────────────────────────────────────────────────────────
+
   return (
+    <CopilotSidebar
+      instructions='You are a background job scheduling assistant.\nHelp users create and understand background jobs.\nWORKFLOW:\n1. When user describes a job, ask: what should it do? how often?\n2. Convert their schedule description to a cron expression.\n3. Call createJobFromNL to create the job.\n4. Use explainCron to explain cron syntax when asked.\nCommon job types: report_export (generates and emails reports), monitoring (checks metric thresholds).'
+      defaultOpen={false}
+      labels={{
+        title: "Job Scheduler AI",
+        initial: "Describe the job you want to schedule and I\'ll help configure it.",
+        placeholder: "e.g. Email a sales report every Monday at 8am…",
+      }}
+    >
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <PageHeader title="Background Jobs" description="Monitor and manage background job processing" />
@@ -292,5 +359,15 @@ function JobsPage() {
         </TabsContent>
       </Tabs>
     </div>
+    </CopilotSidebar>
+  );
+}
+
+
+function JobsPage() {
+  return (
+    <CopilotKit runtimeUrl="/api/copilotkit">
+      <JobsContent />
+    </CopilotKit>
   );
 }

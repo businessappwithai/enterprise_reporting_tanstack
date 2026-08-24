@@ -19,6 +19,7 @@ import { Route as ApiJobsRouteImport } from './routes/api/jobs'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ApiFiltersRouteImport } from './routes/api/filters'
 import { Route as AuthedUsersRouteImport } from './routes/_authed/users'
+import { Route as AuthedTriggerBoardRouteImport } from './routes/_authed/trigger-board'
 import { Route as AuthedSystemLogsRouteImport } from './routes/_authed/system-logs'
 import { Route as AuthedSqlEditorRouteImport } from './routes/_authed/sql-editor'
 import { Route as AuthedSavedQueriesRouteImport } from './routes/_authed/saved-queries'
@@ -27,7 +28,6 @@ import { Route as AuthedQueueManagementRouteImport } from './routes/_authed/queu
 import { Route as AuthedPermissionsRouteImport } from './routes/_authed/permissions'
 import { Route as AuthedLogsRouteImport } from './routes/_authed/logs'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
-import { Route as AuthedBullBoardRouteImport } from './routes/_authed/bull-board'
 import { Route as AuthedAdminRouteImport } from './routes/_authed/admin'
 import { Route as ApiLogsIndexRouteImport } from './routes/api/logs/index'
 import { Route as ApiDataSourcesIndexRouteImport } from './routes/api/data-sources/index'
@@ -174,6 +174,11 @@ const AuthedUsersRoute = AuthedUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedTriggerBoardRoute = AuthedTriggerBoardRouteImport.update({
+  id: '/trigger-board',
+  path: '/trigger-board',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedSystemLogsRoute = AuthedSystemLogsRouteImport.update({
   id: '/system-logs',
   path: '/system-logs',
@@ -212,11 +217,6 @@ const AuthedLogsRoute = AuthedLogsRouteImport.update({
 const AuthedDashboardRoute = AuthedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
-  getParentRoute: () => AuthedRoute,
-} as any)
-const AuthedBullBoardRoute = AuthedBullBoardRouteImport.update({
-  id: '/bull-board',
-  path: '/bull-board',
   getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedAdminRoute = AuthedAdminRouteImport.update({
@@ -725,7 +725,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/admin': typeof AuthedAdminRouteWithChildren
-  '/bull-board': typeof AuthedBullBoardRoute
   '/dashboard': typeof AuthedDashboardRoute
   '/logs': typeof AuthedLogsRoute
   '/permissions': typeof AuthedPermissionsRoute
@@ -734,6 +733,7 @@ export interface FileRoutesByFullPath {
   '/saved-queries': typeof AuthedSavedQueriesRoute
   '/sql-editor': typeof AuthedSqlEditorRoute
   '/system-logs': typeof AuthedSystemLogsRoute
+  '/trigger-board': typeof AuthedTriggerBoardRoute
   '/users': typeof AuthedUsersRoute
   '/api/filters': typeof ApiFiltersRoute
   '/api/health': typeof ApiHealthRoute
@@ -841,7 +841,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/admin': typeof AuthedAdminRouteWithChildren
-  '/bull-board': typeof AuthedBullBoardRoute
   '/dashboard': typeof AuthedDashboardRoute
   '/logs': typeof AuthedLogsRoute
   '/permissions': typeof AuthedPermissionsRoute
@@ -850,6 +849,7 @@ export interface FileRoutesByTo {
   '/saved-queries': typeof AuthedSavedQueriesRoute
   '/sql-editor': typeof AuthedSqlEditorRoute
   '/system-logs': typeof AuthedSystemLogsRoute
+  '/trigger-board': typeof AuthedTriggerBoardRoute
   '/users': typeof AuthedUsersRoute
   '/api/filters': typeof ApiFiltersRoute
   '/api/health': typeof ApiHealthRoute
@@ -959,7 +959,6 @@ export interface FileRoutesById {
   '/_authed': typeof AuthedRouteWithChildren
   '/login': typeof LoginRoute
   '/_authed/admin': typeof AuthedAdminRouteWithChildren
-  '/_authed/bull-board': typeof AuthedBullBoardRoute
   '/_authed/dashboard': typeof AuthedDashboardRoute
   '/_authed/logs': typeof AuthedLogsRoute
   '/_authed/permissions': typeof AuthedPermissionsRoute
@@ -968,6 +967,7 @@ export interface FileRoutesById {
   '/_authed/saved-queries': typeof AuthedSavedQueriesRoute
   '/_authed/sql-editor': typeof AuthedSqlEditorRoute
   '/_authed/system-logs': typeof AuthedSystemLogsRoute
+  '/_authed/trigger-board': typeof AuthedTriggerBoardRoute
   '/_authed/users': typeof AuthedUsersRoute
   '/api/filters': typeof ApiFiltersRoute
   '/api/health': typeof ApiHealthRoute
@@ -1077,7 +1077,6 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/admin'
-    | '/bull-board'
     | '/dashboard'
     | '/logs'
     | '/permissions'
@@ -1086,6 +1085,7 @@ export interface FileRouteTypes {
     | '/saved-queries'
     | '/sql-editor'
     | '/system-logs'
+    | '/trigger-board'
     | '/users'
     | '/api/filters'
     | '/api/health'
@@ -1193,7 +1193,6 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/admin'
-    | '/bull-board'
     | '/dashboard'
     | '/logs'
     | '/permissions'
@@ -1202,6 +1201,7 @@ export interface FileRouteTypes {
     | '/saved-queries'
     | '/sql-editor'
     | '/system-logs'
+    | '/trigger-board'
     | '/users'
     | '/api/filters'
     | '/api/health'
@@ -1310,7 +1310,6 @@ export interface FileRouteTypes {
     | '/_authed'
     | '/login'
     | '/_authed/admin'
-    | '/_authed/bull-board'
     | '/_authed/dashboard'
     | '/_authed/logs'
     | '/_authed/permissions'
@@ -1319,6 +1318,7 @@ export interface FileRouteTypes {
     | '/_authed/saved-queries'
     | '/_authed/sql-editor'
     | '/_authed/system-logs'
+    | '/_authed/trigger-board'
     | '/_authed/users'
     | '/api/filters'
     | '/api/health'
@@ -1549,6 +1549,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedUsersRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/trigger-board': {
+      id: '/_authed/trigger-board'
+      path: '/trigger-board'
+      fullPath: '/trigger-board'
+      preLoaderRoute: typeof AuthedTriggerBoardRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/system-logs': {
       id: '/_authed/system-logs'
       path: '/system-logs'
@@ -1603,13 +1610,6 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthedDashboardRouteImport
-      parentRoute: typeof AuthedRoute
-    }
-    '/_authed/bull-board': {
-      id: '/_authed/bull-board'
-      path: '/bull-board'
-      fullPath: '/bull-board'
-      preLoaderRoute: typeof AuthedBullBoardRouteImport
       parentRoute: typeof AuthedRoute
     }
     '/_authed/admin': {
@@ -2310,7 +2310,6 @@ const AuthedAdminRouteWithChildren = AuthedAdminRoute._addFileChildren(
 
 interface AuthedRouteChildren {
   AuthedAdminRoute: typeof AuthedAdminRouteWithChildren
-  AuthedBullBoardRoute: typeof AuthedBullBoardRoute
   AuthedDashboardRoute: typeof AuthedDashboardRoute
   AuthedLogsRoute: typeof AuthedLogsRoute
   AuthedPermissionsRoute: typeof AuthedPermissionsRoute
@@ -2319,6 +2318,7 @@ interface AuthedRouteChildren {
   AuthedSavedQueriesRoute: typeof AuthedSavedQueriesRoute
   AuthedSqlEditorRoute: typeof AuthedSqlEditorRoute
   AuthedSystemLogsRoute: typeof AuthedSystemLogsRoute
+  AuthedTriggerBoardRoute: typeof AuthedTriggerBoardRoute
   AuthedUsersRoute: typeof AuthedUsersRoute
   AuthedMonitoringCreateRoute: typeof AuthedMonitoringCreateRoute
   AuthedSettingsDesignSystemRoute: typeof AuthedSettingsDesignSystemRoute
@@ -2349,7 +2349,6 @@ interface AuthedRouteChildren {
 
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedAdminRoute: AuthedAdminRouteWithChildren,
-  AuthedBullBoardRoute: AuthedBullBoardRoute,
   AuthedDashboardRoute: AuthedDashboardRoute,
   AuthedLogsRoute: AuthedLogsRoute,
   AuthedPermissionsRoute: AuthedPermissionsRoute,
@@ -2358,6 +2357,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedSavedQueriesRoute: AuthedSavedQueriesRoute,
   AuthedSqlEditorRoute: AuthedSqlEditorRoute,
   AuthedSystemLogsRoute: AuthedSystemLogsRoute,
+  AuthedTriggerBoardRoute: AuthedTriggerBoardRoute,
   AuthedUsersRoute: AuthedUsersRoute,
   AuthedMonitoringCreateRoute: AuthedMonitoringCreateRoute,
   AuthedSettingsDesignSystemRoute: AuthedSettingsDesignSystemRoute,

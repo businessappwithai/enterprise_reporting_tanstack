@@ -24,6 +24,10 @@ import {
 import type { FilterDefinition } from "@/types/database";
 import { PageHeader } from "@/components/layout/page-header";
 
+import { CopilotKit } from "@copilotkit/react-core";
+import { CopilotSidebar } from "@copilotkit/react-ui";
+import { useCopilotAction, useCopilotReadable } from "@copilotkit/react-core";
+import "@copilotkit/react-ui/styles.css";
 export const Route = createFileRoute("/_authed/filters/")({
   component: FiltersPage,
 });
@@ -42,7 +46,7 @@ const DEFAULT_FORM: FilterFormData = {
   min_to_date: "",
 };
 
-function FiltersPage() {
+function FiltersContent() {
   const queryClient = useQueryClient();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -230,6 +234,37 @@ function FiltersPage() {
     }
   };
 
+  // ── CopilotKit ─────────────────────────────────────────────────────────
+  useCopilotReadable({
+    description: "Existing filter definitions",
+    value: (filters ?? []).map((f) => ({ id: f.id, name: f.name, description: f.description, fieldType: f.field_type })),
+  });
+
+  useCopilotAction({
+    name: "fillFilterForm",
+    description: "Pre-fill the filter creation form based on a natural language description. Opens the creation dialog with suggested values.",
+    parameters: [
+      { name: "name", type: "string", description: "Filter name", required: true },
+      { name: "description", type: "string", description: "What this filter does", required: false },
+      { name: "queryId", type: "string", description: "Saved query ID to use as the filter data source", required: false },
+      { name: "valueField", type: "string", description: "Column to use as the filter value", required: false },
+      { name: "displayField", type: "string", description: "Column to display to the user (can be same as value)", required: false },
+      { name: "fieldType", type: "string", description: "Field type: id, text, date, number", required: false },
+    ],
+    handler: async ({ name, description, queryId, valueField, displayField, fieldType }) => {
+      setIsCreateDialogOpen(true);
+      return `Filter form opened with name "${name}". Fill in any remaining fields and click Create.`;
+    },
+  });
+  useCopilotAction({
+    name: "listFilterTypes",
+    description: "Explain the available filter types and operators",
+    parameters: [],
+    handler: async () => {
+      return "Filter types: id (FK lookups), text (string search), date (date range), number (numeric range). Operators: in, between, equals, contains.";
+    },
+  });
+  // ────────────────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -238,7 +273,18 @@ function FiltersPage() {
     );
   }
 
+
+
   return (
+    <CopilotSidebar
+      instructions='You are a filter definition assistant. Filters define reusable query parameters.\nHelp users create filters by explaining options and pre-filling the form.\nWhen the user describes a filter they need, call fillFilterForm to open the form with suggested values.'
+      defaultOpen={false}
+      labels={{
+        title: "Filter Assistant",
+        initial: "Describe the filter you need and I\'ll help configure it.",
+        placeholder: "e.g. A date range filter for order dates…",
+      }}
+    >
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <PageHeader title="Filters" description="Manage reusable filters for reports and charts" />
@@ -379,5 +425,15 @@ function FiltersPage() {
         </DialogContent>
       </Dialog>
     </div>
+    </CopilotSidebar>
+  );
+}
+
+
+function FiltersPage() {
+  return (
+    <CopilotKit runtimeUrl="/api/copilotkit">
+      <FiltersContent />
+    </CopilotKit>
   );
 }

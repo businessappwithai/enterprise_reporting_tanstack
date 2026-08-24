@@ -42,11 +42,18 @@ import { formatDateTime } from "@/lib/utils";
 import type { ReportDefinition, SavedQuery } from "@/types/database";
 import { PageHeader } from "@/components/layout/page-header";
 
+import { CopilotKit } from "@copilotkit/react-core";
+import { CopilotSidebar } from "@copilotkit/react-ui";
+import { useCopilotAction, useCopilotReadable } from "@copilotkit/react-core";
+import "@copilotkit/react-ui/styles.css";
+import { nlBuildPreview, nlSaveReport } from "@/server-fns/admin-builder";
+import { nlBuilderListDataSources } from "@/server-fns/admin-builder";
+
 export const Route = createFileRoute("/_authed/reports/")({
   component: ReportsPage,
 });
 
-function ReportsPage() {
+function ReportsContent() {
   const queryClient = useQueryClient();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [newReportName, setNewReportName] = useState("");
@@ -115,6 +122,15 @@ function ReportsPage() {
   });
 
   return (
+    <CopilotSidebar
+      instructions={'You are an AI report builder assistant.\nHelp users create and understand reports.\n\nWORKFLOW:\n1. When the user describes a report they want, call createReportFromNL with the description, a data source, and a report name.\n2. Check available data sources from context before calling.\n3. If no data sources exist, tell the user to add one in Data Sources first.\n4. Confirm with the user before saving (ask for a name if not provided).\n\nRULES:\n- Ask for clarification if the description is too vague.\n- Summarise what the generated report will show before saving.'}
+      defaultOpen={false}
+      labels={{
+        title: "Report Builder AI",
+        initial: "Describe the report you need and I\'ll generate the SQL and create it for you.",
+        placeholder: "e.g. Show monthly sales by region for the last quarter…",
+      }}
+    >
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <PageHeader title="Reports" description="Create and manage tabular reports" />
@@ -276,5 +292,15 @@ function ReportsPage() {
         </CardContent>
       </Card>
     </div>
+    </CopilotSidebar>
+  );
+}
+
+
+function ReportsPage() {
+  return (
+    <CopilotKit runtimeUrl="/api/copilotkit">
+      <ReportsContent />
+    </CopilotKit>
   );
 }
