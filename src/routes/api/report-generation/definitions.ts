@@ -14,7 +14,7 @@ async function getSession(request: Request) {
   return verifySession(match[1]);
 }
 
-function mariadbNow(): string {
+function isoNow(): string {
   return new Date().toISOString().slice(0, 19).replace("T", " ");
 }
 
@@ -290,7 +290,7 @@ export const Route = createFileRoute("/api/report-generation/definitions")({
 
     const db = getDb();
     const id = crypto.randomUUID();
-    const now = mariadbNow();
+    const now = isoNow();
 
     // Resolve and snapshot RBAC context at creation time
     const userRoles = await (db as any)

@@ -1,7 +1,6 @@
-# Enterprise Reporting System - Docker Compose for Hostinger VPS
-# This setup uses bind mounts for data persistence (Hostinger best practice)
-# All data is stored on the VPS filesystem at /srv/enterprise-reporting-system/
-# Includes Nginx reverse proxy with automatic SSL via Let's Encrypt
+# Enterprise Reporting System - Docker Compose
+# PostgreSQL (apache/age) serves both the config DB and the knowledge graph.
+# Two databases in the same instance: enterprise_config + ers_knowledge
 
 services:
   # Nginx Reverse Proxy with SSL
@@ -37,22 +36,25 @@ services:
     networks:
       - ers-network
 
-  # MariaDB Configuration Database
-  mariadb:
-    image: mariadb:11-alpine
-    container_name: ers-mariadb
+  # PostgreSQL + Apache AGE — config DB + knowledge graph
+  # apache/age:PG16 = PostgreSQL 16 with AGE graph extension pre-installed
+  # enterprise_config: application config (users, reports, charts, dashboards, etc.)
+  # ers_knowledge:     AGE property graph for NL query context
+  postgres:
+    image: apache/age:PG16
+    container_name: ers-postgres
     restart: unless-stopped
     environment:
-      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-root_pass}
-      MARIADB_DATABASE: ${MARIADB_DATABASE:-enterprise_config}
-      MARIADB_USER: ${MARIADB_USER:-enterprise}
-      MARIADB_PASSWORD: ${MARIADB_PASSWORD:-enterprise_pass}
+      POSTGRES_USER: ${POSTGRES_USER:-enterprise}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-enterprise_pass}
+      POSTGRES_DB: enterprise_config
     volumes:
-      - mariadb_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/pg-init:/docker-entrypoint-initdb.d:ro
     ports:
-      - "3306:3306"
+      - "${POSTGRES_PORT:-5432}:5432"
     healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-enterprise} -d enterprise_config"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -64,7 +66,6 @@ services:
     image: redis:7-alpine
     container_name: ers-redis
     restart: unless-stopped
-    # Use default password if REDIS_PASSWORD is not set
     command: >
       sh -c 'if [ -z "$$REDIS_PASSWORD" ]; then
         redis-server --appendonly yes;
@@ -96,12 +97,9 @@ services:
       AUTH_SECRET: ${AUTH_SECRET}
       AUTH_URL: ${AUTH_URL}
 
-      # MariaDB Configuration Database
-      MARIADB_HOST: mariadb
-      MARIADB_PORT: 3306
-      MARIADB_DATABASE: ${MARIADB_DATABASE:-enterprise_config}
-      MARIADB_USER: ${MARIADB_USER:-enterprise}
-      MARIADB_PASSWORD: ${MARIADB_PASSWORD:-enterprise_pass}
+      # PostgreSQL — config DB (enterprise_config) and knowledge graph (ers_knowledge)
+      DATABASE_URL: postgresql://${POSTGRES_USER:-enterprise}:${POSTGRES_PASSWORD:-enterprise_pass}@postgres:5432/enterprise_config
+      GRAPH_DATABASE_URL: postgresql://${POSTGRES_USER:-enterprise}:${POSTGRES_PASSWORD:-enterprise_pass}@postgres:5432/ers_knowledge
 
       # Redis (Job Queue)
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
@@ -134,7 +132,7 @@ services:
       - ${DATA_PATH:-/srv/enterprise-reporting-system}/app/uploads:/app/uploads
       - ${DATA_PATH:-/srv/enterprise-reporting-system}/app/logs:/app/logs
     depends_on:
-      mariadb:
+      postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -146,5 +144,5 @@ networks:
     driver: bridge
 
 volumes:
-  mariadb_data:
+  postgres_data:
     driver: local

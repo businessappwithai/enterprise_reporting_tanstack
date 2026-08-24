@@ -1,6 +1,6 @@
 # ==========================================
 # Enterprise Reporting System
-# Production Dockerfile - Bun + TanStack Start + MariaDB
+# Production Dockerfile - Bun + TanStack Start + PostgreSQL
 # ==========================================
 
 # Build stage - Pure Bun
@@ -30,11 +30,11 @@ FROM oven/bun:1.3-slim
 
 WORKDIR /app
 
-# Install runtime dependencies (curl for health checks, ca-certs for HTTPS, mysql/redis clients for tests)
+# Install runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
-    default-mysql-client \
+    postgresql-client \
     redis-tools \
     procps \
     && rm -rf /var/lib/apt/lists/*
@@ -52,7 +52,7 @@ COPY --from=builder --chown=bunuser:bunuser /app/dist ./dist
 COPY --from=builder --chown=bunuser:bunuser /app/public ./public
 COPY --from=builder --chown=bunuser:bunuser /app/node_modules ./node_modules
 
-# Copy database migration scripts (needed for runtime initialization)
+# Copy database scripts (needed for runtime initialization)
 COPY --chown=bunuser:bunuser scripts ./scripts
 COPY --chown=bunuser:bunuser src/lib/db ./src/lib/db
 COPY --chown=bunuser:bunuser src/lib/security ./src/lib/security
@@ -69,21 +69,14 @@ RUN mkdir -p /app/data /app/logs && \
 # Expose application port
 EXPOSE 3000
 
-# Set environment to production
 ENV NODE_ENV=production \
     PORT=3000 \
-    MARIADB_HOST=mariadb \
-    MARIADB_PORT=3306 \
-    MARIADB_DATABASE=enterprise_config \
-    MARIADB_USER=enterprise \
     PUBLIC_DIR=/app/dist/client
 
 # Switch to non-root user
 USER bunuser
 
-# Health check (wait for MariaDB initialization)
 HEALTHCHECK --interval=10s --timeout=5s --start-period=45s --retries=10 \
     CMD curl -f http://localhost:3000/api/health || exit 1
 
-# Start the application with static file serving
 CMD ["bun", "server-static-wrapper.mjs"]

@@ -1,18 +1,12 @@
 /**
  * Kysely Database Configuration
- * Type-safe SQL query builder using Kysely (https://kysely.dev/)
- * Primary: MariaDB for configuration database
- * Fallback: PostgreSQL if DATABASE_URL is set
+ * Config database: PostgreSQL only (via DATABASE_URL or POSTGRES_* env vars)
  */
 
-import { Kysely, MysqlDialect, PostgresDialect } from "kysely";
+import { Kysely, PostgresDialect } from "kysely";
 import { Pool as PostgresPool } from "pg";
-import { createPool as createMysqlPool } from "mysql2";
 import { bootstrapSchema } from "./bootstrap";
 
-// Database schema type definition
-// This is the most important part - defines all tables and their columns
-// Column names match the actual database schema
 export interface Database {
   users: UsersTable;
   roles: RolesTable;
@@ -42,8 +36,6 @@ export interface Database {
   nl_query_feedback: NLQueryFeedbackTable;
   help_articles: HelpArticleRow;
 }
-
-// Table type definitions — column names match actual DB schema
 
 export interface UsersTable {
   id: string;
@@ -114,8 +106,8 @@ export interface ReportDefinitionsTable {
   filter_config: string | null; // JSON
   sort_config: string | null; // JSON
   pagination_config: string | null; // JSON
-  export_formats: string; // JSON array, default '["csv","xlsx","pdf"]'
-  filename_template: string | null; // JSON {field1: "", field2: ""}
+  export_formats: string; // JSON array
+  filename_template: string | null;
   color_theme: string | null; // JSON
   is_public: boolean | null;
   is_deleted: boolean | null;
@@ -131,10 +123,10 @@ export interface ChartDefinitionsTable {
   name: string;
   description: string | null;
   saved_query_id: string | null;
-  chart_type: string; // 'bar', 'line', 'area', 'pie', 'scatter', 'composed'
+  chart_type: string;
   chart_config: string; // JSON
   data_mapping: string; // JSON
-  refresh_interval: number | null; // seconds
+  refresh_interval: number | null;
   color_theme: string | null; // JSON
   is_public: boolean | null;
   is_deleted: boolean | null;
@@ -164,7 +156,7 @@ export interface DashboardLayoutsTable {
 export interface DashboardWidgetsTable {
   id: string;
   dashboard_id: string;
-  widget_type: string; // 'report', 'chart', 'metric', 'text'
+  widget_type: string;
   report_id: string | null;
   chart_id: string | null;
   position_config: string; // JSON
@@ -176,7 +168,7 @@ export interface DashboardWidgetsTable {
 export interface JobDefinitionsTable {
   id: string;
   name: string;
-  job_type: string; // 'report', 'chart', 'export'
+  job_type: string;
   target_id: string;
   schedule_cron: string | null;
   parameters: string | null; // JSON
@@ -190,7 +182,6 @@ export interface JobDefinitionsTable {
   updated_at: string;
 }
 
-// Alias used by legacy routes/code that reference 'jobs' table directly
 export interface JobsTable {
   id: string;
   name: string;
@@ -207,7 +198,7 @@ export interface JobsTable {
 export interface JobExecutionsTable {
   id: string;
   job_definition_id: string;
-  status: string; // 'pending', 'running', 'completed', 'failed', 'cancelled'
+  status: string;
   started_at: string | null;
   completed_at: string | null;
   result_location: string | null;
@@ -239,7 +230,7 @@ export interface LogsTable {
   metadata: string | null; // JSON
   error_stack: string | null;
   request_id: string | null;
-  message_vector: string | null; // JSON array of numbers (MariaDB JSON)
+  message_vector: string | null;
 }
 
 export interface EmailTemplatesTable {
@@ -327,8 +318,6 @@ export interface DsEntityPermissionsTable {
   updated_at: string;
 }
 
-// Schema Instruction Tables (for NL query enhanced context)
-
 export interface SchemaFieldInstructionsTable {
   id: string;
   data_source_id: string;
@@ -365,8 +354,6 @@ export interface SchemaTableInstructionsTable {
   updated_by: string | null;
 }
 
-// NL Query Context Tables (learning system)
-
 export interface NLQueryContextTable {
   id: string;
   data_source_id: string;
@@ -374,7 +361,7 @@ export interface NLQueryContextTable {
   role_name: string;
   nl_question: string;
   generated_sql: string;
-  nl_question_embedding: string | null; // JSON array
+  nl_question_embedding: string | null;
   schema_context: string; // JSON
   rbac_context: string; // JSON
   field_instructions: string | null; // JSON
@@ -435,99 +422,62 @@ export interface HelpArticleRow {
   updated_at: string;
 }
 
-// Database instance type
 export type KyselyDB = Kysely<Database>;
 
 let db: KyselyDB | null = null;
 
-const DATABASE_URL = process.env.DATABASE_URL || "";
+function buildConnectionString(): string {
+  if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
 
-/**
- * Build MariaDB connection using mysql2
- */
-function buildMariaDBConnection(): KyselyDB {
-  const pool = createMysqlPool({
-    host: process.env.MARIADB_HOST || "localhost",
-    port: Number(process.env.MARIADB_PORT) || 3306,
-    database: process.env.MARIADB_DATABASE || "enterprise_config",
-    user: process.env.MARIADB_USER || "enterprise",
-    password: process.env.MARIADB_PASSWORD || "",
-    connectionLimit: 10,
-    waitForConnections: true,
-    enableKeepAlive: true,
-    keepAliveInitialDelayMs: 0,
-    charset: "utf8mb4_general_ci",
-  });
+  const host = process.env.POSTGRES_HOST || process.env.PGHOST || "localhost";
+  const port = process.env.POSTGRES_PORT || process.env.PGPORT || "5432";
+  const database = process.env.POSTGRES_DB || process.env.PGDATABASE || "enterprise_config";
+  const user = process.env.POSTGRES_USER || process.env.PGUSER || "enterprise";
+  const password = process.env.POSTGRES_PASSWORD || process.env.PGPASSWORD || "";
 
-  return new Kysely<Database>({
-    dialect: new MysqlDialect({ pool }),
-  });
+  return `postgresql://${user}:${encodeURIComponent(password)}@${host}:${port}/${database}`;
 }
 
-/**
- * Build PostgreSQL connection (fallback)
- */
-function buildPostgresConnection(): KyselyDB {
-  const pool = new PostgresPool({ connectionString: DATABASE_URL });
-  return new Kysely<Database>({
-    dialect: new PostgresDialect({ pool }),
-  });
-}
-
-/**
- * Initialize database connection (synchronous, bootstrap happens lazily on first query)
- */
 function initializeDatabase(): KyselyDB {
-  console.log(`[db] Initializing database: ${DATABASE_URL ? "PostgreSQL (via DATABASE_URL)" : "MariaDB"}`);
-  return DATABASE_URL ? buildPostgresConnection() : buildMariaDBConnection();
+  const connectionString = buildConnectionString();
+  const safeUrl = connectionString.replace(/:([^@]+)@/, ":***@");
+  console.log(`[db] Connecting to PostgreSQL: ${safeUrl}`);
+
+  const pool = new PostgresPool({
+    connectionString,
+    max: 10,
+    idleTimeoutMillis: 30_000,
+    connectionTimeoutMillis: 5_000,
+  });
+
+  return new Kysely<Database>({ dialect: new PostgresDialect({ pool }) });
 }
 
 let bootstrapPromise: Promise<void> | null = null;
 
-/**
- * Get or create Kysely database instance (synchronous)
- * Bootstrap happens on first initialization
- */
 export function getDb(): KyselyDB {
   if (!db) {
     db = initializeDatabase();
 
-    // Initialize bootstrap promise on first use
     bootstrapPromise = bootstrapSchema(db)
-      .then(() => {
-        console.log(`[db] Database ready: ${DATABASE_URL ? "PostgreSQL (via DATABASE_URL)" : "MariaDB"}`);
-      })
-      .catch((err) => {
-        console.error("[db] Bootstrap failed:", err);
-      });
+      .then(() => console.log("[db] Database ready"))
+      .catch((err) => console.error("[db] Bootstrap failed:", err));
 
-    // Store the bootstrap promise so we can wait for it if needed
+    // biome-ignore lint/suspicious/noExplicitAny: internal bootstrap tracking
     (db as any).__bootstrapPromise = bootstrapPromise;
   }
   return db;
 }
 
-/**
- * Wait for database bootstrap to complete
- * Should be called before executing queries
- */
 export async function waitForDatabaseReady(): Promise<void> {
-  getDb(); // Ensure db is initialized
-  if (bootstrapPromise) {
-    await bootstrapPromise;
-  }
+  getDb();
+  if (bootstrapPromise) await bootstrapPromise;
 }
 
-/**
- * Get config database (same as main database)
- */
 export function getConfigDB(): KyselyDB {
   return getDb();
 }
 
-/**
- * Close database connection
- */
 export async function closeDb(): Promise<void> {
   if (db) {
     try {
@@ -539,16 +489,7 @@ export async function closeDb(): Promise<void> {
   }
 }
 
-/**
- * Check if using PostgreSQL
- */
+/** Always true — config DB is now exclusively PostgreSQL */
 export function isPostgres(): boolean {
-  return !!DATABASE_URL;
-}
-
-/**
- * Check if using MariaDB
- */
-export function isMariaDB(): boolean {
-  return !DATABASE_URL;
+  return true;
 }

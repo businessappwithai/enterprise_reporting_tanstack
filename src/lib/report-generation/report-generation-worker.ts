@@ -40,7 +40,7 @@ const REPORT_ROW_LIMIT = parseInt(process.env.REPORT_ROW_LIMIT || "10000", 10);
 const REPORT_QUERY_TIMEOUT_MS = parseInt(process.env.REPORT_QUERY_TIMEOUT_MS || "30000", 10);
 const MAX_EMAIL_ATTACHMENT_BYTES = parseInt(process.env.REPORT_EMAIL_MAX_ATTACHMENT_BYTES || "10485760", 10);
 
-function mariadbNow(): string {
+function isoNow(): string {
   return new Date().toISOString().slice(0, 19).replace("T", " ");
 }
 
@@ -424,7 +424,7 @@ async function persistArtifacts(
     await fs.writeFile(filePath, artifact.buffer);
 
     const id = crypto.randomUUID();
-    const now = mariadbNow();
+    const now = isoNow();
 
     await (db as any).insertInto("generated_report_artifacts").values({
       id,
@@ -545,7 +545,7 @@ export async function executeReportGeneration(params: {
 
     await (db as any)
       .updateTable("nl_report_definitions")
-      .set({ last_run_status: "running", last_run_at: mariadbNow() })
+      .set({ last_run_status: "running", last_run_at: isoNow() })
       .where("id", "=", params.reportDefinitionId)
       .execute();
 
@@ -608,7 +608,7 @@ export async function executeReportGeneration(params: {
 
     await (db as any)
       .updateTable("nl_report_definitions")
-      .set({ last_run_status: "complete", last_run_at: mariadbNow() })
+      .set({ last_run_status: "complete", last_run_at: isoNow() })
       .where("id", "=", params.reportDefinitionId)
       .execute();
 

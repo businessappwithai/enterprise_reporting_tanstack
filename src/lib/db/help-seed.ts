@@ -1134,17 +1134,19 @@ export async function seedHelpArticles(db: Kysely<Database>) {
         sort_order: article.sort_order,
         is_published: article.is_published,
       })
-      .onDuplicateKeyUpdate({
-        category: article.category,
-        icon: article.icon,
-        color: article.color,
-        title: article.title,
-        summary: article.summary,
-        content: article.content,
-        keywords: article.keywords,
-        sort_order: article.sort_order,
-        is_published: article.is_published,
-      })
+      .onConflict((oc) =>
+        oc.column("id").doUpdateSet({
+          category: article.category,
+          icon: article.icon,
+          color: article.color,
+          title: article.title,
+          summary: article.summary,
+          content: article.content,
+          keywords: article.keywords,
+          sort_order: article.sort_order,
+          is_published: article.is_published,
+        }),
+      )
       .execute();
   }
 }

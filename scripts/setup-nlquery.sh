@@ -124,7 +124,7 @@ verify_services() {
   sleep 5
 
   # Check MariaDB
-  if docker exec ers-mariadb-dev mariadb-admin ping --silent 2>/dev/null; then
+  if docker exec ers-postgres pg_isready -q 2>/dev/null; then
     log_info "MariaDB is running ✓"
   else
     log_error "MariaDB is not responding"

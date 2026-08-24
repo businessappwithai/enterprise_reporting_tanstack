@@ -12,7 +12,7 @@ import { getDb } from "@/lib/db/config";
 const RETENTION_DAYS = parseInt(process.env.REPORT_ARTIFACT_RETENTION_DAYS || "90", 10);
 const OUTPUT_DIR = process.env.JOB_OUTPUT_PATH || "./job-outputs";
 
-function mariadbNow(): string {
+function isoNow(): string {
   return new Date().toISOString().slice(0, 19).replace("T", " ");
 }
 

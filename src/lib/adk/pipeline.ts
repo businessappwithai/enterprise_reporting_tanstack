@@ -31,7 +31,7 @@ import type { SecurityContext } from "@/lib/auth/rbac";
 
 // ─── ADK Intent Store (inline — avoids circular import with monitoring-repository) ─
 
-function mariadbNow(): string {
+function isoNow(): string {
   return new Date().toISOString().slice(0, 19).replace("T", " ");
 }
 
@@ -40,7 +40,7 @@ async function storeADKIntent(
 ): Promise<string> {
   const db = getDb();
   const id = crypto.randomUUID();
-  const now = mariadbNow();
+  const now = isoNow();
   await (db as any)
     .insertInto("adk_intents")
     .values({

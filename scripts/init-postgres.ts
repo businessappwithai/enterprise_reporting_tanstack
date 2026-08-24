@@ -472,8 +472,20 @@ try {
     await client.query(table);
   }
 
-  // Enable pgvector and create RAG embedding tables
+  // Enable pgvector and Apache AGE (knowledge graph) extensions
   await client.query(`CREATE EXTENSION IF NOT EXISTS vector`);
+  try {
+    await client.query(`CREATE EXTENSION IF NOT EXISTS age`);
+    await client.query(`LOAD 'age'`);
+    await client.query(`SET search_path = ag_catalog, "$user", public`);
+    await client.query(`SELECT create_graph('knowledge_graph')`);
+    console.log("Apache AGE knowledge_graph created.");
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (!msg.includes("already exists")) {
+      console.warn("AGE extension not available (install apache/age or use postgres-graph service):", msg);
+    }
+  }
   await client.query(`
     CREATE TABLE IF NOT EXISTS nl_query_embeddings (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

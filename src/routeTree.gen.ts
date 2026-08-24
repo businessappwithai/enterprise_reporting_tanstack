@@ -95,6 +95,7 @@ import { Route as AuthedDashboardsIdIndexRouteImport } from './routes/_authed/da
 import { Route as AuthedAdminUsersIndexRouteImport } from './routes/_authed/admin/users/index'
 import { Route as AuthedAdminSchemaInstructionsIndexRouteImport } from './routes/_authed/admin/schema-instructions/index'
 import { Route as AuthedAdminRolesIndexRouteImport } from './routes/_authed/admin/roles/index'
+import { Route as AuthedAdminReportBuilderIndexRouteImport } from './routes/_authed/admin/report-builder/index'
 import { Route as AuthedAdminPermissionsIndexRouteImport } from './routes/_authed/admin/permissions/index'
 import { Route as ApiSqlSchemaDataSourceIdRouteImport } from './routes/api/sql/schema.$dataSourceId'
 import { Route as ApiReportsIdFiltersRouteImport } from './routes/api/reports/$id/filters'
@@ -560,6 +561,12 @@ const AuthedAdminRolesIndexRoute = AuthedAdminRolesIndexRouteImport.update({
   path: '/roles/',
   getParentRoute: () => AuthedAdminRoute,
 } as any)
+const AuthedAdminReportBuilderIndexRoute =
+  AuthedAdminReportBuilderIndexRouteImport.update({
+    id: '/report-builder/',
+    path: '/report-builder/',
+    getParentRoute: () => AuthedAdminRoute,
+  } as any)
 const AuthedAdminPermissionsIndexRoute =
   AuthedAdminPermissionsIndexRouteImport.update({
     id: '/permissions/',
@@ -814,6 +821,7 @@ export interface FileRoutesByFullPath {
   '/api/reports/$id/filters': typeof ApiReportsIdFiltersRouteWithChildren
   '/api/sql/schema/$dataSourceId': typeof ApiSqlSchemaDataSourceIdRoute
   '/admin/permissions/': typeof AuthedAdminPermissionsIndexRoute
+  '/admin/report-builder/': typeof AuthedAdminReportBuilderIndexRoute
   '/admin/roles/': typeof AuthedAdminRolesIndexRoute
   '/admin/schema-instructions/': typeof AuthedAdminSchemaInstructionsIndexRoute
   '/admin/users/': typeof AuthedAdminUsersIndexRoute
@@ -929,6 +937,7 @@ export interface FileRoutesByTo {
   '/api/reports/$id/filters': typeof ApiReportsIdFiltersRouteWithChildren
   '/api/sql/schema/$dataSourceId': typeof ApiSqlSchemaDataSourceIdRoute
   '/admin/permissions': typeof AuthedAdminPermissionsIndexRoute
+  '/admin/report-builder': typeof AuthedAdminReportBuilderIndexRoute
   '/admin/roles': typeof AuthedAdminRolesIndexRoute
   '/admin/schema-instructions': typeof AuthedAdminSchemaInstructionsIndexRoute
   '/admin/users': typeof AuthedAdminUsersIndexRoute
@@ -1046,6 +1055,7 @@ export interface FileRoutesById {
   '/api/reports/$id/filters': typeof ApiReportsIdFiltersRouteWithChildren
   '/api/sql/schema/$dataSourceId': typeof ApiSqlSchemaDataSourceIdRoute
   '/_authed/admin/permissions/': typeof AuthedAdminPermissionsIndexRoute
+  '/_authed/admin/report-builder/': typeof AuthedAdminReportBuilderIndexRoute
   '/_authed/admin/roles/': typeof AuthedAdminRolesIndexRoute
   '/_authed/admin/schema-instructions/': typeof AuthedAdminSchemaInstructionsIndexRoute
   '/_authed/admin/users/': typeof AuthedAdminUsersIndexRoute
@@ -1163,6 +1173,7 @@ export interface FileRouteTypes {
     | '/api/reports/$id/filters'
     | '/api/sql/schema/$dataSourceId'
     | '/admin/permissions/'
+    | '/admin/report-builder/'
     | '/admin/roles/'
     | '/admin/schema-instructions/'
     | '/admin/users/'
@@ -1278,6 +1289,7 @@ export interface FileRouteTypes {
     | '/api/reports/$id/filters'
     | '/api/sql/schema/$dataSourceId'
     | '/admin/permissions'
+    | '/admin/report-builder'
     | '/admin/roles'
     | '/admin/schema-instructions'
     | '/admin/users'
@@ -1394,6 +1406,7 @@ export interface FileRouteTypes {
     | '/api/reports/$id/filters'
     | '/api/sql/schema/$dataSourceId'
     | '/_authed/admin/permissions/'
+    | '/_authed/admin/report-builder/'
     | '/_authed/admin/roles/'
     | '/_authed/admin/schema-instructions/'
     | '/_authed/admin/users/'
@@ -2068,6 +2081,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedAdminRolesIndexRouteImport
       parentRoute: typeof AuthedAdminRoute
     }
+    '/_authed/admin/report-builder/': {
+      id: '/_authed/admin/report-builder/'
+      path: '/report-builder'
+      fullPath: '/admin/report-builder/'
+      preLoaderRoute: typeof AuthedAdminReportBuilderIndexRouteImport
+      parentRoute: typeof AuthedAdminRoute
+    }
     '/_authed/admin/permissions/': {
       id: '/_authed/admin/permissions/'
       path: '/permissions'
@@ -2269,6 +2289,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthedAdminRouteChildren {
   AuthedAdminPermissionsIndexRoute: typeof AuthedAdminPermissionsIndexRoute
+  AuthedAdminReportBuilderIndexRoute: typeof AuthedAdminReportBuilderIndexRoute
   AuthedAdminRolesIndexRoute: typeof AuthedAdminRolesIndexRoute
   AuthedAdminSchemaInstructionsIndexRoute: typeof AuthedAdminSchemaInstructionsIndexRoute
   AuthedAdminUsersIndexRoute: typeof AuthedAdminUsersIndexRoute
@@ -2276,6 +2297,7 @@ interface AuthedAdminRouteChildren {
 
 const AuthedAdminRouteChildren: AuthedAdminRouteChildren = {
   AuthedAdminPermissionsIndexRoute: AuthedAdminPermissionsIndexRoute,
+  AuthedAdminReportBuilderIndexRoute: AuthedAdminReportBuilderIndexRoute,
   AuthedAdminRolesIndexRoute: AuthedAdminRolesIndexRoute,
   AuthedAdminSchemaInstructionsIndexRoute:
     AuthedAdminSchemaInstructionsIndexRoute,

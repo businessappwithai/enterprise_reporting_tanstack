@@ -1,6 +1,6 @@
 import { getDb } from "@/lib/db/config";
 
-function mariadbNow(): string {
+function isoNow(): string {
   return new Date().toISOString().slice(0, 19).replace("T", " ");
 }
 import type {
@@ -202,7 +202,7 @@ export async function createMonitoringRule(
 ): Promise<MonitoringRule> {
   const db = getDb();
   const id = crypto.randomUUID();
-  const now = mariadbNow();
+  const now = isoNow();
 
   await (db as any)
     .insertInto("monitoring_rules")
@@ -302,7 +302,7 @@ export async function updateMonitoringRule(
   updates: Partial<MonitoringRule>
 ): Promise<MonitoringRule | null> {
   const db = getDb();
-  const now = mariadbNow();
+  const now = isoNow();
 
   // Serialize JSON columns if present in updates
   const serialized: Record<string, unknown> = { updated_at: now };
@@ -331,7 +331,7 @@ export async function deleteMonitoringRule(id: string): Promise<boolean> {
   // Soft delete by deactivating the rule
   const result = await (db as any)
     .updateTable("monitoring_rules")
-    .set({ is_active: false, updated_at: mariadbNow() })
+    .set({ is_active: false, updated_at: isoNow() })
     .where("id", "=", id)
     .execute();
 
@@ -343,7 +343,7 @@ export async function pauseMonitoringRule(
   reason?: string
 ): Promise<MonitoringRule | null> {
   const db = getDb();
-  const now = mariadbNow();
+  const now = isoNow();
 
   await (db as any)
     .updateTable("monitoring_rules")
@@ -360,7 +360,7 @@ export async function pauseMonitoringRule(
 
 export async function resumeMonitoringRule(id: string): Promise<MonitoringRule | null> {
   const db = getDb();
-  const now = mariadbNow();
+  const now = isoNow();
 
   await (db as any)
     .updateTable("monitoring_rules")
@@ -384,7 +384,7 @@ export async function recordExecution(
 ): Promise<MonitoringExecution> {
   const db = getDb();
   const id = crypto.randomUUID();
-  const now = mariadbNow();
+  const now = isoNow();
 
   await (db as any)
     .insertInto("monitoring_executions")
@@ -486,7 +486,7 @@ export async function updateRuleAfterExecution(
   alertDispatched: boolean
 ): Promise<void> {
   const db = getDb();
-  const now = mariadbNow();
+  const now = isoNow();
 
   // Read current counters so we can increment atomically-ish
   const current = await (db as any)
@@ -528,7 +528,7 @@ export async function storeADKIntent(
 ): Promise<ADKStoredIntent> {
   const db = getDb();
   const id = crypto.randomUUID();
-  const now = mariadbNow();
+  const now = isoNow();
 
   await (db as any)
     .insertInto("adk_intents")

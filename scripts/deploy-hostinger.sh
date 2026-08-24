@@ -119,10 +119,10 @@ EOF
 log "Importing database into remote MariaDB..."
 ssh -p "$HOSTINGER_PORT" "$HOSTINGER_USER@$HOSTINGER_IP" << EOF
     cd $REMOTE_APP_DIR
-    docker exec ers-remote-mariadb mysql -u enterprise -penterprise_pass enterprise_config < enterprise_config_backup.sql
+    docker exec ers-postgres psql -U enterprise -d enterprise_config < enterprise_config_backup.sql
 
     # Verify import
-    TABLE_COUNT=\$(docker exec ers-remote-mariadb mysql -u enterprise -penterprise_pass enterprise_config -e "SELECT COUNT(*) FROM information_schema.TABLES WHERE table_schema='enterprise_config';" | tail -1)
+    TABLE_COUNT=\$(docker exec ers-postgres psql -U enterprise -d enterprise_config -e "SELECT COUNT(*) FROM information_schema.TABLES WHERE table_schema='enterprise_config';" | tail -1)
     echo "Database imported with \$TABLE_COUNT tables"
 EOF
 
@@ -137,7 +137,7 @@ ssh -p "$HOSTINGER_PORT" "$HOSTINGER_USER@$HOSTINGER_IP" << EOF
     echo ""
     echo "=== Health Checks ==="
     echo -n "MariaDB: "
-    docker exec ers-remote-mariadb healthcheck.sh --connect --innodb_initialized && echo "✓ Healthy" || echo "✗ Unhealthy"
+    docker exec ers-postgres pg_isready -U enterprise -d enterprise_config && echo "✓ Healthy" || echo "✗ Unhealthy"
 
     echo -n "Redis: "
     docker exec ers-remote-redis redis-cli ping > /dev/null && echo "✓ Healthy" || echo "✗ Unhealthy"
@@ -153,7 +153,7 @@ ssh -p "$HOSTINGER_PORT" "$HOSTINGER_USER@$HOSTINGER_IP" << EOF
 
     echo ""
     echo "=== Database Tables ==="
-    docker exec ers-remote-mariadb mysql -u enterprise -penterprise_pass enterprise_config -e "SHOW TABLES;" | head -20
+    docker exec ers-postgres psql -U enterprise -d enterprise_config -e "\\dt" | head -20
 EOF
 
 # Step 11: Summary

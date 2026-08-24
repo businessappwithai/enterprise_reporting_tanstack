@@ -3,6 +3,8 @@ import type { RequestHandler } from "@tanstack/react-start/server";
 import { createStartHandler, defaultStreamHandler } from "@tanstack/react-start/server";
 import { closeDb, waitForDatabaseReady } from "@/lib/db/config";
 import { initializeWorkers, shutdownWorkers } from "@/lib/jobs/worker-runner";
+import { initGraph } from "@/lib/graph/graph-init";
+import { syncKnowledgeGraph } from "@/lib/graph/sync";
 
 // Persistent config store will be imported and initialized on first use
 
@@ -22,6 +24,11 @@ const handler = createStartHandler(defaultStreamHandler);
 initializeWorkers().catch((err) =>
   console.error("[server] Worker init failed (non-fatal):", err)
 );
+
+// Bootstrap Apache AGE knowledge graph, then sync schema + config metadata
+initGraph()
+  .then(() => syncKnowledgeGraph())
+  .catch((err) => console.warn("[server] Knowledge graph init failed (non-fatal):", err));
 
 const fetch: RequestHandler<Register> = async (request, opts) => {
   await waitForDatabaseReady();

@@ -9,7 +9,7 @@
 import { randomUUID } from "node:crypto";
 import { getDb } from "@/lib/db/config";
 
-function mariadbNow(): string {
+function isoNow(): string {
   return new Date().toISOString().slice(0, 19).replace("T", " ");
 }
 import { getConnection } from "@/lib/db/connection-manager";
@@ -660,7 +660,7 @@ export async function recordExecution(data: {
 }): Promise<string> {
   const db = getDb();
   const id = randomUUID();
-  const now = mariadbNow();
+  const now = isoNow();
 
   await (db as any)
     .insertInto("monitoring_executions")
@@ -720,7 +720,7 @@ export async function executeMonitoringEvaluation(
       .set({
         is_paused: 1,
         pause_reason: `RBAC drift detected: ${rbacResult.driftType} — ${rbacResult.details ?? ""}`,
-        updated_at: mariadbNow(),
+        updated_at: isoNow(),
       })
       .where("id", "=", rule.id)
       .execute();
@@ -832,14 +832,14 @@ export async function executeMonitoringEvaluation(
     .updateTable("monitoring_rules")
     .set({
       total_executions: rule.total_executions + 1,
-      last_executed_at: mariadbNow(),
+      last_executed_at: isoNow(),
       last_execution_status: evaluation.status,
       last_metric_value: evaluation.actualValue,
       consecutive_breaches: newConsecutiveBreaches,
       total_alerts_sent: alertDispatched
         ? rule.total_alerts_sent + alertResults.filter((r) => r.success).length
         : rule.total_alerts_sent,
-      updated_at: mariadbNow(),
+      updated_at: isoNow(),
     })
     .where("id", "=", rule.id)
     .execute();

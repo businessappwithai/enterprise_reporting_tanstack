@@ -78,7 +78,7 @@ fi
 echo ""
 echo "─── Test 3: MariaDB Database ───"
 TABLE_COUNT=$(ssh -p "$HOSTINGER_PORT" "$HOSTINGER_USER@$HOSTINGER_IP" << 'EOF'
-docker exec ers-remote-mariadb mariadb -u enterprise -penterprise_pass enterprise_config -e \
+docker exec ers-postgres psql -U enterprise -d enterprise_config -e \
   "SELECT COUNT(*) FROM information_schema.TABLES WHERE table_schema='enterprise_config';" 2>/dev/null | tail -1
 EOF
 )
@@ -204,7 +204,7 @@ fi
 echo ""
 echo "─--- Test 13: App → Database Connectivity ───"
 DB_CONNECT=$(ssh -p "$HOSTINGER_PORT" "$HOSTINGER_USER@$HOSTINGER_IP" << 'EOF'
-docker exec ers-remote-app mysql -h mariadb -u enterprise -penterprise_pass enterprise_config -e "SELECT 1;" 2>&1 | head -1
+docker exec ers-remote-app mysql -h psql -U enterprise -d enterprise_config -e "SELECT 1;" 2>&1 | head -1
 EOF
 )
 

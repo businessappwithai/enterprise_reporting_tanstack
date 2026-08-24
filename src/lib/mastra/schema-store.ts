@@ -58,13 +58,15 @@ export async function introspectAndCacheSchema(dataSource: DataSource): Promise<
       created_at: now,
       updated_at: now,
     })
-    .onDuplicateKeyUpdate({
-      schema_metadata: schemaMetadata,
-      sample_data: sampleDataJson,
-      embedding_data: schemaText,
-      last_introspected_at: now,
-      updated_at: now,
-    })
+    .onConflict((oc) =>
+      oc.column("data_source_id").doUpdateSet({
+        schema_metadata: schemaMetadata,
+        sample_data: sampleDataJson,
+        embedding_data: schemaText,
+        last_introspected_at: now,
+        updated_at: now,
+      }),
+    )
     .execute();
 
   return { schemaInfo, sampleData, schemaText };

@@ -26,6 +26,7 @@ import {
   storeNLQueryContext,
   buildMastraContextPrompt,
 } from "@/lib/nlquery/nl-query-context-service";
+import { getGraphContext, formatGraphContext } from "@/lib/graph/rag";
 
 export interface ExecuteNLQueryInput {
   nlQuestion: string;
@@ -167,6 +168,18 @@ export const executeNLQuery = createServerFn({
         schemaContextStr
       );
       console.log("[NLQuery] Built enhanced context from similar role queries");
+    }
+
+    // Augment contextPrompt with knowledge-graph schema context (non-fatal if graph is down)
+    try {
+      const graphCtx = await getGraphContext(dataSourceId, nlQuestion);
+      const graphSection = formatGraphContext(graphCtx);
+      if (graphSection) {
+        contextPrompt = contextPrompt ? `${contextPrompt}\n\n${graphSection}` : graphSection;
+        console.log(`[NLQuery] Graph context: ${graphCtx.tables.length} table(s), ~${graphCtx.totalTokenEstimate} tokens`);
+      }
+    } catch {
+      // graph unavailable — continue with pgvector context only
     }
 
     // [Step 1.6] Translate NL to SQL via Mastra.ai agent (primary) or llama.cpp direct (fallback)
