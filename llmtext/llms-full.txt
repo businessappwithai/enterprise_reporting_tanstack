@@ -1252,7 +1252,116 @@ Max email attachment: `REPORT_EMAIL_MAX_ATTACHMENT_BYTES` (default 10 MB).
 
 ---
 
-## 21. Report Generator CopilotKit Flow
+## 21. AI-Assisted Admin: Reports, Charts, and Dashboard Configuration
+
+Every major content surface — reports, charts, dashboards, and the SQL editor —
+has an embedded CopilotKit AI sidebar that lets administrators configure the
+platform in plain English. No SQL knowledge required.
+
+### 21a. CopilotKit sidebar locations
+
+| Page | Route | Sidebar instructions | Key actions |
+|------|-------|---------------------|-------------|
+| Reports | `/_authed/reports/` | Report builder | `createReportFromNL`, `deleteReport` |
+| Charts | `/_authed/charts/` | Chart builder | `createChartFromNL`, `openChartEditor` |
+| SQL Editor | `/_authed/sql-editor` | SQL assistant | `applySQL`, `selectDataSource`, `executeQuery` |
+| NL Query | `/_authed/nl-query` | NL→SQL assistant | Direct CopilotKit pipeline via Mastra |
+| Report Generator | `/_authed/reports/generate` | End-user report generator | `buildReport`, `confirmReport`, `listReports`, `downloadReport` |
+
+All sidebars use `runtimeUrl="/api/copilotkit"` and default to closed
+(`defaultOpen={false}`) — click the star icon in the top-right to open.
+
+### 21b. Building a report via natural language (admin)
+
+Route: `/_authed/reports/`
+Server functions: `nlBuildPreview`, `nlSaveReport` from `src/server-fns/admin-builder.ts`
+
+**How it works:**
+1. Admin opens the Reports page and clicks the star icon to open the AI sidebar
+2. Admin types: "Create a report showing all users and their creation dates"
+3. AI calls `createReportFromNL(reportName, description, dataSourceId)`:
+   - Calls `nlBuildPreview({ nlDescription, dataSourceId })` — NL→SQL via Mastra/llama.cpp + 20-row preview
+   - Calls `nlSaveReport({ name, description, dataSourceId, sql })` — saves as `saved_queries` + `report_definitions`
+4. Toast confirms creation; report appears in the table immediately
+
+**`createReportFromNL` parameters:**
+```typescript
+{ reportName: string, description: string, dataSourceId: string }
+```
+
+The AI has `useCopilotReadable` context for:
+- Available data sources (`nlBuilderListDataSources()`)
+- Existing report definitions (id, name, description)
+
+### 21c. Building a chart via natural language (admin)
+
+Route: `/_authed/charts/`
+Server functions: `nlBuildPreview`, `nlSaveChart` from `src/server-fns/admin-builder.ts`
+
+**How it works:**
+1. Admin opens the Charts page and clicks the AI sidebar
+2. Admin types: "Bar chart of monthly signups by plan"
+3. AI calls `createChartFromNL(chartName, description, dataSourceId, chartType?)`:
+   - Calls `nlBuildPreview` — NL→SQL via backend LLM, 20-row preview
+   - Calls `nlSaveChart({ name, description, dataSourceId, sql, chartType })` — saves as `saved_queries` + `chart_definitions`
+   - After save, automatically navigates to `/charts/editor/$id` for axis/styling configuration
+4. Admin configures the axis mapping in the editor, then saves
+
+**`createChartFromNL` parameters:**
+```typescript
+{ chartName: string, description: string, dataSourceId: string, chartType?: "bar"|"line"|"area"|"pie"|"scatter"|"composed" }
+```
+
+**Chart type guidance for the AI:**
+- `bar` — category comparisons (sales by region, users by plan)
+- `line` — trends over time (revenue per month)
+- `area` — cumulative trends (total revenue over time)
+- `pie` — proportions/shares (<10 slices)
+- `scatter` — correlation between two numeric columns
+
+### 21d. NL→SQL pipeline for admin builder
+
+Both `createReportFromNL` and `createChartFromNL` call `nlBuildPreview` which:
+1. Calls `getSchemaMetadata(dataSource)` — fetches live schema from the external DB
+2. Calls `buildMastraContextPrompt()` — pgvector RAG context from `nl_query_embeddings`
+3. Calls `getGraphContext()` — Apache AGE graph RAG for entity relationships
+4. Tries `translateNLToSQLViaMastra()` first (Mastra at `MASTRA_URL`)
+5. Falls back to `translateNLToSQLViaLlama()` (llama.cpp at `LLAMA_REASONING_URL`)
+6. Executes `SELECT * FROM (<sql>) LIMIT 20` on the data source to get preview rows
+7. Returns `{ success, sql, confidence, columns, rows }`
+
+### 21e. SQL Editor AI (query assistance)
+
+Route: `/_authed/sql-editor`
+The SQL Editor AI sidebar has three CopilotKit actions:
+
+| Action | What it does |
+|--------|-------------|
+| `applySQL(sql)` | Sets the Monaco editor content to the provided SQL |
+| `selectDataSource(dataSourceId)` | Selects a data source from the dropdown |
+| `executeQuery()` | Triggers the "Run Query" button programmatically |
+
+**Typical workflow:**
+1. Admin types: "Show me all users who signed up in the last 7 days"
+2. AI calls `selectDataSource` if no source is selected
+3. AI calls `applySQL("SELECT id, email, created_at FROM users WHERE created_at >= NOW() - INTERVAL '7 days'")`
+4. AI offers to run it or waits for admin confirmation
+5. Admin clicks Run Query or asks AI to run with `executeQuery`
+
+The AI has access to the current SQL content and selected data source via `useCopilotReadable`.
+
+### 21f. Dashboard configuration
+
+Dashboards (`/_authed/dashboards/`) are composed of widgets. Currently no CopilotKit sidebar on the dashboard page — configuration is done manually via the widget UI.
+
+To add a CopilotKit sidebar to dashboards, the pattern would be:
+1. Wrap `DashboardsPage` in `<CopilotKit runtimeUrl="/api/copilotkit">`
+2. Add a `CopilotSidebar` with actions:
+   - `createDashboard(name, description)` — POST to `/api/dashboards`
+   - `addWidget(dashboardId, chartId, position)` — POST to `/api/dashboards/:id/widgets`
+   - `updateDashboardLayout(dashboardId, layout)` — PUT to `/api/dashboards/:id/layout`
+
+### 21g. Report Generator CopilotKit Flow (end-user)
 
 The `/reports/generate` page provides an AI-driven report builder. A user
 describes a report in plain English; the AI generates SQL, shows a 10-row

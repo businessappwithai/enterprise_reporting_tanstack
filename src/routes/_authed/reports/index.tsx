@@ -121,6 +121,68 @@ function ReportsContent() {
     },
   });
 
+  // ── CopilotKit data sources ───────────────────────────────────────────────
+  const { data: dataSources } = useQuery({
+    queryKey: ["data-sources-for-nl"],
+    queryFn: () => nlBuilderListDataSources(),
+  });
+
+  useCopilotReadable({
+    description: "Available data sources the AI can query to build reports",
+    value: (dataSources ?? []).map((ds) => ({ id: ds.id, name: ds.name, type: ds.client_type })),
+  });
+  useCopilotReadable({
+    description: "Existing report definitions",
+    value: (reports ?? []).map((r) => ({ id: r.id, name: r.name, description: r.description })),
+  });
+
+  useCopilotAction({
+    name: "createReportFromNL",
+    description:
+      "Generate SQL from a natural language description, preview it, then save it as a report definition. Use when the user describes a report they want.",
+    parameters: [
+      { name: "reportName", type: "string", description: "Short title for the report", required: true },
+      { name: "description", type: "string", description: "What data the report shows", required: true },
+      { name: "dataSourceId", type: "string", description: "UUID of the data source from available list", required: true },
+    ],
+    handler: async ({ reportName, description, dataSourceId }) => {
+      const preview = await nlBuildPreview({ data: { nlDescription: description, dataSourceId } });
+      if (!preview.success) return { success: false, error: preview.error };
+
+      await nlSaveReport({
+        data: { name: reportName, description, dataSourceId, sql: preview.sql! },
+      });
+      queryClient.invalidateQueries({ queryKey: ["reports"] });
+      toast.success(`Report "${reportName}" created`);
+      return {
+        success: true,
+        message: `Report "${reportName}" created. Preview shows ${preview.rows?.length ?? 0} rows. Columns: ${preview.columns?.join(", ")}.`,
+        sql: preview.sql,
+        columns: preview.columns,
+        rowCount: preview.rows?.length ?? 0,
+      };
+    },
+  });
+
+  useCopilotAction({
+    name: "deleteReport",
+    description: "Delete a report definition by ID. Ask the user to confirm first.",
+    parameters: [
+      { name: "reportId", type: "string", description: "The report ID to delete", required: true },
+    ],
+    handler: async ({ reportId }) => {
+      const res = await fetch(`/api/reports/${reportId}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        queryClient.invalidateQueries({ queryKey: ["reports"] });
+        toast.success("Report deleted");
+        return { success: true };
+      }
+      return { success: false, error: data.error?.message };
+    },
+  });
+  // ─────────────────────────────────────────────────────────────────────────
+
   return (
     <CopilotSidebar
       instructions={'You are an AI report builder assistant.\nHelp users create and understand reports.\n\nWORKFLOW:\n1. When the user describes a report they want, call createReportFromNL with the description, a data source, and a report name.\n2. Check available data sources from context before calling.\n3. If no data sources exist, tell the user to add one in Data Sources first.\n4. Confirm with the user before saving (ask for a name if not provided).\n\nRULES:\n- Ask for clarification if the description is too vague.\n- Summarise what the generated report will show before saving.'}

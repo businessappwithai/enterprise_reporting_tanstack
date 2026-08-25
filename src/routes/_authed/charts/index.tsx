@@ -13,6 +13,11 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { CopilotKit } from "@copilotkit/react-core";
+import { CopilotSidebar } from "@copilotkit/react-ui";
+import { useCopilotAction, useCopilotReadable } from "@copilotkit/react-core";
+import "@copilotkit/react-ui/styles.css";
+import { nlBuildPreview, nlSaveChart, nlBuilderListDataSources } from "@/server-fns/admin-builder";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -144,7 +149,101 @@ function ChartsPage() {
     },
   });
 
+  // ── CopilotKit context ────────────────────────────────────────────────────
+  const { data: dataSources } = useQuery({
+    queryKey: ["data-sources-for-nl"],
+    queryFn: () => nlBuilderListDataSources(),
+  });
+
+  useCopilotReadable({
+    description: "Available data sources the AI can query to build charts",
+    value: (dataSources ?? []).map((ds) => ({ id: ds.id, name: ds.name, type: ds.client_type })),
+  });
+  useCopilotReadable({
+    description: "Existing chart definitions",
+    value: (charts ?? []).map((c) => ({ id: c.id, name: c.name, chartType: c.chart_type })),
+  });
+
+  useCopilotAction({
+    name: "createChartFromNL",
+    description:
+      "Generate SQL from a natural language description, preview data, then save it as a chart definition. Use when the user describes a visualization they want.",
+    parameters: [
+      { name: "chartName", type: "string", description: "Short title for the chart", required: true },
+      { name: "description", type: "string", description: "What data the chart should visualize", required: true },
+      { name: "dataSourceId", type: "string", description: "UUID of the data source from available list", required: true },
+      {
+        name: "chartType",
+        type: "string",
+        description: "Chart type: bar, line, area, pie, scatter, or composed",
+        required: false,
+      },
+    ],
+    handler: async ({ chartName, description, dataSourceId, chartType }) => {
+      const type = (chartType ?? "bar") as "bar" | "line" | "area" | "pie" | "scatter" | "composed";
+      const preview = await nlBuildPreview({ data: { nlDescription: description, dataSourceId } });
+      if (!preview.success) return { success: false, error: preview.error };
+
+      const result = await nlSaveChart({
+        data: { name: chartName, description, dataSourceId, sql: preview.sql!, chartType: type },
+      });
+      queryClient.invalidateQueries({ queryKey: ["charts"] });
+      toast.success(`Chart "${chartName}" created`);
+      navigate({ to: "/charts/editor/$id", params: { id: result.chartId } });
+      return {
+        success: true,
+        message: `Chart "${chartName}" (${type}) created. Preview shows ${preview.rows?.length ?? 0} rows. Opening the chart editor so you can configure axes and styling.`,
+        chartId: result.chartId,
+        columns: preview.columns,
+        rowCount: preview.rows?.length ?? 0,
+      };
+    },
+  });
+
+  useCopilotAction({
+    name: "openChartEditor",
+    description: "Open the chart editor for an existing chart by ID.",
+    parameters: [
+      { name: "chartId", type: "string", description: "The chart ID to edit", required: true },
+    ],
+    handler: async ({ chartId }) => {
+      navigate({ to: "/charts/editor/$id", params: { id: chartId } });
+      return { success: true, message: `Opened chart editor for ${chartId}` };
+    },
+  });
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const CHARTS_AI_INSTRUCTIONS = `You are an AI chart builder assistant for an enterprise reporting platform.
+
+WORKFLOW:
+1. When the user describes a chart they want, call createChartFromNL with a name, description of the data, a dataSourceId from the list, and an appropriate chartType.
+2. Check available data sources from context before choosing one.
+3. After creating the chart, the editor will open automatically for axis/styling configuration.
+4. If the user asks to edit an existing chart, call openChartEditor with its ID.
+
+CHART TYPE GUIDANCE:
+- Bar chart: comparisons between categories (sales by region, users by plan)
+- Line chart: trends over time (revenue per month, signups per week)
+- Area chart: cumulative trends (total revenue over time)
+- Pie chart: proportions/shares (market share, budget breakdown) — works best with <10 slices
+- Scatter: correlation between two numeric variables
+
+RULES:
+- Ask for clarification if the description is vague.
+- Confirm the chart type with the user if it's not obvious from their description.
+- Never fabricate data source IDs — always pick from the available list.`;
+
   return (
+    <CopilotKit runtimeUrl="/api/copilotkit">
+      <CopilotSidebar
+        instructions={CHARTS_AI_INSTRUCTIONS}
+        defaultOpen={false}
+        labels={{
+          title: "Chart Builder AI",
+          initial: "Describe the chart you want and I'll generate the SQL and create it for you.",
+          placeholder: "e.g. Bar chart of monthly revenue by product category…",
+        }}
+      >
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <PageHeader title="Charts" description="Create and manage data visualizations" />
@@ -322,5 +421,7 @@ function ChartsPage() {
         </CardContent>
       </Card>
     </div>
+      </CopilotSidebar>
+    </CopilotKit>
   );
 }
