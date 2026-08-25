@@ -16,15 +16,11 @@ import { SchemaBrowser } from "@/components/sql-editor/schema-browser";
 import { sqlEditorConfig } from "@/lib/config/pagination";
 import type { SQLExecutionResponse } from "@/types/api";
 import type { DataSource } from "@/types/database";
-<<<<<<< HEAD
 import { PageHeader } from "@/components/layout/page-header";
-=======
 import { CopilotKit } from "@copilotkit/react-core";
 import { CopilotSidebar } from "@copilotkit/react-ui";
 import { useCopilotAction, useCopilotReadable } from "@copilotkit/react-core";
 import "@copilotkit/react-ui/styles.css";
-
->>>>>>> 9a15cb5 (feat: add CopilotKit NL assistant to 5 pages + rename Bull Board → Trigger Board)
 
 export const Route = createFileRoute("/_authed/sql-editor")({
   component: SQLEditorPage,
