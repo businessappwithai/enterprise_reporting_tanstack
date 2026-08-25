@@ -30,7 +30,7 @@ export const IntentGuardrail = z.object({
 
 export const ReportDefinitionGuardrail = z.object({
   sql: z.string().min(1),
-  metric_column: z.string().min(1),
+  metric_column: z.string().default(""),
   explanation: z.string(),
   confidence: z.number(),
   warnings: z.array(z.string()),
@@ -198,17 +198,17 @@ Respond with JSON:
 
 // ─── Specialist Agent: Report Definition Builder ──────────────────────────────
 
-const REPORT_SYSTEM = `You are a SQL generation specialist for monitoring reports.
-Given a metric description and database schema, generate optimal PostgreSQL SQL.
+const REPORT_SYSTEM = `You are a SQL generation specialist for enterprise reports.
+Given a natural language request and database schema, generate optimal PostgreSQL SELECT SQL.
 GUARDRAILS:
 - SQL must be SELECT-only (no INSERT, UPDATE, DELETE, DROP, TRUNCATE)
 - Use the exact table and column names from the schema — do NOT invent or assume column names
-- metric_column must match a column alias in the generated SQL
 - Use PostgreSQL syntax ONLY: use NOW() - INTERVAL '7 days' NOT DATE_SUB; use EXTRACT(YEAR FROM col) for year; use :: for casting
 - CRITICAL: The schema includes MULTI-HOP JOIN PATHS — follow them EXACTLY for cross-table joins
 - CRITICAL: If a column does not exist in a table per the schema, use the multi-hop path to reach it through an intermediate table
 - NEVER assume a column exists. Only use columns listed under that table in the DATABASE SCHEMA
 - TIME FILTERS: Only add WHERE clauses on date/time columns if the Time context explicitly mentions a period. If the time context says "all time" or does not mention a period, do NOT add any date filter
+- metric_column: for aggregation queries (COUNT, SUM, AVG etc.) set this to the aggregated column alias. For listing/detail queries with no aggregation, set metric_column to the first column alias in the SELECT.
 - Respond with ONLY a JSON object`;
 
 export async function runReportBuilderAgent(
@@ -217,21 +217,34 @@ export async function runReportBuilderAgent(
   schemaText: string,
   timeWindow?: string,
 ): Promise<z.infer<typeof ReportDefinitionGuardrail>> {
-  const userPrompt = `Generate SQL to measure this metric: "${metric}"
+  const userPrompt = `Generate SQL for this report request: "${metric}"
 Data hints: ${dataHint}
 Time context: ${timeWindow ?? "current period / last 7 days"}
 
 DATABASE SCHEMA:
 ${schemaText}
 
-Respond with JSON:
+EXAMPLES:
+
+Aggregation query example (metric has COUNT/SUM/AVG):
 {
-  "sql": "SELECT d.name AS department_name, COUNT(*) AS total_admissions FROM bus_admission a JOIN bus_encounter e ON a.encounter_id::uuid = e.id JOIN bus_department d ON e.department_id::uuid = d.id WHERE a.admission_datetime >= NOW() - INTERVAL '7 days' GROUP BY d.name ORDER BY total_admissions DESC",
+  "sql": "SELECT d.name AS department_name, COUNT(*) AS total_admissions FROM bus_admission a JOIN bus_department d ON a.department_id::uuid = d.id GROUP BY d.name ORDER BY total_admissions DESC",
   "metric_column": "total_admissions",
-  "explanation": "Counts admissions by department in the last 7 days, joining through bus_encounter since bus_admission has no direct department_id",
+  "explanation": "Counts admissions grouped by department",
   "confidence": 0.92,
   "warnings": []
-}`;
+}
+
+Listing query example (no aggregation, just rows):
+{
+  "sql": "SELECT u.id AS user_id, u.email, u.created_at FROM users u ORDER BY u.created_at DESC",
+  "metric_column": "user_id",
+  "explanation": "Lists all users with their account creation dates",
+  "confidence": 0.95,
+  "warnings": []
+}
+
+Now generate SQL for the request above. Respond with ONLY a JSON object:`;
 
   const response = await callLLM(REPORT_SYSTEM, userPrompt);
   console.log("[ReportBuilder] LLM raw response (first 500 chars):", response.slice(0, 500));

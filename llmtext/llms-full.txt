@@ -1250,3 +1250,171 @@ Max email attachment: `REPORT_EMAIL_MAX_ATTACHMENT_BYTES` (default 10 MB).
 | `REPORT_QUERY_TIMEOUT_MS` | `30000` | SQL execution timeout |
 | `REPORT_EMAIL_MAX_ATTACHMENT_BYTES` | `10485760` | Max attachment size (10 MB) |
 
+---
+
+## 21. Report Generator CopilotKit Flow
+
+The `/reports/generate` page provides an AI-driven report builder. A user
+describes a report in plain English; the AI generates SQL, shows a 10-row
+preview, then (after confirmation) runs the full pipeline and produces
+downloadable files.
+
+### 21a. Architecture
+
+```
+User types in CopilotKit sidebar
+  → CopilotKit sends message to MASTRA_URL/v1/chat/completions
+  → AI calls useCopilotAction hooks in ReportBuilderPanel.tsx:
+       buildReport(query, dataSourceId)   → dry-run SQL preview
+       confirmReport(title, outputFormats) → full artifact generation
+       listReports(since?, titleLike?)    → browse history
+       downloadReport(reportId)           → fetch artifact URLs
+```
+
+The AI is instructed (via the `instructions` prop on `CopilotSidebar`) to
+**always call `buildReport` first**, then `confirmReport` only after the user
+confirms.
+
+### 21b. CopilotKit actions
+
+#### `buildReport`
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `query` | `string` | yes | Natural language report description |
+| `dataSourceId` | `string` | yes | UUID from available data sources (in useCopilotReadable) |
+
+Internally calls `POST /api/report-generation/definitions` with `{ dryRun: true, nlQuery, dataSourceId }`.
+
+The server:
+1. Fetches entity metadata from `metadata_entity_header` / `metadata_entity_field`
+2. Builds a rich `schemaText` with table descriptions, column types, FK relations, and join paths
+3. Calls `runReportBuilderAgent()` in `mastra/agents/supervisor-agent.ts`
+4. The agent sends the schema + NL query to the LLM at `AI_NL2SQL_BASE_URL`
+5. LLM returns `{ sql, metric_column, explanation, confidence, warnings }`
+6. Server executes `SELECT * FROM (<sql>) AS _preview LIMIT 10` against the user's DB
+7. Returns `{ generatedSQL, previewRows, previewColumns, intent }` to the client
+
+The client updates `ReportBuilderState` to `preview_ready` and renders the preview table.
+
+Return value to AI:
+```json
+{ "success": true, "message": "Preview ready — 10 sample rows returned.", "sql": "...", "columns": [...], "rowCount": 10 }
+```
+
+#### `confirmReport`
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `title` | `string` | yes | Short report name |
+| `outputFormats` | `string` | yes | Comma-separated: `excel`, `pdf`, `csv` |
+| `recipients` | `string` | no | Comma-separated email addresses |
+| `scheduleCron` | `string` | no | 5-field cron for recurring runs; empty = one-shot |
+
+Calls `POST /api/report-generation/definitions` with full fields (not dryRun).
+This inserts into `nl_report_definitions` and immediately runs `executeReportGeneration()`.
+
+The 10-phase worker runs:
+Phase 1 → load definition · Phase 2 → RBAC check · Phase 3 → execute SQL
+Phase 4 → render chart PNG · Phase 5 → Excel · Phase 6 → PDF · Phase 7 → CSV
+Phase 8 → persist artifacts · Phase 9 → in-app notification · Phase 10 → email
+
+Return value to AI:
+```json
+{ "success": true, "message": "Report 'My Report' generated.", "reportId": "uuid" }
+```
+
+#### `listReports` / `downloadReport`
+
+`listReports` calls `GET /api/report-generation/definitions?history=true`.
+`downloadReport` calls `GET /api/report-generation/artifacts/:reportId`.
+
+### 21c. LLM SQL generation (`runReportBuilderAgent`)
+
+File: `mastra/agents/supervisor-agent.ts`
+
+```typescript
+export async function runReportBuilderAgent(
+  metric: string,       // NL description of what to report
+  dataHint: string,     // PostgreSQL DB info + RBAC context
+  schemaText: string,   // rich schema with FK join paths
+  timeWindow?: string,  // "all time" | "last 7 days" | cron natural language
+): Promise<{ sql: string; metric_column: string; explanation: string; confidence: number; warnings: string[] }>
+```
+
+The LLM receives `REPORT_SYSTEM` instructions plus examples for:
+- **Aggregation queries** (COUNT/SUM/AVG): `metric_column` = the aggregated alias (e.g. `"total_admissions"`)
+- **Listing queries** (no aggregation): `metric_column` = the first column alias (e.g. `"user_id"`)
+
+`metric_column` is optional — empty string is valid for listing reports.
+
+**Critical rules the LLM is instructed to follow:**
+- Use ONLY tables/columns from the schema
+- Follow MULTI-HOP JOIN PATHS exactly (e.g., `tableA → tableC via tableB`)
+- Cast varchar `*_id` columns to `::uuid` when joining to uuid `id` columns
+- No date filters unless the query explicitly mentions a time period
+
+### 21d. Schema context fed to the LLM
+
+The `buildReport` dryRun handler builds schema context from `metadata_entity_header` + `metadata_entity_field`:
+
+```
+Table: users
+Description: System users
+Columns: id (uuid), email (text), created_at (timestamp) -- Account creation date
+
+DIRECT FK JOINS:
+user_roles JOIN roles ON user_roles.role_id::uuid = roles.id
+
+MULTI-HOP JOIN PATHS:
+users → roles (via user_roles): JOIN user_roles ON users.id::uuid = user_roles.user_id JOIN roles ON user_roles.role_id::uuid = roles.id
+```
+
+If the data source has no entity metadata (i.e., schema not imported), the
+schema context will be empty and the LLM will not generate useful SQL. **Always
+import schema first** via `POST /api/data-sources/:id/inspect`.
+
+### 21e. Generating a report — example flow
+
+**User says:** "Show me all users and their account creation dates, export as CSV"
+
+1. AI reads `useCopilotReadable` → finds data source `{ id: "...", name: "Enterprise Config DB" }`
+2. AI calls `buildReport({ query: "Show me all users and their account creation dates", dataSourceId: "..." })`
+3. Server generates SQL:
+   ```sql
+   SELECT u.id AS user_id, u.email, u.created_at AS account_creation_date
+   FROM users u
+   ORDER BY u.created_at DESC
+   ```
+4. Server runs 10-row preview → returns to client
+5. AI tells user: "Here's a preview — 2 rows found. What title would you like for this report?"
+6. User says "Users Report, CSV please"
+7. AI calls `confirmReport({ title: "Users Report", outputFormats: "csv" })`
+8. Server saves definition, runs pipeline, writes CSV to `./job-outputs/`
+9. AI responds: "Your report 'Users Report' has been generated. Check the History tab for the download link."
+
+### 21f. Generating a chart via report generator
+
+The `buildReport` API always sets `intent.chartType = "bar"` by default.
+After `confirmReport`, the 10-phase worker (Phase 4) renders a chart image via
+ECharts SSR if `metric_columns` and `dimension_columns` are populated.
+
+To generate a chart with a specific type, the user should ask:
+"Give me a line chart of monthly signups" — the AI passes this to `buildReport.query`
+and the intent returned in the dry-run will carry `chartType: "line"`.
+
+Chart output is embedded in the PDF artifact and stored as a PNG in `job-outputs/`.
+
+For standalone (non-report) charts, use the chart builder at `/_authed/charts/`
+which calls `createChart` from `src/server-fns/charts.ts`.
+
+### 21g. Error handling
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| "Dry-run failed: No JSON object found" | LLM returned prose instead of JSON | Retry; LLM is overloaded |
+| "Dry-run failed: validation" | `sql` is empty (LLM confused) | Schema may be incomplete — inspect the data source |
+| "500 on /api/report-generation/definitions" | `nl_report_definitions` table missing | Run `bun scripts/rebuild-db.ts` |
+| Preview has 0 rows | SQL is valid but no data matches | Check WHERE clauses; LLM may have added wrong date filters |
+| Phase 2 PERMISSION_REVOKED | User's roles changed since report creation | Re-create the report or update RBAC |
+
