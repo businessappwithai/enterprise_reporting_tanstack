@@ -120,9 +120,19 @@ async function fetchSchema(request: Request) {
     .selectAll()
     .execute();
 
+  // Use bus_ tables if present, otherwise fall back to all non-nl_ tables
+  const displayTableNames = busTableNames.length > 0
+    ? busTableNames
+    : tablesList.map((t) => t.name);
+
   const compactSchema = [
     "DATABASE SCHEMA (PostgreSQL):",
-    `Available business tables: ${busTableNames.join(", ")}`,
+    `Available tables: ${displayTableNames.join(", ")}`,
+    "",
+    "TABLE COLUMNS:",
+    ...tablesList
+      .filter((t) => displayTableNames.includes(t.name))
+      .map((t) => `  ${t.name}: ${t.columns.join(", ")}`),
     "",
     "IMPORTANT: Call fetchSimilarQueries FIRST to get detailed column schemas and sample data for relevant tables before generating SQL.",
   ];
