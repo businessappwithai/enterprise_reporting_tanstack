@@ -137,14 +137,18 @@ async function buildKyselyConnection(
         poolConfig.user = user;
         poolConfig.password = password;
 
-        // Always enable SSL for external connections; pass servername so SNI works even when connecting by IP
-        poolConfig.ssl = {
-          rejectUnauthorized: false,
-          minVersion: 'TLSv1.2',
-          servername: hostname,
-        };
-
-        console.log(`[BUILD_CONN:${buildId}] SSL config: rejectUnauthorized=false, servername=${hostname}`);
+        // Skip SSL for local connections; enable for external hosts (e.g. Neon)
+        const isLocal = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
+        if (isLocal) {
+          console.log(`[BUILD_CONN:${buildId}] SSL disabled (local host)`);
+        } else {
+          poolConfig.ssl = {
+            rejectUnauthorized: false,
+            minVersion: 'TLSv1.2',
+            servername: hostname,
+          };
+          console.log(`[BUILD_CONN:${buildId}] SSL config: rejectUnauthorized=false, servername=${hostname}`);
+        }
       } else {
         // Otherwise build from individual components
         console.log(`[BUILD_CONN:${buildId}] Using individual field mode`);
