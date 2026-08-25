@@ -42,12 +42,12 @@ async function syncDataSource(ds: {
 // --------------------------------------------------------------------------
 
 async function syncSchemaForDataSource(
-  dsId: string,
+  ds: Parameters<typeof getConnection>[0],
   clientType: string,
 ): Promise<void> {
   let connection: Awaited<ReturnType<typeof getConnection>>;
   try {
-    connection = await getConnection({ id: dsId } as Parameters<typeof getConnection>[0]);
+    connection = await getConnection(ds);
   } catch {
     return; // data source unreachable — skip silently
   }
@@ -55,12 +55,13 @@ async function syncSchemaForDataSource(
   let schemaInfo: Awaited<ReturnType<typeof introspectSchema>>;
   try {
     schemaInfo = await introspectSchema(connection, clientType);
-  } catch {
+  } catch (err) {
+    console.warn(`[graph-sync] Schema introspection failed for ${ds.id}:`, err instanceof Error ? err.message : err);
     return;
   }
 
   for (const table of schemaInfo.schema.tables) {
-    const tableFqn = `${dsId}.${table.name}`;
+    const tableFqn = `${ds.id}.${table.name}`;
 
     // Upsert Table node
     await cypherWrite(
@@ -70,7 +71,7 @@ async function syncSchemaForDataSource(
            t.schema_name = $schema_name`,
       {
         fqn: tableFqn,
-        ds_id: dsId,
+        ds_id: ds.id,
         name: table.name,
         schema_name: table.schema ?? "public",
       },
@@ -80,7 +81,7 @@ async function syncSchemaForDataSource(
     await cypherWrite(
       `MATCH (ds:DataSource {id: $ds_id}), (t:Table {fqn: $fqn})
        MERGE (ds)-[:HAS_TABLE]->(t)`,
-      { ds_id: dsId, fqn: tableFqn },
+      { ds_id: ds.id, fqn: tableFqn },
     );
 
     // Upsert Column nodes
@@ -96,7 +97,7 @@ async function syncSchemaForDataSource(
              c.is_pk = $is_pk`,
         {
           fqn: colFqn,
-          ds_id: dsId,
+          ds_id: ds.id,
           table_name: table.name,
           name: col.name,
           data_type: col.type,
@@ -116,7 +117,7 @@ async function syncSchemaForDataSource(
     // FK relationships
     for (const fk of table.foreignKeys ?? []) {
       const fromColFqn = `${tableFqn}.${fk.column}`;
-      const toColFqn = `${dsId}.${fk.referencedTable}.${fk.referencedColumn}`;
+      const toColFqn = `${ds.id}.${fk.referencedTable}.${fk.referencedColumn}`;
       await cypherWrite(
         `MATCH (a:Column {fqn: $from}), (b:Column {fqn: $to})
          MERGE (a)-[:FK_REFERENCES]->(b)`,
@@ -224,14 +225,14 @@ export async function syncKnowledgeGraph(): Promise<void> {
 
   const dataSources = await db
     .selectFrom("data_sources")
-    .select(["id", "name", "client_type", "description"])
+    .selectAll()
     .where("is_active", "=", true as unknown as string)
     .where("is_deleted", "=", false as unknown as string)
     .execute();
 
   for (const ds of dataSources) {
     await syncDataSource(ds);
-    await syncSchemaForDataSource(ds.id, ds.client_type);
+    await syncSchemaForDataSource(ds, ds.client_type);
   }
 
   await syncReports();

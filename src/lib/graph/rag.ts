@@ -19,6 +19,7 @@ import { cypher, type CypherRow } from "./client";
 
 export interface GraphContext {
   tables: TableContext[];
+  llmKnowledge: { title: string; body: string }[];
   totalTokenEstimate: number;
 }
 
@@ -167,6 +168,36 @@ async function loadTableContexts(tableFqns: string[]): Promise<TableContext[]> {
 }
 
 // --------------------------------------------------------------------------
+// LLMKnowledge search
+// --------------------------------------------------------------------------
+
+async function findLLMKnowledge(tokens: string[], maxDocs = 3): Promise<{ title: string; body: string }[]> {
+  if (tokens.length === 0) return [];
+
+  const conditions = tokens
+    .map((t) => `toLower(n.title) CONTAINS toLower('${t.replace(/'/g, "\\'")}') OR toLower(n.body) CONTAINS toLower('${t.replace(/'/g, "\\'")}')`)
+    .join(" OR ");
+
+  try {
+    const rows = await cypher(
+      `MATCH (n:LLMKnowledge) WHERE ${conditions} RETURN n`,
+      {},
+      ["n"],
+    );
+
+    return rows
+      .slice(0, maxDocs)
+      .map((r) => ({
+        title: str(prop(r, "n", "title")),
+        body: str(prop(r, "n", "body")).slice(0, 800),
+      }))
+      .filter((d) => d.title);
+  } catch {
+    return [];
+  }
+}
+
+// --------------------------------------------------------------------------
 // Public API
 // --------------------------------------------------------------------------
 
@@ -189,37 +220,48 @@ export async function getGraphContext(
     .filter((t) => t.length >= 3)
     .slice(0, 20);
 
-  const matched = await findRelevantTables(dsId, tokens);
+  const [matched, llmKnowledge] = await Promise.all([
+    findRelevantTables(dsId, tokens),
+    findLLMKnowledge(tokens),
+  ]);
   const expanded = await expandFkNeighbours(matched.slice(0, maxTables));
   const capped = expanded.slice(0, maxTables);
 
   const tables = await loadTableContexts(capped);
 
-  const totalTokenEstimate = tables.reduce(
-    (sum, t) => sum + 30 + t.columns.length * 15,
-    0,
-  );
+  const totalTokenEstimate =
+    tables.reduce((sum, t) => sum + 30 + t.columns.length * 15, 0) +
+    llmKnowledge.reduce((sum, d) => sum + Math.ceil(d.body.length / 4), 0);
 
-  return { tables, totalTokenEstimate };
+  return { tables, llmKnowledge, totalTokenEstimate };
 }
 
 /**
  * Format GraphContext as a compact prompt section.
  */
 export function formatGraphContext(ctx: GraphContext): string {
-  if (ctx.tables.length === 0) return "";
+  const lines: string[] = [];
 
-  const lines: string[] = ["-- Relevant schema from knowledge graph --"];
-  for (const t of ctx.tables) {
-    const cols = t.columns
-      .map((c) => {
-        const flags = [c.isPk && "PK", c.isFk && "FK"].filter(Boolean).join(",");
-        return `  ${c.name} ${c.dataType}${flags ? ` [${flags}]` : ""}${c.nullable ? "" : " NOT NULL"}`;
-      })
-      .join("\n");
-    lines.push(`TABLE ${t.schemaName}.${t.tableName}:\n${cols}`);
-    if (t.relatedTables.length > 0) {
-      lines.push(`  -- joins: ${t.relatedTables.join(", ")}`);
+  if (ctx.tables.length > 0) {
+    lines.push("-- Relevant schema from knowledge graph --");
+    for (const t of ctx.tables) {
+      const cols = t.columns
+        .map((c) => {
+          const flags = [c.isPk && "PK", c.isFk && "FK"].filter(Boolean).join(",");
+          return `  ${c.name} ${c.dataType}${flags ? ` [${flags}]` : ""}${c.nullable ? "" : " NOT NULL"}`;
+        })
+        .join("\n");
+      lines.push(`TABLE ${t.schemaName}.${t.tableName}:\n${cols}`);
+      if (t.relatedTables.length > 0) {
+        lines.push(`  -- joins: ${t.relatedTables.join(", ")}`);
+      }
+    }
+  }
+
+  if (ctx.llmKnowledge.length > 0) {
+    lines.push("\n-- Relevant documentation --");
+    for (const doc of ctx.llmKnowledge) {
+      lines.push(`[${doc.title}]\n${doc.body}`);
     }
   }
 

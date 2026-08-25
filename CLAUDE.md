@@ -22,6 +22,9 @@ bun scripts/rebuild-db.ts                  # full schema rebuild (drops + recrea
 bun src/lib/db/seeds/001_initial_data.ts   # seed sample data + Sakila data source
 bun scripts/init-postgres.ts              # init PostgreSQL user DBs with pgvector tables
 
+# Knowledge graph (Apache AGE)
+bun scripts/sync-knowledge-graph.ts       # bootstrap AGE + sync schema + import llmtext
+
 # Background jobs
 bun src/lib/jobs/worker-runner.ts         # start background jobs worker
 

@@ -63,6 +63,14 @@ export const Route = createFileRoute("/_authed/charts/")({
 });
 
 function ChartsPage() {
+  return (
+    <CopilotKit runtimeUrl="/api/copilotkit">
+      <ChartsContent />
+    </CopilotKit>
+  );
+}
+
+function ChartsContent() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -234,16 +242,15 @@ RULES:
 - Never fabricate data source IDs — always pick from the available list.`;
 
   return (
-    <CopilotKit runtimeUrl="/api/copilotkit">
-      <CopilotSidebar
-        instructions={CHARTS_AI_INSTRUCTIONS}
-        defaultOpen={false}
-        labels={{
-          title: "Chart Builder AI",
-          initial: "Describe the chart you want and I'll generate the SQL and create it for you.",
-          placeholder: "e.g. Bar chart of monthly revenue by product category…",
-        }}
-      >
+    <CopilotSidebar
+      instructions={CHARTS_AI_INSTRUCTIONS}
+      defaultOpen={false}
+      labels={{
+        title: "Chart Builder AI",
+        initial: "Describe the chart you want and I'll generate the SQL and create it for you.",
+        placeholder: "e.g. Bar chart of monthly revenue by product category…",
+      }}
+    >
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <PageHeader title="Charts" description="Create and manage data visualizations" />
@@ -421,7 +428,6 @@ RULES:
         </CardContent>
       </Card>
     </div>
-      </CopilotSidebar>
-    </CopilotKit>
+    </CopilotSidebar>
   );
 }

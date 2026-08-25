@@ -5,10 +5,10 @@
  * other PostgreSQL work uses.  Two steps are needed per connection:
  *   LOAD 'age'
  *   SET search_path = ag_catalog, "$user", public
- * We do both in the pool `connect` event so every connection is ready.
  *
- * Cypher parameters are passed as a jsonb literal (third arg to cypher()).
- * SQL-level $1 parameterisation keeps the JSON safe against injection.
+ * Always use fully-qualified ag_catalog.cypher() and ag_catalog.agtype so
+ * the function resolves correctly regardless of search_path ordering.
+ * Params are cast to ag_catalog.agtype (not jsonb) per the AGE 1.5 API.
  */
 
 import { Pool, type PoolClient } from "pg";
@@ -20,11 +20,16 @@ export const GRAPH_NAME = "knowledge_graph";
 
 let _pool: Pool | null = null;
 
+async function setupClient(client: PoolClient): Promise<void> {
+  await client.query(`LOAD 'age'`);
+  await client.query(`SET search_path = ag_catalog, "$user", public`);
+}
+
 function getPool(): Pool {
   if (_pool) return _pool;
   _pool = new Pool({ connectionString: GRAPH_DATABASE_URL, max: 10 });
   _pool.on("connect", (client) => {
-    client.query(`LOAD 'age'; SET search_path = ag_catalog, "$user", public;`).catch(() => {});
+    setupClient(client).catch(() => {});
   });
   return _pool;
 }
@@ -36,10 +41,9 @@ export interface CypherRow {
 /**
  * Run a Cypher query against `knowledge_graph`.
  *
- * @param cypher  - Cypher string; use $paramName syntax for variables.
+ * @param cql     - Cypher string; use $paramName syntax for variables.
  * @param params  - Variables injected into the Cypher as a JSON object.
  * @param aliases - Column aliases declared in the AS (...) clause.
- *                  Each string becomes one `agtype` column.
  */
 export async function cypher(
   cql: string,
@@ -49,14 +53,28 @@ export async function cypher(
   const pool = getPool();
   const client: PoolClient = await pool.connect();
   try {
-    await client.query(`LOAD 'age'; SET search_path = ag_catalog, "$user", public;`);
+    await setupClient(client);
 
     const asCols =
-      aliases.length > 0 ? aliases.map((a) => `${a} agtype`).join(", ") : "result agtype";
+      aliases.length > 0
+        ? aliases.map((a) => `${a} ag_catalog.agtype`).join(", ")
+        : "result ag_catalog.agtype";
 
-    const sql = `SELECT * FROM cypher('${GRAPH_NAME}', $$ ${cql} $$, $1::jsonb) AS (${asCols})`;
-    const result = await client.query(sql, [JSON.stringify(params)]);
+    const hasParams = Object.keys(params).length > 0;
+    let sql: string;
+    let queryParams: unknown[];
 
+    if (hasParams) {
+      // Third arg must be a $N placeholder cast to ag_catalog.agtype
+      sql = `SELECT * FROM ag_catalog.cypher('${GRAPH_NAME}', $$ ${cql} $$, $1::ag_catalog.agtype) AS (${asCols})`;
+      queryParams = [JSON.stringify(params)];
+    } else {
+      // Omit third arg entirely when no params — avoids the type-resolution issue
+      sql = `SELECT * FROM ag_catalog.cypher('${GRAPH_NAME}', $$ ${cql} $$) AS (${asCols})`;
+      queryParams = [];
+    }
+
+    const result = await client.query(sql, queryParams);
     return result.rows as CypherRow[];
   } finally {
     client.release();
@@ -65,12 +83,37 @@ export async function cypher(
 
 /**
  * Run a Cypher query that returns no rows (CREATE / MERGE / DELETE).
+ * Parameters are inlined into the Cypher string to avoid type-resolution issues.
  */
 export async function cypherWrite(
   cql: string,
   params: Record<string, unknown> = {},
 ): Promise<void> {
-  await cypher(cql, params, []);
+  const pool = getPool();
+  const client: PoolClient = await pool.connect();
+  try {
+    await setupClient(client);
+
+    // Inline parameters into the Cypher string (safe: we own all param values)
+    let inlinedCql = cql;
+    for (const [key, val] of Object.entries(params)) {
+      const jsonVal = typeof val === "string"
+        ? `'${val.replace(/\\/g, "\\\\").replace(/'/g, "\\'")}'`
+        : val === null || val === undefined
+        ? "null"
+        : typeof val === "boolean"
+        ? String(val)
+        : typeof val === "number"
+        ? String(val)
+        : `'${String(val).replace(/\\/g, "\\\\").replace(/'/g, "\\'")}'`;
+      inlinedCql = inlinedCql.replace(new RegExp(`\\$${key}\\b`, "g"), jsonVal);
+    }
+
+    const sql = `SELECT * FROM ag_catalog.cypher('${GRAPH_NAME}', $$ ${inlinedCql} $$) AS (result ag_catalog.agtype)`;
+    await client.query(sql);
+  } finally {
+    client.release();
+  }
 }
 
 /**
@@ -81,7 +124,7 @@ export async function graphSql(sql: string, values: unknown[] = []): Promise<imp
   const pool = getPool();
   const client = await pool.connect();
   try {
-    await client.query(`LOAD 'age'; SET search_path = ag_catalog, "$user", public;`);
+    await setupClient(client);
     return await client.query(sql, values);
   } finally {
     client.release();
