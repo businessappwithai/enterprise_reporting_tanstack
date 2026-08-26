@@ -1,324 +1,315 @@
 # Enterprise Reporting and Dashboard System
 
-A production-ready enterprise reporting system built with **TanStack Start**, **Bun runtime**, **SQLite**, **BullMQ**, and **shadcn/ui**. Provides real-time data visualization, SQL querying, role-based access control, job scheduling, and multi-format export capabilities.
+A production-ready enterprise reporting system built with **TanStack Start**, the **Bun** runtime, **PostgreSQL**, **Trigger.dev**, and **shadcn/ui**. Provides real-time data visualization, SQL querying, natural-language querying, role-based access control, job scheduling, and multi-format export.
 
 ## 🚀 Key Features
 
 ### Core Reporting Engine
-- **TanStack Table** - Headless data grid with server-side pagination, sorting, and filtering
-- **Kysely** - Type-safe SQL query builder for dynamic, secure data access
-- **Application-Level RLS** - Row-level security at application layer
-- **Advanced Filtering** - Dynamic query builder with multiple operators
-- **SQL Validation** - Query validation to prevent injection and ensure correctness
+- **TanStack Table** — headless data grid with server-side pagination, sorting, and filtering
+- **Kysely** — type-safe SQL query builder for dynamic, secure data access
+- **Multi-database data sources** — PostgreSQL, MySQL/MariaDB, and SQL Server connections managed per data source
+- **Advanced filtering** — dynamic query builder with multiple operators
+- **SQL validation** — AST-level parsing to block unsafe statements and enforce entity permissions
 
 ### Data Visualization
-- **Recharts Integration** - Professional charts (Bar, Line, Pie, Area)
-- **Interactive Dashboards** - Drag-and-drop dashboard builder with React Grid Layout
-- **Customizable Widgets** - Multiple visualization types per dashboard
-- **Responsive Design** - Mobile-optimized interfaces
+- **Recharts** and optional **ECharts** — bar, line, pie, area, and composed charts
+- **Interactive dashboards** — drag-and-drop builder with React Grid Layout
+- **DuckDB WASM** — optional in-browser SQL over result sets for instant re-slicing
+- **Public share links** — read-only chart, dashboard, and report links
 
 ### Export & Delivery
-- **CSV Export** - Fast, formatted CSV generation
-- **Excel Export** - Professional spreadsheets with formatting
-- **PDF Export** - Publication-ready PDF documents
-- **Email Delivery** - SMTP-based report distribution
-- **Job Queue** - BullMQ-powered asynchronous processing with Redis backend
-- **Scheduled Reports** - Cron-based automated generation and delivery
+- **CSV export** — fast, formatted CSV generation
+- **Excel export** — spreadsheets via ExcelJS
+- **PDF export** — documents via jsPDF + jspdf-autotable
+- **Email delivery** — SMTP-based report distribution (Nodemailer)
+- **Job queue** — Trigger.dev tasks for report generation, exports, email batches, and scheduled refreshes
+- **Scheduled reports** — cron-based automated generation and delivery
 
 ### Enterprise Features
-- **Role-Based Access Control (RBAC)** - Fine-grained permissions at resource level
-- **Audit Logging** - Complete audit trail for exports and email delivery
-- **User Management** - Admin panel for users, roles, and permissions
-- **Metadata Management** - Dynamic entity and field management
-- **Natural Language Queries** - AI-powered SQL generation with OpenAI + CopilotKit
-- **Session Management** - Secure Custom JWT auth authentication
+- **Two-layer RBAC** — system permissions plus per-data-source table/column entity permissions
+- **Audit logging** — complete audit trail for queries, exports, and delivery
+- **User management** — admin panel for users, roles, and permissions
+- **Metadata management** — entity and field definitions synced from live schemas
+- **Natural language queries** — Mastra + llama.cpp NL→SQL with pgvector RAG and an Apache AGE knowledge graph
+- **Voice queries** — optional speech-to-text and text-to-speech endpoints
+- **Session management** — custom JWT auth over HttpOnly cookies
 
 ## 📋 Technology Stack
 
 | Layer | Technology |
 |-------|-----------|
 | **Runtime** | Bun >= 1.3.0 |
-| **Framework** | TanStack Start 1.167+ (Full-stack React) |
+| **Framework** | TanStack Start 1.167+ (full-stack React 19) |
 | **Language** | TypeScript (strict mode) |
 | **UI Library** | shadcn/ui (Radix UI + Tailwind CSS 3) |
-| **State Management** | TanStack Query + TanStack Table + TanStack Form |
-| **Database** | SQLite (via bun:sqlite + Kysely) |
-| **Authentication** | Custom JWT (jose) + HTTP-only cookies |
-| **Charts** | Recharts |
-| **Job Queue** | BullMQ + Redis (ioredis) |
-| **AI/NL Query** | OpenAI (via @ai-sdk/openai) + CopilotKit |
-| **Export Formats** | ExcelJS, PDFKit, PapaParse |
+| **State Management** | TanStack Query + TanStack Table + TanStack Form + TanStack DB |
+| **Config Database** | PostgreSQL (via `pg` + Kysely) |
+| **Knowledge Graph** | PostgreSQL + Apache AGE (`ers_knowledge`) |
+| **Data Sources** | PostgreSQL, MySQL/MariaDB, SQL Server (via Kysely dialects) |
+| **Authentication** | Custom JWT (jose) + HTTP-only cookies, bcrypt hashing |
+| **Charts** | Recharts, optional ECharts |
+| **Client-side SQL** | DuckDB WASM (feature-flagged) |
+| **Job Queue** | Trigger.dev, with a built-in Bun cron runner as fallback |
+| **AI / NL Query** | Mastra + llama.cpp (OpenAI-compatible) + CopilotKit, pgvector RAG |
+| **Export Formats** | ExcelJS, jsPDF |
 | **Email** | Nodemailer (SMTP) |
-| **Testing** | Playwright (E2E only) |
-| **Styling** | Tailwind CSS with CSS variables (HSL color system) |
-| **Deployment** | Docker (Bun Alpine), Nginx reverse proxy |
+| **Lint / Format** | Biome |
+| **Testing** | Playwright (E2E) |
+| **Deployment** | Docker (Bun), Nginx reverse proxy |
 
 ## 🛠️ Installation
 
 ### Prerequisites
 - **Bun** >= 1.3.0
-- **Redis** (for BullMQ job queue)
-- **SMTP Server** (for email delivery - optional but recommended)
+- **PostgreSQL** (config database; the knowledge graph needs the Apache AGE extension)
+- **SMTP server** — optional, for email delivery
+- **Trigger.dev server** — optional; without `TRIGGER_API_URL` the app runs its built-in cron runner
 
 ### Setup Steps
 
-1. **Clone and Install**
+1. **Clone and install**
 ```bash
 git clone <repository>
 cd enterprise_reporting_tanstack
 bun install
 ```
 
-2. **Configure Environment**
+2. **Configure environment**
 ```bash
 cp .env.example .env
-# Edit .env with your configuration
+# Edit .env — at minimum set AUTH_SECRET, ENCRYPTION_KEY, DATABASE_URL, GRAPH_DATABASE_URL
 ```
 
-3. **Setup Database**
+3. **Set up the database**
 ```bash
-# Run migrations (creates SQLite database)
-bun run db:migrate
-
-# Seed sample data
-bun run db:sample
+bun run db:migrate   # rebuild the PostgreSQL schema
+bun run db:seed      # seed sample data + Sakila data source
 ```
 
-4. **Start Services**
+The schema also bootstraps itself on first boot (`CREATE TABLE IF NOT EXISTS`), so a fresh database works without running these.
+
+4. **Start services**
 ```bash
-# Terminal 1: Development server (port 4050)
+# Terminal 1: development server (port 4050)
 bun run dev
 
-# Terminal 2: BullMQ worker (in separate terminal)
+# Terminal 2: background jobs worker
 bun run jobs:worker
 ```
 
-5. **Access Application**
+5. **Access the application**
 - Application: `http://localhost:4050`
-- Default credentials: `admin@admin.com` / `admin`
+- Default credentials: `admin@admin.com` / `admin` (also `nlquery@nlquery.com` / `nlquery`)
 
 ## 📁 Project Structure
 
-See [CLAUDE.md](CLAUDE.md) for detailed project structure and architecture.
+See [../CLAUDE.md](../CLAUDE.md) for detailed architecture and conventions.
 
 Key directories:
-- `src/app/` - TanStack Start App Router pages and API routes
-- `src/components/` - React components (UI, features, layouts)
-- `src/lib/` - Core libraries (database, auth, permissions, jobs, security)
-- `src/lib/db/` - Database layer (Kysely queries, seeds, connection)
-- `e2e/` - Playwright E2E test suite
-- `docs/` - Detailed documentation
+- `src/routes/` — file-based routes: `_authed/` pages, `api/` handlers, `share/` public links
+- `src/server-fns/` — TanStack Start server functions (`.inputValidator()`, not `.validator()`)
+- `src/components/` — React components (UI, features, layouts)
+- `src/lib/` — core libraries (db, auth, permissions, jobs, mastra, graph, duckdb, export, security)
+- `src/lib/db/` — Kysely schema, bootstrap, connection manager, migrations, seeds
+- `language/`, `llmtext/` — the EML modeling language and its code generator
+- `e2e/` — Playwright E2E test suite
+- `docs/` — supplementary documentation
 
 ## 🔒 Security Features
 
 ### SQL Injection Prevention
-- Column name whitelisting
 - Parameterized queries via Kysely
-- Operator validation
-- Query parsing and sanitization
+- SQL parsed to an AST and validated before execution
+- Column and table access checked against data-source entity permissions
+- Operator and identifier whitelisting in the filter builder
 
 ### Authentication & Authorization
-- Custom JWT auth with credentials provider
-- Bcrypt password hashing (10 rounds)
-- Role-based access control (RBAC)
-- Resource-level permissions
-- Session management with HTTP-only cookies
+- Custom JWT auth (jose) with an HttpOnly `session_token` cookie
+- bcrypt password hashing
+- Two-layer RBAC: system permissions (`resource:action`) plus per-data-source entity permissions
+- Route-level guarding through the `_authed` layout
 
 ### Data Protection
 - AES-256-GCM encryption for data source credentials
 - Audit logging for sensitive operations
-- Application-level row-level security
+- Application-level row filtering by role
 
 ## 📊 Database Schema
 
-**Single Database Approach**: All configuration and business data in SQLite
+**Config database (PostgreSQL)** holds all application configuration; reporting data stays in the external data sources.
 
 ### Core Tables
-- `users` - User accounts and authentication
-- `roles` - Role definitions with permission sets
-- `user_roles` - User-role associations
-- `resource_permissions` - Resource-level access control
-- `data_sources` - External database connections
-- `audit_log` - Audit trail for all sensitive operations
+- `users`, `roles`, `user_roles` — accounts and system roles
+- `resource_permissions` — resource-level access control
+- `data_sources` — external database connections (encrypted config)
+- `audit_log`, `logs` — audit trail and application logs
 
 ### Data Management Tables
-- `report_definitions` - Report configurations
-- `chart_definitions` - Chart configurations
-- `dashboard_layouts` - Dashboard layouts and widgets
-- `saved_queries` - SQL query templates
-- `email_templates` - Email template definitions
+- `report_definitions`, `chart_definitions` — report and chart configuration
+- `dashboard_layouts`, `dashboard_widgets` — dashboard composition
+- `saved_queries` — SQL query templates
+- `filter_definitions`, `report_filters`, `chart_filters` — reusable filters
+- `email_templates` — email template definitions
+
+### Access Control Tables
+- `ds_roles`, `ds_user_roles`, `ds_entity_permissions` — per-data-source RBAC
+
+### AI / NL Query Tables
+- `nl_query_context`, `nl_query_role_stats`, `nl_query_feedback` — NL query history and tuning
+- `schema_table_instructions`, `schema_field_instructions` — schema hints for the NL→SQL model
 
 ### Job Management Tables
-- `job_definitions` - Job queue definitions
-- `job_executions` - Job execution history
+- `job_definitions`, `job_executions` — job configuration and execution history
 
 ## 🔄 Job Queue Architecture
 
-**BullMQ + Redis** for reliable asynchronous job processing:
+**Trigger.dev** handles asynchronous job processing. (An earlier revision used BullMQ + Redis; that code remains under `src/lib/queue/` but is unused and its dependencies are not installed.)
 
-### Job Types
-- `export` - Generate data exports (CSV, Excel, PDF)
-- `report` - Generate scheduled reports
-- `email-batch` - Send batch emails
+### Tasks
+- `report:generate` — generate scheduled or on-demand reports
+- `data:export` — generate data exports (CSV, Excel, PDF)
+- `email:batch` — send batch emails
+- `scheduled:refresh` — refresh reports, charts, and dashboards
+- monitoring evaluation — evaluate monitoring rules and raise notifications
 
-### Features
-- Automatic retry with exponential backoff
-- Job status tracking and monitoring
-- Persistent queue with Redis backend
-- Bull Board UI for monitoring (`/bull-board`)
+Task definitions live in `src/lib/jobs/trigger-tasks.ts`; the work itself is in `src/lib/jobs/workers/`. Configuration is in `trigger.config.ts`.
+
+### Backends
+- **Trigger.dev** — used when `TRIGGER_API_URL` is set; the platform manages scheduling, retries, and concurrency
+- **Built-in cron runner** — automatic fallback when `TRIGGER_API_URL` is unset; a pure-Bun interval loop polls `monitoring_rules` every minute and executes due rules in-process
 
 ## 📧 Email Configuration
 
-### SMTP Setup
-Supports any SMTP provider (Gmail, SendGrid, AWS SES, etc.)
+Supports any SMTP provider (Gmail, SendGrid, AWS SES, etc.):
 
 ```env
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
+SMTP_USER=your-email@example.com
 SMTP_PASSWORD=your-app-password
 ```
 
-### Email Features
-- Professional HTML templates
-- Branded headers and footers
-- Responsive design
-- Attachment support
+## 🤖 Natural Language Queries
 
-## 🎨 Dashboard Builder
+The NL pipeline runs entirely against OpenAI-compatible endpoints, so it works with local llama.cpp servers or hosted providers:
 
-### Features
-- Drag-and-drop widget placement
-- Resize widgets
-- Multiple widget types (Table, Chart, Metric)
-- Layout persistence
-- User-specific dashboards
+```env
+MASTRA_URL=http://localhost:4111        # Mastra agent server
+LLAMA_REASONING_URL=http://localhost:8080  # NL→SQL model
+LLAMA_EMBEDDING_URL=http://localhost:8080  # embeddings (384 dimensions)
+```
+
+Flow: CopilotKit sidebar → `/api/copilotkit` → Mastra → LLM → SQL AST validation → RBAC check → execution. Retrieval context comes from pgvector tables plus the Apache AGE knowledge graph (`bun scripts/sync-knowledge-graph.ts`).
 
 ## 🔧 Common Commands
 
 ### Development
 ```bash
-bun run dev              # Start dev server on port 4050
-bun run build            # Production build
-bun run start            # Start production server
+bun run dev              # dev server on port 4050
+bun run build            # production build
+bun run start            # serve the production build
 ```
 
 ### Quality Checks
 ```bash
-bun run lint             # ESLint
-bun run lint:fix         # ESLint with auto-fix
+bun run lint             # Biome lint
+bun run lint:fix         # Biome lint with auto-fix
 bun run typecheck        # TypeScript type checking
-bun run format           # Prettier formatting
+bun run format           # Biome format
 bun run precommit        # lint + typecheck + format:check
+bun run build:check      # lint + typecheck + build
 ```
 
 ### Database
 ```bash
-bun run db:migrate       # Run pending migrations
-bun run db:migrate:make  # Create new migration
-bun run db:seed          # Run seeds
-bun run db:rollback      # Rollback last migration
-bun run db:sample        # Seed sample data
+bun run db:migrate       # rebuild schema
+bun run db:seed          # seed initial data
+bun run db:setup         # rebuild + seed
+bun run db:sample        # seed sample data
 ```
 
 ### Testing
 ```bash
-bun run test:setup       # Setup test data
-bun run test:e2e         # Run E2E tests
-bun run test:e2e:ui      # Run with Playwright UI
-bun run test:ci          # Full CI pipeline
+bun run test:setup       # set up test data
+bun run test:e2e         # run E2E tests
+bun run test:e2e:ui      # run with the Playwright UI
+bun run test:e2e:headed  # run in a visible browser
+bun run test:e2e:all     # test:setup + test:e2e
 ```
 
 ### Background Services
 ```bash
-bun run jobs:worker      # Start BullMQ worker
+bun run jobs:worker      # start the jobs worker
 ```
 
-See [CLAUDE.md](CLAUDE.md) for complete command reference.
+## 🚦 Performance Notes
 
-## 🚦 Performance Optimizations
-
-- **Server-Side Pagination**: All data queries use LIMIT/OFFSET at database level
-- **Query Optimization**: Indexed columns, efficient joins, parameterized queries
-- **Caching**: TanStack Query automatic caching and stale-while-revalidate
-- **Lazy Loading**: Components and data loaded on demand
-- **Virtual Scrolling**: Optional virtual scrolling for large datasets
+- **Server-side pagination** — all data queries apply `LIMIT`/`OFFSET` at the database level; never fetch a full table and paginate on the client
+- **Connection pooling** — external data source connections are pooled per data source and health-checked before reuse
+- **Caching** — TanStack Query caching and stale-while-revalidate
+- **Virtual scrolling** — optional for large result sets, backed by server-side fetching
+- **DuckDB WASM** — optional client-side re-querying of already-fetched result sets
 
 ## 📈 Testing
 
-**Playwright E2E Test Suite** with phased test execution:
+Playwright E2E suite in `e2e/`:
 
 ```bash
-# Run all tests
-bun run test:e2e
-
-# Run specific phase
-bun run test:phase1      # Authentication
-bun run test:phase2      # Dashboards
-bun run test:phase3      # SQL Editor Basic
-bun run test:phase4      # SQL Editor Advanced
-bun run test:phase5      # Reports
-bun run test:phase6      # Charts
+bun run test:e2e                                # all tests
+playwright test e2e/sql-editor.spec.ts          # one spec file
+playwright test e2e/sql-editor.spec.ts -g "..." # one test by name
 ```
 
-Tests run against live dev server on `http://localhost:4050`.
+The dev server must already be running on port 4050 — the `webServer` block in `playwright.config.ts` is commented out. Authentication state is created once by `e2e/global-setup.ts` and cached in `auth.json`; tests run serially with a single worker to avoid session interference. Set `BASE_URL` to target another environment.
 
-See [docs/TESTING.md](docs/TESTING.md) and [e2e/SETUP.md](e2e/SETUP.md) for detailed test documentation.
+See [TESTING.md](TESTING.md) and [../e2e/SETUP.md](../e2e/SETUP.md).
 
 ## 📚 Documentation
 
-- **[CLAUDE.md](CLAUDE.md)** - Developer guide for Claude Code instances
-- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** - Technical architecture and design decisions
-- **[docs/TESTING.md](docs/TESTING.md)** - Testing guide and test organization
-- **[e2e/SETUP.md](e2e/SETUP.md)** - E2E test setup and troubleshooting
-- **[docs/DEPLOY.md](docs/DEPLOY.md)** - Deployment guide for production
-- **[docs/FEATURES.md](docs/FEATURES.md)** - Feature descriptions and capabilities
+- **[../CLAUDE.md](../CLAUDE.md)** — architecture and conventions (authoritative)
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** — technical architecture and design decisions
+- **[TESTING.md](TESTING.md)** — testing guide and test organization
+- **[../e2e/SETUP.md](../e2e/SETUP.md)** — E2E test setup and troubleshooting
+- **[DEPLOY.md](DEPLOY.md)** — production deployment guide
+- **[FEATURES.md](FEATURES.md)** — feature descriptions and capabilities
+
+⚠️ Several files in this directory predate the migrations to PostgreSQL and Trigger.dev and still describe SQLite/MariaDB, BullMQ, Redis, and Bull Board. This README and the root `CLAUDE.md` are current; verify anything else against source before relying on it.
 
 ## 🐳 Docker Deployment
 
-### Build Docker Image
 ```bash
 docker build -t enterprise-reporting .
+docker compose up -d
 ```
 
-### Docker Services (via docker-compose.yml)
-- **Nginx** - Reverse proxy with SSL support
-- **Redis** - Job queue backend
-- **App** - TanStack Start application
+Use the root `docker-compose.yml` — it runs PostgreSQL with Apache AGE (`apache/age:PG16`) and passes `DATABASE_URL`/`GRAPH_DATABASE_URL`. The `docker-compose.dev.yml`, `docker-compose.local.yml`, and `docker-compose.remote.yml` variants are stale: they still start a MariaDB container and pass `MARIADB_*` variables that the application ignores.
 
-### Environment Variables
-Key variables for deployment:
-- `AUTH_SECRET` - JWT secret for token signing (min 32 chars)
-- `DATABASE_PATH` - SQLite database file path
-- `REDIS_URL` - Redis connection URL
-- `ENCRYPTION_KEY` - AES-256 encryption key for credentials
-- `OPENAI_API_KEY` - OpenAI API key for NL queries
-- `DEFAULT_PAGE_SIZE` - Server-side pagination size (default: 50)
-- `MAX_PAGE_SIZE` - Max allowed page size (default: 1000)
+Compose services cover the app, PostgreSQL, Nginx reverse proxy, and the optional AI/NL query and speech services (`Dockerfile.mastra`, `Dockerfile.nlquery`, `Dockerfile.stt`).
 
-See [docs/DEPLOY.md](docs/DEPLOY.md) for complete deployment guide.
+Key deployment variables:
+- `AUTH_SECRET` — JWT signing key (min 32 chars)
+- `ENCRYPTION_KEY` — AES-256-GCM key (64 hex chars) for data source credentials
+- `DATABASE_URL` — PostgreSQL config database
+- `GRAPH_DATABASE_URL` — Apache AGE knowledge graph database
+- `TRIGGER_API_URL` — Trigger.dev server (omit to use the built-in cron runner)
+- `MASTRA_URL`, `LLAMA_REASONING_URL`, `LLAMA_EMBEDDING_URL` — AI services
+- `DEFAULT_PAGE_SIZE`, `MAX_PAGE_SIZE` — server-side pagination limits
+
+See [DEPLOY.md](DEPLOY.md) for the complete deployment guide.
 
 ## 🤝 Contributing
 
-For local development:
-1. Read [CLAUDE.md](CLAUDE.md) for project conventions
+1. Read [../CLAUDE.md](../CLAUDE.md) for project conventions
 2. Run `bun run precommit` before committing
-3. Ensure tests pass with `bun run test:e2e`
-4. Follow existing code patterns and TypeScript strict mode
+3. Ensure E2E tests pass with `bun run test:e2e`
+4. Follow existing patterns and TypeScript strict mode
 
-## 📄 License
+## 🆘 Troubleshooting
 
-Copyright © 2024-2025 Enterprise Reporting System
-All rights reserved.
-
-## 🆘 Support & Troubleshooting
-
-### Common Issues
-
-**Tests fail with authentication error**
+**Tests fail with an authentication error**
 ```bash
-bun run db:migrate
-bun run db:sample
+rm -f auth.json
+bun run db:setup
 ```
 
 **Port 4050 already in use**
@@ -326,12 +317,10 @@ bun run db:sample
 lsof -ti:4050 | xargs kill -9
 ```
 
-**Database locked error**
-- Ensure only one BullMQ worker is running
-- Check that dev server isn't running twice
+**Server functions crash at runtime** — check that they use `.inputValidator()`, not `.validator()`; the Vite plugin passes unknown method names through to the client bundle verbatim.
 
-For detailed troubleshooting, see [e2e/SETUP.md](e2e/SETUP.md).
+**Data source connection fails over IPv6** — the connection manager resolves hostnames to IPv4 explicitly for this reason; verify `ssl.servername` is preserved if you change that path.
 
----
+## 📄 License
 
-**Built with precision for enterprise-grade reporting needs.**
+Copyright © 2024-2026 Enterprise Reporting System. All rights reserved.
