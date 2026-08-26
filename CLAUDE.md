@@ -218,7 +218,7 @@ LOG_LEVEL=info             # Pino log level
 DEFAULT_PAGE_SIZE / MAX_PAGE_SIZE / DATA_TABLE_PAGE_SIZE / EXPORT_PAGE_SIZE
 ```
 
-`.env.example` still lists `MARIADB_*` variables — they are unused; set `DATABASE_URL` instead.
+`.env.example` documents this full set; copy it to `.env` to start.
 
 **Server-side pagination is mandatory.** Every data query must apply `LIMIT`/`OFFSET` at the database level; never fetch a full table and paginate on the client.
 
@@ -236,7 +236,9 @@ Playwright tests in `e2e/`. The dev server must be running on port 4050 before r
 
 ## Stale documentation
 
-Most files under `docs/` predate the migrations to PostgreSQL and Trigger.dev and describe SQLite/MariaDB, BullMQ + Redis, Bull Board, and OpenAI-based NL query. `docs/CLAUDE.md` in particular is an obsolete copy of this file — this root `CLAUDE.md` is authoritative. Verify against source before trusting anything in `docs/`.
+Most files under `docs/` predate the migrations to PostgreSQL and Trigger.dev and describe SQLite/MariaDB, BullMQ + Redis, Bull Board, and OpenAI-based NL query. `docs/README.md` and this file are current; verify anything else in `docs/` against source before trusting it.
+
+The same applies to the Docker Compose files: `docker-compose.yml` is current (PostgreSQL via `apache/age:PG16`, `DATABASE_URL`/`GRAPH_DATABASE_URL`), while `docker-compose.dev.yml`, `docker-compose.local.yml`, and `docker-compose.remote.yml` still start a MariaDB container and pass `MARIADB_*` to the app, which ignores them.
 
 ## EML Language System
 

@@ -80,8 +80,6 @@ cp .env.example .env
 # Edit .env — at minimum set AUTH_SECRET, ENCRYPTION_KEY, DATABASE_URL, GRAPH_DATABASE_URL
 ```
 
-Note: `.env.example` still lists `MARIADB_*` variables from an earlier revision. They are unused — set `DATABASE_URL` instead.
-
 3. **Set up the database**
 ```bash
 bun run db:migrate   # rebuild the PostgreSQL schema
@@ -275,7 +273,7 @@ See [TESTING.md](TESTING.md) and [../e2e/SETUP.md](../e2e/SETUP.md).
 - **[DEPLOY.md](DEPLOY.md)** — production deployment guide
 - **[FEATURES.md](FEATURES.md)** — feature descriptions and capabilities
 
-⚠️ Several files in this directory predate the migrations to PostgreSQL and Trigger.dev and still describe SQLite/MariaDB, BullMQ, Redis, and Bull Board. `docs/CLAUDE.md` is an obsolete copy of the root `CLAUDE.md`. Verify against source before relying on them.
+⚠️ Several files in this directory predate the migrations to PostgreSQL and Trigger.dev and still describe SQLite/MariaDB, BullMQ, Redis, and Bull Board. This README and the root `CLAUDE.md` are current; verify anything else against source before relying on it.
 
 ## 🐳 Docker Deployment
 
@@ -283,6 +281,8 @@ See [TESTING.md](TESTING.md) and [../e2e/SETUP.md](../e2e/SETUP.md).
 docker build -t enterprise-reporting .
 docker compose up -d
 ```
+
+Use the root `docker-compose.yml` — it runs PostgreSQL with Apache AGE (`apache/age:PG16`) and passes `DATABASE_URL`/`GRAPH_DATABASE_URL`. The `docker-compose.dev.yml`, `docker-compose.local.yml`, and `docker-compose.remote.yml` variants are stale: they still start a MariaDB container and pass `MARIADB_*` variables that the application ignores.
 
 Compose services cover the app, PostgreSQL, Nginx reverse proxy, and the optional AI/NL query and speech services (`Dockerfile.mastra`, `Dockerfile.nlquery`, `Dockerfile.stt`).
 
