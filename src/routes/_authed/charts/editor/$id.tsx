@@ -411,7 +411,7 @@ function ChartEditorContent() {
 
 function ChartEditorPage() {
   return (
-    <CopilotKit runtimeUrl="/api/copilotkit">
+    <CopilotKit runtimeUrl="/api/copilotkit" showDevConsole={false}>
       <ChartEditorContent />
     </CopilotKit>
   );

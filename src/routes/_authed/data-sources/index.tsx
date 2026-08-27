@@ -810,7 +810,7 @@ function DataSourcesContent() {
 
 function DataSourcesPage() {
   return (
-    <CopilotKit runtimeUrl="/api/copilotkit">
+    <CopilotKit runtimeUrl="/api/copilotkit" showDevConsole={false}>
       <DataSourcesContent />
     </CopilotKit>
   );

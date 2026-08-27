@@ -366,7 +366,7 @@ function JobsContent() {
 
 function JobsPage() {
   return (
-    <CopilotKit runtimeUrl="/api/copilotkit">
+    <CopilotKit runtimeUrl="/api/copilotkit" showDevConsole={false}>
       <JobsContent />
     </CopilotKit>
   );

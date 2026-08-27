@@ -13,6 +13,7 @@ function NlQueryPage() {
     <CopilotKit
       runtimeUrl="/api/copilotkit"
       textToSpeechUrl="/api/copilotkit/tts"
+      showDevConsole={false}
     >
       <CopilotSidebar
         instructions={`SQL agent for PostgreSQL. Use ONLY tables/columns from the schema context — never invent names.

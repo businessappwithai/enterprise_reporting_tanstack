@@ -64,7 +64,7 @@ export const Route = createFileRoute("/_authed/charts/")({
 
 function ChartsPage() {
   return (
-    <CopilotKit runtimeUrl="/api/copilotkit">
+    <CopilotKit runtimeUrl="/api/copilotkit" showDevConsole={false}>
       <ChartsContent />
     </CopilotKit>
   );

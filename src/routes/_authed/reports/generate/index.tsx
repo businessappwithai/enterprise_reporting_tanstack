@@ -10,7 +10,7 @@ export const Route = createFileRoute("/_authed/reports/generate/")({
 
 function ReportGeneratePage() {
   return (
-    <CopilotKit runtimeUrl="/api/copilotkit">
+    <CopilotKit runtimeUrl="/api/copilotkit" showDevConsole={false}>
       <CopilotSidebar
         defaultOpen={true}
         instructions={`You are a report generation assistant for an enterprise reporting platform.

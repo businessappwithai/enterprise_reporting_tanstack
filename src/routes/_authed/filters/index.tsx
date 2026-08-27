@@ -432,7 +432,7 @@ function FiltersContent() {
 
 function FiltersPage() {
   return (
-    <CopilotKit runtimeUrl="/api/copilotkit">
+    <CopilotKit runtimeUrl="/api/copilotkit" showDevConsole={false}>
       <FiltersContent />
     </CopilotKit>
   );

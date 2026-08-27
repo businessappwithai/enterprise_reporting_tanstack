@@ -8,6 +8,7 @@ export default function CopilotNlQuery() {
       runtimeUrl="/api/copilotkit"
       transcribeAudioUrl="/api/copilotkit/transcribe"
       textToSpeechUrl="/api/copilotkit/tts"
+      showDevConsole={false}
     >
       <CopilotSidebar
         instructions={`You are a SQL generation agent for the Enterprise Reporting System.

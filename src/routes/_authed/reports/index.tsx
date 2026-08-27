@@ -361,7 +361,7 @@ function ReportsContent() {
 
 function ReportsPage() {
   return (
-    <CopilotKit runtimeUrl="/api/copilotkit">
+    <CopilotKit runtimeUrl="/api/copilotkit" showDevConsole={false}>
       <ReportsContent />
     </CopilotKit>
   );

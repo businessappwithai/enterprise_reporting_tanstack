@@ -856,7 +856,7 @@ RULES:
 
 function SQLEditorPage() {
   return (
-    <CopilotKit runtimeUrl="/api/copilotkit">
+    <CopilotKit runtimeUrl="/api/copilotkit" showDevConsole={false}>
       <SQLEditorContent />
     </CopilotKit>
   );

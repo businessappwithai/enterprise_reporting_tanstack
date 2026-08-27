@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authed/admin/report-builder/")({
 
 function NlReportBuilderPage() {
   return (
-    <CopilotKit runtimeUrl="/api/copilotkit">
+    <CopilotKit runtimeUrl="/api/copilotkit" showDevConsole={false}>
       <CopilotSidebar
         defaultOpen={true}
         instructions={`You are an admin assistant that builds reports and charts from natural language descriptions.

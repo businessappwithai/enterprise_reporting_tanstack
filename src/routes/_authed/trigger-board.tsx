@@ -306,7 +306,7 @@ function QueueManagementContent() {
 
 function TriggerBoardPage() {
   return (
-    <CopilotKit runtimeUrl="/api/copilotkit">
+    <CopilotKit runtimeUrl="/api/copilotkit" showDevConsole={false}>
       <QueueManagementContent />
     </CopilotKit>
   );
