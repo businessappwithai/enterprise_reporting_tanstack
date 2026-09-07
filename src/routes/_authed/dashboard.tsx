@@ -254,7 +254,9 @@ const adminModules: Array<{
   {
     title: "Queue Management",
     description: "Inspect the job queue",
-    href: "/bull-board",
+    // Bull Board went with BullMQ; the job queue is Trigger.dev now and
+    // /trigger-board is what inspects it. /bull-board answered 404.
+    href: "/trigger-board",
     icon: Layers,
     permissionKey: "queue",
   },
