@@ -234,6 +234,29 @@ Running `bun run db:seed` also adds `analyst@example.com` / `analyst123` with a 
 
 Playwright tests in `e2e/`. The dev server must be running on port 4050 before running tests (the `webServer` config in `playwright.config.ts` is commented out). Auth state is set up once by `e2e/global-setup.ts` and cached in `auth.json`, then reused via `storageState`. Tests run serially (1 worker, `fullyParallel: false`) to prevent session interference. Override the target with `BASE_URL`.
 
+## `bun run typecheck` reports the whole repository's backlog
+
+`tsconfig.json` includes `**/*.ts`, so `typecheck` — and therefore `precommit` —
+covers `language/`, `scripts/` and `tests/` as well as `src/`. It does not pass,
+and it did not pass before: it currently reports around 678 errors across ~140
+files, nearly all of them in `src/`.
+
+That number was invisible until recently. A single unescaped backtick in
+`language/cli/src/generate/app.ts` made the file unparseable, and one parse error
+makes `tsc` report *that alone* and stop — so `typecheck` printed exactly one
+error and exited 2, which reads far more like a small local problem than a
+backlog. Fixing the parse error is what surfaced the rest.
+
+So: `typecheck` failing is the status quo, not something you broke. Compare error
+*counts* against `main` before and after a change rather than reading a non-zero
+exit as a regression, and do not treat a low error count as good news — it more
+likely means something upstream stopped `tsc` early.
+
+`language/**` is clean and worth keeping that way. Its files use explicit `.ts`
+import specifiers, which Bun resolves and `tsc` rejects (TS5097) unless
+`allowImportingTsExtensions` is set — it is, in `tsconfig.json`, and it needs the
+`noEmit` that is already there.
+
 ## Stale documentation
 
 Most files under `docs/` predate the migrations to PostgreSQL and Trigger.dev and describe SQLite/MariaDB, BullMQ + Redis, Bull Board, and OpenAI-based NL query. `docs/README.md` and this file are current; verify anything else in `docs/` against source before trusting it.
@@ -259,25 +282,37 @@ Every EML document is valid, renderable Mermaid (`erDiagram`, `flowchart`, `stat
 
 ### CLI usage
 
+Input is `-i/--input` or the first positional argument; output is `-o/--output`.
+There is no `--out`.
+
 ```bash
 # Validate a model
-bun language/cli/eml.ts validate model.mmd
+bun language/cli/eml.ts validate -i model.mmd
 
 # Inspect parsed model summary
-bun language/cli/eml.ts info model.mmd
+bun language/cli/eml.ts info -i model.mmd
 
-# Generate application (targets this repo's stack by default)
-bun language/cli/eml.ts generate model.mmd --out ./generated
+# Generate application (enterprise-reporting is the default stack)
+bun language/cli/eml.ts generate -i model.mmd -o ./generated
 
-# Available stacks: tanstack-nestjs (default), node-rest
-bun language/cli/eml.ts generate model.mmd --stack tanstack-nestjs --out ./generated
+# Generate the dependency-free Node REST app instead
+bun language/cli/eml.ts generate -i model.mmd -o ./generated --stack node-rest
 
 # Auto-fix checker warnings before generating
-bun language/checker.ts model.mmd   # check
+bun language/checker.ts model.mmd   # check — also writes model.mmd.error beside it
 bun language/fixer.ts model.mmd     # fix in-place
 ```
 
-### Generated output (tanstack-nestjs stack)
+**The two stacks are `enterprise-reporting` (default) and `node-rest`.** There is
+no `tanstack-nestjs` target here — that one belongs to `app-with-ai-tanstack`, and
+passing it is rejected with `Unsupported stack`. `tanstack` and `tanstack-start`
+are accepted as *aliases for `enterprise-reporting`*, which is the likeliest way
+to think you got a NestJS stack and not notice.
+
+`enterprise-reporting` emits code to paste into this repository; `node-rest`
+emits a standalone `node:http` app over a JSON file, with no install step.
+
+### Generated output (enterprise-reporting stack)
 
 ```
 generated/
@@ -286,11 +321,25 @@ generated/
 │   ├── routes/_authed/<entity>/
 │   │   ├── index.tsx                  # List page (TanStack Table + shadcn/ui)
 │   │   └── $id.tsx                    # Detail/edit page
-│   └── lib/db/
-│       ├── kysely-db.ts               # Kysely Database interface extension
-│       └── migrations/                # CREATE TABLE migrations
+│   └── lib/db/migrations/<ts>_create_tables.ts   # PostgreSQL DDL via sql``
+├── rules/<rule>.jdm.json              # one GoRules JDM graph per %%rule flow
+├── KYSELY_TYPES.md                    # Database-interface snippet to paste in
 └── README.md
 ```
+
+It writes a `KYSELY_TYPES.md` snippet, **not** a `kysely-db.ts` — you paste the
+snippet into the `Database` interface in `src/lib/db/kysely-db.ts` yourself.
+
+### The CLI vendors two modules from app-with-ai-tanstack
+
+`language/cli/src/vendor/` holds copies of that repository's
+`packages/web/src/lib/{jdm-converter,mermaid-flowchart-parser}.ts`, so a `%%rule`
+flow compiles to the same JDM graph on both sides. They used to be imported
+across the repository boundary as `../../../../packages/web/...`, which resolves
+nowhere here — this repository has no `packages/` directory at all. Because
+`cli.ts` imports the JDM emitter *statically*, that dangling path took down every
+command, `validate` and `info` included, neither of which emits JDM. Both files
+are dependency-free; re-copy them rather than editing them by hand.
 
 ## Repo-local Claude configuration
 
