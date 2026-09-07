@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Edit, Eye, FileText, MoreHorizontal, Plus, Trash } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,17 +30,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { formatDateTime } from "@/lib/utils";
 import type { ReportDefinition, SavedQuery } from "@/types/database";
 import { PageHeader } from "@/components/layout/page-header";
+import { DataTable } from "@/components/reporting/data-table";
+import type { ColumnDef } from "@tanstack/react-table";
 
 import { CopilotKit } from "@copilotkit/react-core";
 import { CopilotSidebar } from "@copilotkit/react-ui";
@@ -60,14 +54,43 @@ function ReportsContent() {
   const [newReportDescription, setNewReportDescription] = useState("");
   const [selectedQueryId, setSelectedQueryId] = useState("");
 
-  const { data: reports, isLoading } = useQuery<ReportDefinition[]>({
-    queryKey: ["reports"],
+  // The listing is paginated server-side and `page` is zero-based: the route
+  // does `.offset(page * pageSize)` and defaults to 0. Asking for no page at
+  // all is what this did before, so it rendered the first 20 rows of however
+  // many exist and offered no way to reach the rest — 20 of 116 against a
+  // model that generates a report per question a role actually asks.
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
+
+  const { data: reportsPage, isLoading } = useQuery<{
+    items: ReportDefinition[];
+    total: number;
+  }>({
+    queryKey: ["reports", pagination.pageIndex, pagination.pageSize],
     queryFn: async () => {
-      const res = await fetch("/api/reports");
+      const res = await fetch(
+        `/api/reports?page=${pagination.pageIndex}&pageSize=${pagination.pageSize}`
+      );
       const data = await res.json();
-      return data.data?.items || [];
+      return {
+        items: data.data?.items ?? [],
+        total: data.data?.meta?.total ?? 0,
+      };
     },
+    // Without this the table blanks out between page turns.
+    placeholderData: (prev) => prev,
   });
+
+  const reports = reportsPage?.items;
+  const totalReports = reportsPage?.total ?? 0;
+
+  // A page that empties underneath you — the last row on it deleted — steps
+  // back rather than showing an empty table with a Previous button.
+  useEffect(() => {
+    const pages = Math.ceil(totalReports / pagination.pageSize);
+    if (pages > 0 && pagination.pageIndex >= pages) {
+      setPagination((p) => ({ ...p, pageIndex: pages - 1 }));
+    }
+  }, [totalReports, pagination.pageIndex, pagination.pageSize]);
 
   const { data: queries } = useQuery<SavedQuery[]>({
     queryKey: ["queries"],
@@ -120,6 +143,91 @@ function ReportsContent() {
       }
     },
   });
+
+  const columns = useMemo<ColumnDef<ReportDefinition>[]>(
+    () => [
+      {
+        accessorKey: "name",
+        header: "Name",
+        cell: ({ row }) => (
+          <div className="flex items-center gap-2 font-medium">
+            {row.original.name}
+            {(!row.original.name || row.original.name === "Draft Report") && (
+              <Badge variant="warning">Draft</Badge>
+            )}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "description",
+        header: "Description",
+        cell: ({ row }) => (
+          <span className="text-tremor-content">{row.original.description || "-"}</span>
+        ),
+      },
+      {
+        id: "query",
+        header: "Query",
+        cell: ({ row }) =>
+          row.original.saved_query_id ? (
+            <Badge variant="secondary">Linked</Badge>
+          ) : (
+            <Badge variant="outline">No Query</Badge>
+          ),
+      },
+      {
+        accessorKey: "created_at",
+        header: "Created",
+        cell: ({ row }) => (
+          <span className="text-tremor-content">{formatDateTime(row.original.created_at)}</span>
+        ),
+      },
+      {
+        accessorKey: "updated_at",
+        header: "Modified",
+        cell: ({ row }) => (
+          <span className="text-tremor-content">{formatDateTime(row.original.updated_at)}</span>
+        ),
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        enableSorting: false,
+        cell: ({ row }) => (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild>
+                <Link to="/reports/$id/viewer" params={{ id: row.original.id }}>
+                  <Eye className="h-4 w-4 mr-2" />
+                  View
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/reports/$id/editor" params={{ id: row.original.id }}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-destructive"
+                onClick={() => deleteMutation.mutate(row.original.id)}
+              >
+                <Trash className="h-4 w-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ),
+      },
+    ],
+    // See the charts listing: depend on the stable `.mutate`, not the object.
+    [deleteMutation.mutate]
+  );
 
   // ── CopilotKit data sources ───────────────────────────────────────────────
   const { data: dataSources } = useQuery({
@@ -267,90 +375,20 @@ function ReportsContent() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">Loading reports...</div>
-          ) : reports?.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No reports created yet. Create your first report to get started.
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Query</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Modified</TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {reports?.map((report) => (
-                  <TableRow key={report.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        {report.name}
-                        {(!report.name || report.name === "Draft Report") && (
-                          <Badge
-                            variant="warning"
-                          >
-                            Draft
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-tremor-content">
-                      {report.description || "-"}
-                    </TableCell>
-                    <TableCell>
-                      {report.saved_query_id ? (
-                        <Badge variant="secondary">Linked</Badge>
-                      ) : (
-                        <Badge variant="outline">No Query</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-tremor-content">
-                      {formatDateTime(report.created_at)}
-                    </TableCell>
-                    <TableCell className="text-tremor-content">
-                      {formatDateTime(report.updated_at)}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <Link to="/reports/$id/viewer" params={{ id: report.id }}>
-                              <Eye className="h-4 w-4 mr-2" />
-                              View
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link to="/reports/$id/editor" params={{ id: report.id }}>
-                              <Edit className="h-4 w-4 mr-2" />
-                              Edit
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onClick={() => deleteMutation.mutate(report.id)}
-                          >
-                            <Trash className="h-4 w-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
+          {/* The shared table, in its server-side mode: it renders the page it
+              is given, takes the row count from `totalRows`, and calls back
+              with the page to fetch. It also brings sorting, column visibility
+              and export, which the hand-rolled table here did not have. */}
+          <DataTable<ReportDefinition>
+            data={reports ?? []}
+            columns={columns}
+            isLoading={isLoading}
+            serverSide
+            totalRows={totalReports}
+            pageIndex={pagination.pageIndex}
+            pageSize={pagination.pageSize}
+            onPaginationChange={setPagination}
+          />
         </CardContent>
       </Card>
     </div>

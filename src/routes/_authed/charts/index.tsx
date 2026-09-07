@@ -11,7 +11,7 @@ import {
   Plus,
   Trash,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { CopilotKit } from "@copilotkit/react-core";
 import { CopilotSidebar } from "@copilotkit/react-ui";
@@ -45,15 +45,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { useCanCreate, useCanDelete, useCanEdit } from "@/lib/hooks/usePermissions";
+import { DataTable } from "@/components/reporting/data-table";
+import type { ColumnDef } from "@tanstack/react-table";
 import { formatDateTime } from "@/lib/utils";
 import type { ChartDefinition, ChartType, SavedQuery } from "@/types/database";
 import { PageHeader } from "@/components/layout/page-header";
@@ -94,14 +88,38 @@ function ChartsContent() {
     []
   );
 
-  const { data: charts, isLoading } = useQuery<ChartDefinition[]>({
-    queryKey: ["charts"],
+  // Server-side paginated, zero-based page — see the note in the reports
+  // listing. Fetching without a page rendered the first 20 of 84 charts and
+  // gave no way to reach the other 64.
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
+
+  const { data: chartsPage, isLoading } = useQuery<{
+    items: ChartDefinition[];
+    total: number;
+  }>({
+    queryKey: ["charts", pagination.pageIndex, pagination.pageSize],
     queryFn: async () => {
-      const res = await fetch("/api/charts");
+      const res = await fetch(
+        `/api/charts?page=${pagination.pageIndex}&pageSize=${pagination.pageSize}`
+      );
       const data = await res.json();
-      return data.data?.items || [];
+      return {
+        items: data.data?.items ?? [],
+        total: data.data?.meta?.total ?? 0,
+      };
     },
+    placeholderData: (prev) => prev,
   });
+
+  const charts = chartsPage?.items;
+  const totalCharts = chartsPage?.total ?? 0;
+
+  useEffect(() => {
+    const pages = Math.ceil(totalCharts / pagination.pageSize);
+    if (pages > 0 && pagination.pageIndex >= pages) {
+      setPagination((p) => ({ ...p, pageIndex: pages - 1 }));
+    }
+  }, [totalCharts, pagination.pageIndex, pagination.pageSize]);
 
   const { data: queries } = useQuery<SavedQuery[]>({
     queryKey: ["queries"],
@@ -156,6 +174,85 @@ function ChartsContent() {
       }
     },
   });
+
+  const columns = useMemo<ColumnDef<ChartDefinition>[]>(
+    () => [
+      {
+        accessorKey: "name",
+        header: "Name",
+        cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
+      },
+      {
+        accessorKey: "chart_type",
+        header: "Type",
+        cell: ({ row }) => (
+          <Badge variant="outline" className="flex items-center gap-1 w-fit">
+            {chartTypeIcons[row.original.chart_type]}
+            {row.original.chart_type}
+          </Badge>
+        ),
+      },
+      {
+        id: "query",
+        header: "Query",
+        cell: ({ row }) =>
+          row.original.saved_query_id ? (
+            <Badge variant="secondary">Linked</Badge>
+          ) : (
+            <Badge variant="outline">No Query</Badge>
+          ),
+      },
+      {
+        accessorKey: "created_at",
+        header: "Created",
+        cell: ({ row }) => (
+          <span className="text-tremor-content">{formatDateTime(row.original.created_at)}</span>
+        ),
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        enableSorting: false,
+        cell: ({ row }) => (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild>
+                <Link to="/charts/viewer/$id" params={{ id: row.original.id }}>
+                  <Eye className="h-4 w-4 mr-2" />
+                  View
+                </Link>
+              </DropdownMenuItem>
+              {canEditCharts && (
+                <DropdownMenuItem asChild>
+                  <Link to="/charts/editor/$id" params={{ id: row.original.id }}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Link>
+                </DropdownMenuItem>
+              )}
+              {canDeleteCharts && (
+                <DropdownMenuItem
+                  className="text-destructive"
+                  onClick={() => deleteMutation.mutate(row.original.id)}
+                >
+                  <Trash className="h-4 w-4 mr-2" />
+                  Delete
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ),
+      },
+    ],
+    // `deleteMutation` itself is a fresh object on every render; `.mutate` is
+    // stable, and depending on the object rebuilt `columns` every render.
+    [canEditCharts, canDeleteCharts, deleteMutation.mutate, chartTypeIcons]
+  );
 
   // ── CopilotKit context ────────────────────────────────────────────────────
   const { data: dataSources } = useQuery({
@@ -349,82 +446,17 @@ RULES:
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">Loading charts...</div>
-          ) : charts?.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No charts created yet. Create your first chart to get started.
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Query</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {charts?.map((chart) => (
-                  <TableRow key={chart.id}>
-                    <TableCell className="font-medium">{chart.name}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="flex items-center gap-1 w-fit">
-                        {chartTypeIcons[chart.chart_type]}
-                        {chart.chart_type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {chart.saved_query_id ? (
-                        <Badge variant="secondary">Linked</Badge>
-                      ) : (
-                        <Badge variant="outline">No Query</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-tremor-content">
-                      {formatDateTime(chart.created_at)}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <Link to="/charts/viewer/$id" params={{ id: chart.id }}>
-                              <Eye className="h-4 w-4 mr-2" />
-                              View
-                            </Link>
-                          </DropdownMenuItem>
-                          {canEditCharts && (
-                            <DropdownMenuItem asChild>
-                              <Link to="/charts/editor/$id" params={{ id: chart.id }}>
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit
-                              </Link>
-                            </DropdownMenuItem>
-                          )}
-                          {canDeleteCharts && (
-                            <DropdownMenuItem
-                              className="text-destructive"
-                              onClick={() => deleteMutation.mutate(chart.id)}
-                            >
-                              <Trash className="h-4 w-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
+          {/* The shared server-side table — see the reports listing. */}
+          <DataTable<ChartDefinition>
+            data={charts ?? []}
+            columns={columns}
+            isLoading={isLoading}
+            serverSide
+            totalRows={totalCharts}
+            pageIndex={pagination.pageIndex}
+            pageSize={pagination.pageSize}
+            onPaginationChange={setPagination}
+          />
         </CardContent>
       </Card>
     </div>
