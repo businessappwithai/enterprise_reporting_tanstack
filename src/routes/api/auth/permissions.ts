@@ -6,7 +6,7 @@ export const Route = createFileRoute("/api/auth/permissions")({
     handlers: {
       GET: async ({ request }: { request: Request }) => {
         const cookie = request.headers.get("cookie") || "";
-        const match = cookie.match(/session_token=([^;]+)/);
+        const match = cookie.match(/(?:^|;\s*)session_token=([^;]+)/);
         const token = match?.[1];
 
         if (!token) {

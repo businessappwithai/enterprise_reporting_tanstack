@@ -5,7 +5,7 @@ import { getDb } from "@/lib/db/config";
 
 async function getSession(request: Request) {
   const cookie = request.headers.get("cookie") || "";
-  const match = cookie.match(/session_token=([^;]+)/);
+  const match = cookie.match(/(?:^|;\s*)session_token=([^;]+)/);
   if (!match?.[1]) return null;
   return verifySession(match[1]);
 }

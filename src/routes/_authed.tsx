@@ -6,7 +6,7 @@ import { verifySession } from "@/lib/auth/session";
 
 const getSessionFn = createServerFn({ method: "GET" }).handler(async () => {
   const cookie = getRequestHeader("cookie") || "";
-  const match = cookie.match(/session_token=([^;]+)/);
+  const match = cookie.match(/(?:^|;\s*)session_token=([^;]+)/);
   const token = match?.[1];
   if (!token) return null;
   return verifySession(token);

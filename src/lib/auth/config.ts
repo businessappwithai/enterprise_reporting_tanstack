@@ -14,7 +14,7 @@ export async function auth(request?: Request): Promise<Session | null> {
   }
 
   const cookie = req.headers.get("cookie") || "";
-  const match = cookie.match(/session_token=([^;]+)/);
+  const match = cookie.match(/(?:^|;\s*)session_token=([^;]+)/);
   const token = match?.[1];
   if (!token) return null;
   return verifySession(token);

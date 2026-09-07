@@ -11,7 +11,7 @@ export const logoutFn = createServerFn({ method: "POST" }).handler(async () => {
 
   try {
     const cookie = getRequestHeader("cookie") || "";
-    const match = cookie.match(/session_token=([^;]+)/);
+    const match = cookie.match(/(?:^|;\s*)session_token=([^;]+)/);
     const token = match?.[1];
 
     if (token) {
@@ -39,7 +39,7 @@ export const logoutFn = createServerFn({ method: "POST" }).handler(async () => {
 
 export const getSessionFn = createServerFn({ method: "GET" }).handler(async () => {
   const cookie = getRequestHeader("cookie") || "";
-  const match = cookie.match(/session_token=([^;]+)/);
+  const match = cookie.match(/(?:^|;\s*)session_token=([^;]+)/);
   const token = match?.[1];
   if (!token) return null;
   return verifySession(token);

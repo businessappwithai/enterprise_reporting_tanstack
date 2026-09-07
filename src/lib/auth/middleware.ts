@@ -7,7 +7,7 @@ import { verifySession as _verifySession } from "./session";
 export async function getServerSession() {
   try {
     const cookie = getRequestHeader("cookie") || "";
-    const match = cookie.match(/session_token=([^;]+)/);
+    const match = cookie.match(/(?:^|;\s*)session_token=([^;]+)/);
     const sessionToken = match?.[1];
 
     if (sessionToken) {
