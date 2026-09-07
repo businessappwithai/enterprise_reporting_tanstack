@@ -26,19 +26,33 @@ export const Route = createFileRoute('/api/charts/')({
 
           const db = getDb()
 
-          const charts = await db
+          // Search runs here, not in the browser: filtering the page that was
+          // already fetched would only ever search the rows it happened to hold.
+          const search = (searchParams.get('search') || '').trim()
+          const like = `%${search}%`
+
+          let rowsQuery = db
             .selectFrom('chart_definitions')
             .selectAll()
             .orderBy('created_at', 'desc')
             .limit(pageSize)
             .offset(page * pageSize)
-            .execute()
-
-          const countResult = await db
+          let countQuery = db
             .selectFrom('chart_definitions')
             .select(db.fn.count<number>('id').as('count'))
-            .executeTakeFirstOrThrow()
-          const total = Number(countResult.count)
+
+          if (search) {
+            rowsQuery = rowsQuery.where((eb) =>
+              eb.or([eb('name', 'ilike', like), eb('description', 'ilike', like)])
+            )
+            countQuery = countQuery.where((eb) =>
+              eb.or([eb('name', 'ilike', like), eb('description', 'ilike', like)])
+            )
+          }
+
+          const charts = await rowsQuery.execute()
+
+          const total = Number((await countQuery.executeTakeFirstOrThrow()).count)
 
           return json({
             success: true,

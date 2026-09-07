@@ -28,19 +28,33 @@ export const Route = createFileRoute("/api/reports")({
           const { getDb } = await import("@/lib/db/config");
           const db = getDb();
 
-          const reports = await db
+          // Search runs here, not in the browser: filtering the page that was
+          // already fetched would only ever search the rows it happened to hold.
+          const search = (searchParams.get("search") || "").trim();
+          const like = `%${search}%`;
+
+          let rowsQuery = db
             .selectFrom("report_definitions")
             .selectAll()
             .orderBy("created_at", "desc")
             .limit(pageSize)
-            .offset(page * pageSize)
-            .execute();
-
-          const countResult = await db
+            .offset(page * pageSize);
+          let countQuery = db
             .selectFrom("report_definitions")
-            .select(db.fn.count<number>("id").as("count"))
-            .executeTakeFirstOrThrow();
-          const total = Number(countResult.count);
+            .select(db.fn.count<number>("id").as("count"));
+
+          if (search) {
+            rowsQuery = rowsQuery.where((eb) =>
+              eb.or([eb("name", "ilike", like), eb("description", "ilike", like)])
+            );
+            countQuery = countQuery.where((eb) =>
+              eb.or([eb("name", "ilike", like), eb("description", "ilike", like)])
+            );
+          }
+
+          const reports = await rowsQuery.execute();
+
+          const total = Number((await countQuery.executeTakeFirstOrThrow()).count);
 
           return json({
             success: true,

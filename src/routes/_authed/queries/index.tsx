@@ -1,18 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Pencil, Plus, RefreshCw, Search, Trash2 } from "lucide-react";
-import { useState } from "react";
+import type { ColumnDef } from "@tanstack/react-table";
+import { DataTable } from "@/components/reporting/data-table";
+import { Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import type { DataSource, SavedQuery } from "@/types/database";
 import { PageHeader } from "@/components/layout/page-header";
 
@@ -23,8 +16,17 @@ export const Route = createFileRoute("/_authed/queries/")({
 function QueriesPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [searchTerm, setSearchTerm] = useState("");
+  const [search, setSearch] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
+
+  // Searching narrows the result set, so page 1 is the only page it is safe
+  // to land on.
+  const onSearchChange = useCallback((term: string) => {
+    setSearch(term.trim());
+    setPagination((p) => (p.pageIndex === 0 ? p : { ...p, pageIndex: 0 }));
+  }, []);
 
   const {
     data: queriesData,
@@ -34,12 +36,19 @@ function QueriesPage() {
     items: SavedQuery[];
     meta: { total: number };
   }>({
-    queryKey: ["saved-queries", "all"],
+    queryKey: ["saved-queries", pagination.pageIndex, pagination.pageSize, search],
     queryFn: async () => {
-      const res = await fetch("/api/queries?pageSize=100");
+      const params = new URLSearchParams({
+        page: String(pagination.pageIndex),
+        pageSize: String(pagination.pageSize),
+      });
+      if (search) params.set("search", search);
+      const res = await fetch(`/api/queries?${params}`);
       const data = await res.json();
       return data.data;
     },
+    // Without this the table blanks out between page turns.
+    placeholderData: (prev) => prev,
   });
 
   const { data: dataSources } = useQuery<DataSource[]>({
@@ -62,26 +71,94 @@ function QueriesPage() {
   });
 
   const queries = queriesData?.items || [];
-  const filteredQueries = queries.filter((query) => {
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      query.name.toLowerCase().includes(searchLower) ||
-      (query.description?.toLowerCase().includes(searchLower) ?? false) ||
-      (dataSources
-        ?.find((ds) => ds.id === query.data_source_id)
-        ?.name.toLowerCase()
-        .includes(searchLower) ??
-        false)
-    );
-  });
+  const totalQueries = queriesData?.meta?.total ?? 0;
 
-  const handleEdit = (query: SavedQuery) => {
-    navigate({ to: "/sql-editor", search: { queryId: query.id } });
-  };
+  // Both are used by the columns memo below. A plain function is a new object
+  // on every render, so listing one as a dependency would rebuild the columns
+  // every render.
+  const handleEdit = useCallback(
+    (query: SavedQuery) => {
+      navigate({ to: "/sql-editor", search: { queryId: query.id } });
+    },
+    [navigate]
+  );
 
-  const getDataSourceName = (dataSourceId: string) => {
-    return dataSources?.find((ds) => ds.id === dataSourceId)?.name || "Unknown";
-  };
+  const getDataSourceName = useCallback(
+    (dataSourceId: string) => dataSources?.find((ds) => ds.id === dataSourceId)?.name || "Unknown",
+    [dataSources]
+  );
+
+  const columns = useMemo<ColumnDef<SavedQuery>[]>(
+    () => [
+      {
+        accessorKey: "name",
+        header: "Name",
+        cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
+      },
+      {
+        accessorKey: "description",
+        header: "Description",
+        cell: ({ row }) => (
+          <span className="text-tremor-content">
+            {row.original.description || <span className="italic">No description</span>}
+          </span>
+        ),
+      },
+      {
+        id: "data_source",
+        header: "Data Source",
+        cell: ({ row }) => (
+          <Badge variant="outline">{getDataSourceName(row.original.data_source_id)}</Badge>
+        ),
+      },
+      {
+        accessorKey: "created_at",
+        header: "Created",
+        cell: ({ row }) => (
+          <span className="text-tremor-default text-tremor-content">
+            {new Date(row.original.created_at).toLocaleDateString()}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "updated_at",
+        header: "Modified",
+        cell: ({ row }) => (
+          <span className="text-tremor-default text-tremor-content">
+            {new Date(row.original.updated_at).toLocaleDateString()}
+          </span>
+        ),
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        enableSorting: false,
+        cell: ({ row }) => (
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              onClick={() => handleEdit(row.original)}
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              title="Edit query"
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+            <Button
+              onClick={() => setShowDeleteConfirm(row.original.id)}
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+              title="Delete query"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [getDataSourceName, handleEdit]
+  );
 
   return (
     <div className="p-6">
@@ -97,113 +174,27 @@ function QueriesPage() {
       </div>
 
       <div className="flex items-center gap-4 mb-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Search by name, description, or data source..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
         <Button onClick={() => refetch()} variant="outline" size="sm" className="gap-2">
           <RefreshCw className="h-4 w-4" />
           Refresh
         </Button>
-        {searchTerm && (
-          <Badge variant="secondary" className="text-sm">
-            {filteredQueries.length} of {queries.length} queries
-          </Badge>
-        )}
       </div>
 
-      <div className="border rounded-lg overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[20%]">Name</TableHead>
-              <TableHead className="w-[25%]">Description</TableHead>
-              <TableHead className="w-[15%]">Data Source</TableHead>
-              <TableHead className="w-[15%]">Created</TableHead>
-              <TableHead className="w-[15%]">Modified</TableHead>
-              <TableHead className="w-[10%] text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">
-                  <div className="flex items-center justify-center">
-                    <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mr-2"></div>
-                    Loading queries...
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : filteredQueries.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">
-                  {searchTerm ? (
-                    <div>
-                      <p className="text-tremor-content">No queries match your search.</p>
-                      <Button variant="link" onClick={() => setSearchTerm("")} className="mt-2">
-                        Clear search
-                      </Button>
-                    </div>
-                  ) : (
-                    <div>
-                      <p className="text-muted-foreground mb-2">No saved queries found.</p>
-                      <Button onClick={() => navigate({ to: "/sql-editor" })}>
-                        Create your first query
-                      </Button>
-                    </div>
-                  )}
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredQueries.map((query) => (
-                <TableRow key={query.id}>
-                  <TableCell className="font-medium">{query.name}</TableCell>
-                  <TableCell className="text-tremor-content">
-                    {query.description || <span className="italic">No description</span>}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{getDataSourceName(query.data_source_id)}</Badge>
-                  </TableCell>
-                  <TableCell className="text-tremor-default text-tremor-content">
-                    {new Date(query.created_at).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell className="text-tremor-default text-tremor-content">
-                    {new Date(query.updated_at).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button
-                        onClick={() => handleEdit(query)}
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        title="Edit query"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        onClick={() => setShowDeleteConfirm(query.id)}
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                        title="Delete query"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      {/* The shared table in its server-side mode: it renders the page the
+          server sent and takes the row count from meta.total. Search is a
+          server round trip too, so it reaches every row rather than the
+          twenty on screen. */}
+      <DataTable<SavedQuery>
+        data={queries}
+        columns={columns}
+        isLoading={isLoading}
+        serverSide
+        totalRows={totalQueries}
+        pageIndex={pagination.pageIndex}
+        pageSize={pagination.pageSize}
+        onPaginationChange={setPagination}
+        onSearchChange={onSearchChange}
+      />
 
       {showDeleteConfirm && (
         <div

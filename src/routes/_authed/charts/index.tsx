@@ -11,7 +11,7 @@ import {
   Plus,
   Trash,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { CopilotKit } from "@copilotkit/react-core";
 import { CopilotSidebar } from "@copilotkit/react-ui";
@@ -92,16 +92,26 @@ function ChartsContent() {
   // listing. Fetching without a page rendered the first 20 of 84 charts and
   // gave no way to reach the other 64.
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
+  // The table's own search box reports here; searching narrows the result set,
+  // so page 1 is the only page it is safe to land on.
+  const [search, setSearch] = useState("");
+  const onSearchChange = useCallback((term: string) => {
+    setSearch(term.trim());
+    setPagination((p) => (p.pageIndex === 0 ? p : { ...p, pageIndex: 0 }));
+  }, []);
 
   const { data: chartsPage, isLoading } = useQuery<{
     items: ChartDefinition[];
     total: number;
   }>({
-    queryKey: ["charts", pagination.pageIndex, pagination.pageSize],
+    queryKey: ["charts", pagination.pageIndex, pagination.pageSize, search],
     queryFn: async () => {
-      const res = await fetch(
-        `/api/charts?page=${pagination.pageIndex}&pageSize=${pagination.pageSize}`
-      );
+      const params = new URLSearchParams({
+        page: String(pagination.pageIndex),
+        pageSize: String(pagination.pageSize),
+      });
+      if (search) params.set("search", search);
+      const res = await fetch(`/api/charts?${params}`);
       const data = await res.json();
       return {
         items: data.data?.items ?? [],
@@ -456,6 +466,7 @@ RULES:
             pageIndex={pagination.pageIndex}
             pageSize={pagination.pageSize}
             onPaginationChange={setPagination}
+        onSearchChange={onSearchChange}
           />
         </CardContent>
       </Card>

@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Edit, Eye, FileText, MoreHorizontal, Plus, Trash } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -60,16 +60,26 @@ function ReportsContent() {
   // many exist and offered no way to reach the rest — 20 of 116 against a
   // model that generates a report per question a role actually asks.
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
+  // The table's own search box reports here; searching narrows the result set,
+  // so page 1 is the only page it is safe to land on.
+  const [search, setSearch] = useState("");
+  const onSearchChange = useCallback((term: string) => {
+    setSearch(term.trim());
+    setPagination((p) => (p.pageIndex === 0 ? p : { ...p, pageIndex: 0 }));
+  }, []);
 
   const { data: reportsPage, isLoading } = useQuery<{
     items: ReportDefinition[];
     total: number;
   }>({
-    queryKey: ["reports", pagination.pageIndex, pagination.pageSize],
+    queryKey: ["reports", pagination.pageIndex, pagination.pageSize, search],
     queryFn: async () => {
-      const res = await fetch(
-        `/api/reports?page=${pagination.pageIndex}&pageSize=${pagination.pageSize}`
-      );
+      const params = new URLSearchParams({
+        page: String(pagination.pageIndex),
+        pageSize: String(pagination.pageSize),
+      });
+      if (search) params.set("search", search);
+      const res = await fetch(`/api/reports?${params}`);
       const data = await res.json();
       return {
         items: data.data?.items ?? [],
@@ -388,6 +398,7 @@ function ReportsContent() {
             pageIndex={pagination.pageIndex}
             pageSize={pagination.pageSize}
             onPaginationChange={setPagination}
+        onSearchChange={onSearchChange}
           />
         </CardContent>
       </Card>
