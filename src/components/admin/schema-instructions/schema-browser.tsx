@@ -40,7 +40,7 @@ export function SchemaInstructionsBrowser({
       try {
         const result = await listDataSources();
         if (result.items) {
-          setDataSources(result.items as DataSource[]);
+          setDataSources(result.items as unknown as DataSource[]);
         }
       } catch (error) {
         console.error("Failed to fetch data sources:", error);
@@ -56,11 +56,11 @@ export function SchemaInstructionsBrowser({
 
     const fetchSchema = async () => {
       try {
-        const result = await introspectSchema({ dataSourceId: selectedDataSource });
-        if (result.schema && result.schema.tables) {
-          const tables = result.schema.tables.map((t: any) => ({
+        const result = await introspectSchema({ data: { dataSourceId: selectedDataSource } });
+        if (result.tables) {
+          const tables: SchemaTable[] = result.tables.map((t) => ({
             name: t.name,
-            columns: t.columns || [],
+            columns: (t.columns ?? []).map((c) => c.name),
           }));
           setSchemas((prev) => ({
             ...prev,

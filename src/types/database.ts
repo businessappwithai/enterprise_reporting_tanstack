@@ -808,6 +808,15 @@ export interface MetadataEntityField {
  * Entity with Fields (API response)
  * Complete entity metadata including all fields
  */
+/**
+ * A row from GET /api/metadata/entities: the header plus the joined data source
+ * name and field count the listing shows.
+ */
+export interface MetadataEntityListRow extends MetadataEntityHeader {
+  data_source_name?: string | null;
+  field_count?: number;
+}
+
 export interface MetadataEntityWithFields extends MetadataEntityHeader {
   fields: MetadataEntityField[];
   data_source_name?: string;

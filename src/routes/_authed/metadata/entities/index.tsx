@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import type { MetadataEntityListRow } from "@/types/database";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Database, RefreshCw, Search, Settings } from "lucide-react";
 import { useState } from "react";
@@ -33,7 +34,9 @@ function MetadataEntitiesPage() {
       });
       const res = await fetch(`/api/metadata/entities?${params.toString()}`);
       if (!res.ok) throw new Error("Failed to fetch entities");
-      const data = await res.json();
+      const data = (await res.json()) as {
+        data?: { entities?: MetadataEntityListRow[] };
+      };
       console.log("[MetadataEntities] Response:", data);
       return data;
     },
@@ -41,7 +44,7 @@ function MetadataEntitiesPage() {
     enabled: !!dataSourceId,
   });
 
-  const entities = response?.data?.entities ?? [];
+  const entities: MetadataEntityListRow[] = response?.data?.entities ?? [];
 
   // Block direct access - must have datasource filter
   if (!dataSourceId) {

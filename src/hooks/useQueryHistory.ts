@@ -46,10 +46,10 @@ export function useQueryHistory(): UseQueryHistoryReturn {
           const map = new Map(prev.map((h) => [h.id, h]))
 
           for (const change of changes) {
-            if (change.type === 'INSERT') {
-              map.set(change.key, change.value as QueryHistoryEntry)
-            } else if (change.type === 'DELETE') {
-              map.delete(change.key)
+            if (change.type === 'insert' || change.type === 'update') {
+              map.set(String(change.key), change.value as QueryHistoryEntry)
+            } else if (change.type === 'delete') {
+              map.delete(String(change.key))
             }
           }
 

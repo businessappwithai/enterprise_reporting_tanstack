@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { DatabaseClientType, SerializableValue } from "@/types/database";
 import { z } from "zod";
 import { randomUUID } from "node:crypto";
 import {
@@ -14,6 +15,11 @@ import { logAudit } from "@/lib/security/audit";
 import { encrypt, decrypt } from "@/lib/security/encryption";
 import { closeConnection } from "@/lib/db/connection-manager";
 import { withErrorHandler } from "@/lib/server-fns/with-error-handler";
+
+/** The schema's client names mapped to the values connection-manager switches on. */
+function toClientType(clientType: "postgres" | "mysql" | "sqlite3"): DatabaseClientType {
+  return clientType === "postgres" ? "pg" : clientType;
+}
 
 export const listDataSources = createServerFn({ method: "GET" }).handler(async () => {
   return withErrorHandler(
@@ -61,7 +67,7 @@ export const getDataSource = createServerFn({ method: "GET" })
           throw new Error("NOT_FOUND");
         }
 
-        let connectionConfig: Record<string, unknown>;
+        let connectionConfig: Record<string, SerializableValue>;
         try {
           const isEncrypted =
             dataSource.connection_config.length > 64 &&
@@ -115,7 +121,7 @@ export const createDataSource = createServerFn({ method: "POST" })
             id,
             name: input.name,
             description: input.description ?? null,
-            client_type: input.clientType,
+            client_type: toClientType(input.clientType),
             connection_config: encryptedConfig,
             is_active: true,
             is_editable: false,
@@ -179,7 +185,7 @@ export const updateDataSource = createServerFn({ method: "POST" })
 
         if (input.connectionConfig !== undefined) {
           let finalConnectionConfig = input.connectionConfig;
-          const configObj = input.connectionConfig as Record<string, unknown>;
+          const configObj = input.connectionConfig as Record<string, SerializableValue>;
 
           if (!configObj.password) {
             const existingConfig = JSON.parse(decrypt(existing.connection_config));
@@ -314,8 +320,10 @@ export const deleteDataSource = createServerFn({ method: "POST" })
     );
   });
 
-export const inspectDataSource = createServerFn({ method: "POST" }).handler(
-  async ({ id }: { id: string }) => {
+export const inspectDataSource = createServerFn({ method: "POST" })
+  .inputValidator((data: { id: string }) => data)
+  .handler(
+  async ({ data: { id } }) => {
     return withErrorHandler(
       async () => {
         const session = await requireAuth();
@@ -341,7 +349,6 @@ export const inspectDataSource = createServerFn({ method: "POST" }).handler(
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                Cookie: `session_token=${(await requireAuth()).sessionToken || ""}`,
               },
             }
           );
