@@ -10,6 +10,11 @@ export interface User {
   updated_at: string;
 }
 
+/** What listUsers/getUser return: a user with the roles joined on. */
+export interface UserWithRoles extends Omit<User, "password_hash"> {
+  roles?: Array<{ id: string; name: string }>;
+}
+
 export interface Role {
   id: string;
   name: string;

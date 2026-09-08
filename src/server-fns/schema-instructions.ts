@@ -6,6 +6,7 @@
  * Manages detailed field and table instructions for LLM context in NL→SQL translation
  */
 
+import { randomUUID } from "node:crypto";
 import { createServerFn } from "@tanstack/react-start";
 import { requireAuth } from "@/lib/auth/middleware";
 import { getDb } from "@/lib/db/config";
@@ -44,7 +45,9 @@ export interface TableInstruction {
  */
 export const getSchemaInstructions = createServerFn({
   method: "GET",
-}).handler(async (input: { dataSourceId: string }) => {
+})
+  .inputValidator((data: { dataSourceId: string }) => data)
+  .handler(async ({ data: input }) => {
   const session = await requireAuth();
   const db = getDb();
 
@@ -85,7 +88,9 @@ export const getSchemaInstructions = createServerFn({
  */
 export const saveFieldInstruction = createServerFn({
   method: "POST",
-}).handler(async (input: FieldInstruction) => {
+})
+  .inputValidator((data: FieldInstruction) => data)
+  .handler(async ({ data: input }) => {
   const session = await requireAuth();
   const db = getDb();
 
@@ -111,7 +116,7 @@ export const saveFieldInstruction = createServerFn({
           example_values: input.exampleValues,
           constraints: input.constraints,
           business_meaning: input.businessMeaning,
-          updated_at: new Date(),
+          updated_at: new Date().toISOString(),
           updated_by: session.user.id as any,
         })
         .where("id", "=", input.id)
@@ -132,6 +137,9 @@ export const saveFieldInstruction = createServerFn({
       await db
         .insertInto("schema_field_instructions")
         .values({
+          id: randomUUID(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
           data_source_id: input.dataSourceId,
           table_name: input.tableName,
           field_name: input.fieldName,
@@ -175,7 +183,9 @@ export const saveFieldInstruction = createServerFn({
  */
 export const saveTableInstruction = createServerFn({
   method: "POST",
-}).handler(async (input: TableInstruction) => {
+})
+  .inputValidator((data: TableInstruction) => data)
+  .handler(async ({ data: input }) => {
   const session = await requireAuth();
   const db = getDb();
 
@@ -200,7 +210,7 @@ export const saveTableInstruction = createServerFn({
           llm_instructions: input.llmInstructions,
           example_queries: input.exampleQueries,
           business_domain: input.businessDomain,
-          updated_at: new Date(),
+          updated_at: new Date().toISOString(),
           updated_by: session.user.id as any,
         })
         .where("id", "=", input.id)
@@ -210,6 +220,9 @@ export const saveTableInstruction = createServerFn({
       await db
         .insertInto("schema_table_instructions")
         .values({
+          id: randomUUID(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
           data_source_id: input.dataSourceId,
           table_name: input.tableName,
           description: input.description,

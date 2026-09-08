@@ -34,12 +34,26 @@ export function TableInstructionEditor({
 
     const fetchInstructions = async () => {
       try {
-        const result = await getSchemaInstructions({ dataSourceId });
+        const result = await getSchemaInstructions({
+          data: { dataSourceId },
+        });
         if (result.success && result.data) {
           const found = result.data.tableInstructions.find(
             (ti: any) => ti.table_name === tableName
           );
-          setExistingInstruction(found);
+          setExistingInstruction(
+            found
+              ? {
+                  id: found.id,
+                  dataSourceId: found.data_source_id,
+                  tableName: found.table_name,
+                  description: found.description ?? undefined,
+                  llmInstructions: found.llm_instructions ?? undefined,
+                  exampleQueries: found.example_queries ?? undefined,
+                  businessDomain: found.business_domain ?? undefined,
+                }
+              : undefined
+          );
         }
       } catch (err) {
         console.error("Failed to fetch instructions:", err);
@@ -56,7 +70,7 @@ export function TableInstructionEditor({
       exampleQueries: existingInstruction?.exampleQueries || "",
       businessDomain: existingInstruction?.businessDomain || "",
     },
-    onSubmit: async (values) => {
+    onSubmit: async ({ value: values }) => {
       if (!dataSourceId || !tableName) {
         setError("Please select a data source and table");
         return;
@@ -68,13 +82,15 @@ export function TableInstructionEditor({
 
       try {
         const result = await saveTableInstruction({
-          id: existingInstruction?.id,
-          dataSourceId,
-          tableName,
-          description: values.description || undefined,
-          llmInstructions: values.llmInstructions || undefined,
-          exampleQueries: values.exampleQueries || undefined,
-          businessDomain: values.businessDomain || undefined,
+          data: {
+            id: existingInstruction?.id,
+            dataSourceId,
+            tableName,
+            description: values.description || undefined,
+            llmInstructions: values.llmInstructions || undefined,
+            exampleQueries: values.exampleQueries || undefined,
+            businessDomain: values.businessDomain || undefined,
+          },
         });
 
         if (result.success) {

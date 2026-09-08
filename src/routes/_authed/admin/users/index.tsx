@@ -33,7 +33,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatDateTime } from "@/lib/utils";
-import type { Role, User } from "@/types/database";
+import type { Role, UserWithRoles } from "@/types/database";
 import { listUsers, listRoles, createUser, updateUser, deleteUser } from "@/server-fns/admin";
 import { PageHeader } from "@/components/layout/page-header";
 
@@ -45,7 +45,7 @@ function UsersManagementPage() {
   const queryClient = useQueryClient();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [assignRoleDialogOpen, setAssignRoleDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
   const [newUserName, setNewUserName] = useState("");
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserPassword, setNewUserPassword] = useState("");
@@ -61,14 +61,14 @@ function UsersManagementPage() {
     },
   });
 
-  const users = usersData as User[] | undefined;
+  const users = usersData as UserWithRoles[] | undefined;
 
   // Fetch roles for dropdown
   const { data: roles = [] } = useQuery<Role[]>({
     queryKey: ["roles"],
-    queryFn: async () => {
+    queryFn: async (): Promise<Role[]> => {
       const result = await listRoles();
-      return result || [];
+      return (result ?? []) as Role[];
     },
   });
 
@@ -150,7 +150,7 @@ function UsersManagementPage() {
 
   // Toggle user active status
   const toggleActiveMutation = useMutation({
-    mutationFn: async (user: User) => {
+    mutationFn: async (user: UserWithRoles) => {
       return await updateUser({
         data: {
           id: user.id,
