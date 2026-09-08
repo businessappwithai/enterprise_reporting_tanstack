@@ -291,6 +291,36 @@ reason: index keys on a query-result preview table whose rows have no id,
 already through `DOMPurify.sanitize`. Everything else was fixed rather than
 silenced.
 
+## CI
+
+`.github/workflows/ci.yml` runs on every pull request and on pushes to `main`.
+Before it existed — which was until recently — nothing on GitHub checked
+anything here, and `precommit` passing was only ever true of whichever tree
+someone last ran it in.
+
+| Job | What it runs |
+|---|---|
+| **Lint, types and format** | `bun install --frozen-lockfile`, then `lint`, `typecheck` and `format:check` as three separate steps — the parts of `precommit`, split so a failure names itself |
+| **Build** | `bun --bun vite build`, then `format:check` *again*, then an assertion that the build left no tracked file modified |
+
+**The second `format:check` is the point of the build job.** The two sides of
+the build catch different mistakes: dropping the `routeTree.gen.ts` formatter
+exclusion on its own turns the first job red, because the committed file is in
+generator form — but dropping it *and* formatting the file by hand, which is the
+tempting fix and the one that looks like it worked, leaves the first job green.
+Only the post-build check sees the generator put the file back.
+
+Two things it deliberately does not do. There is **no `paths:` filter**:
+`tsconfig.json` includes `**/*.ts`, so typecheck covers `language/`, `scripts/`,
+`e2e/` and `tests/` too, and any filter narrow enough to be useful would leave
+one of them unguarded — a skipped path-filtered run also reports no status at
+all, which makes a job awkward to require later. And it **does not run the
+Playwright suite**: that needs a dev server on 4050, a PostgreSQL config
+database and a cached signed-in session, and `playwright.config.ts` has its
+`webServer` commented out, so it starts nothing itself.
+
+Bun is pinned to `1.3.11` there; `package.json` asks only for `>=1.3.0`.
+
 ## Stale documentation
 
 Most files under `docs/` predate the migrations to PostgreSQL and Trigger.dev and describe SQLite/MariaDB, BullMQ + Redis, Bull Board, and OpenAI-based NL query. `docs/README.md` and this file are current; verify anything else in `docs/` against source before trusting it.
