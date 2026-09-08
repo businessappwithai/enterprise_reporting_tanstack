@@ -3,7 +3,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Database, Settings } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { BatchFieldEditForm, type BatchFieldEditFormValues } from "@/components/metadata/forms/BatchFieldEditForm";
+import {
+  BatchFieldEditForm,
+  type BatchFieldEditFormValues,
+} from "@/components/metadata/forms/BatchFieldEditForm";
 import { EntityMetadataForm } from "@/components/metadata/forms/EntityMetadataForm";
 
 interface MetadataEntity {
@@ -197,13 +200,19 @@ function EntityDetailPage() {
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Link to="/metadata/entities" search={{ data_source_id: null }} className="p-2 hover:bg-muted rounded-md">
+        <Link
+          to="/metadata/entities"
+          search={{ data_source_id: null }}
+          className="p-2 hover:bg-muted rounded-md"
+        >
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <Database className="h-6 w-6 text-muted-foreground" />
-            <h1 className="font-semibold text-2xl text-tremor-content-strong">{entity.entity_name}</h1>
+            <h1 className="font-semibold text-2xl text-tremor-content-strong">
+              {entity.entity_name}
+            </h1>
           </div>
           <p className="text-tremor-content">
             {entity.entity_type} {entity.entity_schema && `(${entity.entity_schema})`} •{" "}

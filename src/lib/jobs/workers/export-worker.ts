@@ -15,7 +15,6 @@ export async function processExportJob(data: ExportJobData): Promise<JobResult> 
   const { queryId, userId: _userId, format = "csv", parameters: _parameters } = data;
 
   try {
-
     // Get the saved query
     const db = getDb();
     const query = await db
@@ -28,7 +27,6 @@ export async function processExportJob(data: ExportJobData): Promise<JobResult> 
       throw new Error(`Query not found: ${queryId}`);
     }
 
-
     // Get the data source
     const dataSource = await db
       .selectFrom("data_sources")
@@ -40,14 +38,12 @@ export async function processExportJob(data: ExportJobData): Promise<JobResult> 
       throw new Error("Data source not found");
     }
 
-
     // Execute the query
     const connection = await getConnection(dataSource);
     const result = await sql.raw<Record<string, unknown>>(query.sql_content).execute(connection);
 
     let rows: Record<string, unknown>[] = [];
     rows = result.rows;
-
 
     // Ensure output directory exists
     await fs.mkdir(OUTPUT_DIR, { recursive: true });
@@ -67,7 +63,6 @@ export async function processExportJob(data: ExportJobData): Promise<JobResult> 
     } else {
       throw new Error(`Unsupported format: ${format}`);
     }
-
 
     const duration = Date.now() - startTime;
 

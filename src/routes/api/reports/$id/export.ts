@@ -67,7 +67,12 @@ function hexOr(color: string | undefined, fallback: string): string {
   return isValidHexColor(color) ? color : fallback;
 }
 
-function buildFilename(reportName: string, templateStr: string | null, firstRow: Record<string, unknown> | undefined, ext: string): string {
+function buildFilename(
+  reportName: string,
+  templateStr: string | null,
+  firstRow: Record<string, unknown> | undefined,
+  ext: string
+): string {
   let filename = reportName;
   if (templateStr && firstRow) {
     try {
@@ -258,7 +263,12 @@ export const Route = createFileRoute("/api/reports/$id/export")({
                   .join(",")
               ),
             ];
-            const csvFilename = buildFilename(report.name || "report", report.filename_template, typedRows[0], "csv");
+            const csvFilename = buildFilename(
+              report.name || "report",
+              report.filename_template,
+              typedRows[0],
+              "csv"
+            );
             return new Response(csvRows.join("\n"), {
               headers: {
                 "Content-Type": "text/csv",
@@ -341,7 +351,12 @@ export const Route = createFileRoute("/api/reports/$id/export")({
             });
 
             const buffer = await workbook.xlsx.writeBuffer();
-            const xlsxFilename = buildFilename(report.name || "report", report.filename_template, filteredRows[0], "xlsx");
+            const xlsxFilename = buildFilename(
+              report.name || "report",
+              report.filename_template,
+              filteredRows[0],
+              "xlsx"
+            );
             return new Response(Buffer.from(buffer), {
               headers: {
                 "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -480,7 +495,12 @@ export const Route = createFileRoute("/api/reports/$id/export")({
             }
 
             const pdfBytes = doc.output("arraybuffer");
-            const pdfFilename = buildFilename(report.name || "report", report.filename_template, filteredRows[0], "pdf");
+            const pdfFilename = buildFilename(
+              report.name || "report",
+              report.filename_template,
+              filteredRows[0],
+              "pdf"
+            );
             return new Response(Buffer.from(pdfBytes), {
               headers: {
                 "Content-Type": "application/pdf",
@@ -499,8 +519,12 @@ export const Route = createFileRoute("/api/reports/$id/export")({
             const altRowText = hexOr(colorTheme?.alternatingRowTextColor, "#334155");
             const borderColor = hexOr(colorTheme?.borderColor, "#e2e8f0");
 
-            const dataJson = JSON.stringify(filteredRows).replace(/</g, "\\u003c").replace(/>/g, "\\u003e");
-            const headersJson = JSON.stringify(headers).replace(/</g, "\\u003c").replace(/>/g, "\\u003e");
+            const dataJson = JSON.stringify(filteredRows)
+              .replace(/</g, "\\u003c")
+              .replace(/>/g, "\\u003e");
+            const headersJson = JSON.stringify(headers)
+              .replace(/</g, "\\u003c")
+              .replace(/>/g, "\\u003e");
             const reportName = (report.name || "Report").replace(/"/g, "&quot;");
             const exportTime = new Date().toLocaleString();
             const exportedBy = session?.user?.email || "Unknown";
@@ -662,7 +686,12 @@ export const Route = createFileRoute("/api/reports/$id/export")({
 </body>
 </html>`;
 
-            const htmlFilename = buildFilename(report.name || "report", report.filename_template, filteredRows[0], "html");
+            const htmlFilename = buildFilename(
+              report.name || "report",
+              report.filename_template,
+              filteredRows[0],
+              "html"
+            );
             return new Response(html, {
               headers: {
                 "Content-Type": "text/html; charset=utf-8",

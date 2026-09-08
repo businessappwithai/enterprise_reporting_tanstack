@@ -21,7 +21,6 @@ function ChartViewerPage() {
   const queryClient = useQueryClient();
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
-
   const { data: chart, isLoading: isLoadingChart } = useQuery<ChartDefinition>({
     queryKey: ["chart", chartId],
     queryFn: async () => {

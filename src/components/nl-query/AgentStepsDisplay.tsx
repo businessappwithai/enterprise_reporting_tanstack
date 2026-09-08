@@ -64,6 +64,7 @@ export function AgentStepsDisplay({ steps, isActive, onClear }: AgentStepsDispla
         </div>
         {onClear && (
           <button
+            type="button"
             onClick={onClear}
             className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
           >
@@ -89,6 +90,7 @@ export function AgentStepsDisplay({ steps, isActive, onClear }: AgentStepsDispla
             )}
           >
             <button
+              type="button"
               onClick={() => setExpandedStep(expandedStep === step.id ? null : step.id)}
               className="w-full flex items-center gap-3 text-left hover:opacity-75 transition-opacity"
             >

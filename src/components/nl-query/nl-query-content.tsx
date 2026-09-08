@@ -381,8 +381,8 @@ export function NlQueryContent() {
             <span>RAG Pipeline</span>
           </div>
           <div className="ml-6 text-muted-foreground space-y-0.5">
-            {steps.map((s, i) => (
-              <div key={i} className="flex items-center gap-1.5">
+            {steps.map((s) => (
+              <div key={s.name} className="flex items-center gap-1.5">
                 {s.status === "done" ? (
                   <CheckCircle className="h-3 w-3 text-emerald-500" />
                 ) : (
@@ -660,7 +660,9 @@ export function NlQueryContent() {
       {/* Page Header + Data Source Selector */}
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>
-          <h1 className="font-semibold text-2xl text-tremor-content-strong">Natural Language Query</h1>
+          <h1 className="font-semibold text-2xl text-tremor-content-strong">
+            Natural Language Query
+          </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             Use the chat sidebar to ask questions — AI generates and runs SQL for you
           </p>

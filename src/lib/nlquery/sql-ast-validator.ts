@@ -63,7 +63,9 @@ export function extractTablesFromSQL(sql: string): string[] {
           // Recursively process CTE definition
           if (cte.statement) {
             const cteTables = extractTablesFromSQL(cte.statement);
-            cteTables.forEach((t) => tables.add(t));
+            cteTables.forEach((t) => {
+              tables.add(t);
+            });
           }
         }
       }
@@ -238,11 +240,7 @@ export async function isTableAccessible(
       .where("ds_role_id", "in", roleIds)
       .where("entity_name", "=", tableName)
       .where((eb) =>
-        eb(
-          "permission_level",
-          "in",
-          ["read" as const, "write" as const, "admin" as const]
-        )
+        eb("permission_level", "in", ["read" as const, "write" as const, "admin" as const])
       )
       .executeTakeFirst();
 

@@ -58,14 +58,15 @@ export async function introspectAndCacheSchema(dataSource: DataSource): Promise<
       created_at: now,
       updated_at: now,
     })
-    .onConflict((oc: { column: (c: string) => { doUpdateSet: (v: Record<string, unknown>) => unknown } }) =>
-      oc.column("data_source_id").doUpdateSet({
-        schema_metadata: schemaMetadata,
-        sample_data: sampleDataJson,
-        embedding_data: schemaText,
-        last_introspected_at: now,
-        updated_at: now,
-      }),
+    .onConflict(
+      (oc: { column: (c: string) => { doUpdateSet: (v: Record<string, unknown>) => unknown } }) =>
+        oc.column("data_source_id").doUpdateSet({
+          schema_metadata: schemaMetadata,
+          sample_data: sampleDataJson,
+          embedding_data: schemaText,
+          last_introspected_at: now,
+          updated_at: now,
+        })
     )
     .execute();
 
@@ -217,7 +218,10 @@ function extractRelationships(schemaInfo: SchemaInfo): Relationship[] {
  */
 export async function invalidateSchemaCache(dataSourceId: string): Promise<void> {
   const db = getDb();
-  await (db as any).deleteFrom("ds_schema_cache").where("data_source_id", "=", dataSourceId).execute();
+  await (db as any)
+    .deleteFrom("ds_schema_cache")
+    .where("data_source_id", "=", dataSourceId)
+    .execute();
 }
 
 /**

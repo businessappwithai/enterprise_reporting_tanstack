@@ -90,7 +90,9 @@ export function VoiceInput() {
       mediaRecorderRef.current.stop();
     }
     if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach((t) => t.stop());
+      mediaStreamRef.current.getTracks().forEach((t) => {
+        t.stop();
+      });
       mediaStreamRef.current = null;
     }
     mediaRecorderRef.current = null;
@@ -149,7 +151,9 @@ export function VoiceInput() {
     });
 
     if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach((t) => t.stop());
+      mediaStreamRef.current.getTracks().forEach((t) => {
+        t.stop();
+      });
       mediaStreamRef.current = null;
     }
 

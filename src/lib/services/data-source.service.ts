@@ -13,9 +13,7 @@ import type { DataSource } from "@/types/database";
  * we pass the full connection string as-is rather than parsing it,
  * since the pg driver handles all parameters correctly.
  */
-function parsePostgresConnectionString(
-  connStr: string
-): Record<string, unknown> {
+function parsePostgresConnectionString(connStr: string): Record<string, unknown> {
   try {
     // Validate it's a proper PostgreSQL URL
     new URL(connStr);
@@ -23,7 +21,7 @@ function parsePostgresConnectionString(
     // Return the connection string as-is
     // The pg driver will handle all parameters (sslmode, channel_binding, etc.)
     return {
-      connectionString: connStr
+      connectionString: connStr,
     };
   } catch (error) {
     throw new Error(`Invalid PostgreSQL connection string: ${(error as Error).message}`);
@@ -66,12 +64,11 @@ function normaliseClientType(clientType: string): DatabaseClientType {
 }
 
 export class DataSourceService {
-  static async list(options?: { inspectedOnly?: boolean }): Promise<Omit<DataSource, "connection_config">[]> {
+  static async list(options?: {
+    inspectedOnly?: boolean;
+  }): Promise<Omit<DataSource, "connection_config">[]> {
     const db = getDb();
-    let query = db
-      .selectFrom("data_sources")
-      .selectAll()
-      .where("is_deleted", "=", false);
+    let query = db.selectFrom("data_sources").selectAll().where("is_deleted", "=", false);
 
     if (options?.inspectedOnly) {
       try {
@@ -249,11 +246,7 @@ export class DataSourceService {
       updateData.connection_config = encrypt(JSON.stringify(finalConfig));
     }
 
-    await db
-      .updateTable("data_sources")
-      .set(updateData)
-      .where("id", "=", id)
-      .execute();
+    await db.updateTable("data_sources").set(updateData).where("id", "=", id).execute();
 
     await logAudit({
       userId,

@@ -64,7 +64,12 @@ declare global {
 function detectMode(): VoiceMode {
   if (typeof window === "undefined") return "unavailable";
   if (window.SpeechRecognition || window.webkitSpeechRecognition) return "web-speech";
-  if (typeof navigator !== "undefined" && typeof navigator.mediaDevices !== "undefined" && typeof navigator.mediaDevices.getUserMedia === "function") return "llama-asr";
+  if (
+    typeof navigator !== "undefined" &&
+    typeof navigator.mediaDevices !== "undefined" &&
+    typeof navigator.mediaDevices.getUserMedia === "function"
+  )
+    return "llama-asr";
   return "unavailable";
 }
 
@@ -89,7 +94,9 @@ export function useVoiceRecording({
     return () => {
       recognitionRef.current?.abort();
       mediaRecorderRef.current?.stop();
-      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current?.getTracks().forEach((t) => {
+        t.stop();
+      });
     };
   }, []);
 
@@ -190,7 +197,7 @@ export function useVoiceRecording({
         setIsTranscribing(false);
       }
     },
-    [onTranscription, onError],
+    [onTranscription, onError]
   );
 
   const startLlamaRecording = useCallback(async () => {
@@ -201,7 +208,7 @@ export function useVoiceRecording({
 
       const mimeType =
         ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", "audio/ogg"].find((t) =>
-          MediaRecorder.isTypeSupported(t),
+          MediaRecorder.isTypeSupported(t)
         ) ?? "";
 
       const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
@@ -212,7 +219,9 @@ export function useVoiceRecording({
       };
 
       recorder.onstop = () => {
-        stream.getTracks().forEach((t) => t.stop());
+        stream.getTracks().forEach((t) => {
+          t.stop();
+        });
         streamRef.current = null;
         const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
         transcribeBlobLlama(blob);
@@ -244,7 +253,9 @@ export function useVoiceRecording({
       rec.onstop = null;
       rec.stop();
     }
-    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current?.getTracks().forEach((t) => {
+      t.stop();
+    });
     streamRef.current = null;
     chunksRef.current = [];
     setIsRecording(false);
@@ -257,5 +268,14 @@ export function useVoiceRecording({
   const stopAndTranscribe = mode === "web-speech" ? stopWebSpeech : stopLlamaRecording;
   const cancelRecording = mode === "web-speech" ? cancelWebSpeech : cancelLlamaRecording;
 
-  return { mode, isRecording, isTranscribing, interimText, error, startRecording, stopAndTranscribe, cancelRecording };
+  return {
+    mode,
+    isRecording,
+    isTranscribing,
+    interimText,
+    error,
+    startRecording,
+    stopAndTranscribe,
+    cancelRecording,
+  };
 }
