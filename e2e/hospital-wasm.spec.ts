@@ -332,7 +332,7 @@ test.describe('Hospital Management System - WASM Architecture', () => {
 
     // 3. Navigate to reports
     await page.goto(`${BASE_URL}/reports`);
-    await expect(page.locator('h1:has-text("Report"), text=Reports, h1')).first().toBeVisible();
+    await expect(page.locator('h1:has-text("Report"), text=Reports, h1').first()).toBeVisible();
 
     // 4. Navigate to charts
     await page.goto(`${BASE_URL}/charts`);
@@ -373,6 +373,6 @@ test.describe('Hospital Management - Data Source Connection', () => {
     await page.click('button:has-text("Test Connection")');
 
     // Should show success or connection result
-    await expect(page.locator('text=Connection, text=success, text=failed, .toast, .notification')).first().toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=Connection, text=success, text=failed, .toast, .notification').first()).toBeVisible({ timeout: 10000 });
   });
 });

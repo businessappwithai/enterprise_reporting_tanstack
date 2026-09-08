@@ -1,7 +1,7 @@
 import { test, expect, APIRequestContext } from '@playwright/test'
 import { login } from './test-auth'
 
-test('Test NL Query Execution via Server Function', async ({ browser, context }) => {
+test('Test NL Query Execution via Server Function', async ({ browser, context, playwright }) => {
   // Login first
   const page = await browser.newPage()
   await page.goto('http://localhost:4050/login')
@@ -22,7 +22,7 @@ test('Test NL Query Execution via Server Function', async ({ browser, context })
   console.log('✓ Session obtained')
 
   // Create an APIRequestContext with authentication
-  const apiContext = await context.request.newContext()
+  const apiContext = await playwright.request.newContext()
 
   // Test 1: Check available data sources
   console.log('\n--- Test 1: List Data Sources ---')

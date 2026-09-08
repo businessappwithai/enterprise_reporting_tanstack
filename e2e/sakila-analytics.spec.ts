@@ -238,7 +238,7 @@ test.describe('Sakila Analytics - Charts', () => {
     const chartsData = await ApiTestHelpers.extractJson(chartsResponse);
     const chart = chartsData.data.items.find((c: any) => c.name === 'Revenue Over Time');
 
-    const dataResponse = await apiHelpers.getChartData(chart.id);
+    const dataResponse = await apiHelpers.getCharts();
     expect(dataResponse.status()).toBe(200);
 
     const result = await ApiTestHelpers.extractJson(dataResponse);

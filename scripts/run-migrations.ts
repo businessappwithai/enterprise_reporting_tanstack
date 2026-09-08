@@ -76,7 +76,7 @@ for (const file of migrationFiles) {
       console.warn(`  Skipping... (migrations should use raw SQL for bun:sqlite)`);
       
       // Mark as executed to avoid infinite loops
-      db.query('INSERT INTO _migrations (name) VALUES (?)', [migrationName]);
+      db.query('INSERT INTO _migrations (name) VALUES (?)').run(migrationName);
       executedCount++;
     } else {
       console.warn(`  ⚠ Migration ${migrationName} has no 'up' function`);

@@ -20,7 +20,8 @@ const sessionToken = await createSession({
   id: adminUser.id,
   email: adminUser.email,
   roles: ["admin"],
-  name: adminUser.name || "Admin",
+  name: adminUser.display_name || "Admin",
+  permissions: [],
 });
 
 console.log(`✅ Created session token for: ${adminUser.email}`);

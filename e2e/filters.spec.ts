@@ -122,7 +122,7 @@ test.describe('Filters Management', () => {
         // Select dropdown type if available
         const typeSelect = dialog.locator('select').first();
         if (await typeSelect.isVisible()) {
-          await typeSelect.selectOption({ label: /dropdown|select/i });
+          await typeSelect.selectOption({ index: 0 });
         }
 
         // Cancel

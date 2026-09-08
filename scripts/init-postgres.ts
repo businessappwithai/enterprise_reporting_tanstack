@@ -595,7 +595,7 @@ try {
   console.log(`✓ Default roles created: Admin, User, Viewer`);
 
 } finally {
-  await client.end();
+  client.release();
   await pool.end();
   process.exit(0);
 }

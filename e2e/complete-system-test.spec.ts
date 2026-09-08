@@ -313,7 +313,7 @@ test.describe('Complete System Test Suite', () => {
         await exportButton.click();
 
         // Should show export options
-        await expect(page.locator('text=CSV, text=PDF, text=Excel')).isVisible({ timeout: 3000 });
+        await expect(page.locator('text=CSV, text=PDF, text=Excel')).toBeVisible({ timeout: 3000 });
       }
     });
   });
@@ -455,7 +455,7 @@ test.describe('Complete System Test Suite', () => {
           await addButton.click();
 
           // Should show widget options
-          await expect(page.locator('text=Chart, text=Metric, text=Table')).isVisible({ timeout: 3000 });
+          await expect(page.locator('text=Chart, text=Metric, text=Table')).toBeVisible({ timeout: 3000 });
         }
       }
     });
