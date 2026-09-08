@@ -1,4 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { z } from "zod";
+import { chartTypeSchema } from "@/lib/schemas/charts";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   AreaChart,
@@ -90,6 +92,8 @@ function ChartsContent() {
       pie: <PieChart className="h-4 w-4" />,
       scatter: <BarChart3 className="h-4 w-4" />,
       composed: <BarChart3 className="h-4 w-4" />,
+      column: <BarChart3 className="h-4 w-4" />,
+      doughnut: <PieChart className="h-4 w-4" />,
     }),
     []
   );
@@ -188,7 +192,7 @@ function ChartsContent() {
       },
     ],
     handler: async ({ chartName, description, dataSourceId, chartType }) => {
-      const type = (chartType ?? "bar") as "bar" | "line" | "area" | "pie" | "scatter" | "composed";
+      const type = (chartType ?? "bar") as z.infer<typeof chartTypeSchema>;
       const preview = await nlBuildPreview({ data: { nlDescription: description, dataSourceId } });
       if (!preview.success) return { success: false, error: preview.error };
 

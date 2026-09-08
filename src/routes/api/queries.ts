@@ -99,6 +99,7 @@ export const Route = createFileRoute('/api/queries')({
           await db.insertInto('saved_queries').values({
             id,
             created_by: session.user.id,
+            is_validated: false,
             name: body.name,
             description: body.description || null,
             data_source_id: body.dataSourceId,

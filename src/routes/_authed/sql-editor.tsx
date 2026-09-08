@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { SchemaInfo } from "@/types/api";
 import { createFileRoute } from "@tanstack/react-router";
 import { ChevronDown, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -126,12 +127,9 @@ function SQLEditorContent() {
     gcTime: 300000,
   });
 
-  const { data: schema, isLoading: isLoadingSchema } = useQuery<{
-    tables: Record<string, unknown>[];
-    views: Record<string, unknown>[];
-    logs?: string[];
-    warning?: string;
-  }>({
+  const { data: schema, isLoading: isLoadingSchema } = useQuery<
+    SchemaInfo & { logs?: string[]; warning?: string }
+  >({
     queryKey: ["schema", selectedDataSource],
     queryFn: async () => {
       const res = await fetch(`/api/sql/schema/${selectedDataSource}`);

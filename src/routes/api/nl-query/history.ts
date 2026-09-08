@@ -128,6 +128,7 @@ export const Route = createFileRoute("/api/nl-query/history")({
             .insertInto("nl_query_context")
             .values({
               id,
+              created_at: new Date().toISOString(),
               nl_question,
               generated_sql,
               data_source_id: data_source_id || "",

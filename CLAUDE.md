@@ -234,28 +234,36 @@ Running `bun run db:seed` also adds `analyst@example.com` / `analyst123` with a 
 
 Playwright tests in `e2e/`. The dev server must be running on port 4050 before running tests (the `webServer` config in `playwright.config.ts` is commented out). Auth state is set up once by `e2e/global-setup.ts` and cached in `auth.json`, then reused via `storageState`. Tests run serially (1 worker, `fullyParallel: false`) to prevent session interference. Override the target with `BASE_URL`.
 
-## `bun run typecheck` reports the whole repository's backlog
+## `bun run typecheck` passes — keep it that way
 
 `tsconfig.json` includes `**/*.ts`, so `typecheck` — and therefore `precommit` —
-covers `language/`, `scripts/` and `tests/` as well as `src/`. It does not pass,
-and it did not pass before: the backlog was around 678 errors across ~140 files
-when it first became visible, and is being worked down.
+covers `language/`, `scripts/`, `e2e/` and `tests/` as well as `src/`. It now
+reports **zero** errors.
 
-That number was invisible until recently. A single unescaped backtick in
-`language/cli/src/generate/app.ts` made the file unparseable, and one parse error
-makes `tsc` report *that alone* and stop — so `typecheck` printed exactly one
-error and exited 2, which reads far more like a small local problem than a
-backlog. Fixing the parse error is what surfaced the rest.
+It did not always. The backlog was 678 errors across ~140 files, and it was
+invisible: a single unescaped backtick in `language/cli/src/generate/app.ts`
+made that file unparseable, and one parse error makes `tsc` report *that alone*
+and stop — so `typecheck` printed exactly one error and exited 2, which reads
+far more like a small local problem than a backlog. Fixing the parse error is
+what surfaced the rest.
 
-So: `typecheck` failing is the status quo, not something you broke. Compare error
-*counts* against `main` before and after a change rather than reading a non-zero
-exit as a regression, and do not treat a low error count as good news — it more
-likely means something upstream stopped `tsc` early.
+Two habits are worth keeping from that:
 
-`language/**` is clean and worth keeping that way. Its files use explicit `.ts`
-import specifiers, which Bun resolves and `tsc` rejects (TS5097) unless
-`allowImportingTsExtensions` is set — it is, in `tsconfig.json`, and it needs the
-`noEmit` that is already there.
+- **A low error count is not automatically good news.** If the number collapses
+  after an edit, check for a parse error stopping `tsc` early rather than
+  assuming you fixed something.
+- **Most of those 678 were real defects, not type noise** — Kysely called with
+  Knex's API, `.where(column, value)` without an operator, server functions
+  reading their payload off the ctx, inserts omitting a NOT NULL primary key,
+  columns and hooks that never existed. Treat a new error as a bug report.
+
+`language/**` uses explicit `.ts` import specifiers, which Bun resolves and
+`tsc` rejects (TS5097) unless `allowImportingTsExtensions` is set — it is, in
+`tsconfig.json`, and it needs the `noEmit` that is already there.
+
+`bun run lint` and `bun run format:check` do **not** pass: 21 files carry
+pre-existing Biome diagnostics and 21 need reformatting. Compare counts against
+`main` rather than reading a non-zero exit as something you caused.
 
 ## Stale documentation
 

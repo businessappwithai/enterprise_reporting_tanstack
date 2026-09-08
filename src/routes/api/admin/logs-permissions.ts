@@ -95,6 +95,8 @@ export const Route = createFileRoute("/api/admin/logs-permissions")({
             .values({
               key: "logs_visible_to_users",
               value: body.logsVisibleToUsers ? "true" : "false",
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
             })
             .execute();
 
