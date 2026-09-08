@@ -10,7 +10,6 @@ import {
   scheduledRefreshTask,
 } from "./trigger-tasks";
 import type { EmailBatchJobData } from "./types";
-import type { TriggerClient } from "@trigger.dev/sdk/v3";
 
 // Job type definitions
 export type JobType =

@@ -8,7 +8,7 @@ import {
   type CreateChartInput,
   type UpdateChartInput,
 } from "@/lib/schemas/charts";
-import { paginationInputSchema } from "@/lib/schemas/common";
+import { paginationSchema } from "@/lib/schemas/common";
 import { requireAuth } from "@/lib/auth/middleware";
 import { getDb } from "@/lib/db/config";
 import { logAudit } from "@/lib/security/audit";
@@ -21,7 +21,7 @@ import {
 import { withErrorHandler } from "@/lib/server-fns/with-error-handler";
 
 export const listCharts = createServerFn({ method: "GET" })
-  .inputValidator(paginationInputSchema)
+  .inputValidator(paginationSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(
       async () => {

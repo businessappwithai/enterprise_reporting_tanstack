@@ -86,7 +86,7 @@ export function HelpDialog({ open, onOpenChange }: HelpDialogProps) {
     retry: false,
   });
 
-  const articles = response?.data ?? [];
+  const articles: HelpArticleRow[] = response?.data ?? [];
 
   const filtered = articles.filter(
     (article) => activeCategory === "all" || article.category === activeCategory

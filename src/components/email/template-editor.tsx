@@ -102,7 +102,7 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
       const res = await fetch(`/api/queries/${selectedQueryId}/execute`);
       if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to execute query`);
       const data = await res.json();
-      return data.data?.rows?.slice(0, 5) || [];
+      return (data.data?.rows?.slice(0, 5) || []) as Record<string, unknown>[];
     },
     enabled: !!selectedQueryId && activeTab === "mappings",
   });
@@ -162,7 +162,7 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
   const availableColumns = queryResults.length > 0 ? Object.keys(queryResults[0]) : [];
 
   // Extract placeholders from template
-  const placeholders = htmlBody.match(/{{(\w+)}}/g)?.map((p) => p.replace(/{{|}}/g)) || [];
+  const placeholders = htmlBody.match(/{{(\w+)}}/g)?.map((p) => p.replace(/{{|}}/g, "")) || [];
   const uniquePlaceholders = Array.from(new Set(placeholders));
 
   const handleSave = () => {

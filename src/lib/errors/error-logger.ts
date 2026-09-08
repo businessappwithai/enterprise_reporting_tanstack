@@ -1,4 +1,4 @@
-interface ErrorLog {
+export interface ErrorLog {
   timestamp: string;
   errorMessage: string;
   errorStack?: string;
@@ -18,7 +18,7 @@ class ErrorLogger {
       timestamp: new Date().toISOString(),
       errorMessage: error.message,
       errorStack: error.stack,
-      componentStack: errorInfo?.componentStack,
+      componentStack: errorInfo?.componentStack ?? undefined,
       userAgent: typeof window !== "undefined" ? window.navigator.userAgent : "Unknown",
       url: typeof window !== "undefined" ? window.location.href : "Unknown",
       userId: this.getCurrentUserId(),
