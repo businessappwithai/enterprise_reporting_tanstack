@@ -6,7 +6,7 @@
  */
 
 import { EChartsRenderer } from "@/components/echarts/EChartsRenderer";
-import { DataTable } from "@/components/reporting/DataTable";
+import { DataTable } from "@/components/reporting/data-table";
 import type { ColumnSchema } from "@/types/database";
 import type { EChartsConfig } from "@/types/charts";
 
