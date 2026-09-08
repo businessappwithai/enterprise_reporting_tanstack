@@ -169,6 +169,11 @@ export interface ReportDefinitionsTable {
   export_formats: string; // JSON array
   filename_template: string | null;
   color_theme: string | null; // JSON
+  /**
+   * JSON `RecordLinkConfig` — the button that opens a row's record in another
+   * application. Administrator-only to set; see src/lib/reporting/record-link.ts.
+   */
+  record_link_config: string | null;
   is_public: boolean | null;
   is_deleted: boolean | null;
   deleted_at: string | null;

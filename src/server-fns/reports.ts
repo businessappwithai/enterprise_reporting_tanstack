@@ -3,6 +3,13 @@
 import { randomUUID } from "node:crypto";
 import { createServerFn } from "@tanstack/react-start";
 import { requireAuth } from "@/lib/auth/middleware";
+import { isAdmin } from "@/lib/permissions/permissions";
+import {
+  parseRecordLinkConfig,
+  type RecordLinkConfig,
+  serializeRecordLinkConfig,
+  validateUrlTemplate,
+} from "@/lib/reporting/record-link";
 import { getDb } from "@/lib/db/config";
 import { logAudit } from "@/lib/security/audit";
 import {
@@ -10,6 +17,7 @@ import {
   createReportSchema,
   updateReportSchema,
   getReportSchema,
+  setReportRecordLinkSchema,
 } from "@/lib/schemas/reports";
 
 export const listReports = createServerFn({
@@ -161,4 +169,113 @@ export const deleteReport = createServerFn({
     });
 
     return { success: true };
+  });
+
+/**
+ * Read the record link on a report.
+ *
+ * Not administrator-gated: every viewer of a report needs this to know whether
+ * to draw the button. Configuring the link is the privileged action, not seeing
+ * where it points — and the target application enforces its own access anyway,
+ * so a link is not a grant.
+ */
+export const getReportRecordLink = createServerFn({ method: "GET" })
+  .inputValidator(getReportSchema)
+  .handler(async ({ data: input }) => {
+    await requireAuth();
+
+    const db = getDb();
+    const row = await db
+      .selectFrom("report_definitions")
+      .select("record_link_config")
+      .where("id", "=", input.id)
+      .executeTakeFirst();
+
+    return { config: parseRecordLinkConfig(row?.record_link_config ?? null) };
+  });
+
+/**
+ * Set (or clear) the record link on a report — administrators only.
+ *
+ * The gate is here rather than only in the UI. Hiding the form from
+ * non-administrators is a courtesy; this is the check that means anything,
+ * because a server function is reachable by anyone who can call it, not just by
+ * whoever the screen was rendered for.
+ *
+ * The URL is validated before it is stored. It ends up in an `href` shown to
+ * every viewer of the report, so an unvalidated template is stored XSS — see
+ * src/lib/reporting/record-link.ts.
+ */
+export const setReportRecordLink = createServerFn({ method: "POST" })
+  .inputValidator(setReportRecordLinkSchema)
+  .handler(async ({ data: input }) => {
+    const session = await requireAuth();
+
+    if (!(await isAdmin(session.user.id))) {
+      throw new Error("FORBIDDEN: Only administrators can configure record links");
+    }
+
+    const db = getDb();
+
+    // Clearing is spelled as `link: null` rather than as an empty template, so
+    // "remove this" cannot be confused with "save a blank one".
+    if (!input.link) {
+      await db
+        .updateTable("report_definitions")
+        .set({ record_link_config: null, updated_at: new Date().toISOString() })
+        .where("id", "=", input.id)
+        .execute();
+
+      await logAudit({
+        userId: session.user.id,
+        action: "update",
+        resourceType: "report",
+        resourceId: input.id,
+        details: { operation: "clearRecordLink" },
+      });
+
+      return { success: true, config: null };
+    }
+
+    const validation = validateUrlTemplate(input.link.urlTemplate);
+    if (!validation.ok) {
+      throw new Error(`VALIDATION: ${validation.error}`);
+    }
+
+    if (!input.link.idColumn.trim()) {
+      throw new Error("VALIDATION: Choose the column holding the record's id.");
+    }
+
+    const config: RecordLinkConfig = {
+      enabled: input.link.enabled,
+      idColumn: input.link.idColumn,
+      urlTemplate: input.link.urlTemplate,
+      label: input.link.label,
+      openInNewTab: input.link.openInNewTab,
+    };
+
+    await db
+      .updateTable("report_definitions")
+      .set({
+        record_link_config: serializeRecordLinkConfig(config),
+        updated_at: new Date().toISOString(),
+      })
+      .where("id", "=", input.id)
+      .execute();
+
+    await logAudit({
+      userId: session.user.id,
+      action: "update",
+      resourceType: "report",
+      resourceId: input.id,
+      // The template is recorded: who pointed a report at which external system
+      // is exactly the question an audit of this feature would be asking.
+      details: {
+        operation: "setRecordLink",
+        enabled: config.enabled,
+        urlTemplate: config.urlTemplate,
+      },
+    });
+
+    return { success: true, config };
   });

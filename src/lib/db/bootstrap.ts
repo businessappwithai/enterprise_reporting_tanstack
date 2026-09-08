@@ -644,6 +644,9 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
     // the migration below to read, but a Better-Auth-created user never fills
     // it, so it can no longer be NOT NULL.
     sql`ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL`,
+    // Record links — see src/lib/reporting/record-link.ts. JSON, nullable: a
+    // report without one is the normal case.
+    sql`ALTER TABLE report_definitions ADD COLUMN IF NOT EXISTS record_link_config TEXT`,
   ];
 
   // Indexes — separate statements because PostgreSQL doesn't support inline index creation
