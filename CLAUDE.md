@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Development
 bun --bun vite dev            # dev server at http://localhost:4050
 bun --bun vite build          # production build
-bun .output/server/index.mjs  # serve production build
+bun run start                 # serve it — listens on :3000, PORT overrides
 
 # Code quality (Biome, not ESLint/Prettier)
 biome lint src                # lint check
