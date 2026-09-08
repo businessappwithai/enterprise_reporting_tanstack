@@ -1,12 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
-import { verifySession } from "@/lib/auth/session";
+import { readSessionToken, verifySession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/config";
 
 async function getSession(request: Request) {
   const cookie = request.headers.get("cookie") || "";
-  const match = cookie.match(/session_token=([^;]+)/);
-  const token = match?.[1];
+  const token = readSessionToken(cookie);
   if (!token) return null;
   return verifySession(token);
 }

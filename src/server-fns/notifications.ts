@@ -1,12 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
-import { verifySession } from "@/lib/auth/session";
+import { readSessionToken, verifySession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/config";
 
 async function getSession() {
   const cookie = getRequestHeader("cookie") || "";
-  const match = cookie.match(/session_token=([^;]+)/);
-  const token = match?.[1];
+  const token = readSessionToken(cookie);
   if (!token) return null;
   return verifySession(token);
 }
