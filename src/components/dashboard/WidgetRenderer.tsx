@@ -6,6 +6,7 @@
  */
 
 import { EChartsRenderer } from "@/components/echarts/EChartsRenderer";
+import type { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/reporting/data-table";
 import type { ColumnSchema } from "@/types/database";
 import type { EChartsConfig } from "@/types/charts";
@@ -57,17 +58,13 @@ export function WidgetRenderer({
       return (
         <DataTable
           data={data}
-          columns={
-            columns ||
-            Object.keys(data[0] || {}).map((key) => ({
-              name: key,
-              type: "text",
-              nullable: true,
-            }))
-          }
+          columns={(columns ?? Object.keys(data[0] || {}).map((key) => ({ name: key }))).map(
+            (col): ColumnDef<Record<string, unknown>> => ({
+              accessorKey: col.name,
+              header: col.name,
+            })
+          )}
           pageSize={50}
-          sortable={true}
-          filterable={true}
         />
       );
 
