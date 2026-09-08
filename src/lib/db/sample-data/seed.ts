@@ -50,7 +50,7 @@ const regionData = [
 const insertRegion = db.query("INSERT INTO regions (name, code, country) VALUES (?, ?, ?)");
 for (const region of regionData) {
   const info = insertRegion.run(region.name, region.code, region.country);
-  regions.push({ id: info.lastInsertRowid, ...region });
+  regions.push({ id: Number(info.lastInsertRowid), ...region });
 }
 
 // 2. Departments (15 records)
@@ -79,12 +79,19 @@ const insertDept = db.query(
 );
 for (const dept of departmentData) {
   const info = insertDept.run(dept.name, dept.code, dept.description, dept.budget);
-  departments.push({ id: info.lastInsertRowid, ...dept, manager_id: null });
+  departments.push({ id: Number(info.lastInsertRowid), ...dept, manager_id: null });
 }
 
 // 3. Employees (10,000 records)
 console.log("Inserting 10,000 employees...");
-const employees: { id: number; department_id?: number }[] = [];
+const employees: {
+  id: number;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  department_id?: number;
+  manager_id?: number | null;
+}[] = [];
 const firstNames = [
   "James",
   "Mary",
@@ -312,7 +319,7 @@ for (let i = 0; i < 10000; i++) {
     1
   );
   employees.push({
-    id: info.lastInsertRowid,
+    id: Number(info.lastInsertRowid),
     firstName,
     lastName,
     email,
@@ -382,7 +389,7 @@ for (let i = 0; i < 20; i++) {
     manager ? manager.id : null,
     50000 + Math.floor(Math.random() * 100000)
   );
-  warehouses.push({ id: info.lastInsertRowid, code });
+  warehouses.push({ id: Number(info.lastInsertRowid), code });
 }
 
 // 5. Categories (30 records)
@@ -431,7 +438,7 @@ for (const cat of categoryData) {
     `${cat.name} and related products`,
     parent ? parent.id : null
   );
-  categories.push({ id: info.lastInsertRowid, name: cat.name, code: cat.code });
+  categories.push({ id: Number(info.lastInsertRowid), name: cat.name, code: cat.code });
 }
 
 // Simplified seeding - continue with remaining tables...
