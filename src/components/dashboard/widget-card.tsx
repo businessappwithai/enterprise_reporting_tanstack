@@ -197,7 +197,7 @@ export function WidgetCard({ widget, onFilterApply }: WidgetCardProps) {
               columns={columns.map((col: Record<string, unknown>) => ({
                 accessorKey: col.field || col.accessorKey,
                 header: col.header || col.field,
-                cell: ({ getValue }) => {
+                cell: ({ getValue }: { getValue: () => unknown }) => {
                   const value = getValue();
                   if (value === null || value === undefined) {
                     return <span className="text-tremor-content">-</span>;

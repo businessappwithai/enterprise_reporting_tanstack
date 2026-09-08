@@ -141,7 +141,14 @@ export async function findSimilarQueries(
       LIMIT ${sql.lit(limit)}
     `.execute(connection);
 
-    return result.rows.filter((r) => r.similarity > 0.3);
+    return result.rows
+      .filter((r) => r.similarity > 0.3)
+      .map((r) => ({
+        naturalLanguageQuery: r.natural_language_query,
+        generatedSql: r.generated_sql,
+        explanation: r.explanation,
+        similarity: r.similarity,
+      }));
   } catch (e) {
     console.warn("[RAG] findSimilarQueries failed:", e);
     return [];

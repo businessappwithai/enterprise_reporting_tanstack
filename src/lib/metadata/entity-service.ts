@@ -83,7 +83,7 @@ export class EntityQueryBuilder {
           eb.or([eb("entity_name", "like", term), eb("description", "like", term)])
         );
       } else {
-        query = query.where(f.column as never, "=", f.value);
+        query = query.where(f.column as never, "=", f.value as never);
       }
     }
 

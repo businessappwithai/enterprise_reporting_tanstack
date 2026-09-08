@@ -239,7 +239,7 @@ function ReportViewerPage() {
             );
           })()}
 
-          <Link to={`/reports/${reportId}/editor`}>
+          <Link to="/reports/$id/editor" params={{ id: reportId }}>
             <Button size="sm">
               <Edit className="h-4 w-4 mr-2" />
               Edit

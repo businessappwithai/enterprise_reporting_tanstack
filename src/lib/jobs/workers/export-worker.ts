@@ -169,7 +169,7 @@ async function exportToPdf(rows: Record<string, unknown>[], outputPath: string):
   }
 
   const headers = Object.keys(rows[0]);
-  const data = rows.map((row) => Object.values(row));
+  const data = rows.map((row) => Object.values(row).map((v) => (v == null ? "" : String(v))));
 
   autoTable(doc, {
     head: [headers],
@@ -179,9 +179,7 @@ async function exportToPdf(rows: Record<string, unknown>[], outputPath: string):
     },
     headStyles: {
       fillColor: [66, 66, 66],
-      textStyle: {
-        color: 255,
-      },
+      textColor: 255,
     },
   });
 

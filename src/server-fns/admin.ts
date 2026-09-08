@@ -171,6 +171,7 @@ export const createUser = createServerFn({ method: "POST" })
               input.roleIds.map((roleId) => ({
                 user_id: userId,
                 role_id: roleId,
+                assigned_at: new Date().toISOString(),
               }))
             )
             .execute();
@@ -233,6 +234,7 @@ export const updateUser = createServerFn({ method: "POST" })
                 input.roleIds.map((roleId) => ({
                   user_id: input.id,
                   role_id: roleId,
+                  assigned_at: new Date().toISOString(),
                 }))
               )
               .execute();

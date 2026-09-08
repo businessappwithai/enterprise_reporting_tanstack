@@ -167,7 +167,9 @@ export class OpenKBClient {
 
     try {
       // Get recent query IDs from sorted set (most recent first)
-      const queryIds = await this.redis.xRevRange(`openkb:${roleId}:queries`, 0, limit - 1);
+      const queryIds = await this.redis.zRange(`openkb:${roleId}:queries`, 0, limit - 1, {
+        REV: true,
+      });
 
       const results: OpenKBStoredQuery[] = [];
       for (const queryId of queryIds) {
@@ -249,9 +251,7 @@ export class OpenKBClient {
     try {
       const queryCount = await this.redis.zCard(`openkb:${roleId}:queries`);
 
-      const range = await this.redis.zRange(`openkb:${roleId}:queries`, 0, -1, {
-        withScores: true,
-      });
+      const range = await this.redis.zRangeWithScores(`openkb:${roleId}:queries`, 0, -1);
 
       let oldestQuery: number | undefined;
       let newestQuery: number | undefined;

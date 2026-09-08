@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import type { DatabaseClientType } from "@/types/database";
 import { getDb } from "@/lib/db/config";
 import { encrypt, decrypt } from "@/lib/security/encryption";
 import { logAudit } from "@/lib/security/audit";
@@ -56,6 +57,12 @@ export interface DataSourceOutput {
   updated_at: string;
   created_by: string;
   connection_config?: Record<string, unknown>;
+}
+
+/** The client-name spellings the UI sends, mapped to the stored DatabaseClientType. */
+function normaliseClientType(clientType: string): DatabaseClientType {
+  if (clientType === "postgres" || clientType === "postgresql") return "pg";
+  return clientType as DatabaseClientType;
 }
 
 export class DataSourceService {
@@ -154,7 +161,7 @@ export class DataSourceService {
         id,
         name: name.trim(),
         description: description?.trim() || null,
-        client_type: clientType,
+        client_type: normaliseClientType(clientType),
         connection_config: encryptedConfig,
         is_active: true,
         is_editable: false,
@@ -234,11 +241,7 @@ export class DataSourceService {
         "connectionString" in input.connectionConfig &&
         typeof input.connectionConfig.connectionString === "string"
       ) {
-        if (
-          existing.client_type === "pg" ||
-          existing.client_type === "postgres" ||
-          existing.client_type === "postgresql"
-        ) {
+        if (existing.client_type === "pg") {
           finalConfig = parsePostgresConnectionString(input.connectionConfig.connectionString);
         }
       }

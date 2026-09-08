@@ -28,10 +28,10 @@ const pgp = pgPromise({
     });
   },
 
-  // Initialization of each connection
-  init(client) {
+  // Runs for each new connection
+  connect(e) {
     // Set connection timeout for queries
-    return client.query('SET idle_in_transaction_session_timeout = 60000');
+    void e.client.query("SET idle_in_transaction_session_timeout = 60000");
   },
 });
 

@@ -1133,6 +1133,8 @@ export async function seedHelpArticles(db: Kysely<Database>) {
         keywords: article.keywords,
         sort_order: article.sort_order,
         is_published: article.is_published,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       })
       .onConflict((oc) =>
         oc.column("id").doUpdateSet({

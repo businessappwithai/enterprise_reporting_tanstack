@@ -1,4 +1,5 @@
 import { useCopilotChat } from "@copilotkit/react-core";
+import { Role, TextMessage } from "@copilotkit/runtime-client-gql";
 import { AlertCircle, CheckCircle, Loader2, Mic, Square } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -202,11 +203,13 @@ export function VoiceInput() {
 
       updateStep("Send to agent", "running", "Submitting...");
 
-      appendMessage({
-        id: crypto.randomUUID(),
-        role: "user",
-        content: text,
-      });
+      appendMessage(
+        new TextMessage({
+          id: crypto.randomUUID(),
+          role: Role.User,
+          content: text,
+        })
+      );
 
       updateStep("Send to agent", "done", "Sent");
 

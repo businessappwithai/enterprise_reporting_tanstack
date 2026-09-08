@@ -108,7 +108,7 @@ export function NlBuilderPanel() {
           <Loader2 className="h-4 w-4 animate-spin" />
           Translating to SQL and running preview…
         </div>
-      ) : null,
+      ) : <></>,
     handler: async ({ nlDescription, dataSourceId }) => {
       setPhase("translating");
       setErrorMsg(null);
@@ -176,7 +176,7 @@ export function NlBuilderPanel() {
           <Loader2 className="h-4 w-4 animate-spin" />
           Saving report…
         </div>
-      ) : null,
+      ) : <></>,
     handler: async ({ name, description, dataSourceId, exportFormats }) => {
       if (!preview) return { success: false, error: "Run previewQuery first." };
       setPhase("saving");
@@ -245,7 +245,7 @@ export function NlBuilderPanel() {
           <Loader2 className="h-4 w-4 animate-spin" />
           Saving chart…
         </div>
-      ) : null,
+      ) : <></>,
     handler: async ({ name, description, dataSourceId, chartType }) => {
       if (!preview) return { success: false, error: "Run previewQuery first." };
       setPhase("saving");

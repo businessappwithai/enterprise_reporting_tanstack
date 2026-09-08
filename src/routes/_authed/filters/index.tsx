@@ -61,7 +61,7 @@ function FiltersContent() {
       const res = await fetch("/api/filters");
       if (!res.ok) throw new Error("Failed to fetch filters");
       const json = await res.json();
-      return json.data || [];
+      return (json.data || []) as FilterDefinition[];
     },
   });
 

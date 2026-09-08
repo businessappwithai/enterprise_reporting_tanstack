@@ -85,6 +85,8 @@ export interface EChartsConfig {
   colors?: string[];
   /** Per-series colors (maps to series order) */
   seriesColors?: string[];
+  /** Stack the series rather than drawing them side by side. */
+  stacked?: boolean;
   legend?: boolean | LegendConfig;
   tooltip?: boolean | TooltipConfig;
   dataMapping: DataMapping;

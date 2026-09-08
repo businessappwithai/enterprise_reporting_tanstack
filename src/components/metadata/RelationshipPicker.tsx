@@ -54,7 +54,7 @@ export function RelationshipPicker({
   onChange,
 }: RelationshipPickerProps) {
   const uiType = field.relationship_ui_type || "dropdown";
-  const referencedEntityName = field.foreign_key_table;
+  const referencedEntityName = field.foreign_key_table ?? "";
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [popupOpen, setPopupOpen] = useState(false);

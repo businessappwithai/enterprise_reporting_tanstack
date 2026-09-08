@@ -177,7 +177,7 @@ export function BatchFieldEditForm({
                       <div className="flex items-center space-x-2">
                         <Checkbox
                           id={`display-${field.id}`}
-                          checked={changes?.is_display_field ?? field.is_display_field}
+                          checked={changes?.is_display_field ?? field.is_display_field ?? false}
                           onCheckedChange={(checked) =>
                             updateFieldChange(field.id, {
                               is_display_field: checked === true,
@@ -196,7 +196,7 @@ export function BatchFieldEditForm({
                       <div className="flex items-center space-x-2">
                         <Checkbox
                           id={`searchable-${field.id}`}
-                          checked={changes?.is_searchable ?? field.is_searchable}
+                          checked={changes?.is_searchable ?? field.is_searchable ?? false}
                           onCheckedChange={(checked) =>
                             updateFieldChange(field.id, {
                               is_searchable: checked === true,
@@ -223,7 +223,7 @@ export function BatchFieldEditForm({
                         type="number"
                         min={0}
                         max={10000}
-                        defaultValue={field.display_order}
+                        defaultValue={field.display_order ?? undefined}
                         onChange={(e) =>
                           updateFieldChange(field.id, {
                             display_order: parseInt(e.target.value, 10) || 0,

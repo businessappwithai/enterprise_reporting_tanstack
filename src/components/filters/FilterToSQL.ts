@@ -2,7 +2,7 @@
  * Convert filter state to DuckDB WHERE clause fragments.
  */
 
-import type { TableFilterState } from "@/types/filters";
+import type { TableFilterState } from "@/types/charts";
 
 /**
  * Build a WHERE clause string from an array of filters.

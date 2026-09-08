@@ -27,7 +27,7 @@ if (import.meta.hot) {
 
 export const loginFn = createServerFn({ method: "POST" })
   .inputValidator((data: { email: string; password: string }) => data)
-  .handler(async ({ data, request }) => {
+  .handler(async ({ data }) => {
     const logger = createLogger({ component: LOG_COMPONENTS.Authentication });
     const timestamp = new Date().toISOString();
     const userAgent = getRequestHeader("user-agent") || "unknown";

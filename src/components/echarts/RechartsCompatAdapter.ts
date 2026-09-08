@@ -54,7 +54,7 @@ export function convertRechartsToECharts(
     dataMapping: echartsMapping,
     animation: chartConfig?.animation ?? true,
     stacked: chartConfig?.stacked === true,
-    tooltip: chartConfig?.tooltip?.enabled !== false ? { trigger: "axis" } : false,
+    tooltip: chartConfig?.tooltip?.enabled !== false ? { trigger: "axis" as const } : false,
     legend:
       chartConfig?.legend?.show !== false
         ? {

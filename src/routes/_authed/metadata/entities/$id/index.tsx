@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Database, Settings } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { BatchFieldEditForm } from "@/components/metadata/forms/BatchFieldEditForm";
+import { BatchFieldEditForm, type BatchFieldEditFormValues } from "@/components/metadata/forms/BatchFieldEditForm";
 import { EntityMetadataForm } from "@/components/metadata/forms/EntityMetadataForm";
 
 interface MetadataEntity {
@@ -123,7 +123,7 @@ function EntityDetailPage() {
   });
 
   const updateFieldsMutation = useMutation({
-    mutationFn: async (fields: MetadataField[]) => {
+    mutationFn: async (fields: BatchFieldEditFormValues) => {
       const res = await fetch(`/api/metadata/entities/${entityId}/fields/batch`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -148,7 +148,8 @@ function EntityDetailPage() {
           if (!old) return [];
           const oldMap = new Map(old.map((f) => [f.id, f]));
           updatedFields.forEach((f) => {
-            oldMap.set(f.id, { ...oldMap.get(f.id), ...f });
+            const existing = oldMap.get(f.id);
+            if (existing) oldMap.set(f.id, { ...existing, ...f });
           });
           return Array.from(oldMap.values());
         }
@@ -180,7 +181,7 @@ function EntityDetailPage() {
     await updateEntityMutation.mutateAsync(data);
   };
 
-  const handleFieldsSave = async (fields: MetadataField[]) => {
+  const handleFieldsSave = async (fields: BatchFieldEditFormValues) => {
     await updateFieldsMutation.mutateAsync(fields);
   };
 
@@ -196,7 +197,7 @@ function EntityDetailPage() {
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Link to="/metadata/entities" className="p-2 hover:bg-muted rounded-md">
+        <Link to="/metadata/entities" search={{ data_source_id: null }} className="p-2 hover:bg-muted rounded-md">
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div className="flex-1">

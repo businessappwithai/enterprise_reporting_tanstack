@@ -26,6 +26,6 @@ export async function transcribeAudioStream(
     chunks.push(chunk);
   }
 
-  const blob = new Blob(chunks, { type: "audio/wav" });
+  const blob = new Blob(chunks as BlobPart[], { type: "audio/wav" });
   return transcribeAudio(blob);
 }

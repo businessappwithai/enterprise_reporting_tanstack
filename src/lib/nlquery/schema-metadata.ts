@@ -64,7 +64,12 @@ async function fetchDatabaseSchema(connection: any, clientType: string): Promise
       return { tables: [] };
     }
 
-    return { tables };
+    return {
+      tables: tables.map((t) => ({
+        name: t.name,
+        columns: (t.columns ?? []).map((name) => ({ name, type: "unknown" })),
+      })),
+    };
   } catch (error) {
     console.error("[Schema] Error fetching schema:", error);
     return { tables: [] };

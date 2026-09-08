@@ -58,7 +58,7 @@ export async function introspectAndCacheSchema(dataSource: DataSource): Promise<
       created_at: now,
       updated_at: now,
     })
-    .onConflict((oc) =>
+    .onConflict((oc: { column: (c: string) => { doUpdateSet: (v: Record<string, unknown>) => unknown } }) =>
       oc.column("data_source_id").doUpdateSet({
         schema_metadata: schemaMetadata,
         sample_data: sampleDataJson,
