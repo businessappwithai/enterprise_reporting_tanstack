@@ -24,7 +24,7 @@ test.describe('Entity Metadata - API Tests', () => {
   let testDataSourceId: string;
 
   test.beforeAll(async ({ request, browser }) => {
-    authCookie = await getAuthCookie(request, browser);
+    authCookie = await getAuthCookie(request);
   });
 
   test('setup - create test data source and tables', async ({ request }) => {
@@ -107,7 +107,7 @@ test.describe('Entity Metadata - API Tests', () => {
     const entityId = listData.data.entities[0]?.id;
 
     if (!entityId) {
-      test.skip('No entities found - skipping test');
+      test.skip(true, 'No entities found - skipping test');
       return;
     }
 
@@ -134,7 +134,7 @@ test.describe('Entity Metadata - API Tests', () => {
     const entityId = listData.data.entities?.find((e: any) => e.entity_name === 'test_customers')?.id;
 
     if (!entityId) {
-      test.skip('test_customers entity not found - skipping test');
+      test.skip(true, 'test_customers entity not found - skipping test');
       return;
     }
 
@@ -168,7 +168,7 @@ test.describe('Entity Metadata - API Tests', () => {
     const entityId = listData.data.entities?.find((e: any) => e.entity_name === 'test_customers')?.id;
 
     if (!entityId) {
-      test.skip('test_customers entity not found - skipping test');
+      test.skip(true, 'test_customers entity not found - skipping test');
       return;
     }
 
@@ -196,7 +196,7 @@ test.describe('Entity Metadata - API Tests', () => {
     const entity = listData.data.entities?.find((e: any) => e.entity_name === 'test_orders');
 
     if (!entity) {
-      test.skip('test_orders entity not found - skipping test');
+      test.skip(true, 'test_orders entity not found - skipping test');
       return;
     }
 
@@ -204,7 +204,7 @@ test.describe('Entity Metadata - API Tests', () => {
     const fkField = entity.fields?.find((f: any) => f.field_name === 'customer_id');
 
     if (!fkField) {
-      test.skip('customer_id foreign key field not found - skipping test');
+      test.skip(true, 'customer_id foreign key field not found - skipping test');
       return;
     }
 
@@ -238,7 +238,7 @@ test.describe('Entity Metadata - API Tests', () => {
     const entity = listData.data.entities?.find((e: any) => e.entity_name === 'test_customers');
 
     if (!entity || entity.fields.length < 2) {
-      test.skip('Entity with sufficient fields not found - skipping test');
+      test.skip(true, 'Entity with sufficient fields not found - skipping test');
       return;
     }
 
@@ -274,7 +274,7 @@ test.describe('Entity Metadata - API Tests', () => {
     const entityId = listData.data.entities?.[0]?.id;
 
     if (!entityId) {
-      test.skip('No entity found - skipping test');
+      test.skip(true, 'No entity found - skipping test');
       return;
     }
 
@@ -347,7 +347,7 @@ test.describe('Entity Metadata - API Tests', () => {
     const entity = entitiesData.data.entities?.find((e: any) => e.entity_name === 'test_customers');
 
     if (!entity) {
-      test.skip('test_customers entity not found - skipping test');
+      test.skip(true, 'test_customers entity not found - skipping test');
       return;
     }
 
@@ -375,7 +375,7 @@ test.describe('Entity Metadata - API Tests', () => {
     const entity = entitiesData.data.entities?.find((e: any) => e.entity_name === 'test_customers');
 
     if (!entity) {
-      test.skip('test_customers entity not found - skipping test');
+      test.skip(true, 'test_customers entity not found - skipping test');
       return;
     }
 
@@ -423,7 +423,7 @@ test.describe('Entity Metadata - API Tests', () => {
     const entityId = listData.data.entities?.[0]?.id;
 
     if (!entityId) {
-      test.skip('No entity found - skipping validation test');
+      test.skip(true, 'No entity found - skipping validation test');
       return;
     }
 
@@ -454,14 +454,14 @@ test.describe('Entity Metadata - API Tests', () => {
     const entity = listData.data.entities?.find((e: any) => e.entity_name === 'test_orders');
 
     if (!entity) {
-      test.skip('test_orders entity not found - skipping test');
+      test.skip(true, 'test_orders entity not found - skipping test');
       return;
     }
 
     const fkField = entity.fields?.find((f: any) => f.is_foreign_key);
 
     if (!fkField) {
-      test.skip('Foreign key field not found - skipping test');
+      test.skip(true, 'Foreign key field not found - skipping test');
       return;
     }
 
@@ -492,7 +492,7 @@ test.describe('Entity Metadata - API Tests', () => {
     const entity = listData.data.entities?.[0];
 
     if (!entity || entity.fields.length > 95) {
-      test.skip('Suitable entity not found - skipping test');
+      test.skip(true, 'Suitable entity not found - skipping test');
       return;
     }
 
@@ -532,7 +532,7 @@ test.describe('Entity Metadata - Schema Integration Tests', () => {
   let authCookie: string;
 
   test.beforeAll(async ({ request, browser }) => {
-    authCookie = await getAuthCookie(request, browser);
+    authCookie = await getAuthCookie(request);
   });
 
   test('should create entity metadata after schema inspection', async ({ request }) => {
@@ -723,7 +723,7 @@ test.describe('Entity Metadata - Permission Tests', () => {
   let authCookie: string;
 
   test.beforeAll(async ({ request, browser }) => {
-    authCookie = await getAuthCookie(request, browser);
+    authCookie = await getAuthCookie(request);
   });
 
   test('should enforce view permission on metadata entities', async ({ request }) => {
@@ -809,7 +809,7 @@ test.describe('Entity Metadata - CRUD Operations Tests', () => {
   let testDataSourceId: string;
 
   test.beforeAll(async ({ request, browser }) => {
-    authCookie = await getAuthCookie(request, browser);
+    authCookie = await getAuthCookie(request);
   });
 
   test('setup - create datasource with tables for CRUD tests', async ({ request }) => {
@@ -914,7 +914,7 @@ test.describe('Entity Metadata - CRUD Operations Tests', () => {
     const booksEntity = entitiesData.data.entities?.find((e: any) => e.entity_name === 'books');
 
     if (!booksEntity) {
-      test.skip('books entity not found');
+      test.skip(true, 'books entity not found');
       return;
     }
 
@@ -940,7 +940,7 @@ test.describe('Entity Metadata - CRUD Operations Tests', () => {
     const readersEntity = entitiesData.data.entities?.find((e: any) => e.entity_name === 'readers');
 
     if (!readersEntity) {
-      test.skip('readers entity not found');
+      test.skip(true, 'readers entity not found');
       return;
     }
 
@@ -976,7 +976,7 @@ test.describe('Entity Metadata - CRUD Operations Tests', () => {
     const authorsEntity = entitiesData.data.entities?.find((e: any) => e.entity_name === 'authors');
 
     if (!authorsEntity) {
-      test.skip('authors entity not found');
+      test.skip(true, 'authors entity not found');
       return;
     }
 
@@ -989,7 +989,7 @@ test.describe('Entity Metadata - CRUD Operations Tests', () => {
     const recordId = listData.data.records?.[0]?.id;
 
     if (!recordId) {
-      test.skip('No record found to update');
+      test.skip(true, 'No record found to update');
       return;
     }
 
@@ -1022,7 +1022,7 @@ test.describe('Entity Metadata - CRUD Operations Tests', () => {
     const authorsEntity = entitiesData.data.entities?.find((e: any) => e.entity_name === 'authors');
 
     if (!authorsEntity) {
-      test.skip('authors entity not found');
+      test.skip(true, 'authors entity not found');
       return;
     }
 
@@ -1067,7 +1067,7 @@ test.describe('Entity Metadata - CRUD Operations Tests', () => {
     const booksEntity = entitiesData.data.entities?.find((e: any) => e.entity_name === 'books');
 
     if (!booksEntity) {
-      test.skip('books entity not found');
+      test.skip(true, 'books entity not found');
       return;
     }
 

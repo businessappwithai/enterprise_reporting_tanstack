@@ -782,16 +782,17 @@ export interface MetadataEntityField {
   entity_header_id: string;
   field_name: string;
   data_type: string;
-  is_nullable: boolean;
-  is_primary_key: boolean;
-  is_foreign_key: boolean;
-  foreign_key_table?: string;
-  foreign_key_column?: string;
-  default_value?: string;
-  description?: string;
-  is_display_field: boolean;
-  is_searchable: boolean;
-  display_order?: number;
+  // Nullable in metadata_entity_field; the booleans carry defaults but no NOT NULL.
+  is_nullable: boolean | null;
+  is_primary_key: boolean | null;
+  is_foreign_key: boolean | null;
+  foreign_key_table?: string | null;
+  foreign_key_column?: string | null;
+  default_value?: string | null;
+  description?: string | null;
+  is_display_field: boolean | null;
+  is_searchable: boolean | null;
+  display_order?: number | null;
   section_name?: string | null; // Group fields into visual sections
   relationship_ui_type?: "dropdown" | "popup" | "tab" | null; // FK UI configuration
   created_at: string;

@@ -125,7 +125,7 @@ export function BatchFieldEditForm({
                       </Badge>
                       {isForeignKey && (
                         <Badge variant="secondary" className="text-xs">
-                          FK → {field.referenced_table_name}
+                          FK → {field.foreign_key_table}
                         </Badge>
                       )}
                       {hasFieldChange && (

@@ -416,7 +416,7 @@ export interface MetadataEntityFieldTable {
   is_searchable: boolean | null;
   display_order: number | null;
   section_name: string | null;
-  relationship_ui_type: string | null;
+  relationship_ui_type: "dropdown" | "popup" | "tab" | null;
   created_at: string;
   updated_at: string;
 }

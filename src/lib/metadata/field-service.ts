@@ -6,6 +6,7 @@
  */
 
 import { getDb } from "@/lib/db/config";
+import { randomUUID } from "node:crypto";
 import type { MetadataEntityField } from "@/types/database";
 
 /**
@@ -33,7 +34,7 @@ export class FieldService {
       .selectFrom("metadata_entity_field")
       .where("id", "=", id)
       .selectAll()
-      .executeTakeFirst();
+      .executeTakeFirst() ?? null;
   }
 
   /**
@@ -47,10 +48,12 @@ export class FieldService {
       .insertInto("metadata_entity_field")
       .values({
         ...data,
+        id: randomUUID(),
+        created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
       .returningAll()
-      .executeTakeFirst();
+      .executeTakeFirstOrThrow();
 
     return field;
   }
@@ -69,6 +72,8 @@ export class FieldService {
 
     const fieldData = fields.map((field) => ({
       ...field,
+      id: randomUUID(),
+      created_at: now,
       updated_at: now,
     }));
 
@@ -116,6 +121,7 @@ export class FieldService {
       await getDb()
         .insertInto("audit_log")
         .values({
+          id: randomUUID(),
           user_id: userId,
           action: "update",
           resource_type: "metadata_entity",
@@ -183,6 +189,7 @@ export class FieldService {
           await trx
             .insertInto("audit_log")
             .values({
+              id: randomUUID(),
               user_id: userId,
               action: "update",
               resource_type: "metadata_entity",
@@ -212,6 +219,7 @@ export class FieldService {
       await getDb()
         .insertInto("audit_log")
         .values({
+          id: randomUUID(),
           user_id: userId,
           action: "delete",
           resource_type: "metadata_entity",
