@@ -19,10 +19,13 @@ import { Eye, Plus, Save, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
+import { usePermissions } from "@/lib/hooks/usePermissions";
+import { parseRecordLinkConfig } from "@/lib/reporting/record-link";
 import {
   type FilterGroup,
   ReportFilterBuilder,
 } from "@/components/reporting/report-filter-builder";
+import { RecordLinkEditor } from "@/components/reporting/record-link-editor";
 import { SortableColumnRow } from "@/components/reporting/sortable-column-row";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,6 +55,7 @@ export const Route = createFileRoute("/_authed/reports/$id/editor")({
 
 function ReportEditorPage() {
   const { id: reportId } = Route.useParams();
+  const { data: permissions } = usePermissions();
   const queryClient = useQueryClient();
 
   const [reportName, setReportName] = useState("");
@@ -764,6 +768,15 @@ function ReportEditorPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Administrators only — the server enforces the same rule. */}
+              {permissions?.isAdmin && (
+                <RecordLinkEditor
+                  reportId={reportId}
+                  columns={columns}
+                  initialConfig={parseRecordLinkConfig(report?.record_link_config ?? null)}
+                />
+              )}
 
               <div className="border-t pt-6">
                 <h4 className="text-sm font-semibold mb-4">Color Theme</h4>

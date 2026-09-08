@@ -3,7 +3,7 @@
  * Config database: PostgreSQL only (via DATABASE_URL or POSTGRES_* env vars)
  */
 
-import { Kysely, PostgresDialect } from "kysely";
+import { type Generated, Kysely, PostgresDialect } from "kysely";
 import type { DatabaseClientType } from "@/types/database";
 import { Pool as PostgresPool } from "pg";
 import { bootstrapSchema } from "./bootstrap";
@@ -42,17 +42,70 @@ export interface Database {
   nl_query_role_stats: NLQueryRoleStatsTable;
   nl_query_feedback: NLQueryFeedbackTable;
   help_articles: HelpArticleRow;
+  // Better Auth — see src/lib/auth/better-auth.ts. The `user` model is mapped
+  // onto the existing `users` table above rather than getting one of its own.
+  auth_sessions: AuthSessionsTable;
+  auth_accounts: AuthAccountsTable;
+  auth_verifications: AuthVerificationsTable;
 }
 
 export interface UsersTable {
   id: string;
   email: string;
-  password_hash: string;
+  /**
+   * Legacy bcrypt credential. Better Auth keeps the live password in
+   * `auth_accounts.password`; this column is only read by the one-time
+   * migration in bootstrap that copies it across, and is null for any user
+   * created since.
+   */
+  password_hash: string | null;
   display_name: string;
   avatar_url: string | null;
+  /**
+   * `Generated` because the column carries a DB default. Better Auth writes it;
+   * everything else that inserts a user (seeds, the admin scripts, the users
+   * admin screen) predates the column and must not have to know about it.
+   */
+  email_verified: Generated<boolean>;
   is_active: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface AuthSessionsTable {
+  id: string;
+  user_id: string;
+  token: string;
+  expires_at: Date;
+  ip_address: string | null;
+  user_agent: string | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface AuthAccountsTable {
+  id: string;
+  user_id: string;
+  account_id: string;
+  provider_id: string;
+  access_token: string | null;
+  refresh_token: string | null;
+  id_token: string | null;
+  access_token_expires_at: Date | null;
+  refresh_token_expires_at: Date | null;
+  scope: string | null;
+  password: string | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface AuthVerificationsTable {
+  id: string;
+  identifier: string;
+  value: string;
+  expires_at: Date;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface RolesTable {
@@ -116,6 +169,11 @@ export interface ReportDefinitionsTable {
   export_formats: string; // JSON array
   filename_template: string | null;
   color_theme: string | null; // JSON
+  /**
+   * JSON `RecordLinkConfig` — the button that opens a row's record in another
+   * application. Administrator-only to set; see src/lib/reporting/record-link.ts.
+   */
+  record_link_config: string | null;
   is_public: boolean | null;
   is_deleted: boolean | null;
   deleted_at: string | null;

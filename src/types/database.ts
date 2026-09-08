@@ -111,6 +111,12 @@ export interface ReportDefinition {
   export_formats: string;
   filename_template?: string;
   color_theme?: string;
+  /**
+   * JSON `RecordLinkConfig`, when an administrator has configured a link from
+   * this report's rows to the same record in another application. Read it with
+   * `parseRecordLinkConfig` — see src/lib/reporting/record-link.ts.
+   */
+  record_link_config?: string | null;
   created_by?: string;
   created_at: string;
   updated_at: string;

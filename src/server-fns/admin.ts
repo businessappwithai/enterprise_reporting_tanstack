@@ -334,28 +334,39 @@ export const changePassword = createServerFn({ method: "POST" })
         }
 
         const db = getDb();
-        const user = await db
-          .selectFrom("users")
-          .select(["id", "password_hash"])
-          .where("id", "=", input.id)
+
+        // The credential lives in `auth_accounts`, not `users.password_hash` —
+        // Better Auth is the only reader, and it looks there. Writing the old
+        // column instead is the silent version of this bug: the change reports
+        // success and sign-in keeps accepting the OLD password, because nothing
+        // Better Auth reads ever changed.
+        const credential = await db
+          .selectFrom("auth_accounts")
+          .select(["id", "password"])
+          .where("user_id", "=", input.id)
+          .where("provider_id", "=", "credential")
           .executeTakeFirst();
 
-        if (!user) {
+        if (!credential?.password) {
           throw new Error("NOT_FOUND");
         }
 
-        // Verify current password
-        const isValid = await bcrypt.compare(input.currentPassword, user.password_hash);
+        const isValid = await bcrypt.compare(input.currentPassword, credential.password);
         if (!isValid) {
           throw new Error("UNAUTHORIZED: Current password is incorrect");
         }
 
+        // bcrypt to match the hash/verify hooks configured on Better Auth.
         const newPasswordHash = await bcrypt.hash(input.newPassword, 10);
         await db
-          .updateTable("users")
-          .set({ password_hash: newPasswordHash, updated_at: new Date().toISOString() })
-          .where("id", "=", input.id)
+          .updateTable("auth_accounts")
+          .set({ password: newPasswordHash, updated_at: new Date() })
+          .where("id", "=", credential.id)
           .execute();
+
+        // Every other session for this user is now stale. Ending them is the
+        // point of changing a password: a stolen session must not survive it.
+        await db.deleteFrom("auth_sessions").where("user_id", "=", input.id).execute();
 
         await logAudit({
           userId: session.user.id,

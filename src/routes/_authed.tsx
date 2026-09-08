@@ -1,15 +1,17 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeader } from "@tanstack/react-start/server";
+import { getRequest } from "@tanstack/react-start/server";
 import { AppShell } from "@/components/layout/app-shell";
-import { verifySession } from "@/lib/auth/session";
+import { getSessionFromHeaders } from "@/lib/auth/session";
 
+// Resolved from the request's headers rather than by matching a cookie name:
+// the name is Better Auth's business (`ers.session_token`, and `__Secure-`
+// prefixed once served over HTTPS), and this guard decides whether anyone sees
+// the application at all.
 const getSessionFn = createServerFn({ method: "GET" }).handler(async () => {
-  const cookie = getRequestHeader("cookie") || "";
-  const match = cookie.match(/session_token=([^;]+)/);
-  const token = match?.[1];
-  if (!token) return null;
-  return verifySession(token);
+  const request = getRequest();
+  if (!request) return null;
+  return getSessionFromHeaders(request.headers);
 });
 
 export const Route = createFileRoute("/_authed")({

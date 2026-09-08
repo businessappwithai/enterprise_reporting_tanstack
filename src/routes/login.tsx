@@ -16,7 +16,8 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { authenticateUser, createSession } from "@/lib/auth/session";
+import { getAuth } from "@/lib/auth/better-auth";
+import { loadRolesAndPermissions } from "@/lib/auth/session";
 import { createLogger } from "@/lib/logging/logger";
 import { AUDIT_ACTIONS } from "@/types/actions";
 import { LOG_COMPONENTS } from "@/types/components";
@@ -40,32 +41,46 @@ export const loginFn = createServerFn({ method: "POST" })
         userAgent,
       });
 
-      const user = await authenticateUser(data.email, data.password);
+      // Better Auth issues the session and returns the Set-Cookie header on its
+      // own response; `asResponse` is what makes those headers reachable so
+      // they can be forwarded to the browser. Without it the call succeeds, no
+      // cookie is set, and the very next request is anonymous — a sign-in that
+      // reports success and lands the user back on the login page.
+      const authResponse = await getAuth().api.signInEmail({
+        body: { email: data.email, password: data.password },
+        asResponse: true,
+      });
 
-      if (!user) {
+      if (!authResponse.ok) {
         logger.warn("Failed login attempt - invalid credentials", {
           email: data.email,
           action: AUDIT_ACTIONS.AUTH.LOGIN_FAILURE,
           timestamp,
+          // Deliberately not distinguishing "no such account" from "wrong
+          // password": a different answer for each is an account-enumeration
+          // oracle, and the E2E suite asserts they stay identical.
           reason: "Invalid email or password",
           userAgent,
         });
         throw new Error("Invalid credentials");
       }
 
-      const token = await createSession(user);
+      for (const cookie of authResponse.headers.getSetCookie()) {
+        setResponseHeader("Set-Cookie", cookie);
+      }
 
-      setResponseHeader(
-        "Set-Cookie",
-        `session_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${30 * 24 * 3600}`
-      );
+      const body = (await authResponse.json()) as {
+        user?: { id: string; email: string; name?: string };
+      };
+      const user = body.user;
+      const { roles } = user ? await loadRolesAndPermissions(user.id) : { roles: [] };
 
       logger.info("Login successful", {
-        userId: user.id,
-        email: user.email,
-        userName: user.name,
+        userId: user?.id,
+        email: user?.email ?? data.email,
+        userName: user?.name,
         action: AUDIT_ACTIONS.AUTH.LOGIN_SUCCESS,
-        roles: user.roles,
+        roles,
         timestamp,
         userAgent,
       });

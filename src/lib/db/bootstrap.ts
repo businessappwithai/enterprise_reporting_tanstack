@@ -583,6 +583,70 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`,
+
+    // ── Better Auth ─────────────────────────────────────────────────────────
+    //
+    // Better Auth owns the session, credential and verification rows; the
+    // `user` model is mapped onto the EXISTING `users` table above, so that
+    // roles, user_roles, resource_permissions, ds_user_roles and the audit log
+    // keep pointing at the same ids they always did. See src/lib/auth/better-auth.ts.
+    //
+    // These three use real TIMESTAMPTZ columns rather than the VARCHAR
+    // timestamps the older tables use. Better Auth compares `expires_at`
+    // against a Date to decide whether a session is still valid, and a VARCHAR
+    // would hand it a string — a comparison that does not error, it just
+    // silently stops expiring sessions.
+    sql`CREATE TABLE IF NOT EXISTS auth_sessions (
+      id VARCHAR(255) PRIMARY KEY,
+      user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      token VARCHAR(255) NOT NULL UNIQUE,
+      expires_at TIMESTAMPTZ NOT NULL,
+      ip_address VARCHAR(255),
+      user_agent TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`,
+
+    sql`CREATE TABLE IF NOT EXISTS auth_accounts (
+      id VARCHAR(255) PRIMARY KEY,
+      user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      account_id VARCHAR(255) NOT NULL,
+      provider_id VARCHAR(255) NOT NULL,
+      access_token TEXT,
+      refresh_token TEXT,
+      id_token TEXT,
+      access_token_expires_at TIMESTAMPTZ,
+      refresh_token_expires_at TIMESTAMPTZ,
+      scope TEXT,
+      password TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`,
+
+    sql`CREATE TABLE IF NOT EXISTS auth_verifications (
+      id VARCHAR(255) PRIMARY KEY,
+      identifier VARCHAR(255) NOT NULL,
+      value TEXT NOT NULL,
+      expires_at TIMESTAMPTZ NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`,
+  ];
+
+  // Additive columns for tables that predate the feature needing them. Separate
+  // from `tables` because CREATE TABLE IF NOT EXISTS does nothing to a table
+  // that already exists — an installation upgraded in place would otherwise
+  // never get these.
+  const alters = [
+    // Better Auth requires emailVerified on the user model.
+    sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT FALSE`,
+    // The credential now lives in auth_accounts.password. The column stays for
+    // the migration below to read, but a Better-Auth-created user never fills
+    // it, so it can no longer be NOT NULL.
+    sql`ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL`,
+    // Record links — see src/lib/reporting/record-link.ts. JSON, nullable: a
+    // report without one is the normal case.
+    sql`ALTER TABLE report_definitions ADD COLUMN IF NOT EXISTS record_link_config TEXT`,
   ];
 
   // Indexes — separate statements because PostgreSQL doesn't support inline index creation
@@ -602,6 +666,11 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
     sql`CREATE INDEX IF NOT EXISTS idx_gra_definition ON generated_report_artifacts (report_definition_id, created_at)`,
     sql`CREATE INDEX IF NOT EXISTS idx_gra_user ON generated_report_artifacts (created_by, created_at)`,
     sql`CREATE INDEX IF NOT EXISTS idx_gra_execution ON generated_report_artifacts (execution_id)`,
+    // Better Auth looks a session up by token on every authenticated request.
+    sql`CREATE INDEX IF NOT EXISTS idx_auth_sessions_token ON auth_sessions (token)`,
+    sql`CREATE INDEX IF NOT EXISTS idx_auth_sessions_user ON auth_sessions (user_id)`,
+    sql`CREATE INDEX IF NOT EXISTS idx_auth_accounts_user ON auth_accounts (user_id)`,
+    sql`CREATE INDEX IF NOT EXISTS idx_auth_verifications_identifier ON auth_verifications (identifier)`,
   ];
 
   console.log("[bootstrap] Creating tables...");
@@ -610,6 +679,14 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
       await table.execute(db);
     } catch (err) {
       console.warn("[bootstrap] table create warning:", (err as Error).message?.slice(0, 120));
+    }
+  }
+
+  for (const alter of alters) {
+    try {
+      await alter.execute(db);
+    } catch (err) {
+      console.warn("[bootstrap] alter warning:", (err as Error).message?.slice(0, 120));
     }
   }
 
@@ -759,6 +836,66 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
     });
 
   console.log("[bootstrap] NL Query user ensured: nlquery@nlquery.com / nlquery");
+
+  // ── Credentials into Better Auth ──────────────────────────────────────────
+  //
+  // Better Auth reads the password from `auth_accounts.password` for the
+  // `credential` provider, not from `users.password_hash`. Every user that
+  // predates the migration — and the two seeded above — therefore needs an
+  // account row, or the password sitting in `users` verifies against nothing
+  // and a correct password is rejected as wrong.
+  //
+  // Copying the hash across rather than re-hashing is what makes this a
+  // migration and not a password reset: `hash`/`verify` in
+  // src/lib/auth/better-auth.ts are bcryptjs precisely so these hashes stay
+  // valid. Idempotent — a user who already has a credential row is skipped.
+  const usersNeedingCredential = await db
+    .selectFrom("users")
+    .leftJoin("auth_accounts", (join) =>
+      join
+        .onRef("auth_accounts.user_id", "=", "users.id")
+        .on("auth_accounts.provider_id", "=", "credential")
+    )
+    .where("auth_accounts.id", "is", null)
+    .where("users.password_hash", "is not", null)
+    .select(["users.id as id", "users.password_hash as password_hash"])
+    .execute()
+    .catch(() => [] as { id: string; password_hash: string | null }[]);
+
+  for (const user of usersNeedingCredential) {
+    if (!user.password_hash) continue;
+    await db
+      .insertInto("auth_accounts")
+      .values({
+        id: `cred_${user.id}`.slice(0, 255),
+        user_id: user.id,
+        account_id: user.id,
+        provider_id: "credential",
+        password: user.password_hash,
+        access_token: null,
+        refresh_token: null,
+        id_token: null,
+        access_token_expires_at: null,
+        refresh_token_expires_at: null,
+        scope: null,
+        created_at: new Date(),
+        updated_at: new Date(),
+      })
+      .onConflict((oc) => oc.column("id").doNothing())
+      .execute()
+      .catch((err) => {
+        console.warn(
+          "[bootstrap] credential migration warning:",
+          (err as Error).message?.slice(0, 120)
+        );
+      });
+  }
+
+  if (usersNeedingCredential.length > 0) {
+    console.log(
+      `[bootstrap] Migrated ${usersNeedingCredential.length} credential(s) into Better Auth`
+    );
+  }
 
   console.log("[bootstrap] Seeding help articles...");
   await seedHelpArticles(db);
