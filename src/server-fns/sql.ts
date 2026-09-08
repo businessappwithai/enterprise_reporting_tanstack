@@ -1,6 +1,8 @@
 "use server";
 
 import { createServerFn } from "@tanstack/react-start";
+// Aliased: the query strings in this file are themselves named `sql`.
+import { sql as rawSql } from "kysely";
 import { requireAuth } from "@/lib/auth/middleware";
 import { sqlEditorConfig, validatePageSize } from "@/lib/config/pagination";
 import { getDb } from "@/lib/db/config";
@@ -83,28 +85,20 @@ export const batchExecuteSql = createServerFn({
 
           // Execute with timeout
           const startTime = Date.now();
-          const result =
-            dataSource.client_type === "sqlite3"
-              ? await connection.raw(sql)
-              : await connection.raw(sql).timeout(timeout);
+          const result = await rawSql.raw<Record<string, unknown>>(sql).execute(connection);
 
           const executionTime = Date.now() - startTime;
 
           let rows: Record<string, unknown>[] = [];
           let columns: { name: string; type: string }[] = [];
 
-          if (Array.isArray(result)) {
-            rows = result;
-          } else if (result.rows) {
-            rows = result.rows;
-          } else if (result[0]) {
-            rows = Array.isArray(result[0]) ? result[0] : [result[0]];
-          }
+          rows = result.rows;
 
           if (rows.length > 0) {
-            columns = Object.keys(rows[0]).map((name) => ({
+            const first = rows[0] as Record<string, unknown>;
+            columns = Object.keys(first).map((name) => ({
               name,
-              type: typeof rows[0][name],
+              type: typeof first[name],
             }));
           }
 
@@ -168,15 +162,14 @@ export const batchExecuteSql = createServerFn({
 
 export const executeSql = createServerFn({
   method: "POST",
-}).handler(async (input) => {
+})
+  .inputValidator(executeSqlSchema)
+  .handler(async ({ data: input }) => {
   const session = await requireAuth();
 
   return withErrorHandler(
     async () => {
-      const validated = await executeSqlSchema.parseAsync(input).catch((err) => {
-        throw new Error(`Validation failed: ${err.message}`);
-      });
-      const { sql, dataSourceId, limit, offset = 0, timeout = DEFAULT_TIMEOUT } = validated;
+      const { sql, dataSourceId, limit, offset = 0, timeout = DEFAULT_TIMEOUT } = input;
 
       if (!isReadOnlyQuery(sql)) {
         throw new Error("Only SELECT queries are allowed in the SQL editor");
@@ -226,10 +219,7 @@ export const executeSql = createServerFn({
   const countSQL = `SELECT COUNT(*) as total FROM (${sql.replace(/;$/, "")}) as count_query`;
 
   try {
-    const countResult =
-      dataSource.client_type === "sqlite3"
-        ? await connection.raw(countSQL)
-        : await connection.raw(countSQL).timeout(5000);
+    const countResult = await rawSql.raw<Record<string, unknown>>(countSQL).execute(connection);
 
     if (Array.isArray(countResult) && countResult[0]) {
       totalRowCount = Number(countResult[0].total) || 0;
@@ -282,28 +272,20 @@ export const executeSql = createServerFn({
   }
 
   const startTime = Date.now();
-  const result =
-    dataSource.client_type === "sqlite3"
-      ? await connection.raw(limitedSQL)
-      : await connection.raw(limitedSQL).timeout(timeout);
+  const result = await rawSql.raw<Record<string, unknown>>(limitedSQL).execute(connection);
 
   const executionTime = Date.now() - startTime;
 
   let rows: Record<string, unknown>[] = [];
   let columns: { name: string; type: string }[] = [];
 
-  if (Array.isArray(result)) {
-    rows = result;
-  } else if (result.rows) {
-    rows = result.rows;
-  } else if (result[0]) {
-    rows = Array.isArray(result[0]) ? result[0] : [result[0]];
-  }
+  rows = result.rows;
 
   if (rows.length > 0) {
-    columns = Object.keys(rows[0]).map((name) => ({
+    const first = rows[0] as Record<string, unknown>;
+    columns = Object.keys(first).map((name) => ({
       name,
-      type: typeof rows[0][name],
+      type: typeof first[name],
     }));
   }
 
@@ -343,12 +325,11 @@ export const executeSql = createServerFn({
 
 export const validateSql = createServerFn({
   method: "POST",
-}).handler(async (input) => {
-  const validated = await validateSqlSchema.parseAsync(input).catch((err) => {
-    throw new Error(`Validation failed: ${err.message}`);
-  });
+})
+  .inputValidator(validateSqlSchema)
+  .handler(async ({ data: input }) => {
   const _session = await requireAuth();
-  const { sql, dataSourceId } = validated;
+  const { sql, dataSourceId } = input;
 
   if (!sql) {
     throw new Error("SQL content is required");
@@ -374,12 +355,11 @@ export const validateSql = createServerFn({
 
 export const introspectSchema = createServerFn({
   method: "GET",
-}).handler(async (input) => {
-  const validated = await introspectSchemaSchema.parseAsync(input).catch((err) => {
-    throw new Error(`Validation failed: ${err.message}`);
-  });
+})
+  .inputValidator(introspectSchemaSchema)
+  .handler(async ({ data: input }) => {
   const session = await requireAuth();
-  const { dataSourceId } = validated;
+  const { dataSourceId } = input;
 
   const db = getDb();
   const dataSource = await db

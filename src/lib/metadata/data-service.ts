@@ -48,7 +48,7 @@ export class DataService {
     // Check if datasource is editable
     const dataSource = (await getDb()
       .selectFrom("data_sources")
-      .where("id", dataSourceId)
+      .where("id", "=", dataSourceId)
       .selectAll()
       .executeTakeFirst()) as DataSource | undefined;
 
@@ -137,7 +137,7 @@ export class DataService {
   ): Promise<Record<string, unknown> | null> {
     const dataSource = (await getDb()
       .selectFrom("data_sources")
-      .where("id", dataSourceId)
+      .where("id", "=", dataSourceId)
       .selectAll()
       .executeTakeFirst()) as DataSource | undefined;
 
@@ -180,7 +180,7 @@ export class DataService {
   ): Promise<Record<string, unknown>> {
     const dataSource = (await getDb()
       .selectFrom("data_sources")
-      .where("id", dataSourceId)
+      .where("id", "=", dataSourceId)
       .selectAll()
       .executeTakeFirst()) as DataSource | undefined;
 
@@ -222,7 +222,7 @@ export class DataService {
             entity_name: entityMetadata.entity_name,
             record_id: record[pkField.field_name],
           }),
-          created_at: getDb().fn.now(),
+          created_at: new Date().toISOString(),
         })
         .execute();
     }
@@ -242,7 +242,7 @@ export class DataService {
   ): Promise<Record<string, unknown> | null> {
     const dataSource = (await getDb()
       .selectFrom("data_sources")
-      .where("id", dataSourceId)
+      .where("id", "=", dataSourceId)
       .selectAll()
       .executeTakeFirst()) as DataSource | undefined;
 
@@ -292,7 +292,7 @@ export class DataService {
             record_id: recordId,
             updated_fields: Object.keys(data),
           }),
-          created_at: getDb().fn.now(),
+          created_at: new Date().toISOString(),
         })
         .execute();
     }
@@ -311,7 +311,7 @@ export class DataService {
   ): Promise<boolean> {
     const dataSource = (await getDb()
       .selectFrom("data_sources")
-      .where("id", dataSourceId)
+      .where("id", "=", dataSourceId)
       .selectAll()
       .executeTakeFirst()) as DataSource | undefined;
 
@@ -351,7 +351,7 @@ export class DataService {
             entity_name: entityMetadata.entity_name,
             record_id: recordId,
           }),
-          created_at: getDb().fn.now(),
+          created_at: new Date().toISOString(),
         })
         .execute();
     }

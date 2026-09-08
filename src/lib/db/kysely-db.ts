@@ -4,6 +4,7 @@
  */
 
 import { Kysely, PostgresDialect } from "kysely";
+import type { DatabaseClientType } from "@/types/database";
 import { Pool as PostgresPool } from "pg";
 import { bootstrapSchema } from "./bootstrap";
 
@@ -30,6 +31,12 @@ export interface Database {
   ds_user_roles: DsUserRolesTable;
   ds_entity_permissions: DsEntityPermissionsTable;
   schema_field_instructions: SchemaFieldInstructionsTable;
+  metadata_entity_header: MetadataEntityHeaderTable;
+  metadata_entity_field: MetadataEntityFieldTable;
+  error_messages: ErrorMessagesTable;
+  warning_configs: WarningConfigsTable;
+  error_occurrences: ErrorOccurrencesTable;
+  app_settings: AppSettingsTable;
   schema_table_instructions: SchemaTableInstructionsTable;
   nl_query_context: NLQueryContextTable;
   nl_query_role_stats: NLQueryRoleStatsTable;
@@ -66,7 +73,7 @@ export interface DataSourcesTable {
   id: string;
   name: string;
   description: string | null;
-  client_type: string;
+  client_type: DatabaseClientType;
   connection_config: string; // Encrypted JSON
   is_active: boolean;
   is_editable: boolean | null;
@@ -314,6 +321,102 @@ export interface DsEntityPermissionsTable {
   column_restrictions: string | null; // JSON
   row_filter: string | null;
   created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Mirrors error_messages in scripts/init-postgres.ts. */
+export interface ErrorMessagesTable {
+  id: string;
+  error_code: string;
+  severity: string | null;
+  title: string;
+  message: string;
+  user_message: string | null;
+  suggestions: string | null;
+  documentation_url: string | null;
+  is_active: boolean | null;
+  category: string | null;
+  metadata: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Mirrors warning_configs in scripts/init-postgres.ts. */
+export interface WarningConfigsTable {
+  id: string;
+  warning_code: string;
+  name: string;
+  description: string | null;
+  trigger_type: string;
+  trigger_config: string | null;
+  severity: string | null;
+  message_template: string;
+  suggestions_template: string | null;
+  is_active: boolean | null;
+  display_duration: number | null;
+  require_dismissal: boolean | null;
+  enable_auto_resolve: boolean | null;
+  auto_resolve_after: number | null;
+  metadata: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Mirrors error_occurrences in scripts/init-postgres.ts. */
+export interface ErrorOccurrencesTable {
+  id: string;
+  error_message_id: string | null;
+  user_id: string | null;
+  session_id: string | null;
+  context_data: string | null;
+  resolved_at: string | null;
+  created_at: string;
+}
+
+/** Mirrors app_settings in scripts/init-postgres.ts. */
+export interface AppSettingsTable {
+  key: string;
+  value: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Mirrors metadata_entity_header in bootstrapSchema()/rebuild-db.ts. */
+export interface MetadataEntityHeaderTable {
+  id: string;
+  data_source_id: string;
+  entity_name: string;
+  entity_schema: string | null;
+  entity_type: string;
+  schema_metadata: string;
+  last_introspected_at: string | null;
+  description: string | null;
+  is_active: boolean | null;
+  is_hidden: boolean | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Mirrors metadata_entity_field in bootstrapSchema()/rebuild-db.ts. */
+export interface MetadataEntityFieldTable {
+  id: string;
+  entity_header_id: string;
+  field_name: string;
+  data_type: string;
+  is_nullable: boolean | null;
+  is_primary_key: boolean | null;
+  is_foreign_key: boolean | null;
+  foreign_key_table: string | null;
+  foreign_key_column: string | null;
+  default_value: string | null;
+  description: string | null;
+  is_display_field: boolean | null;
+  is_searchable: boolean | null;
+  display_order: number | null;
+  section_name: string | null;
+  relationship_ui_type: string | null;
   created_at: string;
   updated_at: string;
 }

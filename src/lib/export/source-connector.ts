@@ -4,6 +4,7 @@
  */
 
 import { getDb } from "@/lib/db/config";
+import { sql } from "kysely";
 
 export interface SourceRow {
   [key: string]: unknown;
@@ -38,7 +39,7 @@ export async function executeSourceQuery(
 
   // For now we execute against the config DB (SQLite).
   // In production this would connect to the external source DB.
-  const rows = await db.raw(query);
+  const rows = await sql.raw<Record<string, unknown>>(query).execute(db);
 
   // SQLite returns the rows directly as an array
   const resultRows: SourceRow[] = Array.isArray(rows) ? rows : [];
@@ -64,7 +65,7 @@ export async function executeSourceQuery(
 export async function estimateRowCount(_dataSourceId: string, query: string): Promise<number> {
   const db = getDb();
   try {
-    const result = await db.raw(`SELECT COUNT(*) as cnt FROM (${query}) AS _count_sub`);
+    const result = await sql.raw<Record<string, unknown>>(`SELECT COUNT(*) as cnt FROM (${query}) AS _count_sub`).execute(db);
     const rows = Array.isArray(result) ? result : [];
     return Number(rows[0]?.cnt ?? 0);
   } catch {

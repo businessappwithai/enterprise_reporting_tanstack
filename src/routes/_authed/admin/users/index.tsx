@@ -73,7 +73,8 @@ function UsersManagementPage() {
   });
 
   // Map user roles to expected format
-  const userRoles = selectedUser?.roles?.map((r: any) => ({ role_id: r.id, role_name: r.name })) || [];
+  const userRoles =
+    selectedUser?.roles?.map((r: any) => ({ role_id: r.id, role_name: r.name })) || [];
   const refetchUserRoles = () => {
     queryClient.invalidateQueries({ queryKey: ["admin-users"] });
   };
@@ -82,10 +83,12 @@ function UsersManagementPage() {
   const createMutation = useMutation({
     mutationFn: async () => {
       return await createUser({
-        email: newUserEmail,
-        password: newUserPassword,
-        displayName: newUserName,
-        isActive: isUserActive,
+        data: {
+          email: newUserEmail,
+          password: newUserPassword,
+          displayName: newUserName,
+          isActive: isUserActive,
+        },
       });
     },
     onSuccess: () => {
@@ -108,8 +111,10 @@ function UsersManagementPage() {
       if (!selectedUser) return;
       const currentRoleIds = selectedUser.roles?.map((r: any) => r.id) || [];
       return await updateUser({
-        id: selectedUser.id,
-        roleIds: [...currentRoleIds, roleId],
+        data: {
+          id: selectedUser.id,
+          roleIds: [...currentRoleIds, roleId],
+        },
       });
     },
     onSuccess: () => {
@@ -128,8 +133,10 @@ function UsersManagementPage() {
       const currentRoleIds = selectedUser.roles?.map((r: any) => r.id) || [];
       const updatedRoleIds = currentRoleIds.filter((id: string) => id !== roleId);
       return await updateUser({
-        id: selectedUser.id,
-        roleIds: updatedRoleIds,
+        data: {
+          id: selectedUser.id,
+          roleIds: updatedRoleIds,
+        },
       });
     },
     onSuccess: () => {
@@ -145,8 +152,10 @@ function UsersManagementPage() {
   const toggleActiveMutation = useMutation({
     mutationFn: async (user: User) => {
       return await updateUser({
-        id: user.id,
-        isActive: !user.is_active,
+        data: {
+          id: user.id,
+          isActive: !user.is_active,
+        },
       });
     },
     onSuccess: () => {

@@ -19,7 +19,7 @@ export class FieldService {
   static async getByEntityId(entityHeaderId: string): Promise<MetadataEntityField[]> {
     return await getDb()
       .selectFrom("metadata_entity_field")
-      .where("entity_header_id", entityHeaderId)
+      .where("entity_header_id", "=", entityHeaderId)
       .orderBy("display_order", "asc")
       .selectAll()
       .execute();
@@ -31,7 +31,7 @@ export class FieldService {
   static async getById(id: string): Promise<MetadataEntityField | null> {
     return await getDb()
       .selectFrom("metadata_entity_field")
-      .where("id", id)
+      .where("id", "=", id)
       .selectAll()
       .executeTakeFirst();
   }
@@ -47,7 +47,7 @@ export class FieldService {
       .insertInto("metadata_entity_field")
       .values({
         ...data,
-        updated_at: getDb().fn.now(),
+        updated_at: new Date().toISOString(),
       })
       .returningAll()
       .executeTakeFirst();
@@ -65,7 +65,7 @@ export class FieldService {
       return [];
     }
 
-    const now = getDb().fn.now();
+    const now = new Date().toISOString();
 
     const fieldData = fields.map((field) => ({
       ...field,
@@ -99,10 +99,10 @@ export class FieldService {
   ): Promise<MetadataEntityField | null> {
     const field = await getDb()
       .updateTable("metadata_entity_field")
-      .where("id", id)
+      .where("id", "=", id)
       .set({
         ...data,
-        updated_at: getDb().fn.now(),
+        updated_at: new Date().toISOString(),
       })
       .returningAll()
       .executeTakeFirst();
@@ -123,7 +123,7 @@ export class FieldService {
           details: JSON.stringify({
             updated_fields: Object.keys(data),
           }),
-          created_at: getDb().fn.now(),
+          created_at: new Date().toISOString(),
         })
         .execute();
     }
@@ -155,58 +155,56 @@ export class FieldService {
       return [];
     }
 
-    const trx = await getDb().transaction();
+    // Kysely commits on return and rolls back on throw; there is no explicit
+    // begin/commit/rollback trio as there was under Knex.
+    return getDb()
+      .transaction()
+      .execute(async (trx) => {
+        const results: MetadataEntityField[] = [];
 
-    try {
-      const results: MetadataEntityField[] = [];
+        for (const update of updates) {
+          const field = await trx
+            .updateTable("metadata_entity_field")
+            .where("id", "=", update.id)
+            .set({
+              ...update.data,
+              updated_at: new Date().toISOString(),
+            })
+            .returningAll()
+            .executeTakeFirst();
 
-      for (const update of updates) {
-        const field = await trx
-          .updateTable("metadata_entity_field")
-          .where("id", update.id)
-          .set({
-            ...update.data,
-            updated_at: getDb().fn.now(),
-          })
-          .returningAll()
-          .executeTakeFirst();
-
-        if (field) {
-          results.push(field);
+          if (field) {
+            results.push(field);
+          }
         }
-      }
 
-      // Single audit log entry for the batch update
-      if (userId && results.length > 0) {
-        await trx
-          .insertInto("audit_log")
-          .values({
-            user_id: userId,
-            action: "update",
-            resource_type: "metadata_entity",
-            resource_id: "bulk_field_update",
-            details: JSON.stringify({
-              updated_field_count: results.length,
-              field_ids: results.map((f) => f.id),
-            }),
-            created_at: getDb().fn.now(),
-          })
-          .execute();
-      }
+        // Single audit log entry for the batch update
+        if (userId && results.length > 0) {
+          await trx
+            .insertInto("audit_log")
+            .values({
+              user_id: userId,
+              action: "update",
+              resource_type: "metadata_entity",
+              resource_id: "bulk_field_update",
+              details: JSON.stringify({
+                updated_field_count: results.length,
+                field_ids: results.map((f) => f.id),
+              }),
+              created_at: new Date().toISOString(),
+            })
+            .execute();
+        }
 
-      await trx.commit();
-      return results;
-    } catch (error) {
-      await trx.rollback();
-      throw error;
-    }
+        return results;
+      });
   }
 
   /**
    * Delete field metadata
    */
   static async delete(id: string, userId?: string): Promise<boolean> {
-    const result = await getDb().deleteFrom("metadata_entity_field").where("id", id).execute();
+    const result = await getDb().deleteFrom("metadata_entity_field").where("id", "=", id).execute();
     const count = Number(result[0]?.numDeletedRows ?? 0);
 
     if (count > 0 && userId) {
@@ -221,7 +219,7 @@ export class FieldService {
           details: JSON.stringify({
             deleted: "field_metadata",
           }),
-          created_at: getDb().fn.now(),
+          created_at: new Date().toISOString(),
         })
         .execute();
     }
@@ -235,7 +233,7 @@ export class FieldService {
   static async deleteByEntityId(entityHeaderId: string): Promise<number> {
     const delResult = await getDb()
       .deleteFrom("metadata_entity_field")
-      .where("entity_header_id", entityHeaderId)
+      .where("entity_header_id", "=", entityHeaderId)
       .execute();
     return Number(delResult[0]?.numDeletedRows ?? 0);
   }
@@ -246,8 +244,8 @@ export class FieldService {
   static async getDisplayFields(entityHeaderId: string): Promise<MetadataEntityField[]> {
     return await getDb()
       .selectFrom("metadata_entity_field")
-      .where("entity_header_id", entityHeaderId)
-      .where("is_display_field", true)
+      .where("entity_header_id", "=", entityHeaderId)
+      .where("is_display_field", "=", true)
       .orderBy("display_order", "asc")
       .selectAll()
       .execute();
@@ -259,8 +257,8 @@ export class FieldService {
   static async getForeignKeyFields(entityHeaderId: string): Promise<MetadataEntityField[]> {
     return await getDb()
       .selectFrom("metadata_entity_field")
-      .where("entity_header_id", entityHeaderId)
-      .where("is_foreign_key", true)
+      .where("entity_header_id", "=", entityHeaderId)
+      .where("is_foreign_key", "=", true)
       .selectAll()
       .execute();
   }
@@ -271,8 +269,8 @@ export class FieldService {
   static async getSearchableFields(entityHeaderId: string): Promise<MetadataEntityField[]> {
     return await getDb()
       .selectFrom("metadata_entity_field")
-      .where("entity_header_id", entityHeaderId)
-      .where("is_searchable", true)
+      .where("entity_header_id", "=", entityHeaderId)
+      .where("is_searchable", "=", true)
       .orderBy("display_order", "asc")
       .selectAll()
       .execute();

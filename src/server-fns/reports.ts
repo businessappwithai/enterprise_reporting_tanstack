@@ -9,12 +9,11 @@ import { listReportsSchema, createReportSchema, updateReportSchema, getReportSch
 
 export const listReports = createServerFn({
   method: "GET",
-}).handler(async (input) => {
-  const validated = await listReportsSchema.parseAsync(input).catch((err) => {
-    throw new Error(`Validation failed: ${err.message}`);
-  });
+})
+  .inputValidator(listReportsSchema)
+  .handler(async ({ data: input }) => {
   const _session = await requireAuth();
-  const { page = 0, pageSize = 20 } = validated;
+  const { page = 0, pageSize = 20 } = input;
 
   const db = getDb();
   const reports = await db
@@ -39,12 +38,11 @@ export const listReports = createServerFn({
 
 export const getReport = createServerFn({
   method: "GET",
-}).handler(async (input) => {
-  const validated = await getReportSchema.parseAsync(input).catch((err) => {
-    throw new Error(`Validation failed: ${err.message}`);
-  });
+})
+  .inputValidator(getReportSchema)
+  .handler(async ({ data: input }) => {
   const _session = await requireAuth();
-  const { id } = validated;
+  const { id } = input;
 
   const db = getDb();
   const report = await db
@@ -62,10 +60,9 @@ export const getReport = createServerFn({
 
 export const createReport = createServerFn({
   method: "POST",
-}).handler(async (input) => {
-  const validated = await createReportSchema.parseAsync(input).catch((err) => {
-    throw new Error(`Validation failed: ${err.message}`);
-  });
+})
+  .inputValidator(createReportSchema)
+  .handler(async ({ data: input }) => {
   const session = await requireAuth();
 
   const {
@@ -77,7 +74,7 @@ export const createReport = createServerFn({
     sortConfig,
     paginationConfig,
     exportFormats,
-  } = validated;
+  } = input;
 
   const db = getDb();
   const id = randomUUID();
@@ -112,13 +109,12 @@ export const createReport = createServerFn({
 });
 
 export const updateReport = createServerFn({
-  method: "PUT",
-}).handler(async (input) => {
-  const validated = await updateReportSchema.parseAsync(input).catch((err) => {
-    throw new Error(`Validation failed: ${err.message}`);
-  });
+  method: "POST",
+})
+  .inputValidator(updateReportSchema)
+  .handler(async ({ data: input }) => {
   const session = await requireAuth();
-  const { id, ...updates } = validated;
+  const { id, ...updates } = input;
 
   const db = getDb();
   await db
@@ -142,13 +138,12 @@ export const updateReport = createServerFn({
 });
 
 export const deleteReport = createServerFn({
-  method: "DELETE",
-}).handler(async (input) => {
-  const validated = await getReportSchema.parseAsync(input).catch((err) => {
-    throw new Error(`Validation failed: ${err.message}`);
-  });
+  method: "POST",
+})
+  .inputValidator(getReportSchema)
+  .handler(async ({ data: input }) => {
   const session = await requireAuth();
-  const { id } = validated;
+  const { id } = input;
 
   const db = getDb();
   await db.deleteFrom("report_definitions").where("id", "=", id).execute();

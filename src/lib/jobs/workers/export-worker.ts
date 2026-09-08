@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+import { sql } from "kysely";
 import path from "node:path";
 import type { Job } from "bullmq";
 import ExcelJS from "exceljs";
@@ -21,7 +22,7 @@ export async function processExportJob(job: Job<ExportJobData>): Promise<JobResu
     const db = getDb();
     const query = await db
       .selectFrom("saved_queries")
-      .where("id", queryId)
+      .where("id", "=", queryId)
       .selectAll()
       .executeTakeFirst();
 
@@ -34,7 +35,7 @@ export async function processExportJob(job: Job<ExportJobData>): Promise<JobResu
     // Get the data source
     const dataSource = await db
       .selectFrom("data_sources")
-      .where("id", query.data_source_id)
+      .where("id", "=", query.data_source_id)
       .selectAll()
       .executeTakeFirst();
 
@@ -46,14 +47,10 @@ export async function processExportJob(job: Job<ExportJobData>): Promise<JobResu
 
     // Execute the query
     const connection = await getConnection(dataSource);
-    const result = await connection.raw(query.sql_content);
+    const result = await sql.raw<Record<string, unknown>>(query.sql_content).execute(connection);
 
     let rows: Record<string, unknown>[] = [];
-    if (Array.isArray(result)) {
-      rows = result;
-    } else if (result.rows) {
-      rows = result.rows;
-    }
+    rows = result.rows;
 
     await job.updateProgress(60);
 

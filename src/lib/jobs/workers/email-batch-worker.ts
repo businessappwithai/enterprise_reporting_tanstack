@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+import { sql } from "kysely";
 import path from "node:path";
 import type { Job } from "bullmq";
 import ExcelJS from "exceljs";
@@ -39,7 +40,7 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
     // Get the report query
     const reportQuery = await db
       .selectFrom("saved_queries")
-      .where("id", queryId)
+      .where("id", "=", queryId)
       .selectAll()
       .executeTakeFirst();
 
@@ -52,7 +53,7 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
     // Get data source for report query
     const reportDataSource = await db
       .selectFrom("data_sources")
-      .where("id", reportQuery.data_source_id)
+      .where("id", "=", reportQuery.data_source_id)
       .selectAll()
       .executeTakeFirst();
 
@@ -64,7 +65,7 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
 
     // Execute report query
     const reportConnection = await getConnection(reportDataSource);
-    const reportResult = await reportConnection.raw(reportQuery.sql_content);
+    const reportResult = await sql.raw<Record<string, unknown>>(reportQuery.sql_content).execute(reportConnection);
 
     let reportRows: Record<string, unknown>[] = [];
     if (Array.isArray(reportResult)) {
@@ -106,7 +107,7 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
 
     const template = await db
       .selectFrom("email_templates")
-      .where("id", emailTemplateId)
+      .where("id", "=", emailTemplateId)
       .selectAll()
       .executeTakeFirst();
 
@@ -124,7 +125,7 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
 
     const recipientQuery = await db
       .selectFrom("saved_queries")
-      .where("id", recipientQueryId)
+      .where("id", "=", recipientQueryId)
       .selectAll()
       .executeTakeFirst();
 
@@ -135,7 +136,7 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
     // Get data source for recipient query
     const recipientDataSource = await db
       .selectFrom("data_sources")
-      .where("id", recipientQuery.data_source_id)
+      .where("id", "=", recipientQuery.data_source_id)
       .selectAll()
       .executeTakeFirst();
 
@@ -147,7 +148,7 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
 
     // Execute recipient query
     const recipientConnection = await getConnection(recipientDataSource);
-    const recipientResult = await recipientConnection.raw(recipientQuery.sql_content);
+    const recipientResult = await sql.raw<Record<string, unknown>>(recipientQuery.sql_content).execute(recipientConnection);
 
     let recipientRows: Record<string, unknown>[] = [];
     if (Array.isArray(recipientResult)) {

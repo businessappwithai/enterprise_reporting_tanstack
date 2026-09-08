@@ -152,7 +152,7 @@ export const createDataSource = createServerFn({ method: "POST" })
     );
   });
 
-export const updateDataSource = createServerFn({ method: "PUT" })
+export const updateDataSource = createServerFn({ method: "POST" })
   .inputValidator(updateDataSourceSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(
@@ -217,7 +217,7 @@ export const updateDataSource = createServerFn({ method: "PUT" })
     );
   });
 
-export const deleteDataSource = createServerFn({ method: "DELETE" })
+export const deleteDataSource = createServerFn({ method: "POST" })
   .inputValidator(z.object({ id: uuidSchema }))
   .handler(async ({ data: input }) => {
     return withErrorHandler(

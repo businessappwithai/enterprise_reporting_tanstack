@@ -9,7 +9,10 @@ import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
 import { getSchemaMetadata } from "@/lib/nlquery/schema-metadata";
 import { translateNLToSQLViaMastra, isMastraAvailable } from "@/lib/nlquery/mastra-connector";
-import { translateNLToSQLViaLlama, isLlamaReasoningAvailable } from "@/lib/nlquery/llama-translator";
+import { translateNLToSQLViaLlama } from "@/lib/nlquery/llama-translator";
+// llama-translator imports this symbol but does not re-export it, so taking it
+// from there broke the production build at rollup time.
+import { isLlamaReasoningAvailable } from "@/lib/voice/llama-client";
 import { getGraphContext, formatGraphContext } from "@/lib/graph/rag";
 import { buildMastraContextPrompt } from "@/lib/nlquery/nl-query-context-service";
 import { logAudit } from "@/lib/security/audit";

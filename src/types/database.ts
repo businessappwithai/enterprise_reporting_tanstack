@@ -30,7 +30,7 @@ export type DatabaseClientType = "pg" | "mysql" | "mssql" | "sqlite3" | "oracled
 export interface DataSource {
   id: string;
   name: string;
-  description?: string;
+  description?: string | null;
   client_type: DatabaseClientType;
   connection_config: string;
   is_active: boolean;
@@ -38,7 +38,7 @@ export interface DataSource {
   is_editable?: boolean | null;
   is_inspected?: boolean | null;
   last_inspected_at?: string | null;
-  created_by?: string;
+  created_by?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -459,7 +459,13 @@ export type ResourceType =
   | "setting"
   | "monitoring_rule"
   | "monitoring_execution"
-  | "adk_intent";
+  | "adk_intent"
+  | "queries"
+  | "dashboard_filters"
+  | "nl_builder"
+  | "rag_context"
+  | "schema_table_instruction"
+  | "schema_field_instruction";
 
 export type PermissionLevel = "view" | "edit" | "execute" | "admin";
 
@@ -508,7 +514,14 @@ export type AuditAction =
   | "report:generated"
   | "report:permission_revoked"
   | "report:failed"
-  | "report:scheduled";
+  | "report:scheduled"
+  | "batch_execute"
+  | "email_batch"
+  | "inspect"
+  | "preview"
+  | "sql_validation_warning"
+  | "openkb_query_logged"
+  | "openkb_suggestions_requested";
 
 export interface AuditLog {
   id: string;

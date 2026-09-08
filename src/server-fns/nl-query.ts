@@ -7,6 +7,7 @@
  */
 
 import { createServerFn } from "@tanstack/react-start";
+import { sql } from "kysely";
 import { requireAuth } from "@/lib/auth/middleware";
 import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
@@ -324,10 +325,10 @@ export const executeNLQuery = createServerFn({
     // [Step 5] Execute query
     const connection = await getConnection(dataSource as any as DataSource);
     const startTime = Date.now();
-    const result = await connection.raw(generatedSQL).timeout(timeout);
+    const result = await sql.raw<Record<string, unknown>>(generatedSQL).execute(connection);
     const executionTime = Date.now() - startTime;
 
-    const rows = Array.isArray(result) ? result : result?.rows || [];
+    const rows = result.rows;
 
     // [Step 6] Store successful query context with pgvector for future reference
     try {
@@ -464,10 +465,10 @@ export const executeNLQueryWithOverride = createServerFn({
     // Execute with override
     const connection = await getConnection(dataSource as any as DataSource);
     const startTime = Date.now();
-    const result = await connection.raw(approvedSQL).timeout(timeout);
+    const result = await sql.raw<Record<string, unknown>>(approvedSQL).execute(connection);
     const executionTime = Date.now() - startTime;
 
-    const rows = Array.isArray(result) ? result : result?.rows || [];
+    const rows = result.rows;
 
     return {
       success: true,

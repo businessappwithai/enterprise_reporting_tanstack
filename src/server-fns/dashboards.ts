@@ -160,7 +160,7 @@ export const createDashboard = createServerFn({ method: "POST" })
     );
   });
 
-export const updateDashboard = createServerFn({ method: "PUT" })
+export const updateDashboard = createServerFn({ method: "POST" })
   .inputValidator(updateDashboardSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(
@@ -217,7 +217,7 @@ export const updateDashboard = createServerFn({ method: "PUT" })
     );
   });
 
-export const deleteDashboard = createServerFn({ method: "DELETE" })
+export const deleteDashboard = createServerFn({ method: "POST" })
   .inputValidator(getDashboardSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(
@@ -314,7 +314,7 @@ export const addWidget = createServerFn({ method: "POST" })
     );
   });
 
-export const updateWidget = createServerFn({ method: "PUT" })
+export const updateWidget = createServerFn({ method: "POST" })
   .inputValidator(updateWidgetSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(
@@ -382,7 +382,7 @@ export const updateWidget = createServerFn({ method: "PUT" })
     );
   });
 
-export const removeWidget = createServerFn({ method: "DELETE" })
+export const removeWidget = createServerFn({ method: "POST" })
   .inputValidator(removeWidgetSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(

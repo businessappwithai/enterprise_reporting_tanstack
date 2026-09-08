@@ -60,8 +60,8 @@ class ErrorManagementService {
     const db = getDb();
     const result = await db
       .selectFrom("error_messages")
-      .where("error_code", errorCode)
-      .where("is_active", true)
+      .where("error_code", "=", errorCode)
+      .where("is_active", "=", true)
       .selectAll()
       .executeTakeFirst();
 
@@ -82,7 +82,7 @@ class ErrorManagementService {
     const db = getDb();
     const results = await db
       .selectFrom("error_messages")
-      .where("is_active", true)
+      .where("is_active", "=", true)
       .orderBy("category")
       .orderBy("error_code")
       .selectAll()
@@ -101,8 +101,8 @@ class ErrorManagementService {
     const db = getDb();
     const results = await db
       .selectFrom("error_messages")
-      .where("category", category)
-      .where("is_active", true)
+      .where("category", "=", category)
+      .where("is_active", "=", true)
       .orderBy("error_code")
       .selectAll()
       .execute();
@@ -133,7 +133,7 @@ class ErrorManagementService {
       data.metadata = JSON.stringify(updates.metadata);
     }
 
-    await db.updateTable("error_messages").where("id", id).set(data).execute();
+    await db.updateTable("error_messages").where("id", "=", id).set(data).execute();
   }
 
   /**
@@ -171,8 +171,8 @@ class ErrorManagementService {
     const db = getDb();
     const result = await db
       .selectFrom("warning_configs")
-      .where("warning_code", warningCode)
-      .where("is_active", true)
+      .where("warning_code", "=", warningCode)
+      .where("is_active", "=", true)
       .selectAll()
       .executeTakeFirst();
 
@@ -198,7 +198,7 @@ class ErrorManagementService {
     const db = getDb();
     const results = await db
       .selectFrom("warning_configs")
-      .where("is_active", true)
+      .where("is_active", "=", true)
       .orderBy("severity", "desc")
       .orderBy("warning_code")
       .selectAll()
@@ -250,7 +250,7 @@ class ErrorManagementService {
    */
   async markErrorAsReported(id: string): Promise<void> {
     const db = getDb();
-    await db.updateTable("error_occurrences").where("id", id).set({ is_reported: true }).execute();
+    await db.updateTable("error_occurrences").where("id", "=", id).set({ is_reported: true }).execute();
   }
 
   /**
@@ -283,7 +283,7 @@ class ErrorManagementService {
     const db = getDb();
     await db
       .updateTable("error_occurrences")
-      .where("id", id)
+      .where("id", "=", id)
       .set({
         is_resolved: true,
         resolved_at: new Date().toISOString(),
