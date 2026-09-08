@@ -381,8 +381,8 @@ export function NlQueryContent() {
             <span>RAG Pipeline</span>
           </div>
           <div className="ml-6 text-muted-foreground space-y-0.5">
-            {steps.map((s, i) => (
-              <div key={i} className="flex items-center gap-1.5">
+            {steps.map((s) => (
+              <div key={s.name} className="flex items-center gap-1.5">
                 {s.status === "done" ? (
                   <CheckCircle className="h-3 w-3 text-emerald-500" />
                 ) : (

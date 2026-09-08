@@ -428,7 +428,7 @@ export async function testConnection(
 
     // Provide helpful error messages
     let friendlyMessage = message || "Unknown error";
-    const errorText = (message + " " + errorCode).toUpperCase();
+    const errorText = `${message} ${errorCode}`.toUpperCase();
 
     if (
       errorCode === "ETIMEDOUT" ||

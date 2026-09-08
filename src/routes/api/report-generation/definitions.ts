@@ -248,7 +248,7 @@ export const Route = createFileRoute("/api/report-generation/definitions")({
               .filter(Boolean)
               .join("\n\n");
 
-            const schemaWithRelations = (joinSection ? joinSection + "\n\n" : "") + schemaText;
+            const schemaWithRelations = (joinSection ? `${joinSection}\n\n` : "") + schemaText;
 
             // Use the report builder agent directly — pass the full NL query as the metric
             const reportResult = await runReportBuilderAgent(

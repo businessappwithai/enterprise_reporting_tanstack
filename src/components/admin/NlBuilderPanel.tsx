@@ -109,7 +109,7 @@ export function NlBuilderPanel() {
           Translating to SQL and running preview…
         </div>
       ) : (
-        <></>
+        ""
       ),
     handler: async ({ nlDescription, dataSourceId }) => {
       setPhase("translating");
@@ -179,7 +179,7 @@ export function NlBuilderPanel() {
           Saving report…
         </div>
       ) : (
-        <></>
+        ""
       ),
     handler: async ({ name, description, dataSourceId, exportFormats }) => {
       if (!preview) return { success: false, error: "Run previewQuery first." };
@@ -255,7 +255,7 @@ export function NlBuilderPanel() {
           Saving chart…
         </div>
       ) : (
-        <></>
+        ""
       ),
     handler: async ({ name, description, dataSourceId, chartType }) => {
       if (!preview) return { success: false, error: "Run previewQuery first." };

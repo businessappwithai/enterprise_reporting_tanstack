@@ -164,7 +164,9 @@ export function useLlamaVoice(options: UseLlamaVoiceOptions = {}) {
     if (!mediaStreamRef.current) return;
 
     // Stop all tracks
-    mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+    mediaStreamRef.current.getTracks().forEach((track) => {
+      track.stop();
+    });
     mediaStreamRef.current = null;
 
     // Disconnect audio processor
@@ -216,7 +218,9 @@ export function useLlamaVoice(options: UseLlamaVoiceOptions = {}) {
   useEffect(() => {
     return () => {
       if (mediaStreamRef.current) {
-        mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+        mediaStreamRef.current.getTracks().forEach((track) => {
+          track.stop();
+        });
       }
       if (wsRef.current) {
         wsRef.current.close();

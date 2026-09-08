@@ -1,6 +1,7 @@
 {
   "formatter": {
     "enabled": true,
+    "includes": ["**", "!src/routeTree.gen.ts"],
     "formatWithErrors": false,
     "indentStyle": "space",
     "indentWidth": 2,

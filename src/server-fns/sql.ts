@@ -53,6 +53,25 @@ const batchQuerySchema = z.object({
     .max(50),
 });
 
+/**
+ * Run a read-only statement under a time limit.
+ *
+ * Knex's `.timeout()` had no Kysely equivalent, so the caller's `timeout` was
+ * being accepted and ignored. PostgreSQL's own `statement_timeout` does the
+ * job, and `SET LOCAL` inside a transaction keeps it off the pooled
+ * connection once the query is done.
+ */
+async function runWithTimeout(
+  connection: Awaited<ReturnType<typeof getConnection>>,
+  query: string,
+  timeoutMs: number
+) {
+  return connection.transaction().execute(async (trx) => {
+    await rawSql`SET LOCAL statement_timeout = ${rawSql.lit(timeoutMs)}`.execute(trx);
+    return rawSql.raw<ResultRow>(query).execute(trx);
+  });
+}
+
 export const batchExecuteSql = createServerFn({
   method: "POST",
 })
@@ -122,7 +141,7 @@ export const batchExecuteSql = createServerFn({
 
             // Execute with timeout
             const startTime = Date.now();
-            const result = await rawSql.raw<ResultRow>(sql).execute(connection);
+            const result = await runWithTimeout(connection, sql, timeout);
 
             const executionTime = Date.now() - startTime;
 
@@ -257,7 +276,7 @@ export const executeSql = createServerFn({
         const countSQL = `SELECT COUNT(*) as total FROM (${sql.replace(/;$/, "")}) as count_query`;
 
         try {
-          const countResult = await rawSql.raw<ResultRow>(countSQL).execute(connection);
+          const countResult = await runWithTimeout(connection, countSQL, timeout);
 
           if (Array.isArray(countResult) && countResult[0]) {
             totalRowCount = Number(countResult[0].total) || 0;
@@ -310,7 +329,7 @@ export const executeSql = createServerFn({
         }
 
         const startTime = Date.now();
-        const result = await rawSql.raw<ResultRow>(limitedSQL).execute(connection);
+        const result = await runWithTimeout(connection, limitedSQL, timeout);
 
         const executionTime = Date.now() - startTime;
 

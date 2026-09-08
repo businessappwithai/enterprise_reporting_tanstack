@@ -164,8 +164,8 @@ function validateSQLColumnsAgainstRBAC(
     // Match table.column references
     const escaped = table.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const tableColRegex = new RegExp(`\\b${escaped}\\s*\\.\\s*(\\w+)`, "gi");
-    let match: RegExpExecArray | null;
-    while ((match = tableColRegex.exec(normalizedSql)) !== null) {
+    let match: RegExpExecArray | null = tableColRegex.exec(normalizedSql);
+    while (match !== null) {
       const col = match[1].toUpperCase();
       if (col === "*") {
         return {
@@ -179,6 +179,7 @@ function validateSQLColumnsAgainstRBAC(
           reason: `Column '${match[1]}' in table '${table}' is not permitted by your RBAC profile. Allowed columns: [${allowedCols.join(", ")}]`,
         };
       }
+      match = tableColRegex.exec(normalizedSql);
     }
   }
 

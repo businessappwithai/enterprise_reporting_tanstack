@@ -271,7 +271,7 @@ export async function runADKPipeline(
     const MAX_SCHEMA_CHARS = 4000;
     const truncatedSchema =
       schema.schemaText.length > MAX_SCHEMA_CHARS
-        ? schema.schemaText.slice(0, MAX_SCHEMA_CHARS) + "\n... (schema truncated for LLM context)"
+        ? `${schema.schemaText.slice(0, MAX_SCHEMA_CHARS)}\n... (schema truncated for LLM context)`
         : schema.schemaText;
 
     let supervisorResult: z.infer<typeof SupervisorResultSchema>;

@@ -4,6 +4,7 @@ import { verifySession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
 import { introspectSchema } from "@/lib/sql/schema-introspection";
+import type { SchemaInfo } from "@/types/api";
 import { randomUUID } from "node:crypto";
 
 async function getSession(request: Request) {
@@ -51,17 +52,17 @@ export const Route = createFileRoute("/api/data-sources/$id/inspect")({
           const connection = await getConnection(dataSource);
 
           // Wrap introspection in a timeout promise (increased for external databases)
-          let schema;
+          let schema: SchemaInfo;
           try {
             const introspectionPromise = introspectSchema(connection, dataSource.client_type);
-            const timeoutPromise = new Promise((_, reject) =>
+            const timeoutPromise = new Promise<never>((_, reject) =>
               setTimeout(
                 () => reject(new Error("Schema introspection timeout (exceeded 300 seconds)")),
                 300000
               )
             );
             const result = await Promise.race([introspectionPromise, timeoutPromise]);
-            schema = (result as any).schema;
+            schema = result.schema;
           } catch (error) {
             if (error instanceof Error && error.message.includes("timeout")) {
               throw new Error(

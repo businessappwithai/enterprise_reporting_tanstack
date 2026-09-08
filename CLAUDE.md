@@ -261,9 +261,35 @@ Two habits are worth keeping from that:
 `tsc` rejects (TS5097) unless `allowImportingTsExtensions` is set — it is, in
 `tsconfig.json`, and it needs the `noEmit` that is already there.
 
-`bun run lint` and `bun run format:check` do **not** pass: 21 files carry
-pre-existing Biome diagnostics and 21 need reformatting. Compare counts against
-`main` rather than reading a non-zero exit as something you caused.
+## `bun run precommit` passes too — including across a build
+
+`precommit` is `lint && typecheck && format:check`, and all three are clean.
+Getting the last one there took a config change rather than a reformat, and the
+reason is worth keeping:
+
+**`src/routeTree.gen.ts` is written by the TanStack router generator on every
+`vite build`, in a shape Biome's formatter disagrees with.** Formatting it makes
+`format:check` pass exactly until the next build regenerates it — so a tree can
+pass the check, build, and fail it again with nothing modified and nothing in
+`git status`. That is why `biome.json` now excludes the file from the formatter
+(`formatter.includes`), alongside the lint overrides it already had. Do not
+reformat it by hand; the generator wins.
+
+Two Biome details that cost time here:
+
+- **`format` without `--write` *is* the check.** There is no `--check` flag in
+  Biome v2 — `package.json`'s `format:check` used to pass it and Biome ignored
+  the whole invocation, so the check reported success without running.
+- **`organizeImports` is an assist, not a lint rule or a formatter rule.**
+  `biome check --write` applies it and touches ~190 files; neither `lint`,
+  `format:check` nor `precommit` asks for it. Reach for `biome format --write`
+  or `biome lint --only=<rule> --write`, never a bare `check --write`.
+
+Where a lint rule is genuinely wrong for the code, the suppression carries a
+reason: index keys on a query-result preview table whose rows have no id,
+`dangerouslySetInnerHTML` for the pre-paint theme script and for help articles
+already through `DOMPurify.sanitize`. Everything else was fixed rather than
+silenced.
 
 ## Stale documentation
 

@@ -75,6 +75,7 @@ export function ReportPreviewPanel({ rows, columns, sql, intent }: Props) {
       <Card>
         <CardHeader className="pb-2">
           <button
+            type="button"
             className="flex items-center justify-between w-full"
             onClick={() => setSqlExpanded((e) => !e)}
           >
@@ -129,6 +130,7 @@ export function ReportPreviewPanel({ rows, columns, sql, intent }: Props) {
                   </TableRow>
                 ) : (
                   rows.map((row, i) => (
+                    // biome-ignore lint/suspicious/noArrayIndexKey: preview rows come from an arbitrary query and carry no stable id; the whole table is replaced on every run
                     <TableRow key={i}>
                       {columns.map((col) => (
                         <TableCell key={col} className="text-sm whitespace-nowrap">

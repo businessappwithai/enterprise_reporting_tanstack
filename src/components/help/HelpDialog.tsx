@@ -126,6 +126,7 @@ export function HelpDialog({ open, onOpenChange }: HelpDialogProps) {
             <ScrollArea className="flex-1 px-6 py-4">
               <div className="help-article-content pr-4">
                 <p className="text-sm text-muted-foreground mb-6">{selectedArticle.summary}</p>
+                {/* biome-ignore lint/security/noDangerouslySetInnerHtml: help article HTML is run through DOMPurify.sanitize above */}
                 <div dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
               </div>
             </ScrollArea>
@@ -181,6 +182,7 @@ export function HelpDialog({ open, onOpenChange }: HelpDialogProps) {
                   ) : (
                     filtered.map((article) => (
                       <button
+                        type="button"
                         key={article.id}
                         onClick={() => setSelectedArticle(article)}
                         className={cn(

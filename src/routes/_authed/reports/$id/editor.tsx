@@ -758,8 +758,8 @@ function ReportEditorPage() {
                   <div className="p-3 bg-muted rounded-md">
                     <p className="text-tremor-label text-tremor-content">
                       Example: {reportName || "Report"}
-                      {filenameTemplate.field1 ? "[" + filenameTemplate.field1 + "]" : ""}
-                      {filenameTemplate.field2 ? "[" + filenameTemplate.field2 + "]" : ""} .pdf
+                      {filenameTemplate.field1 ? `[${filenameTemplate.field1}]` : ""}
+                      {filenameTemplate.field2 ? `[${filenameTemplate.field2}]` : ""} .pdf
                     </p>
                   </div>
                 </div>

@@ -94,7 +94,9 @@ export function useVoiceRecording({
     return () => {
       recognitionRef.current?.abort();
       mediaRecorderRef.current?.stop();
-      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current?.getTracks().forEach((t) => {
+        t.stop();
+      });
     };
   }, []);
 
@@ -217,7 +219,9 @@ export function useVoiceRecording({
       };
 
       recorder.onstop = () => {
-        stream.getTracks().forEach((t) => t.stop());
+        stream.getTracks().forEach((t) => {
+          t.stop();
+        });
         streamRef.current = null;
         const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
         transcribeBlobLlama(blob);
@@ -249,7 +253,9 @@ export function useVoiceRecording({
       rec.onstop = null;
       rec.stop();
     }
-    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current?.getTracks().forEach((t) => {
+      t.stop();
+    });
     streamRef.current = null;
     chunksRef.current = [];
     setIsRecording(false);

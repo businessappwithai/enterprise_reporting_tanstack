@@ -134,7 +134,7 @@ export function useAgentStreaming() {
         throw err;
       }
     },
-    [clearSteps]
+    []
   );
 
   return {
