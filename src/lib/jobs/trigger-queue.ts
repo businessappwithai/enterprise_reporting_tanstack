@@ -15,7 +15,7 @@ import type {
   JobResult,
   QueueStatus,
   ScheduledJobOptions,
-} from "./queue/types";
+} from "./types";
 
 /**
  * Add a job to the trigger.dev queue

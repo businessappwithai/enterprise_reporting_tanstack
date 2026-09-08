@@ -161,7 +161,7 @@ Job processing runs on **Trigger.dev** (`@trigger.dev/sdk`), configured in `trig
 - Task definitions: `src/lib/jobs/trigger-tasks.ts` — `report:generate`, `data:export`, `email:batch`, `scheduled:refresh`, plus monitoring evaluation
 - Enqueue via `src/lib/jobs/trigger-queue.ts`; the actual work lives in `src/lib/jobs/workers/`
 - `src/lib/jobs/worker-runner.ts` picks the backend: Trigger.dev when `TRIGGER_API_URL` is set, otherwise it starts the built-in on-premise cron runner (`src/lib/monitoring/monitoring-scheduler.ts`), a pure-Bun interval loop that polls `monitoring_rules` every minute
-- **`src/lib/queue/` is dead legacy BullMQ code.** It imports `bullmq` and `ioredis`, neither of which is in `package.json`, and nothing imports it. Do not add imports of `@/lib/queue` — extend `src/lib/jobs/` instead. Comments elsewhere that mention BullMQ are leftovers from the migration
+- **BullMQ is gone.** `src/lib/queue/` — the dead legacy tree that imported `bullmq` and `ioredis`, neither of which was ever in `package.json` — has been deleted, along with the Bull Board routes it backed. Job payload types now live beside their consumers in `src/lib/jobs/types.ts`, and the workers take their payload directly rather than a BullMQ `Job` wrapper. `/bull-board` is `/trigger-board`
 
 ### Other Subsystems
 
@@ -238,8 +238,8 @@ Playwright tests in `e2e/`. The dev server must be running on port 4050 before r
 
 `tsconfig.json` includes `**/*.ts`, so `typecheck` — and therefore `precommit` —
 covers `language/`, `scripts/` and `tests/` as well as `src/`. It does not pass,
-and it did not pass before: it currently reports around 678 errors across ~140
-files, nearly all of them in `src/`.
+and it did not pass before: the backlog was around 678 errors across ~140 files
+when it first became visible, and is being worked down.
 
 That number was invisible until recently. A single unescaped backtick in
 `language/cli/src/generate/app.ts` made the file unparseable, and one parse error

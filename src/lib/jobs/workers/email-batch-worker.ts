@@ -1,7 +1,6 @@
 import fs from "node:fs/promises";
 import { sql } from "kysely";
 import path from "node:path";
-import type { Job } from "bullmq";
 import ExcelJS from "exceljs";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -9,11 +8,11 @@ import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
 import { sendEmail } from "@/lib/email/email-service";
 import { logAudit } from "@/lib/security/audit";
-import type { EmailBatchJobData, JobResult } from "../queue";
+import type { EmailBatchJobData, JobResult } from "../types";
 
 const OUTPUT_DIR = process.env.JOB_OUTPUT_PATH || "./job-outputs";
 
-export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise<JobResult> {
+export async function processEmailBatchJob(data: EmailBatchJobData): Promise<JobResult> {
   const startTime = Date.now();
   const {
     queryId,
@@ -23,17 +22,16 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
     userId,
     format = "csv",
     reportName = "Report",
-    _parameters,
-  } = job.data;
+    parameters: _parameters,
+  } = data;
 
   let attachmentPath: string | null = null;
   let emailsSent = 0;
 
   try {
-    await job.updateProgress(10);
 
     // === STAGE 1: Generate Report Attachment ===
-    await job.log("Generating report attachment...");
+    console.info("[email-batch]", "Generating report attachment...");
 
     const db = getDb();
 
@@ -48,7 +46,6 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
       throw new Error(`Report query not found: ${queryId}`);
     }
 
-    await job.updateProgress(15);
 
     // Get data source for report query
     const reportDataSource = await db
@@ -61,7 +58,6 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
       throw new Error("Report data source not found");
     }
 
-    await job.updateProgress(20);
 
     // Execute report query
     const reportConnection = await getConnection(reportDataSource);
@@ -74,8 +70,7 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
       reportRows = reportResult.rows;
     }
 
-    await job.updateProgress(30);
-    await job.log(`Generated ${reportRows.length} rows for report`);
+    console.info("[email-batch]", `Generated ${reportRows.length} rows for report`);
 
     // Ensure output directory exists
     await fs.mkdir(OUTPUT_DIR, { recursive: true });
@@ -99,11 +94,10 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
         throw new Error(`Unsupported format: ${format}`);
     }
 
-    await job.updateProgress(50);
-    await job.log(`Report attachment created: ${filename}`);
+    console.info("[email-batch]", `Report attachment created: ${filename}`);
 
     // === STAGE 2: Fetch Email Template ===
-    await job.log("Fetching email template...");
+    console.info("[email-batch]", "Fetching email template...");
 
     const template = await db
       .selectFrom("email_templates")
@@ -116,12 +110,11 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
     }
 
     // Parse column mappings
-    const columnMappings = template.columnMappings ? JSON.parse(template.columnMappings) : {};
+    const columnMappings = template.column_mappings ? JSON.parse(template.column_mappings) : {};
 
-    await job.updateProgress(55);
 
     // === STAGE 3: Fetch Recipients ===
-    await job.log("Fetching recipient list...");
+    console.info("[email-batch]", "Fetching recipient list...");
 
     const recipientQuery = await db
       .selectFrom("saved_queries")
@@ -144,7 +137,6 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
       throw new Error("Recipient data source not found");
     }
 
-    await job.updateProgress(60);
 
     // Execute recipient query
     const recipientConnection = await getConnection(recipientDataSource);
@@ -158,12 +150,11 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
     }
 
     if (recipientRows.length === 0) {
-      await job.log("WARNING: No recipients found");
+    console.info("[email-batch]", "WARNING: No recipients found");
       throw new Error("No recipients found from recipient query");
     }
 
-    await job.updateProgress(65);
-    await job.log(`Found ${recipientRows.length} recipients`);
+    console.info("[email-batch]", `Found ${recipientRows.length} recipients`);
 
     // Validate email column exists
     if (!recipientRows[0][recipientEmailColumn]) {
@@ -173,7 +164,7 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
     }
 
     // === STAGE 4: Send Batch Emails ===
-    await job.log("Starting batch email send...");
+    console.info("[email-batch]", "Starting batch email send...");
 
     const failedRecipients: Array<{ email: string; error: string }> = [];
 
@@ -181,8 +172,7 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
       const recipient = recipientRows[i];
       const recipientEmail = String(recipient[recipientEmailColumn]);
 
-      await job.updateProgress(65 + Math.floor((35 * (i + 1)) / recipientRows.length));
-      await job.log(`Sending email ${i + 1}/${recipientRows.length} to ${recipientEmail}`);
+    console.info("[email-batch]", `Sending email ${i + 1}/${recipientRows.length} to ${recipientEmail}`);
 
       try {
         // Apply column mappings to get variables for template
@@ -202,7 +192,7 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
           recipientEmail,
           {
             subject: template.subject,
-            htmlBody: template.htmlBody,
+            htmlBody: template.html_body ?? template.body,
           },
           variables,
           null, // No query results for batch emails (use column mappings instead)
@@ -216,26 +206,25 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
 
         if (result.success) {
           emailsSent++;
-          await job.log(`✓ Email sent to ${recipientEmail} (Message ID: ${result.messageId})`);
+    console.info("[email-batch]", `✓ Email sent to ${recipientEmail} (Message ID: ${result.messageId})`);
         } else {
           failedRecipients.push({ email: recipientEmail, error: result.error || "Unknown error" });
-          await job.log(`✗ Failed to send to ${recipientEmail}: ${result.error}`);
+    console.info("[email-batch]", `✗ Failed to send to ${recipientEmail}: ${result.error}`);
         }
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : "Unknown error";
         failedRecipients.push({ email: recipientEmail, error: errorMsg });
-        await job.log(`✗ Error sending to ${recipientEmail}: ${errorMsg}`);
+    console.info("[email-batch]", `✗ Error sending to ${recipientEmail}: ${errorMsg}`);
       }
     }
 
-    await job.updateProgress(100);
 
     // Log audit
     await logAudit({
       userId,
       action: "email_batch",
       resourceType: "job",
-      resourceId: job.id ?? "unknown",
+      resourceId: queryId,
       details: {
         emailsSent,
         failedRecipients: failedRecipients.length,
@@ -246,7 +235,7 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
     });
 
     if (failedRecipients.length > 0) {
-      await job.log(
+    console.info("[email-batch]", 
         `Batch completed with ${failedRecipients.length} failures: ${JSON.stringify(failedRecipients)}`
       );
     }
@@ -257,7 +246,6 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
       rowCount: reportRows.length,
       duration: Date.now() - startTime,
       emailsSent,
-      attachmentPath,
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
@@ -266,7 +254,7 @@ export async function processEmailBatchJob(job: Job<EmailBatchJobData>): Promise
       userId,
       action: "email_batch",
       resourceType: "job",
-      resourceId: job.id ?? "unknown",
+      resourceId: queryId,
       details: { error: errorMessage, emailsSent },
     });
 
@@ -389,15 +377,4 @@ async function exportToPDF(
   await fs.writeFile(outputPath, Buffer.from(pdfBuffer));
 }
 
-// Adapter for Trigger.dev tasks — plain-argument wrapper around processEmailBatchJob
-export async function sendEmailBatch(
-  batchId: string,
-  recipients: string[],
-  subject: string,
-  template: string
-): Promise<void> {
-  await processEmailBatchJob({
-    data: { type: "email:batch", batchId, recipients, subject, template },
-    updateProgress: async () => {},
-  } as any);
-}
+export const sendEmailBatch = processEmailBatchJob;

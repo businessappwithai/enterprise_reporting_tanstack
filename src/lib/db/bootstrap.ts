@@ -215,6 +215,8 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
       name VARCHAR(255) NOT NULL,
       subject VARCHAR(500) NOT NULL,
       body TEXT NOT NULL,
+      html_body TEXT,
+      column_mappings TEXT,
       created_at VARCHAR(255) DEFAULT CURRENT_TIMESTAMP,
       updated_at VARCHAR(255) DEFAULT CURRENT_TIMESTAMP
     )`,

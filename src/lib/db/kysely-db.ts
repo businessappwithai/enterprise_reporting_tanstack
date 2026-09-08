@@ -245,6 +245,8 @@ export interface EmailTemplatesTable {
   name: string;
   subject: string;
   body: string;
+  html_body: string | null;
+  column_mappings: string | null;
   created_at: string;
   updated_at: string;
 }
