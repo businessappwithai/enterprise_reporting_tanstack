@@ -154,7 +154,11 @@ export function ChartAxisConfig({
                 <div className="flex items-center gap-1">
                   <input
                     type="color"
-                    value={series.color || (chartConfig.colors ?? [])[index % (chartConfig.colors?.length || 1)] || "#000000"}
+                    value={
+                      series.color ||
+                      (chartConfig.colors ?? [])[index % (chartConfig.colors?.length || 1)] ||
+                      "#000000"
+                    }
                     onChange={(e) => updateYSeries(index, { color: e.target.value })}
                     className="h-6 w-8 rounded cursor-pointer border-2"
                     title="Choose color for this series"

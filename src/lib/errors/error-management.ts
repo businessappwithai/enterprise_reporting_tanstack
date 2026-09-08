@@ -264,7 +264,11 @@ class ErrorManagementService {
    */
   async markErrorAsReported(id: string): Promise<void> {
     const db = getDb();
-    await db.updateTable("error_occurrences").where("id", "=", id).set({ is_reported: true }).execute();
+    await db
+      .updateTable("error_occurrences")
+      .where("id", "=", id)
+      .set({ is_reported: true })
+      .execute();
   }
 
   /**

@@ -12,13 +12,11 @@ import type { Database } from "./kysely-db";
 import { seedHelpArticles } from "./help-seed";
 
 // bcrypt hash of "admin" (10 rounds) – pre-computed to avoid runtime bcrypt dependency
-const ADMIN_PASSWORD_HASH =
-  "$2a$10$9aE.ODJU.nWyAVpLuNSnS.j2Kz5X1g27dZM6ycAb0xzUyf0/fw3bO";
+const ADMIN_PASSWORD_HASH = "$2a$10$9aE.ODJU.nWyAVpLuNSnS.j2Kz5X1g27dZM6ycAb0xzUyf0/fw3bO";
 const ADMIN_ID = "1aa00cc2af0225000c5c114df3eebb69";
 
 // bcrypt hash of "nlquery" (10 rounds)
-const NLQUERY_PASSWORD_HASH =
-  "$2a$10$1UDYFHzn1PDgcNfKbTpX2O7aykAUkAL.tgWGm6aGEuXG3pnMCTH3S";
+const NLQUERY_PASSWORD_HASH = "$2a$10$1UDYFHzn1PDgcNfKbTpX2O7aykAUkAL.tgWGm6aGEuXG3pnMCTH3S";
 const NLQUERY_USER_ID = "nlquery0user00000000000000000000";
 const NLQUERY_ROLE_ID = "nlquery0role00000000000000000000";
 
@@ -686,7 +684,10 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
       })
       .execute()
       .catch((err) => {
-        console.warn("[bootstrap] admin user insert warning:", (err as Error).message?.slice(0, 120));
+        console.warn(
+          "[bootstrap] admin user insert warning:",
+          (err as Error).message?.slice(0, 120)
+        );
       });
 
     await db
@@ -694,7 +695,10 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
       .values({ user_id: ADMIN_ID, role_id: adminRoleId, assigned_at: now })
       .execute()
       .catch((err) => {
-        console.warn("[bootstrap] admin user_roles insert warning:", (err as Error).message?.slice(0, 120));
+        console.warn(
+          "[bootstrap] admin user_roles insert warning:",
+          (err as Error).message?.slice(0, 120)
+        );
       });
 
     console.log("[bootstrap] Admin created: admin@admin.com / admin");
@@ -715,7 +719,10 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
     .onConflict((oc) => oc.column("id").doUpdateSet({ permissions: nlQueryPermissions }))
     .execute()
     .catch((err) => {
-      console.warn("[bootstrap] nlquery role insert warning:", (err as Error).message?.slice(0, 120));
+      console.warn(
+        "[bootstrap] nlquery role insert warning:",
+        (err as Error).message?.slice(0, 120)
+      );
     });
 
   await db
@@ -733,7 +740,10 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
     .onConflict((oc) => oc.column("id").doNothing())
     .execute()
     .catch((err) => {
-      console.warn("[bootstrap] nlquery user insert warning:", (err as Error).message?.slice(0, 120));
+      console.warn(
+        "[bootstrap] nlquery user insert warning:",
+        (err as Error).message?.slice(0, 120)
+      );
     });
 
   await db
@@ -742,7 +752,10 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
     .onConflict((oc) => oc.columns(["user_id", "role_id"]).doNothing())
     .execute()
     .catch((err) => {
-      console.warn("[bootstrap] nlquery user_roles insert warning:", (err as Error).message?.slice(0, 120));
+      console.warn(
+        "[bootstrap] nlquery user_roles insert warning:",
+        (err as Error).message?.slice(0, 120)
+      );
     });
 
   console.log("[bootstrap] NL Query user ensured: nlquery@nlquery.com / nlquery");

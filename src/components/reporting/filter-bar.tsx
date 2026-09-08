@@ -115,10 +115,7 @@ export function FilterBar({ filters }: FilterBarProps) {
     filter,
   }));
 
-  const handleFilterChange = (
-    filterId: string,
-    value: FilterValue
-  ) => {
+  const handleFilterChange = (filterId: string, value: FilterValue) => {
     const newValues = { ...selectedValues, [filterId]: value };
     setSelectedValues(newValues);
     // Don't update URL immediately - wait for Run button

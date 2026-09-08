@@ -85,11 +85,7 @@ export const getDataSource = createServerFn({ method: "GET" })
               .catch(console.error);
           }
         } catch (decryptError) {
-          console.error(
-            "Failed to decrypt connection config",
-            { dataSourceId: id },
-            decryptError
-          );
+          console.error("Failed to decrypt connection config", { dataSourceId: id }, decryptError);
           throw decryptError;
         }
 
@@ -322,8 +318,7 @@ export const deleteDataSource = createServerFn({ method: "POST" })
 
 export const inspectDataSource = createServerFn({ method: "POST" })
   .inputValidator((data: { id: string }) => data)
-  .handler(
-  async ({ data: { id } }) => {
+  .handler(async ({ data: { id } }) => {
     return withErrorHandler(
       async () => {
         const session = await requireAuth();
@@ -343,15 +338,12 @@ export const inspectDataSource = createServerFn({ method: "POST" })
 
         try {
           // Call the internal API endpoint with proper authentication
-          const response = await fetch(
-            `http://localhost:3000/api/data-sources/${id}/inspect`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-            }
-          );
+          const response = await fetch(`http://localhost:3000/api/data-sources/${id}/inspect`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
 
           if (!response.ok) {
             const errorData = await response.json().catch(() => ({
@@ -377,8 +369,7 @@ export const inspectDataSource = createServerFn({ method: "POST" })
 
           return result;
         } catch (error) {
-          const message =
-            error instanceof Error ? error.message : "Failed to inspect schema";
+          const message = error instanceof Error ? error.message : "Failed to inspect schema";
           console.error("[inspectDataSource] Error:", message, { dataSourceId: id });
           throw error;
         }
@@ -389,5 +380,4 @@ export const inspectDataSource = createServerFn({ method: "POST" })
         details: { operation: "inspectDataSource", dataSourceId: id },
       }
     );
-  }
-);
+  });

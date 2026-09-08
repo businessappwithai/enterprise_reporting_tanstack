@@ -301,4 +301,3 @@ function formatCellValue(value: unknown, _dataType: string): React.ReactNode {
 
   return String(value);
 }
-

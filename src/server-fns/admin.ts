@@ -50,7 +50,15 @@ export const listUsers = createServerFn({ method: "GET" })
         const db = getDb();
         const users = await db
           .selectFrom("users")
-          .select(["id", "email", "display_name", "avatar_url", "is_active", "created_at", "updated_at"])
+          .select([
+            "id",
+            "email",
+            "display_name",
+            "avatar_url",
+            "is_active",
+            "created_at",
+            "updated_at",
+          ])
           .orderBy("created_at", "desc")
           .offset(page * pageSize)
           .limit(pageSize)
@@ -103,7 +111,15 @@ export const getUser = createServerFn({ method: "GET" })
         const db = getDb();
         const user = await db
           .selectFrom("users")
-          .select(["id", "email", "display_name", "avatar_url", "is_active", "created_at", "updated_at"])
+          .select([
+            "id",
+            "email",
+            "display_name",
+            "avatar_url",
+            "is_active",
+            "created_at",
+            "updated_at",
+          ])
           .where("id", "=", input.id)
           .executeTakeFirst();
 
@@ -373,11 +389,7 @@ export const listRoles = createServerFn({ method: "GET" }).handler(async () => {
       }
 
       const db = getDb();
-      const roles = await db
-        .selectFrom("roles")
-        .selectAll()
-        .orderBy("name", "asc")
-        .execute();
+      const roles = await db.selectFrom("roles").selectAll().orderBy("name", "asc").execute();
 
       return roles.map((r) => ({
         ...r,
@@ -416,7 +428,8 @@ export const getRole = createServerFn({ method: "GET" })
 
         return {
           ...role,
-          permissions: typeof role.permissions === "string" ? JSON.parse(role.permissions) : role.permissions,
+          permissions:
+            typeof role.permissions === "string" ? JSON.parse(role.permissions) : role.permissions,
         };
       },
       {
@@ -496,7 +509,8 @@ export const updateRole = createServerFn({ method: "POST" })
         const updates: Record<string, unknown> = {};
         if (input.name !== undefined) updates.name = input.name;
         if (input.description !== undefined) updates.description = input.description;
-        if (input.permissions !== undefined) updates.permissions = JSON.stringify(input.permissions);
+        if (input.permissions !== undefined)
+          updates.permissions = JSON.stringify(input.permissions);
 
         await db.updateTable("roles").set(updates).where("id", "=", input.id).execute();
 

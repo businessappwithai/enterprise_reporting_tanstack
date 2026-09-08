@@ -97,7 +97,10 @@ export function conditionToSQL(condition: FilterCondition): {
     case "less_than":
       return { sql: `${field} < ?`, params: [scalar(condition.value)] };
     case "between":
-      return { sql: `${field} BETWEEN ? AND ?`, params: [scalar(condition.value), scalar(condition.value2)] };
+      return {
+        sql: `${field} BETWEEN ? AND ?`,
+        params: [scalar(condition.value), scalar(condition.value2)],
+      };
 
     // NULL check operators
     case "is_null":
@@ -230,7 +233,9 @@ export function applyCondition(row: Record<string, unknown>, condition: FilterCo
     case "less_than":
       return Number(value) < Number(condition.value);
     case "between":
-      return Number(value) >= Number(condition.value) && Number(value) <= Number(condition.value2 ?? "");
+      return (
+        Number(value) >= Number(condition.value) && Number(value) <= Number(condition.value2 ?? "")
+      );
     case "is_null":
       return value === null || value === undefined;
     case "is_not_null":

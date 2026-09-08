@@ -30,11 +30,13 @@ export class FieldService {
    * Get single field by ID
    */
   static async getById(id: string): Promise<MetadataEntityField | null> {
-    return await getDb()
-      .selectFrom("metadata_entity_field")
-      .where("id", "=", id)
-      .selectAll()
-      .executeTakeFirst() ?? null;
+    return (
+      (await getDb()
+        .selectFrom("metadata_entity_field")
+        .where("id", "=", id)
+        .selectAll()
+        .executeTakeFirst()) ?? null
+    );
   }
 
   /**

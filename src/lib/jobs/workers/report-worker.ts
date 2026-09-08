@@ -16,7 +16,6 @@ export async function processReportJob(data: ReportJobData): Promise<JobResult> 
   const { reportId, userId, parameters: _parameters, format = "csv" } = data;
 
   try {
-
     // Get report definition
     const db = getDb();
     const report = await db
@@ -28,7 +27,6 @@ export async function processReportJob(data: ReportJobData): Promise<JobResult> 
     if (!report) {
       throw new Error(`Report not found: ${reportId}`);
     }
-
 
     // Get the saved query
     if (!report.saved_query_id) {
@@ -45,7 +43,6 @@ export async function processReportJob(data: ReportJobData): Promise<JobResult> 
       throw new Error("Query not found");
     }
 
-
     // Get the data source
     const dataSource = await db
       .selectFrom("data_sources")
@@ -57,14 +54,12 @@ export async function processReportJob(data: ReportJobData): Promise<JobResult> 
       throw new Error("Data source not found");
     }
 
-
     // Execute the query
     const connection = await getConnection(dataSource);
     const result = await sql.raw<Record<string, unknown>>(query.sql_content).execute(connection);
 
     let rows: Record<string, unknown>[] = [];
     rows = result.rows;
-
 
     // Ensure output directory exists
     await fs.mkdir(OUTPUT_DIR, { recursive: true });
@@ -88,7 +83,6 @@ export async function processReportJob(data: ReportJobData): Promise<JobResult> 
         throw new Error(`Unsupported format: ${format}`);
     }
 
-
     // Log the export
     await logAudit({
       userId,
@@ -97,7 +91,6 @@ export async function processReportJob(data: ReportJobData): Promise<JobResult> 
       resourceId: reportId,
       details: { format, rowCount: rows.length, outputPath },
     });
-
 
     return {
       success: true,

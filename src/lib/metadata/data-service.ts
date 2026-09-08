@@ -89,9 +89,7 @@ export class DataService {
 
     /** Searchable columns matched with LIKE, OR-ed together. */
     const searchTerm = params.search?.trim();
-    const searchFields = searchTerm
-      ? entityMetadata.fields.filter((f) => f.is_searchable)
-      : [];
+    const searchFields = searchTerm ? entityMetadata.fields.filter((f) => f.is_searchable) : [];
     // The table is only known at run time, so these builders are untyped.
     // biome-ignore lint/suspicious/noExplicitAny: dynamic table name
     const applySearch = (q: any): any => {
@@ -111,7 +109,8 @@ export class DataService {
     const limit = Math.min(params.limit || 50, 500);
     const offset = (page - 1) * limit;
 
-    const sortField = params.sort ?? entityMetadata.fields.find((f) => f.is_primary_key)?.field_name;
+    const sortField =
+      params.sort ?? entityMetadata.fields.find((f) => f.is_primary_key)?.field_name;
     let query = applySearch(connection.selectFrom(table).selectAll());
     if (sortField) {
       query = query.orderBy(sortField, params.order || "asc");

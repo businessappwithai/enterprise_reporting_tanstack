@@ -65,7 +65,9 @@ export async function executeSourceQuery(
 export async function estimateRowCount(_dataSourceId: string, query: string): Promise<number> {
   const db = getDb();
   try {
-    const result = await sql.raw<Record<string, unknown>>(`SELECT COUNT(*) as cnt FROM (${query}) AS _count_sub`).execute(db);
+    const result = await sql
+      .raw<Record<string, unknown>>(`SELECT COUNT(*) as cnt FROM (${query}) AS _count_sub`)
+      .execute(db);
     const rows = Array.isArray(result) ? result : [];
     return Number(rows[0]?.cnt ?? 0);
   } catch {
