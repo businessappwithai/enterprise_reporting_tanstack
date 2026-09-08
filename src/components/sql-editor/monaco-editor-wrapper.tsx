@@ -139,6 +139,7 @@ export function MonacoSQLEditorWrapper(props: MonacoSQLEditorProps) {
 
       // Get current selection and cursor position
       const selection = editorRef.current.getSelection();
+      if (!selection) return;
       console.log("[MOUSE PASTE] Current selection:", selection);
 
       // Insert text at cursor position
@@ -187,7 +188,7 @@ export function MonacoSQLEditorWrapper(props: MonacoSQLEditorProps) {
   // GLOBAL MOUSE PASTE HANDLER - Catches paste from Edit menu
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  const handleMousePaste = useCallback(async (e: ClipboardEvent) => {
+  const handleMousePaste = useCallback(async (e: React.ClipboardEvent<HTMLDivElement>) => {
     console.log("═══════════════════════════════════════════════════════════");
     console.log("[GLOBAL MOUSE PASTE] Paste event detected via mouse!");
     console.log("Event:", {
@@ -207,6 +208,7 @@ export function MonacoSQLEditorWrapper(props: MonacoSQLEditorProps) {
 
         if (clipboardText) {
           const selection = editorRef.current.getSelection();
+          if (!selection) return;
           editorRef.current.executeEdits("paste", [
             {
               range: selection,
@@ -224,12 +226,11 @@ export function MonacoSQLEditorWrapper(props: MonacoSQLEditorProps) {
     console.log("═══════════════════════════════════════════════════════════");
   }, []);
 
-  const options = useMemo(
+  const options = useMemo<editor.IStandaloneEditorConstructionOptions>(
     () => ({
       minimap: { enabled: false },
       fontSize: 14,
       lineNumbers: "on" as const,
-      rulers: "off" as const,
       automaticLayout: true,
       scrollBeyondLastLine: false,
       wordWrap: "on" as const,
