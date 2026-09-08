@@ -15,7 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { ColumnSchema, TableFilterState } from "@/types/filters";
+import type { ColumnSchema } from "@/types/database";
+import type { TableFilterState } from "@/types/charts";
 
 interface DuckDBFilterBarProps {
   columns: ColumnSchema[];
@@ -114,7 +115,7 @@ export function DuckDBFilterBar({ columns, onApply, onClear }: DuckDBFilterBarPr
 
       {filters.length > 0 && (
         <div className="flex flex-wrap gap-1">
-          {filters.map((f) => (
+          {filters.map((f, i) => (
             <span
               key={f.columnId + f.operator + String(f.value)}
               className="inline-flex items-center gap-1 rounded bg-muted px-2 py-1 text-xs"

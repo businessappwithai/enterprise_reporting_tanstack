@@ -213,6 +213,8 @@ export interface ChartDefinition {
   chart_config: string;
   data_mapping: string;
   refresh_interval?: number;
+  is_public?: boolean | null;
+  is_deleted?: boolean | null;
   created_by?: string;
   created_at: string;
   updated_at: string;

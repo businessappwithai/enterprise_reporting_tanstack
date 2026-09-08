@@ -21,7 +21,6 @@ function ChartViewerPage() {
   const queryClient = useQueryClient();
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
-  const searchParams = new URLSearchParams(location.search);
 
   const { data: chart, isLoading: isLoadingChart } = useQuery<ChartDefinition>({
     queryKey: ["chart", chartId],
@@ -51,9 +50,9 @@ function ChartViewerPage() {
     queryKey: ["chart-data", chartId, location.search],
     queryFn: async () => {
       const url = new URL(`/api/charts/${chartId}/data`, window.location.origin);
-      for (const [key, value] of searchParams.entries()) {
-        if (key.startsWith("filter_")) {
-          url.searchParams.set(key, value);
+      for (const [key, value] of Object.entries(location.search)) {
+        if (key.startsWith("filter_") && value != null) {
+          url.searchParams.set(key, String(value));
         }
       }
       const res = await fetch(url.toString());
