@@ -1,5 +1,6 @@
 import { getDb } from "../src/lib/db/config";
-import { createSession } from "../src/lib/auth/session";
+import { randomBytes, randomUUID } from "node:crypto";
+import { SESSION_COOKIE_NAME } from "../src/lib/auth/better-auth";
 
 const db = getDb();
 
@@ -15,14 +16,28 @@ if (!adminUser) {
   process.exit(1);
 }
 
-// Create a valid session token
-const sessionToken = await createSession({
-  id: adminUser.id,
-  email: adminUser.email,
-  roles: ["admin"],
-  name: adminUser.display_name || "Admin",
-  permissions: [],
-});
+// Mint a session the way Better Auth stores one: a row in auth_sessions keyed
+// by a random token. Signing in through the API would need the password, which
+// a diagnostic script has no business knowing.
+//
+// The cookie is deliberately unsigned. Better Auth signs its own cookies, but
+// the session is resolved by looking the token up in the database — so an
+// unsigned token resolves, and a forged one would have to guess 32 random
+// bytes to find a row.
+const sessionToken = randomBytes(32).toString("hex");
+await db
+  .insertInto("auth_sessions")
+  .values({
+    id: randomUUID(),
+    user_id: adminUser.id,
+    token: sessionToken,
+    expires_at: new Date(Date.now() + 60 * 60 * 1000),
+    ip_address: null,
+    user_agent: "scripts/test-nl-with-auth.ts",
+    created_at: new Date(),
+    updated_at: new Date(),
+  })
+  .execute();
 
 console.log(`✅ Created session token for: ${adminUser.email}`);
 
@@ -46,7 +61,7 @@ const response = await fetch("http://localhost:4050/api/copilotkit", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
-    "Cookie": `session_token=${sessionToken}`,
+    Cookie: `${SESSION_COOKIE_NAME}=${sessionToken}`,
   },
   body: JSON.stringify({
     path: "/execute",
