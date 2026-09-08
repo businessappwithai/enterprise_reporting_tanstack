@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { randomUUID } from "node:crypto";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import {
   createUserSchema,
   updateUserSchema,

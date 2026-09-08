@@ -57,9 +57,14 @@ function parseColorTheme(colorThemeStr: string | null): ReportColorTheme | null 
   }
 }
 
-function isValidHexColor(color: string | undefined): boolean {
+function isValidHexColor(color: string | undefined): color is string {
   if (!color) return false;
   return /^#([0-9A-F]{3}){1,2}$/i.test(color);
+}
+
+/** The theme colour when it is a valid hex value, else the fallback. */
+function hexOr(color: string | undefined, fallback: string): string {
+  return isValidHexColor(color) ? color : fallback;
 }
 
 function buildFilename(reportName: string, templateStr: string | null, firstRow: Record<string, unknown> | undefined, ext: string): string {
@@ -486,13 +491,13 @@ export const Route = createFileRoute("/api/reports/$id/export")({
 
           if (format === "html") {
             const colorTheme = parseColorTheme(report.color_theme ?? null);
-            const headerBg = isValidHexColor(colorTheme?.headerBackgroundColor) ? colorTheme.headerBackgroundColor : "#1e293b";
-            const headerText = isValidHexColor(colorTheme?.headerTextColor) ? colorTheme.headerTextColor : "#ffffff";
-            const rowBg = isValidHexColor(colorTheme?.rowBackgroundColor) ? colorTheme.rowBackgroundColor : "#ffffff";
-            const rowText = isValidHexColor(colorTheme?.rowTextColor) ? colorTheme.rowTextColor : "#334155";
-            const altRowBg = isValidHexColor(colorTheme?.alternatingRowBackgroundColor) ? colorTheme.alternatingRowBackgroundColor : "#f8fafc";
-            const altRowText = isValidHexColor(colorTheme?.alternatingRowTextColor) ? colorTheme.alternatingRowTextColor : "#334155";
-            const borderColor = isValidHexColor(colorTheme?.borderColor) ? colorTheme.borderColor : "#e2e8f0";
+            const headerBg = hexOr(colorTheme?.headerBackgroundColor, "#1e293b");
+            const headerText = hexOr(colorTheme?.headerTextColor, "#ffffff");
+            const rowBg = hexOr(colorTheme?.rowBackgroundColor, "#ffffff");
+            const rowText = hexOr(colorTheme?.rowTextColor, "#334155");
+            const altRowBg = hexOr(colorTheme?.alternatingRowBackgroundColor, "#f8fafc");
+            const altRowText = hexOr(colorTheme?.alternatingRowTextColor, "#334155");
+            const borderColor = hexOr(colorTheme?.borderColor, "#e2e8f0");
 
             const dataJson = JSON.stringify(filteredRows).replace(/</g, "\\u003c").replace(/>/g, "\\u003e");
             const headersJson = JSON.stringify(headers).replace(/</g, "\\u003c").replace(/>/g, "\\u003e");
