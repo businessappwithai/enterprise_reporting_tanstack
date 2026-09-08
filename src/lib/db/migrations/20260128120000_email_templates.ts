@@ -1,6 +1,6 @@
 export async function up(db: any): Promise<void> {
   // Email templates table for dynamic email template system
-  await db.schema.createTable("email_templates", (table) => {
+  await db.schema.createTable("email_templates", (table: any) => {
     table.string("id", 36).primary().defaultTo(db.raw("(lower(hex(randomblob(16))))"));
     table.string("name", 255).notNullable();
     table.text("subject").notNullable();

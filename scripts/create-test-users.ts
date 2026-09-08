@@ -116,7 +116,7 @@ try {
     "  Manager: manager@example.com / SecureManager123!"
   );
 } finally {
-  await client.end();
+  client.release();
   await pool.end();
   process.exit(0);
 }

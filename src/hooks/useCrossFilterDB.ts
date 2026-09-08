@@ -37,10 +37,10 @@ export function useCrossFilterDB(config: CrossFilterConfig): UseCrossFilterRetur
           const map = new Map(prev.map((f) => [f.id, f]))
 
           for (const change of changes) {
-            if (change.type === 'INSERT') {
-              map.set(change.key, change.value)
-            } else if (change.type === 'DELETE') {
-              map.delete(change.key)
+            if (change.type === 'insert' || change.type === 'update') {
+              map.set(String(change.key), change.value)
+            } else if (change.type === 'delete') {
+              map.delete(String(change.key))
             }
           }
 
@@ -119,8 +119,9 @@ export function useCrossFilterDB(config: CrossFilterConfig): UseCrossFilterRetur
    */
   const clearFilters = async () => {
     try {
-      const filtersToDelete = activeFilters.filter(
-        (f) => f.dashboardId === config.dashboardId
+      const dashboardWidgetIds = new Set(config.widgets.map((w) => w.widgetId))
+      const filtersToDelete = activeFilters.filter((f) =>
+        dashboardWidgetIds.has(f.sourceWidgetId)
       )
 
       for (const filter of filtersToDelete) {

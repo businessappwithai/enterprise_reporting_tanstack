@@ -10,7 +10,7 @@
  * - Verifying "Inspected" status badge
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect , type Page } from '@playwright/test';
 import { ApiTestHelpers } from './api-test-helpers';
 
 test.describe.configure({ mode: 'serial' });

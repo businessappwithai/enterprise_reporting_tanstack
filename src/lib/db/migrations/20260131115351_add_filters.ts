@@ -1,6 +1,6 @@
 export async function up(db: any): Promise<void> {
   // Create filter_definitions table
-  await db.schema.createTable("filter_definitions", (table) => {
+  await db.schema.createTable("filter_definitions", (table: any) => {
     table.string("id").primary();
     table.string("name").notNullable();
     table.text("description");
@@ -16,7 +16,7 @@ export async function up(db: any): Promise<void> {
   });
 
   // Create report_filters table (links filters to reports)
-  await db.schema.createTable("report_filters", (table) => {
+  await db.schema.createTable("report_filters", (table: any) => {
     table.string("id").primary();
     table.string("report_id").notNullable();
     table.string("filter_id").notNullable();
@@ -32,7 +32,7 @@ export async function up(db: any): Promise<void> {
   });
 
   // Create chart_filters table (links filters to charts)
-  await db.schema.createTable("chart_filters", (table) => {
+  await db.schema.createTable("chart_filters", (table: any) => {
     table.string("id").primary();
     table.string("chart_id").notNullable();
     table.string("filter_id").notNullable();

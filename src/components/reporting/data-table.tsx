@@ -26,6 +26,19 @@ import {
   Settings2,
   X,
 } from "lucide-react";
+/** The CSS custom properties this table sets; CSSProperties cannot describe them. */
+type TableCustomProperties = Record<
+  | "--header-bg"
+  | "--header-text"
+  | "--header-font-weight"
+  | "--row-bg"
+  | "--row-text"
+  | "--alt-row-bg"
+  | "--alt-row-text"
+  | "--border-color",
+  string | undefined
+>;
+
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -140,7 +153,7 @@ export function DataTable<TData>({
   };
 
   // Prepare styles based on color theme
-  const tableStyle = {
+  const tableStyle: TableCustomProperties = {
     "--header-bg": colorTheme?.headerBackgroundColor || undefined,
     "--header-text": colorTheme?.headerTextColor || undefined,
     "--header-font-weight": colorTheme?.headerFontWeight || undefined,
@@ -149,7 +162,7 @@ export function DataTable<TData>({
     "--alt-row-bg": colorTheme?.alternatingRowBackgroundColor || undefined,
     "--alt-row-text": colorTheme?.alternatingRowTextColor || undefined,
     "--border-color": colorTheme?.borderColor || undefined,
-  } as React.CSSProperties;
+  } satisfies TableCustomProperties;
 
   const table = useReactTable({
     data,
@@ -303,7 +316,7 @@ export function DataTable<TData>({
           borderColor: tableStyle["--border-color"],
         }}
       >
-        <Table style={tableStyle}>
+        <Table style={tableStyle as React.CSSProperties}>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -323,7 +336,7 @@ export function DataTable<TData>({
                         tabIndex={0}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ")
-                            header.column.getToggleSortingHandler()?.();
+                            header.column.getToggleSortingHandler()?.(e);
                         }}
                         className={cn(
                           header.column.getCanSort() &&

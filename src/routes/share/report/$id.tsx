@@ -11,8 +11,8 @@ const getPublicReportFn = createServerFn({ method: "GET" })
     const db = getDb();
     const report = await db
       .selectFrom("report_definitions")
-      .where("id", id)
-      .where("is_public", true)
+      .where("id", "=", id)
+      .where("is_public", "=", true)
       .selectAll()
       .executeTakeFirst();
     if (!report) return null;

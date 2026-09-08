@@ -36,9 +36,9 @@ export function useChartDraft(chartId: string) {
       (changes) => {
         for (const change of changes) {
           if (change.key === chartId) {
-            if (change.type === "INSERT") {
-              setDraft(change.value);
-            } else if (change.type === "DELETE") {
+            if (change.type === "insert" || change.type === "update") {
+              setDraft(change.value as unknown as Partial<ChartDraft>);
+            } else if (change.type === "delete") {
               setDraft(null);
             }
           }

@@ -145,7 +145,7 @@ function ReportViewerPage() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <p className="text-muted-foreground mb-4">Report not found</p>
-          <Link to="/reports/">
+          <Link to="/reports">
             <Button>Back to Reports</Button>
           </Link>
         </div>
@@ -164,7 +164,7 @@ function ReportViewerPage() {
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link to="/reports/">
+          <Link to="/reports">
             <Button variant="ghost" size="icon">
               <ArrowLeft className="h-5 w-5" />
             </Button>

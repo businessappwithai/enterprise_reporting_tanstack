@@ -1,28 +1,27 @@
 import fs from "node:fs/promises";
+import { sql } from "kysely";
 import path from "node:path";
-import type { Job } from "bullmq";
 import ExcelJS from "exceljs";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
 import { logAudit } from "@/lib/security/audit";
-import type { JobResult, ReportJobData } from "../queue";
+import type { JobResult, ReportJobData } from "../types";
 
 const OUTPUT_DIR = process.env.JOB_OUTPUT_PATH || "./job-outputs";
 
-export async function processReportJob(job: Job<ReportJobData>): Promise<JobResult> {
+export async function processReportJob(data: ReportJobData): Promise<JobResult> {
   const startTime = Date.now();
-  const { reportId, userId, _parameters, format = "csv" } = job.data;
+  const { reportId, userId, parameters: _parameters, format = "csv" } = data;
 
   try {
-    await job.updateProgress(10);
 
     // Get report definition
     const db = getDb();
     const report = await db
       .selectFrom("report_definitions")
-      .where("id", reportId)
+      .where("id", "=", reportId)
       .selectAll()
       .executeTakeFirst();
 
@@ -30,7 +29,6 @@ export async function processReportJob(job: Job<ReportJobData>): Promise<JobResu
       throw new Error(`Report not found: ${reportId}`);
     }
 
-    await job.updateProgress(20);
 
     // Get the saved query
     if (!report.saved_query_id) {
@@ -39,7 +37,7 @@ export async function processReportJob(job: Job<ReportJobData>): Promise<JobResu
 
     const query = await db
       .selectFrom("saved_queries")
-      .where("id", report.saved_query_id)
+      .where("id", "=", report.saved_query_id)
       .selectAll()
       .executeTakeFirst();
 
@@ -47,12 +45,11 @@ export async function processReportJob(job: Job<ReportJobData>): Promise<JobResu
       throw new Error("Query not found");
     }
 
-    await job.updateProgress(30);
 
     // Get the data source
     const dataSource = await db
       .selectFrom("data_sources")
-      .where("id", query.data_source_id)
+      .where("id", "=", query.data_source_id)
       .selectAll()
       .executeTakeFirst();
 
@@ -60,20 +57,14 @@ export async function processReportJob(job: Job<ReportJobData>): Promise<JobResu
       throw new Error("Data source not found");
     }
 
-    await job.updateProgress(40);
 
     // Execute the query
     const connection = await getConnection(dataSource);
-    const result = await connection.raw(query.sql_content);
+    const result = await sql.raw<Record<string, unknown>>(query.sql_content).execute(connection);
 
     let rows: Record<string, unknown>[] = [];
-    if (Array.isArray(result)) {
-      rows = result;
-    } else if (result.rows) {
-      rows = result.rows;
-    }
+    rows = result.rows;
 
-    await job.updateProgress(60);
 
     // Ensure output directory exists
     await fs.mkdir(OUTPUT_DIR, { recursive: true });
@@ -97,7 +88,6 @@ export async function processReportJob(job: Job<ReportJobData>): Promise<JobResu
         throw new Error(`Unsupported format: ${format}`);
     }
 
-    await job.updateProgress(90);
 
     // Log the export
     await logAudit({
@@ -108,7 +98,6 @@ export async function processReportJob(job: Job<ReportJobData>): Promise<JobResu
       details: { format, rowCount: rows.length, outputPath },
     });
 
-    await job.updateProgress(100);
 
     return {
       success: true,
@@ -252,7 +241,4 @@ async function exportToPDF(
   await fs.writeFile(outputPath, Buffer.from(pdfBuffer));
 }
 
-// Adapter for Trigger.dev tasks — accepts plain data instead of a BullMQ Job
-export async function generateReport(data: ReportJobData): Promise<JobResult> {
-  return processReportJob({ data, updateProgress: async () => {} } as any);
-}
+export const generateReport = processReportJob;

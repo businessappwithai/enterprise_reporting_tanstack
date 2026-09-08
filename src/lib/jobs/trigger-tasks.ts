@@ -14,7 +14,8 @@ import type {
   ChartJobData,
   ExportJobData,
   ScheduledRefreshData,
-} from "./queue/types";
+  EmailBatchJobData,
+} from "./types";
 
 /**
  * Report Generation Task
@@ -71,22 +72,10 @@ export const dataExportTask = task({
  */
 export const emailBatchTask = task({
   id: "email:batch",
-  run: async (payload: {
-    type: "email:batch";
-    batchId: string;
-    userId: string;
-    recipients: string[];
-    subject: string;
-    template: string;
-  }) => {
+  run: async (payload: EmailBatchJobData) => {
     const startTime = Date.now();
     try {
-      await sendEmailBatch(
-        payload.batchId,
-        payload.recipients,
-        payload.subject,
-        payload.template
-      );
+      await sendEmailBatch(payload);
       return {
         success: true,
         duration: Date.now() - startTime,

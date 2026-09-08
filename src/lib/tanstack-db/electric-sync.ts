@@ -24,7 +24,7 @@ export function createElectricSyncAdapter(config: ElectricSyncConfig) {
 
   // Return a sync configuration that TanStack DB will use
   // TanStack DB expects the sync adapter to be a callable function
-  const syncAdapter = async (params: {
+  const syncAdapter = (params: {
     collection: any
     begin: (options?: { immediate?: boolean }) => void
     write: (message: ChangeMessageOrDeleteKeyMessage<any, any>) => void
@@ -79,13 +79,12 @@ export function convertElectricChangeToTanStackDB(
     case 'insert':
     case 'update':
       return {
-        type: 'INSERT',
-        key: record[primaryKey],
+        type: 'insert',
         value: record,
       }
     case 'delete':
       return {
-        type: 'DELETE',
+        type: 'delete',
         key: record[primaryKey],
       }
     default:

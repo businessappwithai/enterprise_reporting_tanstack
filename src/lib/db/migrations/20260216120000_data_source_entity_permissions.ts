@@ -1,7 +1,7 @@
 export async function up(db: any): Promise<void> {
   // Data source roles - roles specific to data source entity access
   // These are separate from the application-level roles in the 'roles' table
-  await db.schema.createTable("ds_roles", (table) => {
+  await db.schema.createTable("ds_roles", (table: any) => {
     table.string("id", 36).primary().defaultTo(db.raw("(lower(hex(randomblob(16))))"));
     table
       .string("data_source_id", 36)
@@ -19,7 +19,7 @@ export async function up(db: any): Promise<void> {
   });
 
   // Data source user-role assignments
-  await db.schema.createTable("ds_user_roles", (table) => {
+  await db.schema.createTable("ds_user_roles", (table: any) => {
     table
       .string("data_source_id", 36)
       .notNullable()
@@ -38,7 +38,7 @@ export async function up(db: any): Promise<void> {
   });
 
   // Data source entity permissions - permissions on specific tables/views within a data source
-  await db.schema.createTable("ds_entity_permissions", (table) => {
+  await db.schema.createTable("ds_entity_permissions", (table: any) => {
     table.string("id", 36).primary().defaultTo(db.raw("(lower(hex(randomblob(16))))"));
     table
       .string("data_source_id", 36)
@@ -65,7 +65,7 @@ export async function up(db: any): Promise<void> {
   });
 
   // Schema cache - stores introspected schema metadata for RAG
-  await db.schema.createTable("ds_schema_cache", (table) => {
+  await db.schema.createTable("ds_schema_cache", (table: any) => {
     table.string("id", 36).primary().defaultTo(db.raw("(lower(hex(randomblob(16))))"));
     table
       .string("data_source_id", 36)
@@ -83,7 +83,7 @@ export async function up(db: any): Promise<void> {
   });
 
   // NL query history - audit trail for natural language queries
-  await db.schema.createTable("nl_query_history", (table) => {
+  await db.schema.createTable("nl_query_history", (table: any) => {
     table.string("id", 36).primary().defaultTo(db.raw("(lower(hex(randomblob(16))))"));
     table
       .string("data_source_id", 36)

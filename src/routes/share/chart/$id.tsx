@@ -11,8 +11,8 @@ const getPublicChartFn = createServerFn({ method: "GET" })
     const db = getDb();
     const chart = await db
       .selectFrom("chart_definitions")
-      .where("id", id)
-      .where("is_public", true)
+      .where("id", "=", id)
+      .where("is_public", "=", true)
       .selectAll()
       .executeTakeFirst();
     if (!chart) return null;

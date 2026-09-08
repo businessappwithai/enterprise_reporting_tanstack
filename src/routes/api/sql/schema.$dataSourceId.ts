@@ -51,7 +51,7 @@ export const Route = createFileRoute("/api/sql/schema/$dataSourceId")({
           const connection = await getConnection(dataSource as unknown as DataSource);
           const { schema, logs } = await introspectSchema(connection, dataSource.client_type);
 
-          let syncResult: { success: boolean; errors?: string[] } | undefined;
+          let syncResult: Awaited<ReturnType<typeof SyncService.syncDataSource>> | undefined;
           try {
             syncResult = await SyncService.syncDataSource(dataSourceId, session.user.id);
           } catch (e) {

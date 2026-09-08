@@ -575,7 +575,7 @@ async function seedDashboards(queryIds: Record<string, string>) {
   ];
 
   for (const widget of widgets) {
-    const chart = charts.find(c => c.name === widget.chart_name);
+    const chart = charts.find((c: { id: string; name: string }) => c.name === widget.chart_name);
     if (!chart) continue;
 
     const widgetId = uuidv4();

@@ -176,7 +176,7 @@ ${c.bold("OPTIONS")}
 
 ${c.bold("STACKS")}
   ${c.bold("enterprise-reporting")} (default)
-    Generates TanStack Start + Kysely + MariaDB code for the enterprise
+    Generates TanStack Start + Kysely + PostgreSQL code for the enterprise
     reporting repository: server functions (.inputValidator()), list/detail
     route components (shadcn/ui + TanStack Table), and a Kysely migration.
 
@@ -337,7 +337,7 @@ async function cmdGenerate(f: Flags): Promise<number> {
   if (stack === "enterprise-reporting") {
     const written = generateEnterpriseReporting(model, { outDir, appName });
     console.log(
-      c.green(`  wrote ${written.length} file(s) (TanStack Start + Kysely + MariaDB)`)
+      c.green(`  wrote ${written.length} file(s) (TanStack Start + Kysely + PostgreSQL)`)
     );
     runHint =
       `  1. Copy files into the repository\n` +

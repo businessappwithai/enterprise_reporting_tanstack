@@ -254,7 +254,7 @@ const adminModules: Array<{
   {
     title: "Queue Management",
     description: "Inspect the job queue",
-    href: "/bull-board",
+    href: "/trigger-board",
     icon: Layers,
     permissionKey: "queue",
   },

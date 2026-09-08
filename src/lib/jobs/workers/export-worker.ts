@@ -1,27 +1,26 @@
 import fs from "node:fs/promises";
+import { sql } from "kysely";
 import path from "node:path";
-import type { Job } from "bullmq";
 import ExcelJS from "exceljs";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
-import type { ExportJobData, JobResult } from "../queue";
+import type { ExportJobData, JobResult } from "../types";
 
 const OUTPUT_DIR = process.env.JOB_OUTPUT_PATH || "./job-outputs";
 
-export async function processExportJob(job: Job<ExportJobData>): Promise<JobResult> {
+export async function processExportJob(data: ExportJobData): Promise<JobResult> {
   const startTime = Date.now();
-  const { queryId, _userId, format = "csv", _parameters } = job.data;
+  const { queryId, userId: _userId, format = "csv", parameters: _parameters } = data;
 
   try {
-    await job.updateProgress(10);
 
     // Get the saved query
     const db = getDb();
     const query = await db
       .selectFrom("saved_queries")
-      .where("id", queryId)
+      .where("id", "=", queryId)
       .selectAll()
       .executeTakeFirst();
 
@@ -29,12 +28,11 @@ export async function processExportJob(job: Job<ExportJobData>): Promise<JobResu
       throw new Error(`Query not found: ${queryId}`);
     }
 
-    await job.updateProgress(30);
 
     // Get the data source
     const dataSource = await db
       .selectFrom("data_sources")
-      .where("id", query.data_source_id)
+      .where("id", "=", query.data_source_id)
       .selectAll()
       .executeTakeFirst();
 
@@ -42,20 +40,14 @@ export async function processExportJob(job: Job<ExportJobData>): Promise<JobResu
       throw new Error("Data source not found");
     }
 
-    await job.updateProgress(40);
 
     // Execute the query
     const connection = await getConnection(dataSource);
-    const result = await connection.raw(query.sql_content);
+    const result = await sql.raw<Record<string, unknown>>(query.sql_content).execute(connection);
 
     let rows: Record<string, unknown>[] = [];
-    if (Array.isArray(result)) {
-      rows = result;
-    } else if (result.rows) {
-      rows = result.rows;
-    }
+    rows = result.rows;
 
-    await job.updateProgress(60);
 
     // Ensure output directory exists
     await fs.mkdir(OUTPUT_DIR, { recursive: true });
@@ -76,7 +68,6 @@ export async function processExportJob(job: Job<ExportJobData>): Promise<JobResu
       throw new Error(`Unsupported format: ${format}`);
     }
 
-    await job.updateProgress(100);
 
     const duration = Date.now() - startTime;
 
@@ -198,7 +189,4 @@ async function exportToPdf(rows: Record<string, unknown>[], outputPath: string):
   return rows.length;
 }
 
-// Adapter for Trigger.dev tasks — accepts plain data instead of a BullMQ Job
-export async function exportQueryData(data: ExportJobData): Promise<JobResult> {
-  return processExportJob({ data, updateProgress: async () => {} } as any);
-}
+export const exportQueryData = processExportJob;

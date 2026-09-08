@@ -11,6 +11,11 @@
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
+    // language/** is written for Bun, which resolves explicit ".ts" import
+    // specifiers; tsc rejects them (TS5097) unless this is on. It requires
+    // noEmit, which is set above. A parse error in language/cli was masking
+    // all 16 of these until it was fixed.
+    "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
     "paths": {
       "@/*": ["./src/*"]

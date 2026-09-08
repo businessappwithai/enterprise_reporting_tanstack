@@ -48,23 +48,42 @@ export function FieldInstructionEditor({
 
     const fetchInstructions = async () => {
       try {
-        const result = await getSchemaInstructions({ dataSourceId });
+        const result = await getSchemaInstructions({
+          data: { dataSourceId },
+        });
         if (result.success && result.data) {
           const found = result.data.fieldInstructions.find(
             (fi: any) => fi.table_name === tableName && fi.field_name === fieldName
           );
-          setExistingInstruction(found);
-
-          // Set field metadata from instruction
           if (found) {
+            setExistingInstruction({
+              id: found.id,
+              dataSourceId: found.data_source_id,
+              tableName: found.table_name,
+              fieldName: found.field_name,
+              fieldType: found.field_type || "",
+              isNullable: found.is_nullable ?? true,
+              isPrimaryKey: found.is_primary_key ?? false,
+              isForeignKey: found.is_foreign_key ?? false,
+              foreignKeyTable: found.foreign_key_table ?? undefined,
+              foreignKeyField: found.foreign_key_field ?? undefined,
+              description: found.description ?? undefined,
+              llmInstructions: found.llm_instructions ?? undefined,
+              exampleValues: found.example_values ?? undefined,
+              constraints: found.constraints ?? undefined,
+              businessMeaning: found.business_meaning ?? undefined,
+            });
+
             setFieldMetadata({
               fieldType: found.field_type || "",
               isNullable: found.is_nullable ?? true,
               isPrimaryKey: found.is_primary_key ?? false,
               isForeignKey: found.is_foreign_key ?? false,
-              foreignKeyTable: found.foreign_key_table,
-              foreignKeyField: found.foreign_key_field,
+              foreignKeyTable: found.foreign_key_table ?? undefined,
+              foreignKeyField: found.foreign_key_field ?? undefined,
             });
+          } else {
+            setExistingInstruction(undefined);
           }
         }
       } catch (err) {
@@ -78,12 +97,12 @@ export function FieldInstructionEditor({
   const form = useForm({
     defaultValues: {
       description: existingInstruction?.description || "",
-      businessMeaning: existingInstruction?.business_meaning || "",
-      llmInstructions: existingInstruction?.llm_instructions || "",
-      exampleValues: existingInstruction?.example_values || "",
+      businessMeaning: existingInstruction?.businessMeaning || "",
+      llmInstructions: existingInstruction?.llmInstructions || "",
+      exampleValues: existingInstruction?.exampleValues || "",
       constraints: existingInstruction?.constraints || "",
     },
-    onSubmit: async (values) => {
+    onSubmit: async ({ value: values }) => {
       if (!dataSourceId || !tableName || !fieldName) {
         setError("Please select a data source, table, and field");
         return;
@@ -95,21 +114,23 @@ export function FieldInstructionEditor({
 
       try {
         const result = await saveFieldInstruction({
-          id: existingInstruction?.id,
-          dataSourceId,
-          tableName,
-          fieldName,
-          fieldType: fieldMetadata?.fieldType || "unknown",
-          isNullable: fieldMetadata?.isNullable ?? true,
-          isPrimaryKey: fieldMetadata?.isPrimaryKey ?? false,
-          isForeignKey: fieldMetadata?.isForeignKey ?? false,
-          foreignKeyTable: fieldMetadata?.foreignKeyTable,
-          foreignKeyField: fieldMetadata?.foreignKeyField,
-          description: values.description || undefined,
-          businessMeaning: values.businessMeaning || undefined,
-          llmInstructions: values.llmInstructions || undefined,
-          exampleValues: values.exampleValues || undefined,
-          constraints: values.constraints || undefined,
+          data: {
+            id: existingInstruction?.id,
+            dataSourceId,
+            tableName,
+            fieldName,
+            fieldType: fieldMetadata?.fieldType || "unknown",
+            isNullable: fieldMetadata?.isNullable ?? true,
+            isPrimaryKey: fieldMetadata?.isPrimaryKey ?? false,
+            isForeignKey: fieldMetadata?.isForeignKey ?? false,
+            foreignKeyTable: fieldMetadata?.foreignKeyTable,
+            foreignKeyField: fieldMetadata?.foreignKeyField,
+            description: values.description || undefined,
+            businessMeaning: values.businessMeaning || undefined,
+            llmInstructions: values.llmInstructions || undefined,
+            exampleValues: values.exampleValues || undefined,
+            constraints: values.constraints || undefined,
+          },
         });
 
         if (result.success) {

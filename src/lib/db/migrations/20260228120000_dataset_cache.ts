@@ -5,7 +5,7 @@
 
 export async function up(db: any): Promise<void> {
   // Dataset registry
-  await db.schema.createTable("dataset_cache", (table) => {
+  await db.schema.createTable("dataset_cache", (table: any) => {
     table.text("id").primary();
     table.text("name").notNullable();
     table.text("description");
@@ -33,7 +33,7 @@ export async function up(db: any): Promise<void> {
   });
 
   // Dataset refresh jobs
-  await db.schema.createTable("dataset_refresh_jobs", (table) => {
+  await db.schema.createTable("dataset_refresh_jobs", (table: any) => {
     table.text("id").primary();
     table.text("dataset_id").notNullable().references("id").inTable("dataset_cache");
     table.text("status").notNullable().defaultTo("pending"); // pending | processing | completed | failed

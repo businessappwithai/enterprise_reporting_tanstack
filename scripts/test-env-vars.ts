@@ -19,3 +19,5 @@ try {
 }
 
 process.exit(0);
+
+export {};

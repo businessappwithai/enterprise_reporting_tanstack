@@ -54,7 +54,7 @@ export function RelationshipPicker({
   onChange,
 }: RelationshipPickerProps) {
   const uiType = field.relationship_ui_type || "dropdown";
-  const referencedEntityName = field.referenced_table_name;
+  const referencedEntityName = field.foreign_key_table;
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [popupOpen, setPopupOpen] = useState(false);
@@ -110,7 +110,7 @@ export function RelationshipPicker({
         onOpenChange={setDropdownOpen}
       >
         <SelectTrigger>
-          <SelectValue placeholder={`Select ${field.referenced_table_name}...`} />
+          <SelectValue placeholder={`Select ${field.foreign_key_table}...`} />
         </SelectTrigger>
         <SelectContent>
           {isLoadingDropdown ? (
@@ -140,15 +140,15 @@ export function RelationshipPicker({
     <Dialog open={popupOpen} onOpenChange={setPopupOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className="w-full justify-start" type="button">
-          {value ? `Selected ID: ${value}` : `Select ${field.referenced_table_name}...`}
+          {value ? `Selected ID: ${value}` : `Select ${field.foreign_key_table}...`}
           <ExternalLink className="ml-auto h-4 w-4 opacity-50" />
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[80vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Select {field.referenced_table_name}</DialogTitle>
+          <DialogTitle>Select {field.foreign_key_table}</DialogTitle>
           <DialogDescription>
-            Search and select a record from the {field.referenced_table_name} table.
+            Search and select a record from the {field.foreign_key_table} table.
           </DialogDescription>
         </DialogHeader>
 

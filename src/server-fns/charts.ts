@@ -153,7 +153,7 @@ export const createChart = createServerFn({ method: "POST" })
     );
   });
 
-export const updateChart = createServerFn({ method: "PUT" })
+export const updateChart = createServerFn({ method: "POST" })
   .inputValidator(updateChartSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(
@@ -211,7 +211,7 @@ export const updateChart = createServerFn({ method: "PUT" })
     );
   });
 
-export const deleteChart = createServerFn({ method: "DELETE" })
+export const deleteChart = createServerFn({ method: "POST" })
   .inputValidator(getChartSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(

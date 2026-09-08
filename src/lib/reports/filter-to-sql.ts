@@ -57,6 +57,17 @@ export function escapeIdentifier(identifier: string): string {
  * Boolean field operators: is_true, is_false (checks multiple representations)
  * Text field operators: equals, not_equals, contains, not_contains, starts_with, ends_with
  */
+/**
+ * A single bind parameter. `value` is typed wide enough to carry an array (for
+ * `in`) and to be absent (for `is_null`), but the scalar operators bind one
+ * value, so narrow before pushing it into `params`.
+ */
+function scalar(value: FilterCondition["value"]): string | number | boolean {
+  if (value === undefined || value === null) return "";
+  if (Array.isArray(value)) return value.join(",");
+  return value;
+}
+
 export function conditionToSQL(condition: FilterCondition): {
   sql: string;
   params: (string | number | boolean)[];
@@ -66,9 +77,9 @@ export function conditionToSQL(condition: FilterCondition): {
   switch (condition.operator) {
     // Text and basic equality operators
     case "equals":
-      return { sql: `${field} = ?`, params: [condition.value] };
+      return { sql: `${field} = ?`, params: [scalar(condition.value)] };
     case "not_equals":
-      return { sql: `${field} != ?`, params: [condition.value] };
+      return { sql: `${field} != ?`, params: [scalar(condition.value)] };
 
     // Text pattern matching operators
     case "contains":
@@ -82,11 +93,11 @@ export function conditionToSQL(condition: FilterCondition): {
 
     // Number and comparison operators
     case "greater_than":
-      return { sql: `${field} > ?`, params: [condition.value] };
+      return { sql: `${field} > ?`, params: [scalar(condition.value)] };
     case "less_than":
-      return { sql: `${field} < ?`, params: [condition.value] };
+      return { sql: `${field} < ?`, params: [scalar(condition.value)] };
     case "between":
-      return { sql: `${field} BETWEEN ? AND ?`, params: [condition.value, condition.value2 ?? ""] };
+      return { sql: `${field} BETWEEN ? AND ?`, params: [scalar(condition.value), scalar(condition.value2)] };
 
     // NULL check operators
     case "is_null":
@@ -125,9 +136,9 @@ export function conditionToSQL(condition: FilterCondition): {
 
     // Date operators (semantically clearer aliases for less_than/greater_than)
     case "before":
-      return { sql: `${field} < ?`, params: [condition.value] };
+      return { sql: `${field} < ?`, params: [scalar(condition.value)] };
     case "after":
-      return { sql: `${field} > ?`, params: [condition.value] };
+      return { sql: `${field} > ?`, params: [scalar(condition.value)] };
 
     default:
       return { sql: "1=1", params: [] };

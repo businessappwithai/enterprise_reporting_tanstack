@@ -1,5 +1,5 @@
 export async function up(db: any): Promise<void> {
-  return db.schema.createTable("notifications", (table) => {
+  return db.schema.createTable("notifications", (table: any) => {
     table.uuid("id").primary().defaultTo(db.raw("(uuid_to_bytes(uuid()))"));
     table.uuid("user_id").notNullable();
     table.string("type", 50).notNullable(); // info, warning, error, success

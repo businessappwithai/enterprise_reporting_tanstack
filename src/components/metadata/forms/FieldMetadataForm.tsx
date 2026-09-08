@@ -48,7 +48,7 @@ export function FieldMetadataForm({
   isLoading = false,
 }: FieldMetadataFormProps) {
   const isForeignKey = field.is_foreign_key;
-  const referencedTableName = field.referenced_table_name;
+  const referencedTableName = field.foreign_key_table;
 
   const form = useForm({
     defaultValues: {

@@ -37,6 +37,9 @@ interface FilterBarProps {
   type: "report" | "chart";
 }
 
+/** What one filter control holds: ids, free text, or a date range. */
+type FilterValue = string | string[] | { from: string; to: string };
+
 function getTodayDate() {
   return new Date().toISOString().split("T")[0];
 }
@@ -46,12 +49,12 @@ export function FilterBar({ filters }: FilterBarProps) {
   const searchParams = new URLSearchParams(
     typeof window !== "undefined" ? window.location.search : ""
   );
-  const [selectedValues, setSelectedValues] = useState<Record<string, string | string[]>>({});
-  const [appliedValues, setAppliedValues] = useState<Record<string, string | string[]>>({});
+  const [selectedValues, setSelectedValues] = useState<Record<string, FilterValue>>({});
+  const [appliedValues, setAppliedValues] = useState<Record<string, FilterValue>>({});
 
   // Initialize selected values from URL based on field type
   useEffect(() => {
-    const initialValues: Record<string, string | string[]> = {};
+    const initialValues: Record<string, FilterValue> = {};
     filters.forEach((filter) => {
       const value = searchParams.get(`filter_${filter.filter_id}`);
       const fieldType = filter.field_type || "id";
@@ -114,7 +117,7 @@ export function FilterBar({ filters }: FilterBarProps) {
 
   const handleFilterChange = (
     filterId: string,
-    value: string | string[] | { from: string; to: string }
+    value: FilterValue
   ) => {
     const newValues = { ...selectedValues, [filterId]: value };
     setSelectedValues(newValues);
@@ -151,7 +154,9 @@ export function FilterBar({ filters }: FilterBarProps) {
       }
     });
     setAppliedValues(selectedValues);
-    navigate({ search: Object.fromEntries(params), replace: true });
+    const next = Object.fromEntries(params);
+    // The filter_* keys are dynamic, so they cannot be typed against the route.
+    navigate({ search: next as never, replace: true });
   };
 
   if (filters.length === 0) {

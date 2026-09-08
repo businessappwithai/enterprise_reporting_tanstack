@@ -9,6 +9,7 @@ import {
   emailBatchTask,
   scheduledRefreshTask,
 } from "./trigger-tasks";
+import type { EmailBatchJobData } from "./types";
 import type { TriggerClient } from "@trigger.dev/sdk/v3";
 
 // Job type definitions
@@ -27,17 +28,6 @@ export interface ReportJobData {
   format?: "csv" | "xlsx" | "pdf";
 }
 
-export interface EmailBatchJobData {
-  type: "email:batch";
-  queryId: string;
-  emailTemplateId: string;
-  recipientQueryId: string;
-  recipientEmailColumn: string;
-  userId: string;
-  format?: "csv" | "xlsx" | "pdf";
-  reportName?: string;
-  parameters?: Record<string, unknown>;
-}
 
 export interface ChartJobData {
   type: "chart:render";
@@ -114,13 +104,8 @@ export async function addJob(
         break;
 
       case "email:batch":
-        await emailBatchTask.trigger({
-          type: "email:batch",
-          batchId: jobId,
-          userId: (data as EmailBatchJobData).userId,
-          recipients: [],
-          subject: "Report",
-          template: "default",
+        await emailBatchTask.trigger(data as EmailBatchJobData, {
+          idempotencyKey: jobId,
         });
         break;
 

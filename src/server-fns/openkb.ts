@@ -37,15 +37,16 @@ export interface SuggestRAGResult {
  */
 export const logQueryToOpenKB = createServerFn({
   method: "POST",
-}).handler(async (input: LogQueryInput): Promise<{ queryId: string }> => {
+})
+  .inputValidator((data: LogQueryInput) => data)
+  .handler(async ({ data: input }): Promise<{ queryId: string }> => {
   const session = await requireAuth();
 
   try {
     const openkb = await getOpenKBClient();
 
     // Get the manager's role (for role-scoped OpenKB)
-    // TODO: Get actual role from user session
-    const roleId = session.user.roleId || "default";
+    const roleId = session.user.roles[0] ?? "default";
 
     // Log to OpenKB
     const queryId = await openkb.logQuery(roleId, {
@@ -79,12 +80,14 @@ export const logQueryToOpenKB = createServerFn({
  */
 export const suggestFromOpenKB = createServerFn({
   method: "POST",
-}).handler(async (input: SuggestRAGInput): Promise<SuggestRAGResult> => {
+})
+  .inputValidator((data: SuggestRAGInput) => data)
+  .handler(async ({ data: input }): Promise<SuggestRAGResult> => {
   const session = await requireAuth();
 
   try {
     const openkb = await getOpenKBClient();
-    const roleId = session.user.roleId || "default";
+    const roleId = session.user.roles[0] ?? "default";
 
     // Find similar queries in OpenKB (D24: top 3 suggestions)
     const similar = await openkb.findSimilar(roleId, input.proposedDefinition, 3);
@@ -121,10 +124,10 @@ export const suggestFromOpenKB = createServerFn({
  */
 export const getRecentQueriesFromOpenKB = createServerFn({
   method: "GET",
-}).handler(
-  async (input: {
-    limit?: number;
-  }): Promise<
+})
+  .inputValidator((data: { limit?: number }) => data)
+  .handler(
+  async ({ data: input }): Promise<
     Array<{
       nlQuestion: string;
       generatedSQL: string;
@@ -136,7 +139,7 @@ export const getRecentQueriesFromOpenKB = createServerFn({
 
     try {
       const openkb = await getOpenKBClient();
-      const roleId = session.user.roleId || "default";
+      const roleId = session.user.roles[0] ?? "default";
 
       const recent = await openkb.getRecentQueries(roleId, input.limit || 20);
 
@@ -168,7 +171,7 @@ export const getOpenKBStats = createServerFn({
 
     try {
       const openkb = await getOpenKBClient();
-      const roleId = session.user.roleId || "default";
+      const roleId = session.user.roles[0] ?? "default";
 
       const stats = await openkb.getStats(roleId);
 

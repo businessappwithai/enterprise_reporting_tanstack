@@ -38,7 +38,7 @@ test.describe('NL→SQL Translation Pipeline @batch6', () => {
       const dsResponse = await page.request.get('/api/data-sources/active', {
         headers: { Cookie: authCookie },
       });
-      if (dsResponse.ok) {
+      if (dsResponse.ok()) {
         const dsData = await dsResponse.json();
         if (dsData.data?.activeDataSource?.id) {
           dataSourceId = dsData.data.activeDataSource.id;

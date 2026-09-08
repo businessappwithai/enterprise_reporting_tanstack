@@ -1,17 +1,19 @@
+import { randomUUID } from "node:crypto";
 import { getDb } from "@/lib/db/config";
+import type { ErrorMessagesTable, WarningConfigsTable } from "@/lib/db/kysely-db";
 
 export interface ErrorMessage {
   id: string;
   error_code: string;
-  severity: "error" | "warning" | "info";
+  severity: "error" | "warning" | "info" | null;
   title: string;
   message: string;
-  user_message?: string;
-  suggestions?: string[];
-  documentation_url?: string;
-  is_active: boolean;
-  category?: string;
-  metadata?: Record<string, unknown>;
+  user_message?: string | null;
+  suggestions?: string[] | null;
+  documentation_url?: string | null;
+  is_active: boolean | null;
+  category?: string | null;
+  metadata?: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
 }
@@ -20,18 +22,18 @@ export interface WarningConfig {
   id: string;
   warning_code: string;
   name: string;
-  description?: string;
+  description?: string | null;
   trigger_type: string;
-  trigger_config?: Record<string, unknown>;
-  severity: "info" | "warning" | "critical";
+  trigger_config?: Record<string, unknown> | null;
+  severity: "info" | "warning" | "critical" | null;
   message_template: string;
-  suggestions_template?: string[];
-  is_active: boolean;
-  display_duration: number;
-  require_dismissal: boolean;
-  enable_auto_resolve: boolean;
-  auto_resolve_after?: number;
-  metadata?: Record<string, unknown>;
+  suggestions_template?: string[] | null;
+  is_active: boolean | null;
+  display_duration: number | null;
+  require_dismissal: boolean | null;
+  enable_auto_resolve: boolean | null;
+  auto_resolve_after?: number | null;
+  metadata?: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
 }
@@ -52,6 +54,33 @@ export interface ErrorOccurrence {
   created_at: string;
 }
 
+/** JSON-encoded TEXT columns, decoded once on the way out of the database. */
+function parseJson<T>(value: unknown): T | null {
+  if (typeof value !== "string" || value.length === 0) return null;
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return null;
+  }
+}
+
+function toErrorMessage(row: ErrorMessagesTable): ErrorMessage {
+  return {
+    ...row,
+    suggestions: parseJson<string[]>(row.suggestions),
+    metadata: parseJson<Record<string, unknown>>(row.metadata),
+  };
+}
+
+function toWarningConfig(row: WarningConfigsTable): WarningConfig {
+  return {
+    ...row,
+    trigger_config: parseJson<Record<string, unknown>>(row.trigger_config),
+    suggestions_template: parseJson<string[]>(row.suggestions_template),
+    metadata: parseJson<Record<string, unknown>>(row.metadata),
+  };
+}
+
 class ErrorManagementService {
   /**
    * Get error message by error code
@@ -60,19 +89,12 @@ class ErrorManagementService {
     const db = getDb();
     const result = await db
       .selectFrom("error_messages")
-      .where("error_code", errorCode)
-      .where("is_active", true)
+      .where("error_code", "=", errorCode)
+      .where("is_active", "=", true)
       .selectAll()
       .executeTakeFirst();
 
-    if (result?.suggestions) {
-      result.suggestions = JSON.parse(result.suggestions as string);
-    }
-    if (result?.metadata) {
-      result.metadata = JSON.parse(result.metadata as string);
-    }
-
-    return result;
+    return result ? toErrorMessage(result) : null;
   }
 
   /**
@@ -82,16 +104,12 @@ class ErrorManagementService {
     const db = getDb();
     const results = await db
       .selectFrom("error_messages")
-      .where("is_active", true)
+      .where("is_active", "=", true)
       .orderBy("category")
       .orderBy("error_code")
       .selectAll()
       .execute();
-    return results.map((msg) => ({
-      ...msg,
-      suggestions: msg.suggestions ? JSON.parse(msg.suggestions as string) : undefined,
-      metadata: msg.metadata ? JSON.parse(msg.metadata as string) : undefined,
-    }));
+    return results.map(toErrorMessage);
   }
 
   /**
@@ -101,8 +119,8 @@ class ErrorManagementService {
     const db = getDb();
     const results = await db
       .selectFrom("error_messages")
-      .where("category", category)
-      .where("is_active", true)
+      .where("category", "=", category)
+      .where("is_active", "=", true)
       .orderBy("error_code")
       .selectAll()
       .execute();
@@ -133,7 +151,7 @@ class ErrorManagementService {
       data.metadata = JSON.stringify(updates.metadata);
     }
 
-    await db.updateTable("error_messages").where("id", id).set(data).execute();
+    await db.updateTable("error_messages").where("id", "=", id).set(data).execute();
   }
 
   /**
@@ -144,22 +162,22 @@ class ErrorManagementService {
   ): Promise<ErrorMessage> {
     const db = getDb();
 
-    const data: Record<string, unknown> = {
+    const now = new Date().toISOString();
+    const row: ErrorMessagesTable = {
       ...message,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      id: randomUUID(),
+      suggestions: message.suggestions ? JSON.stringify(message.suggestions) : null,
+      metadata: message.metadata ? JSON.stringify(message.metadata) : null,
+      severity: message.severity ?? null,
+      user_message: message.user_message ?? null,
+      documentation_url: message.documentation_url ?? null,
+      is_active: message.is_active ?? null,
+      category: message.category ?? null,
+      created_at: now,
+      updated_at: now,
     };
 
-    // Serialize JSON fields
-    if (message.suggestions) {
-      data.suggestions = JSON.stringify(message.suggestions);
-    }
-    if (message.metadata) {
-      data.metadata = JSON.stringify(message.metadata);
-    }
-
-    const result = await db.insertInto("error_messages").values(data).executeTakeFirst();
-    const _id = result.insertId as string;
+    await db.insertInto("error_messages").values(row).execute();
 
     return this.getErrorMessage(message.error_code) as Promise<ErrorMessage>;
   }
@@ -171,24 +189,12 @@ class ErrorManagementService {
     const db = getDb();
     const result = await db
       .selectFrom("warning_configs")
-      .where("warning_code", warningCode)
-      .where("is_active", true)
+      .where("warning_code", "=", warningCode)
+      .where("is_active", "=", true)
       .selectAll()
       .executeTakeFirst();
 
-    if (result) {
-      if (result.trigger_config) {
-        result.trigger_config = JSON.parse(result.trigger_config as string);
-      }
-      if (result.suggestions_template) {
-        result.suggestions_template = JSON.parse(result.suggestions_template as string);
-      }
-      if (result.metadata) {
-        result.metadata = JSON.parse(result.metadata as string);
-      }
-    }
-
-    return result;
+    return result ? toWarningConfig(result) : null;
   }
 
   /**
@@ -198,20 +204,13 @@ class ErrorManagementService {
     const db = getDb();
     const results = await db
       .selectFrom("warning_configs")
-      .where("is_active", true)
+      .where("is_active", "=", true)
       .orderBy("severity", "desc")
       .orderBy("warning_code")
       .selectAll()
       .execute();
 
-    return results.map((config) => ({
-      ...config,
-      trigger_config: config.trigger_config ? JSON.parse(config.trigger_config as string) : undefined,
-      suggestions_template: config.suggestions_template
-        ? JSON.parse(config.suggestions_template as string)
-        : undefined,
-      metadata: config.metadata ? JSON.parse(config.metadata as string) : undefined,
-    }));
+    return results.map(toWarningConfig);
   }
 
   /**
@@ -234,15 +233,30 @@ class ErrorManagementService {
   ): Promise<string> {
     const db = getDb();
 
-    const data = {
-      ...occurrence,
-      context: occurrence.context ? JSON.stringify(occurrence.context) : null,
-      created_at: new Date().toISOString(),
-    };
+    const { context, ...rest } = occurrence;
+    const id = randomUUID();
 
-    const result = await db.insertInto("error_occurrences").values(data).executeTakeFirst();
+    await db
+      .insertInto("error_occurrences")
+      .values({
+        ...rest,
+        id,
+        error_message_id: null,
+        session_id: null,
+        resolved_at: rest.resolved_at ?? null,
+        user_id: rest.user_id ?? null,
+        error_code: rest.error_code ?? null,
+        error_message: rest.error_message ?? null,
+        stack_trace: rest.stack_trace ?? null,
+        component_stack: rest.component_stack ?? null,
+        url: rest.url ?? null,
+        user_agent: rest.user_agent ?? null,
+        context_data: context ? JSON.stringify(context) : null,
+        created_at: new Date().toISOString(),
+      })
+      .execute();
 
-    return String(result.insertId);
+    return id;
   }
 
   /**
@@ -250,7 +264,7 @@ class ErrorManagementService {
    */
   async markErrorAsReported(id: string): Promise<void> {
     const db = getDb();
-    await db.updateTable("error_occurrences").where("id", id).set({ is_reported: true }).execute();
+    await db.updateTable("error_occurrences").where("id", "=", id).set({ is_reported: true }).execute();
   }
 
   /**
@@ -270,8 +284,8 @@ class ErrorManagementService {
       .limit(10)
       .execute();
 
-    return stats.map((stat: { error_code: string; count: number }) => ({
-      errorCode: stat.error_code,
+    return stats.map((stat) => ({
+      errorCode: stat.error_code ?? "unknown",
       count: Number(stat.count),
     }));
   }
@@ -283,7 +297,7 @@ class ErrorManagementService {
     const db = getDb();
     await db
       .updateTable("error_occurrences")
-      .where("id", id)
+      .where("id", "=", id)
       .set({
         is_resolved: true,
         resolved_at: new Date().toISOString(),

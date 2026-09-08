@@ -10,6 +10,11 @@ export interface User {
   updated_at: string;
 }
 
+/** What listUsers/getUser return: a user with the roles joined on. */
+export interface UserWithRoles extends Omit<User, "password_hash"> {
+  roles?: Array<{ id: string; name: string }>;
+}
+
 export interface Role {
   id: string;
   name: string;
@@ -30,7 +35,7 @@ export type DatabaseClientType = "pg" | "mysql" | "mssql" | "sqlite3" | "oracled
 export interface DataSource {
   id: string;
   name: string;
-  description?: string;
+  description?: string | null;
   client_type: DatabaseClientType;
   connection_config: string;
   is_active: boolean;
@@ -38,7 +43,7 @@ export interface DataSource {
   is_editable?: boolean | null;
   is_inspected?: boolean | null;
   last_inspected_at?: string | null;
-  created_by?: string;
+  created_by?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -76,7 +81,7 @@ export interface QueryParameter {
   name: string;
   type: "string" | "number" | "boolean" | "date" | "datetime";
   label?: string;
-  defaultValue?: unknown;
+  defaultValue?: SerializableValue;
   required?: boolean;
   options?: Array<{ label: string; value: unknown }>;
 }
@@ -459,7 +464,13 @@ export type ResourceType =
   | "setting"
   | "monitoring_rule"
   | "monitoring_execution"
-  | "adk_intent";
+  | "adk_intent"
+  | "queries"
+  | "dashboard_filters"
+  | "nl_builder"
+  | "rag_context"
+  | "schema_table_instruction"
+  | "schema_field_instruction";
 
 export type PermissionLevel = "view" | "edit" | "execute" | "admin";
 
@@ -508,7 +519,14 @@ export type AuditAction =
   | "report:generated"
   | "report:permission_revoked"
   | "report:failed"
-  | "report:scheduled";
+  | "report:scheduled"
+  | "batch_execute"
+  | "email_batch"
+  | "inspect"
+  | "preview"
+  | "sql_validation_warning"
+  | "openkb_query_logged"
+  | "openkb_suggestions_requested";
 
 export interface AuditLog {
   id: string;
@@ -769,16 +787,17 @@ export interface MetadataEntityField {
   entity_header_id: string;
   field_name: string;
   data_type: string;
-  is_nullable: boolean;
-  is_primary_key: boolean;
-  is_foreign_key: boolean;
-  foreign_key_table?: string;
-  foreign_key_column?: string;
-  default_value?: string;
-  description?: string;
-  is_display_field: boolean;
-  is_searchable: boolean;
-  display_order?: number;
+  // Nullable in metadata_entity_field; the booleans carry defaults but no NOT NULL.
+  is_nullable: boolean | null;
+  is_primary_key: boolean | null;
+  is_foreign_key: boolean | null;
+  foreign_key_table?: string | null;
+  foreign_key_column?: string | null;
+  default_value?: string | null;
+  description?: string | null;
+  is_display_field: boolean | null;
+  is_searchable: boolean | null;
+  display_order?: number | null;
   section_name?: string | null; // Group fields into visual sections
   relationship_ui_type?: "dropdown" | "popup" | "tab" | null; // FK UI configuration
   created_at: string;
@@ -789,6 +808,15 @@ export interface MetadataEntityField {
  * Entity with Fields (API response)
  * Complete entity metadata including all fields
  */
+/**
+ * A row from GET /api/metadata/entities: the header plus the joined data source
+ * name and field count the listing shows.
+ */
+export interface MetadataEntityListRow extends MetadataEntityHeader {
+  data_source_name?: string | null;
+  field_count?: number;
+}
+
 export interface MetadataEntityWithFields extends MetadataEntityHeader {
   fields: MetadataEntityField[];
   data_source_name?: string;
@@ -817,7 +845,7 @@ export interface EntitySchemaMetadata {
     name: string;
     type: string;
     nullable: boolean;
-    defaultValue?: unknown;
+    defaultValue?: SerializableValue;
   }>;
 }
 
@@ -862,3 +890,15 @@ export interface QueryResult {
   /** The SQL that was executed */
   query: string;
 }
+
+/**
+ * A value that survives TanStack Start's server-function serializer.
+ *
+ * `Record<string, unknown>` does not: `unknown` matches none of the serializer's
+ * branches, so it resolves to SerializationError and the whole server function
+ * fails to type-check. Query results are scalars, so naming them is enough.
+ */
+export type SerializableValue = string | number | boolean | null | undefined | Date;
+
+/** One row of a SQL result, as returned across a server-function boundary. */
+export type ResultRow = Record<string, SerializableValue>;

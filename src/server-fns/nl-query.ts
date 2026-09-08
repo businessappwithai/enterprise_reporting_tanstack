@@ -7,13 +7,18 @@
  */
 
 import { createServerFn } from "@tanstack/react-start";
+import { sql } from "kysely";
 import { requireAuth } from "@/lib/auth/middleware";
 import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
-import type { DataSource, User } from "@/types/database";
+import type { DataSource, ResultRow, User } from "@/types/database";
 import { isSafeSelectQuery } from "@/lib/nlquery/openai-translator";
-import { translateNLToSQLViaLlama, isLlamaReasoningAvailable } from "@/lib/nlquery/llama-translator";
-import { translateNLToSQLViaMastra as translateViaMastra, isMastraAvailable } from "@/lib/nlquery/mastra-connector";
+import { translateNLToSQLViaLlama } from "@/lib/nlquery/llama-translator";
+import { isLlamaReasoningAvailable } from "@/lib/voice/llama-client";
+import {
+  translateNLToSQLViaMastra as translateViaMastra,
+  isMastraAvailable,
+} from "@/lib/nlquery/mastra-connector";
 import { getSchemaMetadata } from "@/lib/nlquery/schema-metadata";
 import { validateQueryAccess } from "@/lib/permissions/query-access-validator";
 import { logAudit } from "@/lib/security/audit";
@@ -41,7 +46,7 @@ export interface ExecuteNLQueryResult {
   confidence?: number;
   requiresApproval?: boolean;
   warning?: string;
-  rows?: Record<string, unknown>[];
+  rows?: ResultRow[];
   error?: string;
   rowCount?: number;
   executionTime?: number;
@@ -63,7 +68,9 @@ const CONFIDENCE_THRESHOLD = 0.9; // D3: ≥90% execute; <90% warn
  */
 export const executeNLQuery = createServerFn({
   method: "POST",
-}).handler(async (input: ExecuteNLQueryInput) => {
+})
+  .inputValidator((data: ExecuteNLQueryInput) => data)
+  .handler(async ({ data: input }) => {
   const session = await requireAuth();
   const { nlQuestion, dataSourceId, timeout = DEFAULT_TIMEOUT } = input;
 
@@ -176,7 +183,9 @@ export const executeNLQuery = createServerFn({
       const graphSection = formatGraphContext(graphCtx);
       if (graphSection) {
         contextPrompt = contextPrompt ? `${contextPrompt}\n\n${graphSection}` : graphSection;
-        console.log(`[NLQuery] Graph context: ${graphCtx.tables.length} table(s), ~${graphCtx.totalTokenEstimate} tokens`);
+        console.log(
+          `[NLQuery] Graph context: ${graphCtx.tables.length} table(s), ~${graphCtx.totalTokenEstimate} tokens`
+        );
       }
     } catch {
       // graph unavailable — continue with pgvector context only
@@ -298,7 +307,11 @@ export const executeNLQuery = createServerFn({
     }
 
     // [Step 4] RBAC pre-flight check (D5)
-    const accessValidation = await validateQueryAccess(session.user as any as User, generatedSQL, dataSourceId);
+    const accessValidation = await validateQueryAccess(
+      session.user as any as User,
+      generatedSQL,
+      dataSourceId
+    );
 
     if (!accessValidation.allowed) {
       await logAudit({
@@ -324,10 +337,10 @@ export const executeNLQuery = createServerFn({
     // [Step 5] Execute query
     const connection = await getConnection(dataSource as any as DataSource);
     const startTime = Date.now();
-    const result = await connection.raw(generatedSQL).timeout(timeout);
+    const result = await sql.raw<ResultRow>(generatedSQL).execute(connection);
     const executionTime = Date.now() - startTime;
 
-    const rows = Array.isArray(result) ? result : result?.rows || [];
+    const rows = result.rows;
 
     // [Step 6] Store successful query context with pgvector for future reference
     try {
@@ -366,10 +379,12 @@ export const executeNLQuery = createServerFn({
     try {
       const { logQueryToOpenKB } = await import("@/server-fns/openkb");
       await logQueryToOpenKB({
-        nlQuestion,
-        generatedSQL,
-        executionTimeMs: executionTime,
-        resultRowCount: rows.length,
+        data: {
+          nlQuestion,
+          generatedSQL,
+          executionTimeMs: executionTime,
+          resultRowCount: rows.length,
+        },
       });
     } catch (error) {
       console.warn("[NLQuery] Failed to log to OpenKB:", error);
@@ -432,7 +447,9 @@ export const executeNLQuery = createServerFn({
  */
 export const executeNLQueryWithOverride = createServerFn({
   method: "POST",
-}).handler(async (input: ExecuteNLQueryInput & { approvedSQL: string }) => {
+})
+  .inputValidator((data: ExecuteNLQueryInput & { approvedSQL: string }) => data)
+  .handler(async ({ data: input }) => {
   const session = await requireAuth();
   const { approvedSQL, dataSourceId, timeout = DEFAULT_TIMEOUT } = input;
 
@@ -464,10 +481,10 @@ export const executeNLQueryWithOverride = createServerFn({
     // Execute with override
     const connection = await getConnection(dataSource as any as DataSource);
     const startTime = Date.now();
-    const result = await connection.raw(approvedSQL).timeout(timeout);
+    const result = await sql.raw<ResultRow>(approvedSQL).execute(connection);
     const executionTime = Date.now() - startTime;
 
-    const rows = Array.isArray(result) ? result : result?.rows || [];
+    const rows = result.rows;
 
     return {
       success: true,
@@ -500,7 +517,7 @@ export const nlGenerateSQL = createServerFn({ method: "POST" })
       .selectFrom("data_sources")
       .selectAll()
       .where("id", "=", dataSourceId)
-      .where("is_active", "=", true as unknown as string)
+      .where("is_active", "=", true)
       .executeTakeFirst();
 
     if (!ds) return { success: false as const, error: "Data source not found" };
@@ -510,21 +527,36 @@ export const nlGenerateSQL = createServerFn({ method: "POST" })
 
       let contextPrompt = "";
       try {
-        contextPrompt = await buildMastraContextPrompt(dataSourceId, session.user.id, nlDescription, JSON.stringify(schema));
-      } catch { /* non-fatal */ }
+        contextPrompt = await buildMastraContextPrompt(
+          dataSourceId,
+          session.user.id,
+          nlDescription,
+          JSON.stringify(schema)
+        );
+      } catch {
+        /* non-fatal */
+      }
 
       if (await isMastraAvailable()) {
         const result = await translateViaMastra(nlDescription, schema, {}, contextPrompt);
-        if (result?.sql) return { success: true as const, sql: result.sql, confidence: result.confidence ?? 0.8 };
+        if (result?.sql)
+          return { success: true as const, sql: result.sql, confidence: result.confidence ?? 0.8 };
       }
 
       if (await isLlamaReasoningAvailable()) {
         const result = await translateNLToSQLViaLlama(nlDescription, schema);
-        if (result?.sql) return { success: true as const, sql: result.sql, confidence: result.confidence ?? 0.7 };
+        if (result?.sql)
+          return { success: true as const, sql: result.sql, confidence: 0.7 };
       }
 
-      return { success: false as const, error: "No NL→SQL backend available. Start Mastra or llama.cpp." };
+      return {
+        success: false as const,
+        error: "No NL→SQL backend available. Start Mastra or llama.cpp.",
+      };
     } catch (err) {
-      return { success: false as const, error: err instanceof Error ? err.message : "Unknown error" };
+      return {
+        success: false as const,
+        error: err instanceof Error ? err.message : "Unknown error",
+      };
     }
   });

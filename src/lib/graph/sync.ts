@@ -142,7 +142,7 @@ async function syncReports(): Promise<void> {
       "report_definitions.description",
       "saved_queries.data_source_id",
     ])
-    .where("report_definitions.is_deleted", "=", false as unknown as string)
+    .where("report_definitions.is_deleted", "=", false)
     .execute();
 
   for (const r of reports) {
@@ -173,7 +173,7 @@ async function syncCharts(): Promise<void> {
       "chart_definitions.chart_type",
       "saved_queries.data_source_id",
     ])
-    .where("chart_definitions.is_deleted", "=", false as unknown as string)
+    .where("chart_definitions.is_deleted", "=", false)
     .execute();
 
   for (const c of charts) {
@@ -203,7 +203,7 @@ async function syncDashboards(): Promise<void> {
   const dashboards = await db
     .selectFrom("dashboard_layouts")
     .select(["id", "name", "description"])
-    .where("is_deleted", "=", false as unknown as string)
+    .where("is_deleted", "=", false)
     .execute();
 
   for (const d of dashboards) {
@@ -226,8 +226,8 @@ export async function syncKnowledgeGraph(): Promise<void> {
   const dataSources = await db
     .selectFrom("data_sources")
     .selectAll()
-    .where("is_active", "=", true as unknown as string)
-    .where("is_deleted", "=", false as unknown as string)
+    .where("is_active", "=", true)
+    .where("is_deleted", "=", false)
     .execute();
 
   for (const ds of dataSources) {

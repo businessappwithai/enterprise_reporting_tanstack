@@ -8,8 +8,6 @@
  * - No race conditions
  */
 
-import { createTanStackStore } from "@tanstack/store";
-import { DBListStore } from "@tanstack/db";
 import * as fs from "fs";
 
 interface TestResult {

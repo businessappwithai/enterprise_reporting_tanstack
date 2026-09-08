@@ -620,7 +620,9 @@ test.describe('Enterprise Reporting System - Comprehensive Suite', () => {
     await page.goto(`${BASE_URL}/`);
 
     // Check sidebar is collapsed or hidden
-    await expect(page.locator('button[aria-label*="menu"], button[aria-label*="Menu"]')).or(page.locator('.sidebar, aside')).toBeVisible();
+    await expect(
+      page.locator('button[aria-label*="menu"], button[aria-label*="Menu"]').or(page.locator('.sidebar, aside'))
+    ).toBeVisible();
   });
 
   test('30. Performance - sequential queries', async ({ page }) => {

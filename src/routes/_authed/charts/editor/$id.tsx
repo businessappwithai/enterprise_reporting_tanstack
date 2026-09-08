@@ -324,7 +324,7 @@ function ChartEditorContent() {
       <div className="mx-auto max-w-7xl space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link to="/charts/">
+            <Link to="/charts">
               <Button variant="ghost" size="icon">
                 <ArrowLeft className="h-5 w-5" />
               </Button>

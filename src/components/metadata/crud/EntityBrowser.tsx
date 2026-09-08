@@ -9,6 +9,7 @@
 
 import {
   type ColumnDef,
+  flexRender,
   getCoreRowModel,
   type PaginationState,
   type SortingState,
@@ -16,6 +17,8 @@ import {
 } from "@tanstack/react-table";
 import { Edit, Loader2, RefreshCw, Search } from "lucide-react";
 import { useState } from "react";
+import { useEntityList } from "@/hooks/metadata/use-metadata-queries";
+import { useSyncDatasource } from "@/hooks/metadata/use-metadata-mutations";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,11 +38,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { MetadataEntityHeader } from "@/types/database";
+import type { MetadataEntityListRow } from "@/types/database";
 
 interface EntityBrowserProps {
   dataSourceId?: string;
-  onEditEntity?: (entityId: string, entity: MetadataEntityHeader) => void;
+  onEditEntity?: (entityId: string, entity: MetadataEntityListRow) => void;
   onEditFields?: (entityId: string, entityName: string) => void;
   onManagePermissions?: (entityId: string, entityName: string) => void;
 }
@@ -57,7 +60,7 @@ export function EntityBrowser({
   const [isHiddenFilter, setIsHiddenFilter] = useState<boolean | undefined>(undefined);
 
   // Query entities
-  const { data, isLoading, isError, error, refetch } = useEntityListQuery({
+  const { data, isLoading, isError, error, refetch } = useEntityList({
     data_source_id: dataSourceId,
     search: search || undefined,
     is_active: isActiveFilter,
@@ -81,7 +84,7 @@ export function EntityBrowser({
   };
 
   // Table columns
-  const columns: ColumnDef<MetadataEntityHeader>[] = [
+  const columns: ColumnDef<MetadataEntityListRow>[] = [
     {
       accessorKey: "entity_name",
       header: "Entity Name",
@@ -346,9 +349,3 @@ export function EntityBrowser({
   );
 }
 
-function flexRender<T>(Comp: ((props: T) => React.ReactNode) | string, props: T): React.ReactNode {
-  if (typeof Comp === "string") {
-    return Comp;
-  }
-  return <Comp {...props} />;
-}

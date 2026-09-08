@@ -1,5 +1,5 @@
 import { getDb } from '../src/lib/db/config';
-import bcrypt from 'bcrypt';
+import bcrypt from "bcryptjs";
 
 async function verifyAdmin() {
   const db = getDb();

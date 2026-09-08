@@ -3,6 +3,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireAuth } from "@/lib/auth/middleware";
 import { getDb } from "@/lib/db/config";
+import type { SerializableValue } from "@/types/database";
 import { withErrorHandler, NotFoundError } from "@/lib/server-fns/with-error-handler";
 
 // Filter link type
@@ -12,7 +13,7 @@ interface FilterLink {
   widgetId: string;
   field: string;
   operator: string;
-  value: unknown;
+  value: SerializableValue;
   createdAt: string;
 }
 
@@ -22,7 +23,9 @@ interface GetDashboardFilterLinksInput {
 
 export const getDashboardFilterLinks = createServerFn({
   method: "GET",
-}).handler(async (input: GetDashboardFilterLinksInput) => {
+})
+  .inputValidator((data: GetDashboardFilterLinksInput) => data)
+  .handler(async ({ data: input }) => {
   const session = await requireAuth();
 
   return withErrorHandler(
@@ -31,7 +34,7 @@ export const getDashboardFilterLinks = createServerFn({
 
       const db = getDb();
       const dashboard = await db
-        .selectFrom("dashboards")
+        .selectFrom("dashboard_layouts")
         .selectAll()
         .where("id", "=", dashboardId)
         .where("is_deleted", "=", false)
@@ -45,9 +48,9 @@ export const getDashboardFilterLinks = createServerFn({
       // In a full implementation, they'd be in a dedicated table
       let filterLinks: FilterLink[] = [];
 
-      if (dashboard.widget_config) {
+      if (dashboard.layout_config) {
         try {
-          const config = JSON.parse(dashboard.widget_config);
+          const config = JSON.parse(dashboard.layout_config);
           if (config.filterLinks && Array.isArray(config.filterLinks)) {
             filterLinks = config.filterLinks;
           }
@@ -71,13 +74,15 @@ interface ApplyFilterInput {
   dashboardId: string;
   widgetId: string;
   columnName: string;
-  value: unknown;
+  value: SerializableValue;
   operator?: "equals" | "contains" | "gt" | "lt" | "gte" | "lte" | "in" | "between";
 }
 
 export const applyDashboardFilter = createServerFn({
   method: "POST",
-}).handler(async (input: ApplyFilterInput) => {
+})
+  .inputValidator((data: ApplyFilterInput) => data)
+  .handler(async ({ data: input }) => {
   const session = await requireAuth();
 
   return withErrorHandler(

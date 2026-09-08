@@ -306,7 +306,7 @@ export class TestHelpers {
     }
 
     // Click using JavaScript (more reliable for Radix UI)
-    await this.page.evaluate((element) => element.click(), await selectTrigger.elementHandle());
+    await selectTrigger.dispatchEvent('click');
 
     // Wait for options to appear with a longer timeout
     await this.page.waitForSelector('[role="option"]', { state: 'visible', timeout: 5000 });
@@ -316,11 +316,11 @@ export class TestHelpers {
     if (dataSourceName) {
       const option = this.page.locator('[role="option"]').filter({ hasText: dataSourceName }).first();
       await option.waitFor({ state: 'visible', timeout: 5000 });
-      await this.page.evaluate((el) => el.click(), await option.elementHandle());
+      await option.dispatchEvent('click');
     } else {
       const firstOption = this.page.locator('[role="option"]').first();
       await firstOption.waitFor({ state: 'visible', timeout: 5000 });
-      await this.page.evaluate((el) => el.click(), await firstOption.elementHandle());
+      await firstOption.dispatchEvent('click');
     }
 
     // Wait for selection to complete and schema to start loading

@@ -15,7 +15,7 @@ logs.forEach((log, i) => {
       const parsed = JSON.parse(log.metadata);
       console.log('Parsed metadata:', JSON.stringify(parsed, null, 2).substring(0, 500));
     } catch (e) {
-      console.log('Failed to parse:', e.message);
+      console.log('Failed to parse:', e instanceof Error ? e.message : String(e));
     }
   }
 });

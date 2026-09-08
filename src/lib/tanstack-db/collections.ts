@@ -5,12 +5,11 @@ import { createElectricSyncAdapter, getElectricSyncConfig } from './electric-syn
 // Active Filters schema
 const activeFiltersSchema = z.object({
   id: z.string(),
-  dashboardId: z.string(),
-  widgetId: z.string(),
-  field: z.string(),
-  operator: z.string(),
-  value: z.unknown(),
-  createdAt: z.string(),
+  sourceWidgetId: z.string(),
+  column: z.string(),
+  values: z.array(z.unknown()),
+  operator: z.enum(["eq", "in", "range"]),
+  affectedWidgets: z.array(z.string()),
 })
 
 export type ActiveFilter = z.infer<typeof activeFiltersSchema>

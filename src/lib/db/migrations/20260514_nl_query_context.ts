@@ -13,7 +13,7 @@ export async function up(db: any): Promise<void> {
   // ========================================================================
   // 1. Create nl_query_context table for successful NL queries
   // ========================================================================
-  await db.schema.createTable("nl_query_context", (table) => {
+  await db.schema.createTable("nl_query_context", (table: any) => {
     table.string("id", 36).primary();
 
     // Query identification
@@ -73,7 +73,7 @@ export async function up(db: any): Promise<void> {
   // ========================================================================
   // 2. Create nl_query_role_stats table for tracking role-based performance
   // ========================================================================
-  await db.schema.createTable("nl_query_role_stats", (table) => {
+  await db.schema.createTable("nl_query_role_stats", (table: any) => {
     table.string("id", 36).primary();
 
     // Role identification
@@ -106,7 +106,7 @@ export async function up(db: any): Promise<void> {
   // ========================================================================
   // 3. Create nl_query_feedback table for improving accuracy
   // ========================================================================
-  await db.schema.createTable("nl_query_feedback", (table) => {
+  await db.schema.createTable("nl_query_feedback", (table: any) => {
     table.string("id", 36).primary();
 
     // Reference to query

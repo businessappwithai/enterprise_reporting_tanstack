@@ -630,7 +630,7 @@ test.describe('WASM Features - Cross-Widget Filtering', () => {
         await page.waitForTimeout(1000);
 
         // Should update the UI
-        await expect(page).toBeVisible();
+        await expect(page.locator('body')).toBeVisible();
       }
     }
   });
@@ -696,7 +696,7 @@ test.describe('WASM Features - Error Handling', () => {
     await page.waitForTimeout(3000);
 
     // Should complete without crashing
-    await expect(page).toBeVisible();
+    await expect(page.locator('body')).toBeVisible();
   });
 });
 
@@ -814,6 +814,6 @@ test.describe('WASM Features - Performance', () => {
     }
 
     // Should complete without hanging
-    await expect(page).toBeVisible();
+    await expect(page.locator('body')).toBeVisible();
   });
 });
