@@ -501,7 +501,7 @@ export const nlGenerateSQL = createServerFn({ method: "POST" })
       .selectFrom("data_sources")
       .selectAll()
       .where("id", "=", dataSourceId)
-      .where("is_active", "=", true as unknown as string)
+      .where("is_active", "=", true)
       .executeTakeFirst();
 
     if (!ds) return { success: false as const, error: "Data source not found" };

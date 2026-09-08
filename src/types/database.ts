@@ -76,7 +76,7 @@ export interface QueryParameter {
   name: string;
   type: "string" | "number" | "boolean" | "date" | "datetime";
   label?: string;
-  defaultValue?: unknown;
+  defaultValue?: SerializableValue;
   required?: boolean;
   options?: Array<{ label: string; value: unknown }>;
 }
@@ -831,7 +831,7 @@ export interface EntitySchemaMetadata {
     name: string;
     type: string;
     nullable: boolean;
-    defaultValue?: unknown;
+    defaultValue?: SerializableValue;
   }>;
 }
 
@@ -876,3 +876,15 @@ export interface QueryResult {
   /** The SQL that was executed */
   query: string;
 }
+
+/**
+ * A value that survives TanStack Start's server-function serializer.
+ *
+ * `Record<string, unknown>` does not: `unknown` matches none of the serializer's
+ * branches, so it resolves to SerializationError and the whole server function
+ * fails to type-check. Query results are scalars, so naming them is enough.
+ */
+export type SerializableValue = string | number | boolean | null | undefined | Date;
+
+/** One row of a SQL result, as returned across a server-function boundary. */
+export type ResultRow = Record<string, SerializableValue>;

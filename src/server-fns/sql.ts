@@ -1,6 +1,8 @@
 "use server";
 
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import type { ResultRow } from "@/types/database";
 // Aliased: the query strings in this file are themselves named `sql`.
 import { sql as rawSql } from "kysely";
 import { requireAuth } from "@/lib/auth/middleware";
@@ -15,6 +17,16 @@ import { withErrorHandler, NotFoundError } from "@/lib/server-fns/with-error-han
 
 const DEFAULT_TIMEOUT = 30000;
 
+/** One widget's result, as batchExecuteSql returns it across the wire. */
+interface WidgetQueryResult {
+  columns: { name: string; type: string }[];
+  rows: ResultRow[];
+  rowCount: number;
+  executionTime: number;
+  truncated: boolean;
+  pagination: { limit: number; offset: number; hasMore: boolean; serverSide: boolean };
+}
+
 interface BatchQueryInput {
   queries: Array<{
     widgetId: string;
@@ -25,9 +37,27 @@ interface BatchQueryInput {
   }>;
 }
 
+const batchQuerySchema = z.object({
+  queries: z
+    .array(
+      z.object({
+        widgetId: z.string(),
+        sql: z.string(),
+        dataSourceId: z.string(),
+        limit: z.number().optional(),
+        offset: z.number().optional(),
+        timeout: z.number().optional(),
+      })
+    )
+    .min(1)
+    .max(50),
+});
+
 export const batchExecuteSql = createServerFn({
   method: "POST",
-}).handler(async (input: BatchQueryInput) => {
+})
+  .inputValidator(batchQuerySchema)
+  .handler(async ({ data: input }) => {
   const session = await requireAuth();
 
   return withErrorHandler(
@@ -85,17 +115,17 @@ export const batchExecuteSql = createServerFn({
 
           // Execute with timeout
           const startTime = Date.now();
-          const result = await rawSql.raw<Record<string, unknown>>(sql).execute(connection);
+          const result = await rawSql.raw<ResultRow>(sql).execute(connection);
 
           const executionTime = Date.now() - startTime;
 
-          let rows: Record<string, unknown>[] = [];
+          let rows: ResultRow[] = [];
           let columns: { name: string; type: string }[] = [];
 
           rows = result.rows;
 
           if (rows.length > 0) {
-            const first = rows[0] as Record<string, unknown>;
+            const first = rows[0] as ResultRow;
             columns = Object.keys(first).map((name) => ({
               name,
               type: typeof first[name],
@@ -122,7 +152,7 @@ export const batchExecuteSql = createServerFn({
       );
 
       // Map results back to widget IDs
-      const batchResults: Record<string, unknown> = {};
+      const batchResults: Record<string, WidgetQueryResult> = {};
       const errors: Record<string, string> = {};
 
       for (const result of results) {
@@ -219,7 +249,7 @@ export const executeSql = createServerFn({
   const countSQL = `SELECT COUNT(*) as total FROM (${sql.replace(/;$/, "")}) as count_query`;
 
   try {
-    const countResult = await rawSql.raw<Record<string, unknown>>(countSQL).execute(connection);
+    const countResult = await rawSql.raw<ResultRow>(countSQL).execute(connection);
 
     if (Array.isArray(countResult) && countResult[0]) {
       totalRowCount = Number(countResult[0].total) || 0;
@@ -272,17 +302,17 @@ export const executeSql = createServerFn({
   }
 
   const startTime = Date.now();
-  const result = await rawSql.raw<Record<string, unknown>>(limitedSQL).execute(connection);
+  const result = await rawSql.raw<ResultRow>(limitedSQL).execute(connection);
 
   const executionTime = Date.now() - startTime;
 
-  let rows: Record<string, unknown>[] = [];
+  let rows: ResultRow[] = [];
   let columns: { name: string; type: string }[] = [];
 
   rows = result.rows;
 
   if (rows.length > 0) {
-    const first = rows[0] as Record<string, unknown>;
+    const first = rows[0] as ResultRow;
     columns = Object.keys(first).map((name) => ({
       name,
       type: typeof first[name],
@@ -318,7 +348,7 @@ export const executeSql = createServerFn({
       user: session.user,
       action: "execute",
       resourceType: "query",
-      resourceId: dataSourceId,
+      resourceId: input.dataSourceId,
     }
   );
 });
@@ -350,7 +380,8 @@ export const validateSql = createServerFn({
     }
   }
 
-  return validateSQL(sql, dialect);
+  const { ast: _ast, ...result } = validateSQL(sql, dialect);
+  return result;
 });
 
 export const introspectSchema = createServerFn({
