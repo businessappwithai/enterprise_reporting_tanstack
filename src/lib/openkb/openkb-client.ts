@@ -167,7 +167,7 @@ export class OpenKBClient {
 
     try {
       // Get recent query IDs from sorted set (most recent first)
-      const queryIds = await this.redis.zRevRange(`openkb:${roleId}:queries`, 0, limit - 1);
+      const queryIds = await this.redis.xRevRange(`openkb:${roleId}:queries`, 0, limit - 1);
 
       const results: OpenKBStoredQuery[] = [];
       for (const queryId of queryIds) {

@@ -196,7 +196,7 @@ function EntityDetailPage() {
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Link to="/metadata/entities/" className="p-2 hover:bg-muted rounded-md">
+        <Link to="/metadata/entities" className="p-2 hover:bg-muted rounded-md">
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div className="flex-1">

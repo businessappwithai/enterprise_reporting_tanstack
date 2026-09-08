@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type BrowserContext, type Page } from '@playwright/test';
 import { ApiTestHelpers } from './api-test-helpers';
 import { TestHelpers } from './helpers/test-helpers';
 
@@ -14,8 +14,8 @@ import { TestHelpers } from './helpers/test-helpers';
 
 test.describe('Sakila Analytics - Queries', () => {
   let authCookie: string;
-  let authContext: any;
-  let authPage: any;
+  let authContext: BrowserContext;
+  let authPage: Page;
 
   test.beforeAll(async ({ browser }) => {
     authContext = await browser.newContext();
@@ -75,8 +75,8 @@ test.describe('Sakila Analytics - Queries', () => {
 
 test.describe('Sakila Analytics - SQL Execution', () => {
   let authCookie: string;
-  let authContext: any;
-  let authPage: any;
+  let authContext: BrowserContext;
+  let authPage: Page;
 
   test.beforeAll(async ({ browser }) => {
     authContext = await browser.newContext();
@@ -142,8 +142,8 @@ test.describe('Sakila Analytics - SQL Execution', () => {
 
 test.describe('Sakila Analytics - Reports', () => {
   let authCookie: string;
-  let authContext: any;
-  let authPage: any;
+  let authContext: BrowserContext;
+  let authPage: Page;
 
   test.beforeAll(async ({ browser }) => {
     authContext = await browser.newContext();
@@ -179,7 +179,7 @@ test.describe('Sakila Analytics - Reports', () => {
     const reportsData = await ApiTestHelpers.extractJson(reportsResponse);
     const report = reportsData.data.items.find((r: any) => r.name === 'Monthly Revenue Report');
 
-    const dataResponse = await apiHelpers.getReportData(report.id);
+    const dataResponse = await apiHelpers.getReport(report.id);
     expect(dataResponse.status()).toBe(200);
 
     const result = await ApiTestHelpers.extractJson(dataResponse);
@@ -190,8 +190,8 @@ test.describe('Sakila Analytics - Reports', () => {
 
 test.describe('Sakila Analytics - Charts', () => {
   let authCookie: string;
-  let authContext: any;
-  let authPage: any;
+  let authContext: BrowserContext;
+  let authPage: Page;
 
   test.beforeAll(async ({ browser }) => {
     authContext = await browser.newContext();
@@ -249,8 +249,8 @@ test.describe('Sakila Analytics - Charts', () => {
 
 test.describe('Sakila Analytics - Dashboard', () => {
   let authCookie: string;
-  let authContext: any;
-  let authPage: any;
+  let authContext: BrowserContext;
+  let authPage: Page;
 
   test.beforeAll(async ({ browser }) => {
     authContext = await browser.newContext();
@@ -335,8 +335,8 @@ test.describe('Sakila Analytics - UI Integration', () => {
 
 test.describe('Sakila Analytics - Data Quality', () => {
   let authCookie: string;
-  let authContext: any;
-  let authPage: any;
+  let authContext: BrowserContext;
+  let authPage: Page;
 
   test.beforeAll(async ({ browser }) => {
     authContext = await browser.newContext();
@@ -399,8 +399,8 @@ test.describe('Sakila Analytics - Data Quality', () => {
 
 test.describe('Sakila Analytics - Performance', () => {
   let authCookie: string;
-  let authContext: any;
-  let authPage: any;
+  let authContext: BrowserContext;
+  let authPage: Page;
 
   test.beforeAll(async ({ browser }) => {
     authContext = await browser.newContext();

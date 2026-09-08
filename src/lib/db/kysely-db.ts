@@ -329,7 +329,7 @@ export interface DsEntityPermissionsTable {
 export interface ErrorMessagesTable {
   id: string;
   error_code: string;
-  severity: string | null;
+  severity: "error" | "warning" | "info" | null;
   title: string;
   message: string;
   user_message: string | null;
@@ -350,7 +350,7 @@ export interface WarningConfigsTable {
   description: string | null;
   trigger_type: string;
   trigger_config: string | null;
-  severity: string | null;
+  severity: "info" | "warning" | "critical" | null;
   message_template: string;
   suggestions_template: string | null;
   is_active: boolean | null;
@@ -369,7 +369,15 @@ export interface ErrorOccurrencesTable {
   error_message_id: string | null;
   user_id: string | null;
   session_id: string | null;
+  error_code: string | null;
+  error_message: string | null;
+  stack_trace: string | null;
+  component_stack: string | null;
+  url: string | null;
+  user_agent: string | null;
   context_data: string | null;
+  is_reported: boolean | null;
+  is_resolved: boolean | null;
   resolved_at: string | null;
   created_at: string;
 }

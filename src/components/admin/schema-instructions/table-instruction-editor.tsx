@@ -52,9 +52,9 @@ export function TableInstructionEditor({
   const form = useForm({
     defaultValues: {
       description: existingInstruction?.description || "",
-      llmInstructions: existingInstruction?.llm_instructions || "",
-      exampleQueries: existingInstruction?.example_queries || "",
-      businessDomain: existingInstruction?.business_domain || "",
+      llmInstructions: existingInstruction?.llmInstructions || "",
+      exampleQueries: existingInstruction?.exampleQueries || "",
+      businessDomain: existingInstruction?.businessDomain || "",
     },
     onSubmit: async (values) => {
       if (!dataSourceId || !tableName) {

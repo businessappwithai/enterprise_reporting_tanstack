@@ -1,4 +1,4 @@
-import { test, expect, APIRequestContext } from '@playwright/test';
+import { test, expect, APIRequestContext, type BrowserContext, type Page } from '@playwright/test';
 import { ApiTestHelpers } from './api-test-helpers';
 import { TestHelpers } from './helpers/test-helpers';
 
@@ -14,8 +14,8 @@ import { TestHelpers } from './helpers/test-helpers';
 
 test.describe('API - Encryption & Decryption', () => {
   let authCookie: string;
-  let authContext: any;
-  let authPage: any;
+  let authContext: BrowserContext;
+  let authPage: Page;
 
   test.beforeAll(async ({ browser }) => {
     // Create a page for authentication
@@ -164,8 +164,8 @@ test.describe('API - Encryption & Decryption', () => {
 test.describe('API - SQL Execution with Logging', () => {
   let authCookie: string;
   let sqliteDataSourceId: string;
-  let authContext: any;
-  let authPage: any;
+  let authContext: BrowserContext;
+  let authPage: Page;
 
   test.beforeAll(async ({ browser, request }) => {
     authContext = await browser.newContext();
@@ -352,8 +352,8 @@ test.describe('API - SQL Execution with Logging', () => {
 
 test.describe('API - Error Logging Scenarios', () => {
   let authCookie: string;
-  let authContext: any;
-  let authPage: any;
+  let authContext: BrowserContext;
+  let authPage: Page;
 
   test.beforeAll(async ({ browser }) => {
     authContext = await browser.newContext();
@@ -414,8 +414,8 @@ test.describe('API - Error Logging Scenarios', () => {
 
 test.describe('API - Performance Logging', () => {
   let authCookie: string;
-  let authContext: any;
-  let authPage: any;
+  let authContext: BrowserContext;
+  let authPage: Page;
 
   test.beforeAll(async ({ browser }) => {
     authContext = await browser.newContext();

@@ -78,9 +78,9 @@ export function FieldInstructionEditor({
   const form = useForm({
     defaultValues: {
       description: existingInstruction?.description || "",
-      businessMeaning: existingInstruction?.business_meaning || "",
-      llmInstructions: existingInstruction?.llm_instructions || "",
-      exampleValues: existingInstruction?.example_values || "",
+      businessMeaning: existingInstruction?.businessMeaning || "",
+      llmInstructions: existingInstruction?.llmInstructions || "",
+      exampleValues: existingInstruction?.exampleValues || "",
       constraints: existingInstruction?.constraints || "",
     },
     onSubmit: async (values) => {

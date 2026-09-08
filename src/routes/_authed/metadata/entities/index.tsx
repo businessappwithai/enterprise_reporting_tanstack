@@ -53,7 +53,7 @@ function MetadataEntitiesPage() {
           <p className="text-muted-foreground mb-6">
             Entity metadata management must be accessed from a datasource.
           </p>
-          <Link to="/data-sources/">
+          <Link to="/data-sources">
             <Button>
               <Database className="h-4 w-4 mr-2" />
               Go to Data Sources
@@ -83,7 +83,7 @@ function MetadataEntitiesPage() {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <Link to="/data-sources/">
+            <Link to="/data-sources">
               <Button variant="ghost" size="sm">
                 <ArrowLeft className="h-4 w-4 mr-1" />
                 Back to Data Sources
@@ -267,7 +267,7 @@ function MetadataEntitiesPage() {
                   </td>
                   <td className="p-4 text-right">
                     <Link
-                      to="/metadata/entities/$id/"
+                      to="/metadata/entities/$id"
                       params={{ id: entity.id }}
                       className="text-primary hover:underline text-sm"
                     >
@@ -289,7 +289,7 @@ function MetadataEntitiesPage() {
               : 'Go back to Data Sources and click "Inspect Schema" to import entities from this datasource'}
           </p>
           {!search && (
-            <Link to="/data-sources/">
+            <Link to="/data-sources">
               <Button>
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Inspect Schema

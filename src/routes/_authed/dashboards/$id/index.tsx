@@ -250,7 +250,7 @@ function DashboardViewerContent({ dashboardId }: { dashboardId: string }) {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <p className="text-muted-foreground mb-4">Dashboard not found</p>
-          <Link to="/dashboards/">
+          <Link to="/dashboards">
             <Button>Back to Dashboards</Button>
           </Link>
         </div>
@@ -266,7 +266,7 @@ function DashboardViewerContent({ dashboardId }: { dashboardId: string }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link to="/dashboards/">
+          <Link to="/dashboards">
             <Button variant="ghost" size="icon">
               <ArrowLeft className="h-5 w-5" />
             </Button>
