@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { sql } from "kysely";
 import { json } from "@/lib/server/response";
-import { verifySession } from "@/lib/auth/session";
+import { readSessionToken, verifySession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
 import { resolveRBACContext } from "@/lib/monitoring/rbac-workflow-context";
@@ -9,9 +9,9 @@ import type { SecurityContext } from "@/lib/auth/rbac";
 
 async function getSession(request: Request) {
   const cookie = request.headers.get("cookie") || "";
-  const match = cookie.match(/session_token=([^;]+)/);
-  if (!match?.[1]) return null;
-  return verifySession(match[1]);
+  const token = readSessionToken(cookie);
+  if (!token) return null;
+  return verifySession(token);
 }
 
 function isoNow(): string {
