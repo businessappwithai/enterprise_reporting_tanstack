@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import type { ExpressionBuilder } from "kysely";
+import type { Database } from "@/lib/db/kysely-db";
 import { json } from "@/lib/server/response";
 import { auth } from "@/lib/auth/config";
 import { getDb } from "@/lib/db/config";
@@ -29,8 +31,57 @@ export const Route = createFileRoute("/api/queries")({
             );
           }
 
+          /*
+           * Paginate and search at the database.
+           *
+           * This selected the whole table and reported `meta.total` as the
+           * length of what it had already fetched, so the page it served was
+           * always "all of them" — every row, and every row's `sql_content` —
+           * while the caller asked for a page. Filtering in the browser has the
+           * matching problem: it only ever searches the rows that page happened
+           * to contain, so a query whose name matches is invisible unless it
+           * landed on the page you were looking at.
+           */
+          const { searchParams } = new URL(request.url);
+          const page = Number.parseInt(searchParams.get("page") || "0", 10);
+          const pageSize = Number.parseInt(searchParams.get("pageSize") || "20", 10);
+          const search = (searchParams.get("search") || "").trim();
+          const like = `%${search}%`;
+
           const db = getDb();
-          const queries = await db.selectFrom("saved_queries").selectAll().execute();
+
+          // The data source's name is reachable from the search because the
+          // browser-side filter this replaces matched on it too.
+          const matches = (eb: ExpressionBuilder<Database, "saved_queries">) =>
+            eb.or([
+              eb("name", "ilike", like),
+              eb("description", "ilike", like),
+              eb.exists(
+                eb
+                  .selectFrom("data_sources")
+                  .select("data_sources.id")
+                  .whereRef("data_sources.id", "=", "saved_queries.data_source_id")
+                  .where("data_sources.name", "ilike", like)
+              ),
+            ]);
+
+          let rowsQuery = db
+            .selectFrom("saved_queries")
+            .selectAll()
+            .orderBy("created_at", "desc")
+            .limit(pageSize)
+            .offset(page * pageSize);
+          let countQuery = db
+            .selectFrom("saved_queries")
+            .select(db.fn.count<number>("id").as("count"));
+
+          if (search) {
+            rowsQuery = rowsQuery.where(matches);
+            countQuery = countQuery.where(matches);
+          }
+
+          const queries = await rowsQuery.execute();
+          const total = Number((await countQuery.executeTakeFirstOrThrow()).count);
 
           logger.info("Queries list retrieved", {
             userId: session.user.id,
@@ -41,7 +92,10 @@ export const Route = createFileRoute("/api/queries")({
             timestamp: new Date().toISOString(),
           });
 
-          return json({ success: true, data: { items: queries, meta: { total: queries.length } } });
+          return json({
+            success: true,
+            data: { items: queries, meta: { total, page, pageSize } },
+          });
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : "Unknown error";
           logger.error(
