@@ -33,7 +33,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatDateTime } from "@/lib/utils";
-import type { Role, User } from "@/types/database";
+import type { Role, UserWithRoles } from "@/types/database";
 import { listUsers, listRoles, createUser, updateUser, deleteUser } from "@/server-fns/admin";
 import { PageHeader } from "@/components/layout/page-header";
 
@@ -45,7 +45,7 @@ function UsersManagementPage() {
   const queryClient = useQueryClient();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [assignRoleDialogOpen, setAssignRoleDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
   const [newUserName, setNewUserName] = useState("");
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserPassword, setNewUserPassword] = useState("");
@@ -61,19 +61,20 @@ function UsersManagementPage() {
     },
   });
 
-  const users = usersData as User[] | undefined;
+  const users = usersData as UserWithRoles[] | undefined;
 
   // Fetch roles for dropdown
   const { data: roles = [] } = useQuery<Role[]>({
     queryKey: ["roles"],
-    queryFn: async () => {
+    queryFn: async (): Promise<Role[]> => {
       const result = await listRoles();
-      return result || [];
+      return (result ?? []) as Role[];
     },
   });
 
   // Map user roles to expected format
-  const userRoles = selectedUser?.roles?.map((r: any) => ({ role_id: r.id, role_name: r.name })) || [];
+  const userRoles =
+    selectedUser?.roles?.map((r: any) => ({ role_id: r.id, role_name: r.name })) || [];
   const refetchUserRoles = () => {
     queryClient.invalidateQueries({ queryKey: ["admin-users"] });
   };
@@ -82,10 +83,12 @@ function UsersManagementPage() {
   const createMutation = useMutation({
     mutationFn: async () => {
       return await createUser({
-        email: newUserEmail,
-        password: newUserPassword,
-        displayName: newUserName,
-        isActive: isUserActive,
+        data: {
+          email: newUserEmail,
+          password: newUserPassword,
+          displayName: newUserName,
+          isActive: isUserActive,
+        },
       });
     },
     onSuccess: () => {
@@ -108,8 +111,10 @@ function UsersManagementPage() {
       if (!selectedUser) return;
       const currentRoleIds = selectedUser.roles?.map((r: any) => r.id) || [];
       return await updateUser({
-        id: selectedUser.id,
-        roleIds: [...currentRoleIds, roleId],
+        data: {
+          id: selectedUser.id,
+          roleIds: [...currentRoleIds, roleId],
+        },
       });
     },
     onSuccess: () => {
@@ -128,8 +133,10 @@ function UsersManagementPage() {
       const currentRoleIds = selectedUser.roles?.map((r: any) => r.id) || [];
       const updatedRoleIds = currentRoleIds.filter((id: string) => id !== roleId);
       return await updateUser({
-        id: selectedUser.id,
-        roleIds: updatedRoleIds,
+        data: {
+          id: selectedUser.id,
+          roleIds: updatedRoleIds,
+        },
       });
     },
     onSuccess: () => {
@@ -143,10 +150,12 @@ function UsersManagementPage() {
 
   // Toggle user active status
   const toggleActiveMutation = useMutation({
-    mutationFn: async (user: User) => {
+    mutationFn: async (user: UserWithRoles) => {
       return await updateUser({
-        id: user.id,
-        isActive: !user.is_active,
+        data: {
+          id: user.id,
+          isActive: !user.is_active,
+        },
       });
     },
     onSuccess: () => {

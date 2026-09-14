@@ -8,7 +8,7 @@ import {
   type CreateChartInput,
   type UpdateChartInput,
 } from "@/lib/schemas/charts";
-import { paginationInputSchema } from "@/lib/schemas/common";
+import { paginationSchema } from "@/lib/schemas/common";
 import { requireAuth } from "@/lib/auth/middleware";
 import { getDb } from "@/lib/db/config";
 import { logAudit } from "@/lib/security/audit";
@@ -21,7 +21,7 @@ import {
 import { withErrorHandler } from "@/lib/server-fns/with-error-handler";
 
 export const listCharts = createServerFn({ method: "GET" })
-  .inputValidator(paginationInputSchema)
+  .inputValidator(paginationSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(
       async () => {
@@ -153,7 +153,7 @@ export const createChart = createServerFn({ method: "POST" })
     );
   });
 
-export const updateChart = createServerFn({ method: "PUT" })
+export const updateChart = createServerFn({ method: "POST" })
   .inputValidator(updateChartSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(
@@ -181,7 +181,8 @@ export const updateChart = createServerFn({ method: "PUT" })
         if (input.name !== undefined) updates.name = input.name;
         if (input.description !== undefined) updates.description = input.description;
         if (input.chartType !== undefined) updates.chart_type = input.chartType;
-        if (input.chartConfig !== undefined) updates.chart_config = JSON.stringify(input.chartConfig);
+        if (input.chartConfig !== undefined)
+          updates.chart_config = JSON.stringify(input.chartConfig);
         if (input.colorScheme !== undefined) updates.color_theme = input.colorScheme;
         if (input.isPublic !== undefined) updates.is_public = input.isPublic;
 
@@ -211,7 +212,7 @@ export const updateChart = createServerFn({ method: "PUT" })
     );
   });
 
-export const deleteChart = createServerFn({ method: "DELETE" })
+export const deleteChart = createServerFn({ method: "POST" })
   .inputValidator(getChartSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(

@@ -1,3 +1,4 @@
+import { readSessionToken } from "@/lib/auth/session";
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
 
@@ -6,8 +7,7 @@ export const Route = createFileRoute("/api/auth/permissions")({
     handlers: {
       GET: async ({ request }: { request: Request }) => {
         const cookie = request.headers.get("cookie") || "";
-        const match = cookie.match(/session_token=([^;]+)/);
-        const token = match?.[1];
+        const token = readSessionToken(cookie);
 
         if (!token) {
           return json({

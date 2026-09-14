@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
-import { verifySession } from "@/lib/auth/session";
+import { readSessionToken, verifySession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
 import { executeNlQueryPipeline } from "@/lib/mastra/nl-query-pipeline";
@@ -9,8 +9,7 @@ import type { DataSource } from "@/types/database";
 
 async function getSession(request: Request) {
   const cookie = request.headers.get("cookie") || "";
-  const match = cookie.match(/session_token=([^;]+)/);
-  const token = match?.[1];
+  const token = readSessionToken(cookie);
   if (!token) return null;
   return verifySession(token);
 }
@@ -60,7 +59,7 @@ export const Route = createFileRoute("/api/nl-query/execute")({
             query,
             sql,
             session.user.id,
-            dataSource as unknown as DataSource,
+            dataSource as unknown as DataSource
           );
 
           // Store successful query in RAG for future similarity search
@@ -75,8 +74,8 @@ export const Route = createFileRoute("/api/nl-query/execute")({
                   result.generatedSql,
                   null,
                   result.queryResults!.totalRows,
-                  result.queryResults!.executionTimeMs,
-                ),
+                  result.queryResults!.executionTimeMs
+                )
               )
               .catch((e) => console.warn("[RAG] Failed to store query embedding:", e));
           }

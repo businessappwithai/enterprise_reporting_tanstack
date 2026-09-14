@@ -1,27 +1,21 @@
 "use server";
 
-import { getRequestHeader } from "@tanstack/react-start/server";
-import { verifySession as _verifySession } from "./session";
+import { getRequest } from "@tanstack/react-start/server";
+import { getSessionFromHeaders } from "./session";
 
-// Get session from current request context in TanStack Start
+/** The caller's session inside a server function, or null when signed out. */
 export async function getServerSession() {
   try {
-    const cookie = getRequestHeader("cookie") || "";
-    const match = cookie.match(/session_token=([^;]+)/);
-    const sessionToken = match?.[1];
-
-    if (sessionToken) {
-      const session = await _verifySession(sessionToken);
-      return session;
-    }
+    const request = getRequest();
+    if (!request) return null;
+    return await getSessionFromHeaders(request.headers);
   } catch (e) {
     console.error("Failed to get session:", e);
+    return null;
   }
-
-  return null;
 }
 
-// Enforce authentication in server functions
+/** Enforce authentication in server functions. */
 export async function requireAuth() {
   const session = await getServerSession();
   if (!session?.user) {

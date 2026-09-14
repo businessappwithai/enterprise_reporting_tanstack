@@ -28,7 +28,9 @@ export function AppShell({ children, user }: AppShellProps) {
         </div>
 
         {/* Mobile sidebar overlay */}
-        <div
+        <button
+          type="button"
+          aria-label="Close navigation menu"
           className="lg:hidden fixed inset-0 z-40 bg-gray-900/50 transition-opacity duration-300"
           style={{
             opacity: mobileMenuOpen ? 1 : 0,

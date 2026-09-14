@@ -80,6 +80,7 @@ import { Route as ApiDashboardsIdRouteImport } from './routes/api/dashboards/$id
 import { Route as ApiCopilotkitSplatRouteImport } from './routes/api/copilotkit/$'
 import { Route as ApiChartsIdRouteImport } from './routes/api/charts/$id'
 import { Route as ApiAuthPermissionsRouteImport } from './routes/api/auth/permissions'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiAdminUsersRouteImport } from './routes/api/admin/users'
 import { Route as ApiAdminRolesRouteImport } from './routes/api/admin/roles'
 import { Route as ApiAdminPermissionsRouteImport } from './routes/api/admin/permissions'
@@ -481,6 +482,11 @@ const ApiAuthPermissionsRoute = ApiAuthPermissionsRouteImport.update({
   path: '/api/auth/permissions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAdminUsersRoute = ApiAdminUsersRouteImport.update({
   id: '/api/admin/users',
   path: '/api/admin/users',
@@ -749,6 +755,7 @@ export interface FileRoutesByFullPath {
   '/api/admin/permissions': typeof ApiAdminPermissionsRoute
   '/api/admin/roles': typeof ApiAdminRolesRoute
   '/api/admin/users': typeof ApiAdminUsersRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/auth/permissions': typeof ApiAuthPermissionsRoute
   '/api/charts/$id': typeof ApiChartsIdRouteWithChildren
   '/api/copilotkit/$': typeof ApiCopilotkitSplatRoute
@@ -865,6 +872,7 @@ export interface FileRoutesByTo {
   '/api/admin/permissions': typeof ApiAdminPermissionsRoute
   '/api/admin/roles': typeof ApiAdminRolesRoute
   '/api/admin/users': typeof ApiAdminUsersRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/auth/permissions': typeof ApiAuthPermissionsRoute
   '/api/charts/$id': typeof ApiChartsIdRouteWithChildren
   '/api/copilotkit/$': typeof ApiCopilotkitSplatRoute
@@ -983,6 +991,7 @@ export interface FileRoutesById {
   '/api/admin/permissions': typeof ApiAdminPermissionsRoute
   '/api/admin/roles': typeof ApiAdminRolesRoute
   '/api/admin/users': typeof ApiAdminUsersRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/auth/permissions': typeof ApiAuthPermissionsRoute
   '/api/charts/$id': typeof ApiChartsIdRouteWithChildren
   '/api/copilotkit/$': typeof ApiCopilotkitSplatRoute
@@ -1101,6 +1110,7 @@ export interface FileRouteTypes {
     | '/api/admin/permissions'
     | '/api/admin/roles'
     | '/api/admin/users'
+    | '/api/auth/$'
     | '/api/auth/permissions'
     | '/api/charts/$id'
     | '/api/copilotkit/$'
@@ -1217,6 +1227,7 @@ export interface FileRouteTypes {
     | '/api/admin/permissions'
     | '/api/admin/roles'
     | '/api/admin/users'
+    | '/api/auth/$'
     | '/api/auth/permissions'
     | '/api/charts/$id'
     | '/api/copilotkit/$'
@@ -1334,6 +1345,7 @@ export interface FileRouteTypes {
     | '/api/admin/permissions'
     | '/api/admin/roles'
     | '/api/admin/users'
+    | '/api/auth/$'
     | '/api/auth/permissions'
     | '/api/charts/$id'
     | '/api/copilotkit/$'
@@ -1438,6 +1450,7 @@ export interface RootRouteChildren {
   ApiAdminPermissionsRoute: typeof ApiAdminPermissionsRoute
   ApiAdminRolesRoute: typeof ApiAdminRolesRoute
   ApiAdminUsersRoute: typeof ApiAdminUsersRoute
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiAuthPermissionsRoute: typeof ApiAuthPermissionsRoute
   ApiChartsIdRoute: typeof ApiChartsIdRouteWithChildren
   ApiCopilotkitSplatRoute: typeof ApiCopilotkitSplatRoute
@@ -1974,6 +1987,13 @@ declare module '@tanstack/react-router' {
       path: '/api/auth/permissions'
       fullPath: '/api/auth/permissions'
       preLoaderRoute: typeof ApiAuthPermissionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/admin/users': {
@@ -2615,6 +2635,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminPermissionsRoute: ApiAdminPermissionsRoute,
   ApiAdminRolesRoute: ApiAdminRolesRoute,
   ApiAdminUsersRoute: ApiAdminUsersRoute,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiAuthPermissionsRoute: ApiAuthPermissionsRoute,
   ApiChartsIdRoute: ApiChartsIdRouteWithChildren,
   ApiCopilotkitSplatRoute: ApiCopilotkitSplatRoute,

@@ -9,7 +9,7 @@ import {
   emailBatchTask,
   scheduledRefreshTask,
 } from "./trigger-tasks";
-import type { TriggerClient } from "@trigger.dev/sdk/v3";
+import type { EmailBatchJobData } from "./types";
 
 // Job type definitions
 export type JobType =
@@ -25,18 +25,6 @@ export interface ReportJobData {
   userId: string;
   parameters?: Record<string, unknown>;
   format?: "csv" | "xlsx" | "pdf";
-}
-
-export interface EmailBatchJobData {
-  type: "email:batch";
-  queryId: string;
-  emailTemplateId: string;
-  recipientQueryId: string;
-  recipientEmailColumn: string;
-  userId: string;
-  format?: "csv" | "xlsx" | "pdf";
-  reportName?: string;
-  parameters?: Record<string, unknown>;
 }
 
 export interface ChartJobData {
@@ -114,13 +102,8 @@ export async function addJob(
         break;
 
       case "email:batch":
-        await emailBatchTask.trigger({
-          type: "email:batch",
-          batchId: jobId,
-          userId: (data as EmailBatchJobData).userId,
-          recipients: [],
-          subject: "Report",
-          template: "default",
+        await emailBatchTask.trigger(data as EmailBatchJobData, {
+          idempotencyKey: jobId,
         });
         break;
 
@@ -257,10 +240,8 @@ export const reportingQueue = {
     const status = await getQueueStatus();
     return status.delayed;
   },
-  getJobs: async (types: any[], start?: number, end?: number) =>
-    getJobs(types[0], start, end),
-  clean: async (grace: number, limit: number, type: string) =>
-    cleanOldJobs(grace, limit),
+  getJobs: async (types: any[], start?: number, end?: number) => getJobs(types[0], start, end),
+  clean: async (grace: number, limit: number, type: string) => cleanOldJobs(grace, limit),
   close: async () => closeQueue(),
   removeRepeatableByKey: async (key: string) => removeScheduledJob(key),
 };

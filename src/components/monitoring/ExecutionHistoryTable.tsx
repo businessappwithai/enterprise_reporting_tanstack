@@ -92,13 +92,16 @@ function DeltaBadge({ delta }: { delta: number | null | undefined }) {
   );
 }
 
+const SKELETON_ROW_KEYS = Array.from({ length: 5 }, (_, i) => `skeleton-row-${i}`);
+const SKELETON_CELL_KEYS = Array.from({ length: 7 }, (_, i) => `skeleton-cell-${i}`);
+
 function SkeletonRows() {
   return (
     <>
-      {Array.from({ length: 5 }).map((_, i) => (
-        <TableRow key={i}>
-          {Array.from({ length: 7 }).map((_, j) => (
-            <TableCell key={j}>
+      {SKELETON_ROW_KEYS.map((rowKey) => (
+        <TableRow key={rowKey}>
+          {SKELETON_CELL_KEYS.map((cellKey) => (
+            <TableCell key={cellKey}>
               <Skeleton className="h-4 w-full" />
             </TableCell>
           ))}

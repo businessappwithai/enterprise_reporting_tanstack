@@ -270,7 +270,7 @@ export async function sendEmailWithTemplate(
     to,
     {
       subject: template.subject,
-      htmlBody: template.html,
+      htmlBody: template.htmlBody,
     },
     variables,
     queryResults,

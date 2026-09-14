@@ -339,7 +339,15 @@ try {
       error_message_id TEXT REFERENCES error_messages(id) ON DELETE CASCADE,
       user_id TEXT REFERENCES users(id),
       session_id TEXT,
+      error_code TEXT,
+      error_message TEXT,
+      stack_trace TEXT,
+      component_stack TEXT,
+      url TEXT,
+      user_agent TEXT,
       context_data TEXT,
+      is_reported BOOLEAN DEFAULT false,
+      is_resolved BOOLEAN DEFAULT false,
       resolved_at TIMESTAMP,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`,
@@ -587,7 +595,7 @@ try {
   console.log(`✓ Default roles created: Admin, User, Viewer`);
 
 } finally {
-  await client.end();
+  client.release();
   await pool.end();
   process.exit(0);
 }

@@ -103,9 +103,9 @@ test.describe('NL Query Full Flow Test', () => {
 })
 
 test.describe('NL Query API Test', () => {
-  test('Execute NL Query via API', async () => {
+  test('Execute NL Query via API', async ({ context }) => {
     // First login to get session
-    const page = await test.browserContext!.newPage()
+    const page = await context.newPage()
     await page.goto('http://localhost:4050/login')
     await login(page, 'admin@admin.com', 'admin')
 

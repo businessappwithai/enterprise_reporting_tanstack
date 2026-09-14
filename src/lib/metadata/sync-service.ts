@@ -55,7 +55,6 @@ export class SyncService {
       id: dataSourceId,
       name: dataSource.name,
       client_type: dataSource.client_type as "pg" | "mysql" | "sqlite3" | "mssql",
-      type: dataSource.type as "DB_QUERY" | "API_REQUEST",
       connection_config: dataSource.connection_config,
       is_active: dataSource.is_active,
       created_at: dataSource.created_at,

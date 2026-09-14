@@ -120,7 +120,7 @@ export async function findSimilarQueries(
   connection: Kysely<any>,
   dataSourceId: string,
   queryText: string,
-  limit = 5,
+  limit = 5
 ): Promise<SimilarQuery[]> {
   const embedding = await generateEmbedding(queryText);
   const vecLiteral = `[${embedding.join(",")}]`;
@@ -141,7 +141,14 @@ export async function findSimilarQueries(
       LIMIT ${sql.lit(limit)}
     `.execute(connection);
 
-    return result.rows.filter((r) => r.similarity > 0.3);
+    return result.rows
+      .filter((r) => r.similarity > 0.3)
+      .map((r) => ({
+        naturalLanguageQuery: r.natural_language_query,
+        generatedSql: r.generated_sql,
+        explanation: r.explanation,
+        similarity: r.similarity,
+      }));
   } catch (e) {
     console.warn("[RAG] findSimilarQueries failed:", e);
     return [];
@@ -163,7 +170,7 @@ export async function findRelevantSchema(
   connection: Kysely<any>,
   dataSourceId: string,
   queryText: string,
-  limit = 10,
+  limit = 10
 ): Promise<RelevantSchema[]> {
   const embedding = await generateEmbedding(queryText);
   const vecLiteral = `[${embedding.join(",")}]`;
@@ -208,7 +215,7 @@ export async function storeQueryEmbedding(
   generatedSql: string,
   explanation: string | null,
   rowCount: number | null,
-  executionTimeMs: number | null,
+  executionTimeMs: number | null
 ): Promise<void> {
   const hash = queryHash(naturalLanguageQuery);
   const embedding = await generateEmbedding(naturalLanguageQuery);
@@ -255,17 +262,16 @@ export async function storeSchemaEmbeddings(
   connection: Kysely<any>,
   dataSourceId: string,
   tables: { name: string; columns: { column_name: string; data_type: string }[] }[],
-  sampleData: Record<string, Record<string, unknown>[]>,
+  sampleData: Record<string, Record<string, unknown>[]>
 ): Promise<void> {
   for (const table of tables) {
-    const colDefs = table.columns
-      .map((c) => `${c.column_name} (${c.data_type})`)
-      .join(", ");
+    const colDefs = table.columns.map((c) => `${c.column_name} (${c.data_type})`).join(", ");
     const samples = sampleData[table.name] || [];
     const schemaText = `TABLE ${table.name}: ${colDefs}`;
-    const contextText = samples.length > 0
-      ? `${schemaText}\nSAMPLE DATA:\n${JSON.stringify(samples.slice(0, 5), null, 0)}`
-      : schemaText;
+    const contextText =
+      samples.length > 0
+        ? `${schemaText}\nSAMPLE DATA:\n${JSON.stringify(samples.slice(0, 5), null, 0)}`
+        : schemaText;
 
     const embedding = await generateEmbedding(contextText);
     const vecLiteral = `[${embedding.join(",")}]`;
@@ -295,10 +301,7 @@ export async function storeSchemaEmbeddings(
 // Build RAG context string for the LLM prompt
 // ---------------------------------------------------------------------------
 
-export async function buildRagContext(
-  dataSource: DataSource,
-  queryText: string,
-): Promise<string> {
+export async function buildRagContext(dataSource: DataSource, queryText: string): Promise<string> {
   try {
     const connection = await getConnection(dataSource);
 
@@ -342,7 +345,7 @@ export async function buildRagContext(
 // ---------------------------------------------------------------------------
 
 export async function introspectAndStoreSchemaEmbeddings(
-  dataSource: DataSource,
+  dataSource: DataSource
 ): Promise<{ tableCount: number; embeddingType: string }> {
   const connection = await getConnection(dataSource);
 

@@ -8,6 +8,7 @@ import type {
   JobExecution,
   ReportDefinition,
   SavedQuery,
+  SerializableValue,
   User,
 } from "./database";
 
@@ -141,7 +142,7 @@ export interface ColumnSchema {
   name: string;
   type: string;
   nullable: boolean;
-  defaultValue?: unknown;
+  defaultValue?: SerializableValue;
   isPrimaryKey?: boolean;
   comment?: string;
 }

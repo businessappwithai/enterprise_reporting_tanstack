@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { verifySession } from "@/lib/auth/session";
+import { readSessionToken, verifySession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
 import { SyncService } from "@/lib/metadata/sync-service";
@@ -9,8 +9,7 @@ import type { DataSource } from "@/types/database";
 
 async function getSession(request: Request) {
   const cookie = request.headers.get("cookie") || "";
-  const match = cookie.match(/session_token=([^;]+)/);
-  const token = match?.[1];
+  const token = readSessionToken(cookie);
   if (!token) return null;
   return verifySession(token);
 }
@@ -51,7 +50,7 @@ export const Route = createFileRoute("/api/sql/schema/$dataSourceId")({
           const connection = await getConnection(dataSource as unknown as DataSource);
           const { schema, logs } = await introspectSchema(connection, dataSource.client_type);
 
-          let syncResult: { success: boolean; errors?: string[] } | undefined;
+          let syncResult: Awaited<ReturnType<typeof SyncService.syncDataSource>> | undefined;
           try {
             syncResult = await SyncService.syncDataSource(dataSourceId, session.user.id);
           } catch (e) {

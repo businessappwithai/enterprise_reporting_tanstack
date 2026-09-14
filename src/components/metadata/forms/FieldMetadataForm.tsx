@@ -6,7 +6,7 @@
  */
 
 import { useForm } from "@tanstack/react-form";
-import { ForeignKeyIcon, Loader2 } from "lucide-react";
+import { KeyRound, Loader2 } from "lucide-react";
 import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -48,7 +48,7 @@ export function FieldMetadataForm({
   isLoading = false,
 }: FieldMetadataFormProps) {
   const isForeignKey = field.is_foreign_key;
-  const referencedTableName = field.referenced_table_name;
+  const referencedTableName = field.foreign_key_table;
 
   const form = useForm({
     defaultValues: {
@@ -72,7 +72,7 @@ export function FieldMetadataForm({
           <Badge variant="outline">{field.data_type}</Badge>
           {isForeignKey && (
             <Badge variant="secondary" className="gap-1">
-              <ForeignKeyIcon className="h-3 w-3" />
+              <KeyRound className="h-3 w-3" />
               FK → {referencedTableName}
             </Badge>
           )}

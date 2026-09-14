@@ -17,14 +17,14 @@ export async function up(db: any): Promise<void> {
   // ========================================================================
   // 1. Add is_editable column to data_sources table
   // ========================================================================
-  await db.schema.alterTable("data_sources", (table) => {
+  await db.schema.alterTable("data_sources", (table: any) => {
     table.boolean("is_editable").defaultTo(false).after("is_active");
   });
 
   // ========================================================================
   // 2. Create metadata_entity_header table
   // ========================================================================
-  await db.schema.createTable("metadata_entity_header", (table) => {
+  await db.schema.createTable("metadata_entity_header", (table: any) => {
     table.string("id", 36).primary().defaultTo(db.raw("(lower(hex(randomblob(16))))"));
 
     // Foreign key to data_sources
@@ -61,7 +61,7 @@ export async function up(db: any): Promise<void> {
   // ========================================================================
   // 3. Create metadata_entity_field table
   // ========================================================================
-  await db.schema.createTable("metadata_entity_field", (table) => {
+  await db.schema.createTable("metadata_entity_field", (table: any) => {
     table.string("id", 36).primary().defaultTo(db.raw("(lower(hex(randomblob(16))))"));
 
     // Foreign key to entity header
@@ -160,7 +160,7 @@ export async function down(db: any): Promise<void> {
   await db.schema.dropTableIfExists("metadata_entity_header");
 
   // Remove is_editable from data_sources
-  await db.schema.alterTable("data_sources", (table) => {
+  await db.schema.alterTable("data_sources", (table: any) => {
     table.dropColumn("is_editable");
   });
 }

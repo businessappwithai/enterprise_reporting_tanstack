@@ -7,7 +7,7 @@ if (users.length === 0) {
   console.log("No users found!");
 } else {
   users.forEach((user) => {
-    console.log(`ID: ${user.id}, Email: ${user.email}, Name: ${user.name}`);
+    console.log(`ID: ${user.id}, Email: ${user.email}, Name: ${user.display_name}`);
   });
 }
 

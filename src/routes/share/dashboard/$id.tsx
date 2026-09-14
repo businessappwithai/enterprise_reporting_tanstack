@@ -11,8 +11,8 @@ const getPublicDashboardFn = createServerFn({ method: "GET" })
     const db = getDb();
     const dashboard = await db
       .selectFrom("dashboard_layouts")
-      .where("id", id)
-      .where("is_public", true)
+      .where("id", "=", id)
+      .where("is_public", "=", true)
       .selectAll()
       .executeTakeFirst();
     if (!dashboard) return null;

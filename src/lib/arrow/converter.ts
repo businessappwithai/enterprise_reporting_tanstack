@@ -26,17 +26,14 @@ export function objectsToArrow(
 
   // If explicit types are provided, build typed vectors
   if (columnTypes) {
-    const fields: Arrow.Field[] = [];
-    const batches: Arrow.Vector[] = [];
+    const typedVectors: Record<string, Arrow.Vector> = {};
 
     for (const [name, values] of Object.entries(columns)) {
       const sqlType = columnTypes[name] ?? "text";
-      const arrowType = resolveArrowType(sqlType);
-      fields.push(new Arrow.Field(name, arrowType, true));
-      batches.push(Arrow.vectorFromArray(values));
+      typedVectors[name] = Arrow.vectorFromArray(values, resolveArrowType(sqlType));
     }
 
-    return new Arrow.Table(fields.map((f, i) => ({ field: f, vector: batches[i] })));
+    return new Arrow.Table(typedVectors);
   }
 
   // Auto-infer from JS types

@@ -1,12 +1,27 @@
 import { logAudit } from "@/lib/security/audit";
 import type { SessionUser } from "@/lib/auth/session";
+import type { ResourceType } from "@/types/database";
 
 export interface ErrorContext {
+  /**
+   * The acting user. Callers that only have the id may pass `userId` instead —
+   * most do, which is why both are accepted and `resolveUserId` reads either.
+   */
   user?: SessionUser;
+  userId?: string;
   action: string;
-  resourceType: string;
+  /**
+   * Optional: many call sites describe the action but have no single resource
+   * to name, and audit rows for those are still worth writing.
+   */
+  resourceType?: ResourceType;
   resourceId?: string;
   details?: Record<string, unknown>;
+}
+
+/** The acting user's id, from whichever of the two fields the caller supplied. */
+function resolveUserId(context: ErrorContext): string | undefined {
+  return context.userId ?? context.user?.id;
 }
 
 export class ServerFunctionError extends Error {
@@ -37,7 +52,9 @@ export class UnauthorizedError extends ServerFunctionError {
 
 export class NotFoundError extends ServerFunctionError {
   constructor(resourceType: string, resourceId?: string) {
-    const msg = resourceId ? `${resourceType} not found: ${resourceId}` : `${resourceType} not found`;
+    const msg = resourceId
+      ? `${resourceType} not found: ${resourceId}`
+      : `${resourceType} not found`;
     super(msg, "NOT_FOUND", 404);
     this.name = "NotFoundError";
   }
@@ -53,13 +70,15 @@ export async function withErrorHandler<T>(
     const error = err instanceof Error ? err : new Error(String(err));
 
     // Log audit trail for all errors
-    if (context.user) {
-      const errorMessage = error instanceof ServerFunctionError ? error.message : error.message.substring(0, 200);
+    const actingUserId = resolveUserId(context);
+    if (actingUserId) {
+      const errorMessage =
+        error instanceof ServerFunctionError ? error.message : error.message.substring(0, 200);
 
       await logAudit({
-        userId: context.user.id,
+        userId: actingUserId,
         action: "execute",
-        resourceType: context.resourceType as any,
+        resourceType: context.resourceType ?? "setting",
         resourceId: context.resourceId,
         details: {
           error: errorMessage,
@@ -78,7 +97,7 @@ export async function withErrorHandler<T>(
     }
 
     // Wrap unhandled errors to prevent stack traces leaking to client
-    const safeMessage = context.user ? error.message : "Internal server error";
+    const safeMessage = actingUserId ? error.message : "Internal server error";
     throw new ServerFunctionError(safeMessage, "INTERNAL_ERROR", 500, {
       originalError: process.env.NODE_ENV === "development" ? error.message : undefined,
     });

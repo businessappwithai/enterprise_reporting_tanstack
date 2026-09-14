@@ -37,121 +37,126 @@ export interface SuggestRAGResult {
  */
 export const logQueryToOpenKB = createServerFn({
   method: "POST",
-}).handler(async (input: LogQueryInput): Promise<{ queryId: string }> => {
-  const session = await requireAuth();
+})
+  .inputValidator((data: LogQueryInput) => data)
+  .handler(async ({ data: input }): Promise<{ queryId: string }> => {
+    const session = await requireAuth();
 
-  try {
-    const openkb = await getOpenKBClient();
+    try {
+      const openkb = await getOpenKBClient();
 
-    // Get the manager's role (for role-scoped OpenKB)
-    // TODO: Get actual role from user session
-    const roleId = session.user.roleId || "default";
+      // Get the manager's role (for role-scoped OpenKB)
+      const roleId = session.user.roles[0] ?? "default";
 
-    // Log to OpenKB
-    const queryId = await openkb.logQuery(roleId, {
-      nlQuestion: input.nlQuestion,
-      generatedSQL: input.generatedSQL,
-      executionTimeMs: input.executionTimeMs,
-      resultRowCount: input.resultRowCount,
-    });
-
-    // Audit log
-    await logAudit({
-      userId: session.user.id,
-      action: "openkb_query_logged",
-      resourceType: "query",
-      resourceId: queryId,
-      details: {
+      // Log to OpenKB
+      const queryId = await openkb.logQuery(roleId, {
         nlQuestion: input.nlQuestion,
+        generatedSQL: input.generatedSQL,
+        executionTimeMs: input.executionTimeMs,
         resultRowCount: input.resultRowCount,
-      },
-    });
+      });
 
-    return { queryId };
-  } catch (error) {
-    console.error("[OpenKB] Failed to log query:", error);
-    throw new Error("Failed to save query to knowledge base");
-  }
-});
+      // Audit log
+      await logAudit({
+        userId: session.user.id,
+        action: "openkb_query_logged",
+        resourceType: "query",
+        resourceId: queryId,
+        details: {
+          nlQuestion: input.nlQuestion,
+          resultRowCount: input.resultRowCount,
+        },
+      });
+
+      return { queryId };
+    } catch (error) {
+      console.error("[OpenKB] Failed to log query:", error);
+      throw new Error("Failed to save query to knowledge base");
+    }
+  });
 
 /**
  * Suggest similar queries from OpenKB when manager adds RAG context (D24)
  */
 export const suggestFromOpenKB = createServerFn({
   method: "POST",
-}).handler(async (input: SuggestRAGInput): Promise<SuggestRAGResult> => {
-  const session = await requireAuth();
+})
+  .inputValidator((data: SuggestRAGInput) => data)
+  .handler(async ({ data: input }): Promise<SuggestRAGResult> => {
+    const session = await requireAuth();
 
-  try {
-    const openkb = await getOpenKBClient();
-    const roleId = session.user.roleId || "default";
+    try {
+      const openkb = await getOpenKBClient();
+      const roleId = session.user.roles[0] ?? "default";
 
-    // Find similar queries in OpenKB (D24: top 3 suggestions)
-    const similar = await openkb.findSimilar(roleId, input.proposedDefinition, 3);
+      // Find similar queries in OpenKB (D24: top 3 suggestions)
+      const similar = await openkb.findSimilar(roleId, input.proposedDefinition, 3);
 
-    // Audit log
-    await logAudit({
-      userId: session.user.id,
-      action: "openkb_suggestions_requested",
-      resourceType: "rag_context",
-      resourceId: roleId,
-      details: {
-        proposedDefinition: input.proposedDefinition.substring(0, 200),
-        suggestionCount: similar.length,
-      },
-    });
+      // Audit log
+      await logAudit({
+        userId: session.user.id,
+        action: "openkb_suggestions_requested",
+        resourceType: "rag_context",
+        resourceId: roleId,
+        details: {
+          proposedDefinition: input.proposedDefinition.substring(0, 200),
+          suggestionCount: similar.length,
+        },
+      });
 
-    return {
-      suggestions: similar.map((s) => ({
-        nlQuestion: s.nlQuestion,
-        generatedSQL: s.generatedSQL,
-        similarity: s.similarity,
-        executionTimeMs: s.executionTimeMs,
-        resultRowCount: s.resultRowCount,
-      })),
-    };
-  } catch (error) {
-    console.error("[OpenKB] Failed to get suggestions:", error);
-    return { suggestions: [] }; // Gracefully return empty suggestions
-  }
-});
+      return {
+        suggestions: similar.map((s) => ({
+          nlQuestion: s.nlQuestion,
+          generatedSQL: s.generatedSQL,
+          similarity: s.similarity,
+          executionTimeMs: s.executionTimeMs,
+          resultRowCount: s.resultRowCount,
+        })),
+      };
+    } catch (error) {
+      console.error("[OpenKB] Failed to get suggestions:", error);
+      return { suggestions: [] }; // Gracefully return empty suggestions
+    }
+  });
 
 /**
  * Get recent queries for role discovery/browsing
  */
 export const getRecentQueriesFromOpenKB = createServerFn({
   method: "GET",
-}).handler(
-  async (input: {
-    limit?: number;
-  }): Promise<
-    Array<{
-      nlQuestion: string;
-      generatedSQL: string;
-      executionTimeMs: number;
-      resultRowCount: number;
-    }>
-  > => {
-    const session = await requireAuth();
+})
+  .inputValidator((data: { limit?: number }) => data)
+  .handler(
+    async ({
+      data: input,
+    }): Promise<
+      Array<{
+        nlQuestion: string;
+        generatedSQL: string;
+        executionTimeMs: number;
+        resultRowCount: number;
+      }>
+    > => {
+      const session = await requireAuth();
 
-    try {
-      const openkb = await getOpenKBClient();
-      const roleId = session.user.roleId || "default";
+      try {
+        const openkb = await getOpenKBClient();
+        const roleId = session.user.roles[0] ?? "default";
 
-      const recent = await openkb.getRecentQueries(roleId, input.limit || 20);
+        const recent = await openkb.getRecentQueries(roleId, input.limit || 20);
 
-      return recent.map((q) => ({
-        nlQuestion: q.nlQuestion,
-        generatedSQL: q.generatedSQL,
-        executionTimeMs: q.executionTimeMs,
-        resultRowCount: q.resultRowCount,
-      }));
-    } catch (error) {
-      console.error("[OpenKB] Failed to get recent queries:", error);
-      return [];
+        return recent.map((q) => ({
+          nlQuestion: q.nlQuestion,
+          generatedSQL: q.generatedSQL,
+          executionTimeMs: q.executionTimeMs,
+          resultRowCount: q.resultRowCount,
+        }));
+      } catch (error) {
+        console.error("[OpenKB] Failed to get recent queries:", error);
+        return [];
+      }
     }
-  }
-);
+  );
 
 /**
  * Get OpenKB statistics for a role (admin/monitoring)
@@ -168,7 +173,7 @@ export const getOpenKBStats = createServerFn({
 
     try {
       const openkb = await getOpenKBClient();
-      const roleId = session.user.roleId || "default";
+      const roleId = session.user.roles[0] ?? "default";
 
       const stats = await openkb.getStats(roleId);
 

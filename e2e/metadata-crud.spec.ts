@@ -546,7 +546,7 @@ test.describe('Entity and Field Metadata CRUD', () => {
 
     // Get fresh reference to description input (placeholder now shows the description)
     const descriptionInput2 = page.locator('input[type="text"]').filter({ hasText: testDescription }).or(
-      page.locator('input').filter({ hasAttribute: 'placeholder', value: testDescription })
+      page.locator('input[placeholder]').filter({ hasText: testDescription })
     ).first();
 
     // The input uses defaultValue, so we need to verify via API

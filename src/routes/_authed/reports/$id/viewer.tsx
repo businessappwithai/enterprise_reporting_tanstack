@@ -1,15 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Download, Edit, RefreshCw } from "lucide-react";
+import { ArrowLeft, Download, Edit, Eye, RefreshCw } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
+import { RecordViewDialog } from "@/components/nl-query/RecordViewDialog";
 import { DataTable } from "@/components/reporting/data-table";
 import { FilterBar } from "@/components/reporting/filter-bar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ColumnDef } from "@tanstack/react-table";
+import { parseRecordLinkConfig } from "@/lib/reporting/record-link";
 import type { ColumnDefinition, ReportDefinition } from "@/types/database";
 
 export const Route = createFileRoute("/_authed/reports/$id/viewer")({
@@ -25,6 +27,9 @@ function ReportViewerPage() {
   const queryClient = useQueryClient();
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(50);
+  // The row whose read-only detail is open, or null. Held here rather than in
+  // DataTable so the table stays a presentation component.
+  const [detailRow, setDetailRow] = useState<ReportRow | null>(null);
 
   const { data: report, isLoading: isLoadingReport } = useQuery<ReportDefinition>({
     queryKey: ["report", reportId],
@@ -38,7 +43,9 @@ function ReportViewerPage() {
   const { data: reportData, isLoading: isLoadingData } = useQuery({
     queryKey: ["report-data", reportId, pageIndex, pageSize],
     queryFn: async () => {
-      const res = await fetch(`/api/reports/${reportId}/data?page=${pageIndex}&pageSize=${pageSize}`);
+      const res = await fetch(
+        `/api/reports/${reportId}/data?page=${pageIndex}&pageSize=${pageSize}`
+      );
       const data = await res.json();
       return data.data;
     },
@@ -85,6 +92,13 @@ function ReportViewerPage() {
     },
   });
 
+  // The report's record link, if an administrator configured one. Drives both
+  // the per-row detail action below and the button inside the detail dialog.
+  const recordLink = useMemo(
+    () => parseRecordLinkConfig(report?.record_link_config ?? null),
+    [report?.record_link_config]
+  );
+
   const columns: ColumnDef<ReportRow>[] = useMemo(() => {
     if (!report) return [];
 
@@ -94,6 +108,38 @@ function ReportViewerPage() {
      * hidden) column config renders as an empty frame: the row count, search
      * box and pager all appear, wrapped around a table with no columns.
      */
+    /**
+     * Prepend the "view record" action.
+     *
+     * Only when a record link is configured. A report without one has nowhere
+     * to traverse to, and the raw row is already on screen — so an action that
+     * reopens the same values in a dialog would be noise on every report in the
+     * installation.
+     */
+    const withDetailAction = (cols: ColumnDef<ReportRow>[]): ColumnDef<ReportRow>[] => {
+      if (!recordLink?.enabled) return cols;
+      return [
+        {
+          id: "__view_record",
+          header: "",
+          enableSorting: false,
+          cell: ({ row }: { row: { original: ReportRow } }) => (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 p-0"
+              aria-label="View record"
+              onClick={() => setDetailRow(row.original)}
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+          ),
+        },
+        ...cols,
+      ];
+    };
+
     const columnsFromData = (): ColumnDef<ReportRow>[] => {
       const firstRow = reportData?.rows?.[0];
       if (!firstRow) return [];
@@ -125,11 +171,11 @@ function ReportViewerPage() {
             return String(value);
           },
         }));
-      return configured.length > 0 ? configured : columnsFromData();
+      return withDetailAction(configured.length > 0 ? configured : columnsFromData());
     } catch {
-      return columnsFromData();
+      return withDetailAction(columnsFromData());
     }
-  }, [report, reportData]);
+  }, [report, reportData, recordLink]);
 
   if (isLoadingReport) {
     return (
@@ -145,7 +191,7 @@ function ReportViewerPage() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <p className="text-muted-foreground mb-4">Report not found</p>
-          <Link to="/reports/">
+          <Link to="/reports">
             <Button>Back to Reports</Button>
           </Link>
         </div>
@@ -155,16 +201,11 @@ function ReportViewerPage() {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb
-        items={[
-          { label: "Reports", href: "/reports" },
-          { label: report.name },
-        ]}
-      />
+      <Breadcrumb items={[{ label: "Reports", href: "/reports" }, { label: report.name }]} />
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link to="/reports/">
+          <Link to="/reports">
             <Button variant="ghost" size="icon">
               <ArrowLeft className="h-5 w-5" />
             </Button>
@@ -239,7 +280,7 @@ function ReportViewerPage() {
             );
           })()}
 
-          <Link to={`/reports/${reportId}/editor`}>
+          <Link to="/reports/$id/editor" params={{ id: reportId }}>
             <Button size="sm">
               <Edit className="h-4 w-4 mr-2" />
               Edit
@@ -277,6 +318,21 @@ function ReportViewerPage() {
           )}
         </CardContent>
       </Card>
+
+      {detailRow && (
+        // entityId is empty and no entityMeta is passed: a report's result set
+        // is the shape of its query, not of one catalogued entity, so the
+        // dialog renders the row's own columns. That path is already its
+        // documented fallback rather than something added for this.
+        <RecordViewDialog
+          open={!!detailRow}
+          onClose={() => setDetailRow(null)}
+          dataSourceId=""
+          entityId=""
+          record={detailRow}
+          recordLink={recordLink}
+        />
+      )}
     </div>
   );
 }

@@ -1,4 +1,12 @@
 /**
+ * Job payload types.
+ *
+ * These lived under src/lib/queue/, the dead BullMQ tree that CLAUDE.md says
+ * nothing should import from. The live Trigger.dev tasks imported them as
+ * "./queue/types", which resolves to src/lib/jobs/queue/types and does not
+ * exist — so they are here now, beside the code that actually uses them.
+ */
+/**
  * Job Queue Types
  * Centralized type definitions for the modular queue system
  */
@@ -41,6 +49,8 @@ export interface JobResult {
   success: boolean;
   outputLocation?: string;
   rowCount?: number;
+  /** Batch email jobs report how many messages actually went out. */
+  emailsSent?: number;
   duration: number;
   error?: string;
 }
@@ -88,4 +98,16 @@ export interface QueueConfig {
       age?: number;
     };
   };
+}
+
+export interface EmailBatchJobData {
+  type: "email:batch";
+  queryId: string;
+  emailTemplateId: string;
+  recipientQueryId: string;
+  recipientEmailColumn: string;
+  userId: string;
+  format?: "csv" | "xlsx" | "pdf";
+  reportName?: string;
+  parameters?: Record<string, unknown>;
 }

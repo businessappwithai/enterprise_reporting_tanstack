@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { randomUUID } from "node:crypto";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import {
   createUserSchema,
   updateUserSchema,
@@ -33,27 +33,32 @@ import { withErrorHandler } from "@/lib/server-fns/with-error-handler";
 // ============================================================================
 
 export const listUsers = createServerFn({ method: "GET" })
-  .handler(async (input) => {
+  .inputValidator(listUsersSchema)
+  .handler(async ({ data: input }) => {
     const session = await requireAuth();
 
     return withErrorHandler(
       async () => {
-        const validated = await listUsersSchema.parseAsync(input).catch((err) => {
-          throw new Error(`Validation failed: ${err.message}`);
-        });
-
         const admin = await isAdmin(session.user.id);
         if (!admin) {
           throw new Error("FORBIDDEN");
         }
 
-        const page = validated.page ?? 0;
-        const pageSize = Math.min(validated.pageSize ?? 20, 100);
+        const page = input.page ?? 0;
+        const pageSize = Math.min(input.pageSize ?? 20, 100);
 
         const db = getDb();
         const users = await db
           .selectFrom("users")
-          .select(["id", "email", "display_name", "avatar_url", "is_active", "created_at", "updated_at"])
+          .select([
+            "id",
+            "email",
+            "display_name",
+            "avatar_url",
+            "is_active",
+            "created_at",
+            "updated_at",
+          ])
           .orderBy("created_at", "desc")
           .offset(page * pageSize)
           .limit(pageSize)
@@ -93,13 +98,10 @@ export const listUsers = createServerFn({ method: "GET" })
   });
 
 export const getUser = createServerFn({ method: "GET" })
-  .handler(async (input) => {
+  .inputValidator(getUserSchema)
+  .handler(async ({ data: input }) => {
     return withErrorHandler(
       async () => {
-        const validated = await getUserSchema.parseAsync(input).catch((err) => {
-          throw new Error(`Validation failed: ${err.message}`);
-        });
-
         const session = await requireAuth();
         const admin = await isAdmin(session.user.id);
         if (!admin) {
@@ -109,8 +111,16 @@ export const getUser = createServerFn({ method: "GET" })
         const db = getDb();
         const user = await db
           .selectFrom("users")
-          .select(["id", "email", "display_name", "avatar_url", "is_active", "created_at", "updated_at"])
-          .where("id", "=", validated.id)
+          .select([
+            "id",
+            "email",
+            "display_name",
+            "avatar_url",
+            "is_active",
+            "created_at",
+            "updated_at",
+          ])
+          .where("id", "=", input.id)
           .executeTakeFirst();
 
         if (!user) {
@@ -122,19 +132,16 @@ export const getUser = createServerFn({ method: "GET" })
       {
         userId: (await requireAuth()).user.id,
         action: "execute",
-        details: { operation: "getUser", userId: validated.id },
+        details: { operation: "getUser", userId: input.id },
       }
     );
   });
 
 export const createUser = createServerFn({ method: "POST" })
-  .handler(async (input) => {
+  .inputValidator(createUserSchema)
+  .handler(async ({ data: input }) => {
     return withErrorHandler(
       async () => {
-        const validated = await createUserSchema.parseAsync(input).catch((err) => {
-          throw new Error(`Validation failed: ${err.message}`);
-        });
-
         const session = await requireAuth();
         const admin = await isAdmin(session.user.id);
         if (!admin) {
@@ -147,7 +154,7 @@ export const createUser = createServerFn({ method: "POST" })
         const existing = await db
           .selectFrom("users")
           .select("id")
-          .where("email", "=", validated.email)
+          .where("email", "=", input.email)
           .executeTakeFirst();
 
         if (existing) {
@@ -155,31 +162,32 @@ export const createUser = createServerFn({ method: "POST" })
         }
 
         const userId = randomUUID();
-        const passwordHash = await bcrypt.hash(validated.password, 10);
+        const passwordHash = await bcrypt.hash(input.password, 10);
         const now = new Date().toISOString();
 
         await db
           .insertInto("users")
           .values({
             id: userId,
-            email: validated.email,
+            email: input.email,
             password_hash: passwordHash,
-            display_name: validated.displayName,
+            display_name: input.displayName,
             avatar_url: null,
-            is_active: validated.isActive ?? true,
+            is_active: input.isActive ?? true,
             created_at: now,
             updated_at: now,
           })
           .execute();
 
         // Assign roles if provided
-        if (validated.roleIds && validated.roleIds.length > 0) {
+        if (input.roleIds && input.roleIds.length > 0) {
           await db
             .insertInto("user_roles")
             .values(
-              validated.roleIds.map((roleId) => ({
+              input.roleIds.map((roleId) => ({
                 user_id: userId,
                 role_id: roleId,
+                assigned_at: new Date().toISOString(),
               }))
             )
             .execute();
@@ -190,7 +198,7 @@ export const createUser = createServerFn({ method: "POST" })
           action: "create",
           resourceType: "user",
           resourceId: userId,
-          details: { email: validated.email, displayName: validated.displayName },
+          details: { email: input.email, displayName: input.displayName },
         });
 
         return { id: userId };
@@ -198,19 +206,16 @@ export const createUser = createServerFn({ method: "POST" })
       {
         userId: (await requireAuth()).user.id,
         action: "execute",
-        details: { operation: "createUser", email: validated.email },
+        details: { operation: "createUser", email: input.email },
       }
     );
   });
 
-export const updateUser = createServerFn({ method: "PUT" })
-  .handler(async (input) => {
+export const updateUser = createServerFn({ method: "POST" })
+  .inputValidator(updateUserSchema)
+  .handler(async ({ data: input }) => {
     return withErrorHandler(
       async () => {
-        const validated = await updateUserSchema.parseAsync(input).catch((err) => {
-          throw new Error(`Validation failed: ${err.message}`);
-        });
-
         const session = await requireAuth();
         const admin = await isAdmin(session.user.id);
         if (!admin) {
@@ -221,7 +226,7 @@ export const updateUser = createServerFn({ method: "PUT" })
         const existing = await db
           .selectFrom("users")
           .selectAll()
-          .where("id", "=", validated.id)
+          .where("id", "=", input.id)
           .executeTakeFirst();
 
         if (!existing) {
@@ -229,22 +234,23 @@ export const updateUser = createServerFn({ method: "PUT" })
         }
 
         const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
-        if (validated.email !== undefined) updates.email = validated.email;
-        if (validated.displayName !== undefined) updates.display_name = validated.displayName;
-        if (validated.isActive !== undefined) updates.is_active = validated.isActive;
+        if (input.email !== undefined) updates.email = input.email;
+        if (input.displayName !== undefined) updates.display_name = input.displayName;
+        if (input.isActive !== undefined) updates.is_active = input.isActive;
 
-        await db.updateTable("users").set(updates).where("id", "=", validated.id).execute();
+        await db.updateTable("users").set(updates).where("id", "=", input.id).execute();
 
         // Update roles if provided
-        if (validated.roleIds !== undefined) {
-          await db.deleteFrom("user_roles").where("user_id", "=", validated.id).execute();
-          if (validated.roleIds.length > 0) {
+        if (input.roleIds !== undefined) {
+          await db.deleteFrom("user_roles").where("user_id", "=", input.id).execute();
+          if (input.roleIds.length > 0) {
             await db
               .insertInto("user_roles")
               .values(
-                validated.roleIds.map((roleId) => ({
-                  user_id: validated.id,
+                input.roleIds.map((roleId) => ({
+                  user_id: input.id,
                   role_id: roleId,
+                  assigned_at: new Date().toISOString(),
                 }))
               )
               .execute();
@@ -255,8 +261,8 @@ export const updateUser = createServerFn({ method: "PUT" })
           userId: session.user.id,
           action: "update",
           resourceType: "user",
-          resourceId: validated.id,
-          details: { email: validated.email },
+          resourceId: input.id,
+          details: { email: input.email },
         });
 
         return { success: true };
@@ -269,14 +275,11 @@ export const updateUser = createServerFn({ method: "PUT" })
     );
   });
 
-export const deleteUser = createServerFn({ method: "DELETE" })
-  .handler(async (input) => {
+export const deleteUser = createServerFn({ method: "POST" })
+  .inputValidator(getUserSchema)
+  .handler(async ({ data: input }) => {
     return withErrorHandler(
       async () => {
-        const validated = await getUserSchema.parseAsync(input).catch((err) => {
-          throw new Error(`Validation failed: ${err.message}`);
-        });
-
         const session = await requireAuth();
         const admin = await isAdmin(session.user.id);
         if (!admin) {
@@ -284,7 +287,7 @@ export const deleteUser = createServerFn({ method: "DELETE" })
         }
 
         // Prevent deletion of self
-        if (validated.id === session.user.id) {
+        if (input.id === session.user.id) {
           throw new Error("FORBIDDEN: Cannot delete your own account");
         }
 
@@ -292,21 +295,21 @@ export const deleteUser = createServerFn({ method: "DELETE" })
         const existing = await db
           .selectFrom("users")
           .selectAll()
-          .where("id", "=", validated.id)
+          .where("id", "=", input.id)
           .executeTakeFirst();
 
         if (!existing) {
           throw new Error("NOT_FOUND");
         }
 
-        await db.deleteFrom("user_roles").where("user_id", "=", validated.id).execute();
-        await db.deleteFrom("users").where("id", "=", validated.id).execute();
+        await db.deleteFrom("user_roles").where("user_id", "=", input.id).execute();
+        await db.deleteFrom("users").where("id", "=", input.id).execute();
 
         await logAudit({
           userId: session.user.id,
           action: "delete",
           resourceType: "user",
-          resourceId: validated.id,
+          resourceId: input.id,
         });
 
         return { success: true };
@@ -320,48 +323,56 @@ export const deleteUser = createServerFn({ method: "DELETE" })
   });
 
 export const changePassword = createServerFn({ method: "POST" })
-  .handler(async (input) => {
+  .inputValidator(changePasswordSchema)
+  .handler(async ({ data: input }) => {
     return withErrorHandler(
       async () => {
-        const validated = await changePasswordSchema.parseAsync(input).catch((err) => {
-          throw new Error(`Validation failed: ${err.message}`);
-        });
-
         const session = await requireAuth();
         const admin = await isAdmin(session.user.id);
-        if (!admin && validated.id !== session.user.id) {
+        if (!admin && input.id !== session.user.id) {
           throw new Error("FORBIDDEN");
         }
 
         const db = getDb();
-        const user = await db
-          .selectFrom("users")
-          .select(["id", "password_hash"])
-          .where("id", "=", validated.id)
+
+        // The credential lives in `auth_accounts`, not `users.password_hash` —
+        // Better Auth is the only reader, and it looks there. Writing the old
+        // column instead is the silent version of this bug: the change reports
+        // success and sign-in keeps accepting the OLD password, because nothing
+        // Better Auth reads ever changed.
+        const credential = await db
+          .selectFrom("auth_accounts")
+          .select(["id", "password"])
+          .where("user_id", "=", input.id)
+          .where("provider_id", "=", "credential")
           .executeTakeFirst();
 
-        if (!user) {
+        if (!credential?.password) {
           throw new Error("NOT_FOUND");
         }
 
-        // Verify current password
-        const isValid = await bcrypt.compare(validated.currentPassword, user.password_hash);
+        const isValid = await bcrypt.compare(input.currentPassword, credential.password);
         if (!isValid) {
           throw new Error("UNAUTHORIZED: Current password is incorrect");
         }
 
-        const newPasswordHash = await bcrypt.hash(validated.newPassword, 10);
+        // bcrypt to match the hash/verify hooks configured on Better Auth.
+        const newPasswordHash = await bcrypt.hash(input.newPassword, 10);
         await db
-          .updateTable("users")
-          .set({ password_hash: newPasswordHash, updated_at: new Date().toISOString() })
-          .where("id", "=", validated.id)
+          .updateTable("auth_accounts")
+          .set({ password: newPasswordHash, updated_at: new Date() })
+          .where("id", "=", credential.id)
           .execute();
+
+        // Every other session for this user is now stale. Ending them is the
+        // point of changing a password: a stolen session must not survive it.
+        await db.deleteFrom("auth_sessions").where("user_id", "=", input.id).execute();
 
         await logAudit({
           userId: session.user.id,
           action: "update",
           resourceType: "user",
-          resourceId: validated.id,
+          resourceId: input.id,
           details: { operation: "changePassword" },
         });
 
@@ -379,7 +390,7 @@ export const changePassword = createServerFn({ method: "POST" })
 // ROLE MANAGEMENT
 // ============================================================================
 
-export const listRoles = createServerFn({ method: "GET" }).handler(async (input) => {
+export const listRoles = createServerFn({ method: "GET" }).handler(async () => {
   return withErrorHandler(
     async () => {
       const session = await requireAuth();
@@ -389,11 +400,7 @@ export const listRoles = createServerFn({ method: "GET" }).handler(async (input)
       }
 
       const db = getDb();
-      const roles = await db
-        .selectFrom("roles")
-        .selectAll()
-        .orderBy("name", "asc")
-        .execute();
+      const roles = await db.selectFrom("roles").selectAll().orderBy("name", "asc").execute();
 
       return roles.map((r) => ({
         ...r,
@@ -409,13 +416,10 @@ export const listRoles = createServerFn({ method: "GET" }).handler(async (input)
 });
 
 export const getRole = createServerFn({ method: "GET" })
-  .handler(async (input) => {
+  .inputValidator(getRoleSchema)
+  .handler(async ({ data: input }) => {
     return withErrorHandler(
       async () => {
-        const validated = await getRoleSchema.parseAsync(input).catch((err) => {
-          throw new Error(`Validation failed: ${err.message}`);
-        });
-
         const session = await requireAuth();
         const admin = await isAdmin(session.user.id);
         if (!admin) {
@@ -426,7 +430,7 @@ export const getRole = createServerFn({ method: "GET" })
         const role = await db
           .selectFrom("roles")
           .selectAll()
-          .where("id", "=", validated.id)
+          .where("id", "=", input.id)
           .executeTakeFirst();
 
         if (!role) {
@@ -435,25 +439,23 @@ export const getRole = createServerFn({ method: "GET" })
 
         return {
           ...role,
-          permissions: typeof role.permissions === "string" ? JSON.parse(role.permissions) : role.permissions,
+          permissions:
+            typeof role.permissions === "string" ? JSON.parse(role.permissions) : role.permissions,
         };
       },
       {
         userId: (await requireAuth()).user.id,
         action: "execute",
-        details: { operation: "getRole", roleId: validated.id },
+        details: { operation: "getRole", roleId: input.id },
       }
     );
   });
 
 export const createRole = createServerFn({ method: "POST" })
-  .handler(async (input) => {
+  .inputValidator(createRoleSchema)
+  .handler(async ({ data: input }) => {
     return withErrorHandler(
       async () => {
-        const validated = await createRoleSchema.parseAsync(input).catch((err) => {
-          throw new Error(`Validation failed: ${err.message}`);
-        });
-
         const session = await requireAuth();
         const admin = await isAdmin(session.user.id);
         if (!admin) {
@@ -468,9 +470,9 @@ export const createRole = createServerFn({ method: "POST" })
           .insertInto("roles")
           .values({
             id: roleId,
-            name: validated.name,
-            description: validated.description ?? null,
-            permissions: JSON.stringify(validated.permissions || []),
+            name: input.name,
+            description: input.description ?? null,
+            permissions: JSON.stringify(input.permissions || []),
             created_at: now,
           })
           .execute();
@@ -480,7 +482,7 @@ export const createRole = createServerFn({ method: "POST" })
           action: "create",
           resourceType: "role",
           resourceId: roleId,
-          details: { name: validated.name },
+          details: { name: input.name },
         });
 
         return { id: roleId };
@@ -493,14 +495,11 @@ export const createRole = createServerFn({ method: "POST" })
     );
   });
 
-export const updateRole = createServerFn({ method: "PUT" })
-  .handler(async (input) => {
+export const updateRole = createServerFn({ method: "POST" })
+  .inputValidator(updateRoleSchema)
+  .handler(async ({ data: input }) => {
     return withErrorHandler(
       async () => {
-        const validated = await updateRoleSchema.parseAsync(input).catch((err) => {
-          throw new Error(`Validation failed: ${err.message}`);
-        });
-
         const session = await requireAuth();
         const admin = await isAdmin(session.user.id);
         if (!admin) {
@@ -511,7 +510,7 @@ export const updateRole = createServerFn({ method: "PUT" })
         const existing = await db
           .selectFrom("roles")
           .selectAll()
-          .where("id", "=", validated.id)
+          .where("id", "=", input.id)
           .executeTakeFirst();
 
         if (!existing) {
@@ -519,18 +518,19 @@ export const updateRole = createServerFn({ method: "PUT" })
         }
 
         const updates: Record<string, unknown> = {};
-        if (validated.name !== undefined) updates.name = validated.name;
-        if (validated.description !== undefined) updates.description = validated.description;
-        if (validated.permissions !== undefined) updates.permissions = JSON.stringify(validated.permissions);
+        if (input.name !== undefined) updates.name = input.name;
+        if (input.description !== undefined) updates.description = input.description;
+        if (input.permissions !== undefined)
+          updates.permissions = JSON.stringify(input.permissions);
 
-        await db.updateTable("roles").set(updates).where("id", "=", validated.id).execute();
+        await db.updateTable("roles").set(updates).where("id", "=", input.id).execute();
 
         await logAudit({
           userId: session.user.id,
           action: "update",
           resourceType: "role",
-          resourceId: validated.id,
-          details: { name: validated.name },
+          resourceId: input.id,
+          details: { name: input.name },
         });
 
         return { success: true };
@@ -543,14 +543,11 @@ export const updateRole = createServerFn({ method: "PUT" })
     );
   });
 
-export const deleteRole = createServerFn({ method: "DELETE" })
-  .handler(async (input) => {
+export const deleteRole = createServerFn({ method: "POST" })
+  .inputValidator(getRoleSchema)
+  .handler(async ({ data: input }) => {
     return withErrorHandler(
       async () => {
-        const validated = await getRoleSchema.parseAsync(input).catch((err) => {
-          throw new Error(`Validation failed: ${err.message}`);
-        });
-
         const session = await requireAuth();
         const admin = await isAdmin(session.user.id);
         if (!admin) {
@@ -561,7 +558,7 @@ export const deleteRole = createServerFn({ method: "DELETE" })
         const existing = await db
           .selectFrom("roles")
           .selectAll()
-          .where("id", "=", validated.id)
+          .where("id", "=", input.id)
           .executeTakeFirst();
 
         if (!existing) {
@@ -572,20 +569,20 @@ export const deleteRole = createServerFn({ method: "DELETE" })
         const usageCount = await db
           .selectFrom("user_roles")
           .select(db.fn.count<number>("role_id").as("count"))
-          .where("role_id", "=", validated.id)
+          .where("role_id", "=", input.id)
           .executeTakeFirst();
 
         if ((usageCount?.count ?? 0) > 0) {
           throw new Error("IN_USE: Cannot delete role that is assigned to users");
         }
 
-        await db.deleteFrom("roles").where("id", "=", validated.id).execute();
+        await db.deleteFrom("roles").where("id", "=", input.id).execute();
 
         await logAudit({
           userId: session.user.id,
           action: "delete",
           resourceType: "role",
-          resourceId: validated.id,
+          resourceId: input.id,
         });
 
         return { success: true };

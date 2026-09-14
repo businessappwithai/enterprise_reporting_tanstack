@@ -2,8 +2,13 @@
  * GoRules JDM emitter.
  *
  * Converts each EML business-rule flow into a GoRules JDM decision graph using
- * the SHIPPED converter:
- *   packages/web/src/lib/jdm-converter.ts  (convertToJdm)
+ * the SHIPPED converter, vendored into this repository at:
+ *   language/cli/src/vendor/jdm-converter.ts  (convertToJdm)
+ *
+ * It is a copy of app-with-ai-tanstack's packages/web/src/lib/jdm-converter.ts.
+ * cli.ts imports this module statically, so while that import reached across a
+ * repository boundary that does not exist here, every command died at module
+ * load — validate and info included, neither of which emits JDM at all.
  *
  * The EML parser has already produced a clean, correctly-shaped node/edge graph
  * for each rule (input/decision/expression/function/output), so we build the
@@ -15,12 +20,12 @@
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { convertToJdm } from "../../../../packages/web/src/lib/jdm-converter.ts";
+import { convertToJdm } from "../vendor/jdm-converter.ts";
 import type {
   FlowAST,
   FlowNode,
   NodeShape,
-} from "../../../../packages/web/src/lib/mermaid-flowchart-parser.ts";
+} from "../vendor/mermaid-flowchart-parser.ts";
 import type { EmlModel, EmlRule, RuleNodeShape } from "../model.ts";
 import { kebabCase } from "../util.ts";
 

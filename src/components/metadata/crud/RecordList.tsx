@@ -9,6 +9,7 @@
 
 import {
   type ColumnDef,
+  flexRender,
   getCoreRowModel,
   type PaginationState,
   type SortingState,
@@ -299,11 +300,4 @@ function formatCellValue(value: unknown, _dataType: string): React.ReactNode {
   }
 
   return String(value);
-}
-
-function flexRender<T>(Comp: ((props: T) => React.ReactNode) | string, props: T): React.ReactNode {
-  if (typeof Comp === "string") {
-    return Comp;
-  }
-  return <Comp {...props} />;
 }

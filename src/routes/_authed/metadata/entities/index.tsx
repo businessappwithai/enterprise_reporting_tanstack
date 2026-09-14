@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import type { MetadataEntityListRow } from "@/types/database";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Database, RefreshCw, Search, Settings } from "lucide-react";
 import { useState } from "react";
@@ -33,7 +34,9 @@ function MetadataEntitiesPage() {
       });
       const res = await fetch(`/api/metadata/entities?${params.toString()}`);
       if (!res.ok) throw new Error("Failed to fetch entities");
-      const data = await res.json();
+      const data = (await res.json()) as {
+        data?: { entities?: MetadataEntityListRow[] };
+      };
       console.log("[MetadataEntities] Response:", data);
       return data;
     },
@@ -41,7 +44,7 @@ function MetadataEntitiesPage() {
     enabled: !!dataSourceId,
   });
 
-  const entities = response?.data?.entities ?? [];
+  const entities: MetadataEntityListRow[] = response?.data?.entities ?? [];
 
   // Block direct access - must have datasource filter
   if (!dataSourceId) {
@@ -49,11 +52,13 @@ function MetadataEntitiesPage() {
       <div className="container mx-auto p-6">
         <div className="mx-auto max-w-md text-center py-12">
           <Database className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <h2 className="mb-2 font-semibold text-2xl text-tremor-content-strong">Access Restricted</h2>
+          <h2 className="mb-2 font-semibold text-2xl text-tremor-content-strong">
+            Access Restricted
+          </h2>
           <p className="text-muted-foreground mb-6">
             Entity metadata management must be accessed from a datasource.
           </p>
-          <Link to="/data-sources/">
+          <Link to="/data-sources">
             <Button>
               <Database className="h-4 w-4 mr-2" />
               Go to Data Sources
@@ -83,7 +88,7 @@ function MetadataEntitiesPage() {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <Link to="/data-sources/">
+            <Link to="/data-sources">
               <Button variant="ghost" size="sm">
                 <ArrowLeft className="h-4 w-4 mr-1" />
                 Back to Data Sources
@@ -123,7 +128,9 @@ function MetadataEntitiesPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-tremor-default text-tremor-content">Total Entities</p>
-              <p className="font-semibold text-tremor-metric text-tremor-content-strong">{entities?.length ?? 0}</p>
+              <p className="font-semibold text-tremor-metric text-tremor-content-strong">
+                {entities?.length ?? 0}
+              </p>
             </div>
             <Database className="h-8 w-8 text-muted-foreground" />
           </div>
@@ -267,7 +274,7 @@ function MetadataEntitiesPage() {
                   </td>
                   <td className="p-4 text-right">
                     <Link
-                      to="/metadata/entities/$id/"
+                      to="/metadata/entities/$id"
                       params={{ id: entity.id }}
                       className="text-primary hover:underline text-sm"
                     >
@@ -289,7 +296,7 @@ function MetadataEntitiesPage() {
               : 'Go back to Data Sources and click "Inspect Schema" to import entities from this datasource'}
           </p>
           {!search && (
-            <Link to="/data-sources/">
+            <Link to="/data-sources">
               <Button>
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Inspect Schema

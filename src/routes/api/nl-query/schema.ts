@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { sql } from "kysely";
 import { json } from "@/lib/server/response";
-import { verifySession } from "@/lib/auth/session";
+import { readSessionToken, verifySession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
 import { storeSchemaEmbeddings } from "@/lib/mastra/rag-store";
@@ -9,8 +9,7 @@ import type { DataSource } from "@/types/database";
 
 async function getSession(request: Request) {
   const cookie = request.headers.get("cookie") || "";
-  const match = cookie.match(/session_token=([^;]+)/);
-  const token = match?.[1];
+  const token = readSessionToken(cookie);
   if (!token) return null;
   return verifySession(token);
 }
@@ -32,7 +31,7 @@ async function fetchSchema(request: Request) {
   if (!dataSourceId) {
     return json(
       { success: false, error: { message: "data_source_id is required" } },
-      { status: 400 },
+      { status: 400 }
     );
   }
 
@@ -46,10 +45,7 @@ async function fetchSchema(request: Request) {
     .executeTakeFirst();
 
   if (!dataSource) {
-    return json(
-      { success: false, error: { message: "Data source not found" } },
-      { status: 404 },
-    );
+    return json({ success: false, error: { message: "Data source not found" } }, { status: 404 });
   }
 
   const connection = await getConnection(dataSource as unknown as DataSource);
@@ -100,7 +96,7 @@ async function fetchSchema(request: Request) {
     columns,
   }));
   storeSchemaEmbeddings(connection, dataSourceId, tablesForEmbedding, sampleData).catch((e) =>
-    console.warn("[Schema] Failed to store schema embeddings:", e),
+    console.warn("[Schema] Failed to store schema embeddings:", e)
   );
 
   const tablesList: { name: string; columns: string[] }[] = [];
@@ -121,9 +117,8 @@ async function fetchSchema(request: Request) {
     .execute();
 
   // Use bus_ tables if present, otherwise fall back to all non-nl_ tables
-  const displayTableNames = busTableNames.length > 0
-    ? busTableNames
-    : tablesList.map((t) => t.name);
+  const displayTableNames =
+    busTableNames.length > 0 ? busTableNames : tablesList.map((t) => t.name);
 
   const compactSchema = [
     "DATABASE SCHEMA (PostgreSQL):",
@@ -171,7 +166,7 @@ export const Route = createFileRoute("/api/nl-query/schema")({
                 message: error instanceof Error ? error.message : "Failed to fetch schema",
               },
             },
-            { status: 500 },
+            { status: 500 }
           );
         }
       },
@@ -187,7 +182,7 @@ export const Route = createFileRoute("/api/nl-query/schema")({
                 message: error instanceof Error ? error.message : "Failed to fetch schema",
               },
             },
-            { status: 500 },
+            { status: 500 }
           );
         }
       },

@@ -1,41 +1,41 @@
 export async function up(db: any): Promise<void> {
   // Add soft delete columns to data_sources
-  await db.schema.alterTable("data_sources", (table) => {
+  await db.schema.alterTable("data_sources", (table: any) => {
     table.boolean("is_deleted").defaultTo(false);
     table.timestamp("deleted_at");
     table.string("deleted_by", 36).references("id").inTable("users");
   });
 
   // Add soft delete columns to saved_queries
-  await db.schema.alterTable("saved_queries", (table) => {
+  await db.schema.alterTable("saved_queries", (table: any) => {
     table.boolean("is_deleted").defaultTo(false);
     table.timestamp("deleted_at");
     table.string("deleted_by", 36).references("id").inTable("users");
   });
 
   // Add soft delete columns to report_definitions
-  await db.schema.alterTable("report_definitions", (table) => {
+  await db.schema.alterTable("report_definitions", (table: any) => {
     table.boolean("is_deleted").defaultTo(false);
     table.timestamp("deleted_at");
     table.string("deleted_by", 36).references("id").inTable("users");
   });
 
   // Add soft delete columns to chart_definitions
-  await db.schema.alterTable("chart_definitions", (table) => {
+  await db.schema.alterTable("chart_definitions", (table: any) => {
     table.boolean("is_deleted").defaultTo(false);
     table.timestamp("deleted_at");
     table.string("deleted_by", 36).references("id").inTable("users");
   });
 
   // Add soft delete columns to dashboard_layouts
-  await db.schema.alterTable("dashboard_layouts", (table) => {
+  await db.schema.alterTable("dashboard_layouts", (table: any) => {
     table.boolean("is_deleted").defaultTo(false);
     table.timestamp("deleted_at");
     table.string("deleted_by", 36).references("id").inTable("users");
   });
 
   // Add soft delete columns to job_definitions
-  await db.schema.alterTable("job_definitions", (table) => {
+  await db.schema.alterTable("job_definitions", (table: any) => {
     table.boolean("is_deleted").defaultTo(false);
     table.timestamp("deleted_at");
     table.string("deleted_by", 36).references("id").inTable("users");
@@ -72,42 +72,42 @@ export async function down(db: any): Promise<void> {
   await db.raw("DROP INDEX IF NOT EXISTS idx_data_sources_active");
 
   // Remove soft delete columns from job_definitions
-  await db.schema.alterTable("job_definitions", (table) => {
+  await db.schema.alterTable("job_definitions", (table: any) => {
     table.dropColumn("deleted_by");
     table.dropColumn("deleted_at");
     table.dropColumn("is_deleted");
   });
 
   // Remove soft delete columns from dashboard_layouts
-  await db.schema.alterTable("dashboard_layouts", (table) => {
+  await db.schema.alterTable("dashboard_layouts", (table: any) => {
     table.dropColumn("deleted_by");
     table.dropColumn("deleted_at");
     table.dropColumn("is_deleted");
   });
 
   // Remove soft delete columns from chart_definitions
-  await db.schema.alterTable("chart_definitions", (table) => {
+  await db.schema.alterTable("chart_definitions", (table: any) => {
     table.dropColumn("deleted_by");
     table.dropColumn("deleted_at");
     table.dropColumn("is_deleted");
   });
 
   // Remove soft delete columns from report_definitions
-  await db.schema.alterTable("report_definitions", (table) => {
+  await db.schema.alterTable("report_definitions", (table: any) => {
     table.dropColumn("deleted_by");
     table.dropColumn("deleted_at");
     table.dropColumn("is_deleted");
   });
 
   // Remove soft delete columns from saved_queries
-  await db.schema.alterTable("saved_queries", (table) => {
+  await db.schema.alterTable("saved_queries", (table: any) => {
     table.dropColumn("deleted_by");
     table.dropColumn("deleted_at");
     table.dropColumn("is_deleted");
   });
 
   // Remove soft delete columns from data_sources
-  await db.schema.alterTable("data_sources", (table) => {
+  await db.schema.alterTable("data_sources", (table: any) => {
     table.dropColumn("deleted_by");
     table.dropColumn("deleted_at");
     table.dropColumn("is_deleted");

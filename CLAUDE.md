@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Development
 bun --bun vite dev            # dev server at http://localhost:4050
 bun --bun vite build          # production build
-bun .output/server/index.mjs  # serve production build
+bun run start                 # serve it — listens on :3000, PORT overrides
 
 # Code quality (Biome, not ESLint/Prettier)
 biome lint src                # lint check
@@ -161,7 +161,7 @@ Job processing runs on **Trigger.dev** (`@trigger.dev/sdk`), configured in `trig
 - Task definitions: `src/lib/jobs/trigger-tasks.ts` — `report:generate`, `data:export`, `email:batch`, `scheduled:refresh`, plus monitoring evaluation
 - Enqueue via `src/lib/jobs/trigger-queue.ts`; the actual work lives in `src/lib/jobs/workers/`
 - `src/lib/jobs/worker-runner.ts` picks the backend: Trigger.dev when `TRIGGER_API_URL` is set, otherwise it starts the built-in on-premise cron runner (`src/lib/monitoring/monitoring-scheduler.ts`), a pure-Bun interval loop that polls `monitoring_rules` every minute
-- **`src/lib/queue/` is dead legacy BullMQ code.** It imports `bullmq` and `ioredis`, neither of which is in `package.json`, and nothing imports it. Do not add imports of `@/lib/queue` — extend `src/lib/jobs/` instead. Comments elsewhere that mention BullMQ are leftovers from the migration
+- **BullMQ is gone.** `src/lib/queue/` — the dead legacy tree that imported `bullmq` and `ioredis`, neither of which was ever in `package.json` — has been deleted, along with the Bull Board routes it backed. Job payload types now live beside their consumers in `src/lib/jobs/types.ts`, and the workers take their payload directly rather than a BullMQ `Job` wrapper. `/bull-board` is `/trigger-board`
 
 ### Other Subsystems
 
@@ -234,6 +234,93 @@ Running `bun run db:seed` also adds `analyst@example.com` / `analyst123` with a 
 
 Playwright tests in `e2e/`. The dev server must be running on port 4050 before running tests (the `webServer` config in `playwright.config.ts` is commented out). Auth state is set up once by `e2e/global-setup.ts` and cached in `auth.json`, then reused via `storageState`. Tests run serially (1 worker, `fullyParallel: false`) to prevent session interference. Override the target with `BASE_URL`.
 
+## `bun run typecheck` passes — keep it that way
+
+`tsconfig.json` includes `**/*.ts`, so `typecheck` — and therefore `precommit` —
+covers `language/`, `scripts/`, `e2e/` and `tests/` as well as `src/`. It now
+reports **zero** errors.
+
+It did not always. The backlog was 678 errors across ~140 files, and it was
+invisible: a single unescaped backtick in `language/cli/src/generate/app.ts`
+made that file unparseable, and one parse error makes `tsc` report *that alone*
+and stop — so `typecheck` printed exactly one error and exited 2, which reads
+far more like a small local problem than a backlog. Fixing the parse error is
+what surfaced the rest.
+
+Two habits are worth keeping from that:
+
+- **A low error count is not automatically good news.** If the number collapses
+  after an edit, check for a parse error stopping `tsc` early rather than
+  assuming you fixed something.
+- **Most of those 678 were real defects, not type noise** — Kysely called with
+  Knex's API, `.where(column, value)` without an operator, server functions
+  reading their payload off the ctx, inserts omitting a NOT NULL primary key,
+  columns and hooks that never existed. Treat a new error as a bug report.
+
+`language/**` uses explicit `.ts` import specifiers, which Bun resolves and
+`tsc` rejects (TS5097) unless `allowImportingTsExtensions` is set — it is, in
+`tsconfig.json`, and it needs the `noEmit` that is already there.
+
+## `bun run precommit` passes too — including across a build
+
+`precommit` is `lint && typecheck && format:check`, and all three are clean.
+Getting the last one there took a config change rather than a reformat, and the
+reason is worth keeping:
+
+**`src/routeTree.gen.ts` is written by the TanStack router generator on every
+`vite build`, in a shape Biome's formatter disagrees with.** Formatting it makes
+`format:check` pass exactly until the next build regenerates it — so a tree can
+pass the check, build, and fail it again with nothing modified and nothing in
+`git status`. That is why `biome.json` now excludes the file from the formatter
+(`formatter.includes`), alongside the lint overrides it already had. Do not
+reformat it by hand; the generator wins.
+
+Two Biome details that cost time here:
+
+- **`format` without `--write` *is* the check.** There is no `--check` flag in
+  Biome v2 — `package.json`'s `format:check` used to pass it and Biome ignored
+  the whole invocation, so the check reported success without running.
+- **`organizeImports` is an assist, not a lint rule or a formatter rule.**
+  `biome check --write` applies it and touches ~190 files; neither `lint`,
+  `format:check` nor `precommit` asks for it. Reach for `biome format --write`
+  or `biome lint --only=<rule> --write`, never a bare `check --write`.
+
+Where a lint rule is genuinely wrong for the code, the suppression carries a
+reason: index keys on a query-result preview table whose rows have no id,
+`dangerouslySetInnerHTML` for the pre-paint theme script and for help articles
+already through `DOMPurify.sanitize`. Everything else was fixed rather than
+silenced.
+
+## CI
+
+`.github/workflows/ci.yml` runs on every pull request and on pushes to `main`.
+Before it existed — which was until recently — nothing on GitHub checked
+anything here, and `precommit` passing was only ever true of whichever tree
+someone last ran it in.
+
+| Job | What it runs |
+|---|---|
+| **Lint, types and format** | `bun install --frozen-lockfile`, then `lint`, `typecheck` and `format:check` as three separate steps — the parts of `precommit`, split so a failure names itself |
+| **Build** | `bun --bun vite build`, then `format:check` *again*, then an assertion that the build left no tracked file modified |
+
+**The second `format:check` is the point of the build job.** The two sides of
+the build catch different mistakes: dropping the `routeTree.gen.ts` formatter
+exclusion on its own turns the first job red, because the committed file is in
+generator form — but dropping it *and* formatting the file by hand, which is the
+tempting fix and the one that looks like it worked, leaves the first job green.
+Only the post-build check sees the generator put the file back.
+
+Two things it deliberately does not do. There is **no `paths:` filter**:
+`tsconfig.json` includes `**/*.ts`, so typecheck covers `language/`, `scripts/`,
+`e2e/` and `tests/` too, and any filter narrow enough to be useful would leave
+one of them unguarded — a skipped path-filtered run also reports no status at
+all, which makes a job awkward to require later. And it **does not run the
+Playwright suite**: that needs a dev server on 4050, a PostgreSQL config
+database and a cached signed-in session, and `playwright.config.ts` has its
+`webServer` commented out, so it starts nothing itself.
+
+Bun is pinned to `1.3.11` there; `package.json` asks only for `>=1.3.0`.
+
 ## Stale documentation
 
 Most files under `docs/` predate the migrations to PostgreSQL and Trigger.dev and describe SQLite/MariaDB, BullMQ + Redis, Bull Board, and OpenAI-based NL query. `docs/README.md` and this file are current; verify anything else in `docs/` against source before trusting it.
@@ -259,25 +346,37 @@ Every EML document is valid, renderable Mermaid (`erDiagram`, `flowchart`, `stat
 
 ### CLI usage
 
+Input is `-i/--input` or the first positional argument; output is `-o/--output`.
+There is no `--out`.
+
 ```bash
 # Validate a model
-bun language/cli/eml.ts validate model.mmd
+bun language/cli/eml.ts validate -i model.mmd
 
 # Inspect parsed model summary
-bun language/cli/eml.ts info model.mmd
+bun language/cli/eml.ts info -i model.mmd
 
-# Generate application (targets this repo's stack by default)
-bun language/cli/eml.ts generate model.mmd --out ./generated
+# Generate application (enterprise-reporting is the default stack)
+bun language/cli/eml.ts generate -i model.mmd -o ./generated
 
-# Available stacks: tanstack-nestjs (default), node-rest
-bun language/cli/eml.ts generate model.mmd --stack tanstack-nestjs --out ./generated
+# Generate the dependency-free Node REST app instead
+bun language/cli/eml.ts generate -i model.mmd -o ./generated --stack node-rest
 
 # Auto-fix checker warnings before generating
-bun language/checker.ts model.mmd   # check
+bun language/checker.ts model.mmd   # check — also writes model.mmd.error beside it
 bun language/fixer.ts model.mmd     # fix in-place
 ```
 
-### Generated output (tanstack-nestjs stack)
+**The two stacks are `enterprise-reporting` (default) and `node-rest`.** There is
+no `tanstack-nestjs` target here — that one belongs to `app-with-ai-tanstack`, and
+passing it is rejected with `Unsupported stack`. `tanstack` and `tanstack-start`
+are accepted as *aliases for `enterprise-reporting`*, which is the likeliest way
+to think you got a NestJS stack and not notice.
+
+`enterprise-reporting` emits code to paste into this repository; `node-rest`
+emits a standalone `node:http` app over a JSON file, with no install step.
+
+### Generated output (enterprise-reporting stack)
 
 ```
 generated/
@@ -286,11 +385,25 @@ generated/
 │   ├── routes/_authed/<entity>/
 │   │   ├── index.tsx                  # List page (TanStack Table + shadcn/ui)
 │   │   └── $id.tsx                    # Detail/edit page
-│   └── lib/db/
-│       ├── kysely-db.ts               # Kysely Database interface extension
-│       └── migrations/                # CREATE TABLE migrations
+│   └── lib/db/migrations/<ts>_create_tables.ts   # PostgreSQL DDL via sql``
+├── rules/<rule>.jdm.json              # one GoRules JDM graph per %%rule flow
+├── KYSELY_TYPES.md                    # Database-interface snippet to paste in
 └── README.md
 ```
+
+It writes a `KYSELY_TYPES.md` snippet, **not** a `kysely-db.ts` — you paste the
+snippet into the `Database` interface in `src/lib/db/kysely-db.ts` yourself.
+
+### The CLI vendors two modules from app-with-ai-tanstack
+
+`language/cli/src/vendor/` holds copies of that repository's
+`packages/web/src/lib/{jdm-converter,mermaid-flowchart-parser}.ts`, so a `%%rule`
+flow compiles to the same JDM graph on both sides. They used to be imported
+across the repository boundary as `../../../../packages/web/...`, which resolves
+nowhere here — this repository has no `packages/` directory at all. Because
+`cli.ts` imports the JDM emitter *statically*, that dangling path took down every
+command, `validate` and `info` included, neither of which emits JDM. Both files
+are dependency-free; re-copy them rather than editing them by hand.
 
 ## Repo-local Claude configuration
 

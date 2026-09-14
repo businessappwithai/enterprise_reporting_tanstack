@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
-import { verifySession } from "@/lib/auth/session";
+import { readSessionToken, verifySession } from "@/lib/auth/session";
 import { DataSourceService } from "@/lib/services/data-source.service";
 import { getDb } from "@/lib/db/config";
 import { closeConnection } from "@/lib/db/connection-manager";
@@ -8,15 +8,14 @@ import { logAudit } from "@/lib/security/audit";
 
 async function getSession(request: Request) {
   const cookie = request.headers.get("cookie") || "";
-  const match = cookie.match(/session_token=([^;]+)/);
-  const token = match?.[1];
+  const token = readSessionToken(cookie);
   if (!token) return null;
   return verifySession(token);
 }
 
 function checkPermission(session: any, createdBy: string | null): boolean {
   const userRoles: string[] = session.user.roles || [];
-  const isAdmin = userRoles.some((r) => r.toLowerCase().includes('admin'));
+  const isAdmin = userRoles.some((r) => r.toLowerCase().includes("admin"));
   const isOwner = createdBy === session.user.id;
   return isAdmin || isOwner;
 }
@@ -34,10 +33,7 @@ export const Route = createFileRoute("/api/data-sources/$id")({
           const dataSource = await DataSourceService.getById(params.id, true);
 
           if (!dataSource) {
-            return json(
-              { error: { message: "Data source not found" } },
-              { status: 404 }
-            );
+            return json({ error: { message: "Data source not found" } }, { status: 404 });
           }
 
           logAudit({
@@ -80,17 +76,11 @@ export const Route = createFileRoute("/api/data-sources/$id")({
             .executeTakeFirst();
 
           if (!existing) {
-            return json(
-              { error: { message: "Data source not found" } },
-              { status: 404 }
-            );
+            return json({ error: { message: "Data source not found" } }, { status: 404 });
           }
 
           if (!checkPermission(session, existing.created_by)) {
-            return json(
-              { error: { message: "Forbidden" } },
-              { status: 403 }
-            );
+            return json({ error: { message: "Forbidden" } }, { status: 403 });
           }
 
           const body = await request.json();
@@ -131,17 +121,11 @@ export const Route = createFileRoute("/api/data-sources/$id")({
             .executeTakeFirst();
 
           if (!existing) {
-            return json(
-              { error: { message: "Data source not found" } },
-              { status: 404 }
-            );
+            return json({ error: { message: "Data source not found" } }, { status: 404 });
           }
 
           if (!checkPermission(session, existing.created_by)) {
-            return json(
-              { error: { message: "Forbidden" } },
-              { status: 403 }
-            );
+            return json({ error: { message: "Forbidden" } }, { status: 403 });
           }
 
           const body = await request.json();
@@ -178,17 +162,11 @@ export const Route = createFileRoute("/api/data-sources/$id")({
             .executeTakeFirst();
 
           if (!existing) {
-            return json(
-              { error: { message: "Data source not found" } },
-              { status: 404 }
-            );
+            return json({ error: { message: "Data source not found" } }, { status: 404 });
           }
 
           if (!checkPermission(session, existing.created_by)) {
-            return json(
-              { error: { message: "Forbidden" } },
-              { status: 403 }
-            );
+            return json({ error: { message: "Forbidden" } }, { status: 403 });
           }
 
           await DataSourceService.softDelete(params.id, session.user.id);

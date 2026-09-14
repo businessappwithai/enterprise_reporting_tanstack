@@ -1,6 +1,7 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
+import type { DataSource, ResultRow } from "@/types/database";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth/middleware";
@@ -9,7 +10,10 @@ import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
 import { getSchemaMetadata } from "@/lib/nlquery/schema-metadata";
 import { translateNLToSQLViaMastra, isMastraAvailable } from "@/lib/nlquery/mastra-connector";
-import { translateNLToSQLViaLlama, isLlamaReasoningAvailable } from "@/lib/nlquery/llama-translator";
+import { translateNLToSQLViaLlama } from "@/lib/nlquery/llama-translator";
+// llama-translator imports this symbol but does not re-export it, so taking it
+// from there broke the production build at rollup time.
+import { isLlamaReasoningAvailable } from "@/lib/voice/llama-client";
 import { getGraphContext, formatGraphContext } from "@/lib/graph/rag";
 import { buildMastraContextPrompt } from "@/lib/nlquery/nl-query-context-service";
 import { logAudit } from "@/lib/security/audit";
@@ -21,22 +25,31 @@ import { chartTypeSchema } from "@/lib/schemas/charts";
 
 async function nlToSql(
   nlDescription: string,
-  dataSource: { id: string; client_type: string; [k: string]: unknown },
+  dataSource: DataSource
 ): Promise<{ sql: string; confidence: number } | { error: string }> {
-  const schema = await getSchemaMetadata(dataSource as Parameters<typeof getSchemaMetadata>[0]);
+  const schema = await getSchemaMetadata(dataSource);
 
   // Build context prompt (pgvector RAG + graph RAG)
   let contextPrompt = "";
   try {
-    contextPrompt = await buildMastraContextPrompt(dataSource.id, "admin", nlDescription, JSON.stringify(schema));
-  } catch { /* non-fatal */ }
+    contextPrompt = await buildMastraContextPrompt(
+      dataSource.id,
+      "admin",
+      nlDescription,
+      JSON.stringify(schema)
+    );
+  } catch {
+    /* non-fatal */
+  }
   try {
     const graphCtx = await getGraphContext(dataSource.id, nlDescription);
     const graphSection = formatGraphContext(graphCtx);
     if (graphSection) {
       contextPrompt = contextPrompt ? `${contextPrompt}\n\n${graphSection}` : graphSection;
     }
-  } catch { /* non-fatal */ }
+  } catch {
+    /* non-fatal */
+  }
 
   if (await isMastraAvailable()) {
     const result = await translateNLToSQLViaMastra(nlDescription, schema, {}, contextPrompt);
@@ -45,7 +58,7 @@ async function nlToSql(
 
   if (await isLlamaReasoningAvailable()) {
     const result = await translateNLToSQLViaLlama(nlDescription, schema);
-    if (result?.sql) return { sql: result.sql, confidence: result.confidence ?? 0.7 };
+    if (result?.sql) return { sql: result.sql, confidence: 0.7 };
   }
 
   return { error: "No NL→SQL backend available. Start Mastra or llama.cpp first." };
@@ -60,7 +73,7 @@ export const nlBuildPreview = createServerFn({ method: "POST" })
     z.object({
       nlDescription: z.string().min(1).max(2000),
       dataSourceId: z.string().uuid(),
-    }),
+    })
   )
   .handler(async ({ data }) => {
     const session = await requireAuth();
@@ -71,7 +84,7 @@ export const nlBuildPreview = createServerFn({ method: "POST" })
       .selectFrom("data_sources")
       .selectAll()
       .where("id", "=", data.dataSourceId)
-      .where("is_active", "=", true as unknown as string)
+      .where("is_active", "=", true)
       .executeTakeFirst();
 
     if (!ds) return { success: false as const, error: "Data source not found" };
@@ -85,8 +98,11 @@ export const nlBuildPreview = createServerFn({ method: "POST" })
     try {
       const conn = await getConnection(ds);
       // biome-ignore lint/suspicious/noExplicitAny: external DB
-      const result = await (conn as any).executeQuery({ sql: `${sql.trimEnd().replace(/;$/, "")} LIMIT 20`, parameters: [] });
-      const rows = (result.rows ?? []) as Record<string, unknown>[];
+      const result = await (conn as any).executeQuery({
+        sql: `${sql.trimEnd().replace(/;$/, "")} LIMIT 20`,
+        parameters: [],
+      });
+      const rows = (result.rows ?? []) as ResultRow[];
       const columns = rows.length > 0 ? Object.keys(rows[0]) : [];
 
       await logAudit({
@@ -99,7 +115,11 @@ export const nlBuildPreview = createServerFn({ method: "POST" })
 
       return { success: true as const, sql, confidence, columns, rows };
     } catch (err) {
-      return { success: false as const, error: `SQL execution failed: ${err instanceof Error ? err.message : String(err)}`, sql };
+      return {
+        success: false as const,
+        error: `SQL execution failed: ${err instanceof Error ? err.message : String(err)}`,
+        sql,
+      };
     }
   });
 
@@ -115,7 +135,7 @@ export const nlSaveReport = createServerFn({ method: "POST" })
       dataSourceId: z.string().uuid(),
       sql: z.string().min(1),
       exportFormats: z.array(z.enum(["csv", "xlsx", "pdf"])).default(["csv", "xlsx", "pdf"]),
-    }),
+    })
   )
   .handler(async ({ data }) => {
     const session = await requireAuth();
@@ -135,7 +155,7 @@ export const nlSaveReport = createServerFn({ method: "POST" })
         description: data.description ?? null,
         data_source_id: data.dataSourceId,
         sql_content: data.sql,
-        is_validated: true as unknown as string,
+        is_validated: true,
         created_by: session.user.id,
         created_at: now,
         updated_at: now,
@@ -151,8 +171,8 @@ export const nlSaveReport = createServerFn({ method: "POST" })
         saved_query_id: savedQueryId,
         column_config: "[]",
         export_formats: JSON.stringify(data.exportFormats),
-        is_public: false as unknown as string,
-        is_deleted: false as unknown as string,
+        is_public: false,
+        is_deleted: false,
         created_by: session.user.id,
         created_at: now,
         updated_at: now,
@@ -183,7 +203,7 @@ export const nlSaveChart = createServerFn({ method: "POST" })
       sql: z.string().min(1),
       chartType: chartTypeSchema,
       chartConfig: z.record(z.unknown()).optional(),
-    }),
+    })
   )
   .handler(async ({ data }) => {
     const session = await requireAuth();
@@ -203,7 +223,7 @@ export const nlSaveChart = createServerFn({ method: "POST" })
         description: data.description ?? null,
         data_source_id: data.dataSourceId,
         sql_content: data.sql,
-        is_validated: true as unknown as string,
+        is_validated: true,
         created_by: session.user.id,
         created_at: now,
         updated_at: now,
@@ -222,8 +242,8 @@ export const nlSaveChart = createServerFn({ method: "POST" })
         data_mapping: JSON.stringify({ xAxis: { field: "" }, yAxis: [] }),
         refresh_interval: null,
         color_theme: null,
-        is_public: false as unknown as string,
-        is_deleted: false as unknown as string,
+        is_public: false,
+        is_deleted: false,
         deleted_at: null,
         deleted_by: null,
         created_by: session.user.id,
@@ -255,8 +275,8 @@ export const nlBuilderListDataSources = createServerFn({ method: "GET" }).handle
   const sources = await db
     .selectFrom("data_sources")
     .select(["id", "name", "client_type", "description"])
-    .where("is_active", "=", true as unknown as string)
-    .where("is_deleted", "=", false as unknown as string)
+    .where("is_active", "=", true)
+    .where("is_deleted", "=", false)
     .orderBy("name")
     .execute();
 

@@ -11,7 +11,7 @@ export async function up(db: any): Promise<void> {
 
   if (!exists) {
     // Add section_name column for grouping fields into visual sections
-    await db.schema.alterTable("metadata_entity_field", (table) => {
+    await db.schema.alterTable("metadata_entity_field", (table: any) => {
       table.string("section_name").nullable().after("display_order");
     });
 
@@ -29,7 +29,7 @@ export async function down(db: any): Promise<void> {
   // Remove section_name column if it exists
   const exists = await db.schema.hasColumn("metadata_entity_field", "section_name");
   if (exists) {
-    await db.schema.alterTable("metadata_entity_field", (table) => {
+    await db.schema.alterTable("metadata_entity_field", (table: any) => {
       table.dropColumn("section_name");
     });
   }

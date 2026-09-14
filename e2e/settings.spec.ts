@@ -88,7 +88,7 @@ test.describe('Settings', () => {
   });
 });
 
-test.describe('Queue Management (Bull Board)', () => {
+test.describe('Queue Management (Trigger.dev board)', () => {
   test.beforeAll(async ({ browser }) => {
     authenticatedPage = await browser.newPage();
     await authenticatedPage.goto('/');
@@ -107,11 +107,11 @@ test.describe('Queue Management (Bull Board)', () => {
   });
 
   test('should navigate to Queue Management', async () => {
-    await authenticatedPage.goto('/bull-board');
+    await authenticatedPage.goto('/trigger-board');
     await authenticatedPage.waitForTimeout(1000);
 
-    // Bull Board UI should be visible
-    const queueUI = authenticatedPage.locator('.bull-board, [data-bull-board], h1, h2').first();
+    // The board UI should be visible
+    const queueUI = authenticatedPage.locator('h1, h2').first();
     const hasQueueUI = await queueUI.isVisible().catch(() => false);
 
     // Pass - queue page loads
@@ -119,7 +119,7 @@ test.describe('Queue Management (Bull Board)', () => {
   });
 
   test('should show queue statistics', async () => {
-    await authenticatedPage.goto('/bull-board');
+    await authenticatedPage.goto('/trigger-board');
     await authenticatedPage.waitForTimeout(1000);
 
     // Look for queue stats

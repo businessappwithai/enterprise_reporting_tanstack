@@ -1,6 +1,6 @@
 export async function up(db: any): Promise<void> {
   // Users table
-  await db.schema.createTable("users", (table) => {
+  await db.schema.createTable("users", (table: any) => {
     table.string("id", 36).primary().defaultTo(db.raw("(lower(hex(randomblob(16))))"));
     table.string("email").unique().notNullable();
     table.string("password_hash").notNullable();
@@ -12,7 +12,7 @@ export async function up(db: any): Promise<void> {
   });
 
   // Roles table
-  await db.schema.createTable("roles", (table) => {
+  await db.schema.createTable("roles", (table: any) => {
     table.string("id", 36).primary().defaultTo(db.raw("(lower(hex(randomblob(16))))"));
     table.string("name").unique().notNullable();
     table.string("description");
@@ -21,7 +21,7 @@ export async function up(db: any): Promise<void> {
   });
 
   // User roles junction table
-  await db.schema.createTable("user_roles", (table) => {
+  await db.schema.createTable("user_roles", (table: any) => {
     table.string("user_id", 36).references("id").inTable("users").onDelete("CASCADE");
     table.string("role_id", 36).references("id").inTable("roles").onDelete("CASCADE");
     table.timestamp("assigned_at").defaultTo(db.fn.now());
@@ -29,7 +29,7 @@ export async function up(db: any): Promise<void> {
   });
 
   // Data sources table
-  await db.schema.createTable("data_sources", (table) => {
+  await db.schema.createTable("data_sources", (table: any) => {
     table.string("id", 36).primary().defaultTo(db.raw("(lower(hex(randomblob(16))))"));
     table.string("name").notNullable();
     table.string("description");
@@ -42,7 +42,7 @@ export async function up(db: any): Promise<void> {
   });
 
   // Saved queries table
-  await db.schema.createTable("saved_queries", (table) => {
+  await db.schema.createTable("saved_queries", (table: any) => {
     table.string("id", 36).primary().defaultTo(db.raw("(lower(hex(randomblob(16))))"));
     table.string("name").notNullable();
     table.string("description");
@@ -57,7 +57,7 @@ export async function up(db: any): Promise<void> {
   });
 
   // Report definitions table
-  await db.schema.createTable("report_definitions", (table) => {
+  await db.schema.createTable("report_definitions", (table: any) => {
     table.string("id", 36).primary().defaultTo(db.raw("(lower(hex(randomblob(16))))"));
     table.string("name").notNullable();
     table.string("description");
@@ -77,7 +77,7 @@ export async function up(db: any): Promise<void> {
   });
 
   // Chart definitions table
-  await db.schema.createTable("chart_definitions", (table) => {
+  await db.schema.createTable("chart_definitions", (table: any) => {
     table.string("id", 36).primary().defaultTo(db.raw("(lower(hex(randomblob(16))))"));
     table.string("name").notNullable();
     table.string("description");
@@ -96,7 +96,7 @@ export async function up(db: any): Promise<void> {
   });
 
   // Dashboard layouts table
-  await db.schema.createTable("dashboard_layouts", (table) => {
+  await db.schema.createTable("dashboard_layouts", (table: any) => {
     table.string("id", 36).primary().defaultTo(db.raw("(lower(hex(randomblob(16))))"));
     table.string("name").notNullable();
     table.string("description");
@@ -110,7 +110,7 @@ export async function up(db: any): Promise<void> {
   });
 
   // Dashboard widgets table
-  await db.schema.createTable("dashboard_widgets", (table) => {
+  await db.schema.createTable("dashboard_widgets", (table: any) => {
     table.string("id", 36).primary().defaultTo(db.raw("(lower(hex(randomblob(16))))"));
     table
       .string("dashboard_id", 36)
@@ -131,7 +131,7 @@ export async function up(db: any): Promise<void> {
   });
 
   // Job definitions table
-  await db.schema.createTable("job_definitions", (table) => {
+  await db.schema.createTable("job_definitions", (table: any) => {
     table.string("id", 36).primary().defaultTo(db.raw("(lower(hex(randomblob(16))))"));
     table.string("name").notNullable();
     table.string("job_type").notNullable(); // 'report', 'chart', 'export'
@@ -146,7 +146,7 @@ export async function up(db: any): Promise<void> {
   });
 
   // Job executions table
-  await db.schema.createTable("job_executions", (table) => {
+  await db.schema.createTable("job_executions", (table: any) => {
     table.string("id", 36).primary().defaultTo(db.raw("(lower(hex(randomblob(16))))"));
     table
       .string("job_definition_id", 36)
@@ -163,7 +163,7 @@ export async function up(db: any): Promise<void> {
   });
 
   // Resource permissions table
-  await db.schema.createTable("resource_permissions", (table) => {
+  await db.schema.createTable("resource_permissions", (table: any) => {
     table.string("id", 36).primary().defaultTo(db.raw("(lower(hex(randomblob(16))))"));
     table.string("resource_type").notNullable(); // 'data_source', 'query', 'report', 'chart', 'dashboard'
     table.string("resource_id").notNullable();
@@ -174,7 +174,7 @@ export async function up(db: any): Promise<void> {
   });
 
   // Audit log table
-  await db.schema.createTable("audit_log", (table) => {
+  await db.schema.createTable("audit_log", (table: any) => {
     table.string("id", 36).primary().defaultTo(db.raw("(lower(hex(randomblob(16))))"));
     table.string("user_id", 36).references("id").inTable("users");
     table.string("action").notNullable(); // 'create', 'update', 'delete', 'execute', 'view'

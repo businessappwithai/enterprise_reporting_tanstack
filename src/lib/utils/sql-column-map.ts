@@ -23,19 +23,16 @@ function splitSelectColumns(s: string): string[] {
 
 function extractTableAliases(sql: string): Map<string, string> {
   const map = new Map<string, string>();
-  const re =
-    /(?:FROM|JOIN)\s+["'`]?(\w+)["'`]?\s*(?:AS\s+)?(?:([\w]+)(?=\s|$|,|\)|;))?/gi;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(sql)) !== null) {
+  const re = /(?:FROM|JOIN)\s+["'`]?(\w+)["'`]?\s*(?:AS\s+)?(?:([\w]+)(?=\s|$|,|\)|;))?/gi;
+  let m: RegExpExecArray | null = re.exec(sql);
+  while (m !== null) {
     const table = m[1].toLowerCase();
     const alias = m[2]?.toLowerCase();
-    if (
-      alias &&
-      !/^(ON|WHERE|INNER|LEFT|RIGHT|FULL|OUTER|CROSS|SET|USING)$/i.test(alias)
-    ) {
+    if (alias && !/^(ON|WHERE|INNER|LEFT|RIGHT|FULL|OUTER|CROSS|SET|USING)$/i.test(alias)) {
       map.set(alias, table);
     }
     map.set(table, table);
+    m = re.exec(sql);
   }
   return map;
 }
@@ -133,7 +130,7 @@ export function parseColumnTableMap(sql: string): Record<string, ColumnMeta> {
 export function drillableColumnSet(
   colMap: Record<string, ColumnMeta>,
   resultColumns: string[],
-  entityTableNames: Set<string>,
+  entityTableNames: Set<string>
 ): Set<string> {
   const drillable = new Set<string>();
   const wildcard = colMap["*"];

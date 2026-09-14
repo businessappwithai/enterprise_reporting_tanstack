@@ -1,6 +1,6 @@
 export async function up(db: any): Promise<void> {
   // Error messages configuration table
-  await db.schema.createTable("error_messages", (table) => {
+  await db.schema.createTable("error_messages", (table: any) => {
     table.string("id", 36).primary().defaultTo(db.raw("(lower(hex(randomblob(16))))"));
     table.string("error_code", 100).notNullable().unique();
     table.string("severity").defaultTo("error"); // 'error', 'warning', 'info'
@@ -17,7 +17,7 @@ export async function up(db: any): Promise<void> {
   });
 
   // Warning configurations table (for proactive warnings)
-  await db.schema.createTable("warning_configs", (table) => {
+  await db.schema.createTable("warning_configs", (table: any) => {
     table.string("id", 36).primary().defaultTo(db.raw("(lower(hex(randomblob(16))))"));
     table.string("warning_code", 100).notNullable().unique();
     table.string("name").notNullable();
@@ -38,7 +38,7 @@ export async function up(db: any): Promise<void> {
   });
 
   // Error occurrence tracking table
-  await db.schema.createTable("error_occurrences", (table) => {
+  await db.schema.createTable("error_occurrences", (table: any) => {
     table.string("id", 36).primary().defaultTo(db.raw("(lower(hex(randomblob(16))))"));
     table.string("error_code", 100).notNullable();
     table.string("user_id", 36).references("id").inTable("users");

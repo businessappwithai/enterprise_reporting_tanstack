@@ -64,7 +64,6 @@ export const Route = createFileRoute("/api/charts/$id")({
             chart_config,
             data_mapping,
             saved_query_id,
-            data_source_id,
             refresh_interval,
           } = body;
 
@@ -92,8 +91,8 @@ export const Route = createFileRoute("/api/charts/$id")({
               chart_type: chart_type ?? existing.chart_type,
               chart_config: chart_config ? JSON.stringify(chart_config) : existing.chart_config,
               data_mapping: data_mapping ? JSON.stringify(data_mapping) : existing.data_mapping,
-              saved_query_id: saved_query_id !== undefined ? saved_query_id : existing.saved_query_id,
-              data_source_id: data_source_id ?? existing.data_source_id,
+              saved_query_id:
+                saved_query_id !== undefined ? saved_query_id : existing.saved_query_id,
               refresh_interval: refresh_interval ?? existing.refresh_interval,
               updated_at: new Date().toISOString(),
             })

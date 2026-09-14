@@ -19,10 +19,13 @@ import { Eye, Plus, Save, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
+import { usePermissions } from "@/lib/hooks/usePermissions";
+import { parseRecordLinkConfig } from "@/lib/reporting/record-link";
 import {
   type FilterGroup,
   ReportFilterBuilder,
 } from "@/components/reporting/report-filter-builder";
+import { RecordLinkEditor } from "@/components/reporting/record-link-editor";
 import { SortableColumnRow } from "@/components/reporting/sortable-column-row";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,6 +55,7 @@ export const Route = createFileRoute("/_authed/reports/$id/editor")({
 
 function ReportEditorPage() {
   const { id: reportId } = Route.useParams();
+  const { data: permissions } = usePermissions();
   const queryClient = useQueryClient();
 
   const [reportName, setReportName] = useState("");
@@ -387,7 +391,9 @@ function ReportEditorPage() {
               </span>
             )}
           </div>
-          <p className="text-tremor-default text-tremor-content">Configure report columns and settings</p>
+          <p className="text-tremor-default text-tremor-content">
+            Configure report columns and settings
+          </p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -650,7 +656,9 @@ function ReportEditorPage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="export-csv">CSV Export</Label>
-                    <p className="text-tremor-label text-tremor-content">Comma-separated values format</p>
+                    <p className="text-tremor-label text-tremor-content">
+                      Comma-separated values format
+                    </p>
                   </div>
                   <Switch
                     id="export-csv"
@@ -691,7 +699,9 @@ function ReportEditorPage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="export-pdf">PDF Export</Label>
-                    <p className="text-tremor-label text-tremor-content">Portable Document Format</p>
+                    <p className="text-tremor-label text-tremor-content">
+                      Portable Document Format
+                    </p>
                   </div>
                   <Switch
                     id="export-pdf"
@@ -752,12 +762,21 @@ function ReportEditorPage() {
                   <div className="p-3 bg-muted rounded-md">
                     <p className="text-tremor-label text-tremor-content">
                       Example: {reportName || "Report"}
-                      {filenameTemplate.field1 ? "[" + filenameTemplate.field1 + "]" : ""}
-                      {filenameTemplate.field2 ? "[" + filenameTemplate.field2 + "]" : ""} .pdf
+                      {filenameTemplate.field1 ? `[${filenameTemplate.field1}]` : ""}
+                      {filenameTemplate.field2 ? `[${filenameTemplate.field2}]` : ""} .pdf
                     </p>
                   </div>
                 </div>
               </div>
+
+              {/* Administrators only — the server enforces the same rule. */}
+              {permissions?.isAdmin && (
+                <RecordLinkEditor
+                  reportId={reportId}
+                  columns={columns}
+                  initialConfig={parseRecordLinkConfig(report?.record_link_config ?? null)}
+                />
+              )}
 
               <div className="border-t pt-6">
                 <h4 className="text-sm font-semibold mb-4">Color Theme</h4>

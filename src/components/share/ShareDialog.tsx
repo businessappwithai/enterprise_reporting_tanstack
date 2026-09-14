@@ -54,7 +54,7 @@ export function ShareDialog({
   };
 
   const togglePublicMutation = useMutation({
-    mutationFn: async (_newPublicState: boolean) => {
+    mutationFn: async (newState: boolean) => {
       const response = await fetch(`/api/${resourceType}s/${resourceId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },

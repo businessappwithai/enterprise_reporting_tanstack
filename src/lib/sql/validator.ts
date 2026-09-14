@@ -6,6 +6,7 @@ export interface SQLValidationResult {
   isValid: boolean;
   errors: SQLError[];
   warnings: SQLWarning[];
+  /** Parser internal. Never returned across a server-function boundary. */
   ast?: unknown;
   formattedSQL?: string;
 }

@@ -8,7 +8,7 @@ import {
   updateWidgetSchema,
   removeWidgetSchema,
 } from "@/lib/schemas/dashboards";
-import { paginationInputSchema } from "@/lib/schemas/common";
+import { paginationSchema } from "@/lib/schemas/common";
 import { requireAuth } from "@/lib/auth/middleware";
 import { getDb } from "@/lib/db/config";
 import { logAudit } from "@/lib/security/audit";
@@ -21,7 +21,7 @@ import {
 import { withErrorHandler } from "@/lib/server-fns/with-error-handler";
 
 export const listDashboards = createServerFn({ method: "GET" })
-  .inputValidator(paginationInputSchema)
+  .inputValidator(paginationSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(
       async () => {
@@ -160,7 +160,7 @@ export const createDashboard = createServerFn({ method: "POST" })
     );
   });
 
-export const updateDashboard = createServerFn({ method: "PUT" })
+export const updateDashboard = createServerFn({ method: "POST" })
   .inputValidator(updateDashboardSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(
@@ -217,7 +217,7 @@ export const updateDashboard = createServerFn({ method: "PUT" })
     );
   });
 
-export const deleteDashboard = createServerFn({ method: "DELETE" })
+export const deleteDashboard = createServerFn({ method: "POST" })
   .inputValidator(getDashboardSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(
@@ -259,7 +259,12 @@ export const addWidget = createServerFn({ method: "POST" })
         const session = await requireAuth();
         const { dashboardId, widget } = input;
 
-        const hasAccess = await hasResourceAccess(session.user.id, "dashboard", dashboardId, "edit");
+        const hasAccess = await hasResourceAccess(
+          session.user.id,
+          "dashboard",
+          dashboardId,
+          "edit"
+        );
         if (!hasAccess) {
           throw new Error("FORBIDDEN");
         }
@@ -314,7 +319,7 @@ export const addWidget = createServerFn({ method: "POST" })
     );
   });
 
-export const updateWidget = createServerFn({ method: "PUT" })
+export const updateWidget = createServerFn({ method: "POST" })
   .inputValidator(updateWidgetSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(
@@ -322,7 +327,12 @@ export const updateWidget = createServerFn({ method: "PUT" })
         const session = await requireAuth();
         const { dashboardId, widgetId, widget } = input;
 
-        const hasAccess = await hasResourceAccess(session.user.id, "dashboard", dashboardId, "edit");
+        const hasAccess = await hasResourceAccess(
+          session.user.id,
+          "dashboard",
+          dashboardId,
+          "edit"
+        );
         if (!hasAccess) {
           throw new Error("FORBIDDEN");
         }
@@ -382,7 +392,7 @@ export const updateWidget = createServerFn({ method: "PUT" })
     );
   });
 
-export const removeWidget = createServerFn({ method: "DELETE" })
+export const removeWidget = createServerFn({ method: "POST" })
   .inputValidator(removeWidgetSchema)
   .handler(async ({ data: input }) => {
     return withErrorHandler(
@@ -390,7 +400,12 @@ export const removeWidget = createServerFn({ method: "DELETE" })
         const session = await requireAuth();
         const { dashboardId, widgetId } = input;
 
-        const hasAccess = await hasResourceAccess(session.user.id, "dashboard", dashboardId, "edit");
+        const hasAccess = await hasResourceAccess(
+          session.user.id,
+          "dashboard",
+          dashboardId,
+          "edit"
+        );
         if (!hasAccess) {
           throw new Error("FORBIDDEN");
         }

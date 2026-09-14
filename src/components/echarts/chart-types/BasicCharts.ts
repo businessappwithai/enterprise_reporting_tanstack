@@ -51,7 +51,7 @@ export function buildBar(config: EChartsConfig, rows: Record<string, unknown>[])
   console.log("[buildBar] First series object:", JSON.stringify(seriesWithStack[0], null, 2));
   console.log("[buildBar] Second series object:", JSON.stringify(seriesWithStack[1], null, 2));
 
-  const result = {
+  const result: EChartsOption = {
     xAxis: {
       type: "category",
       data: categories,
@@ -101,7 +101,7 @@ export function buildLine(config: EChartsConfig, rows: Record<string, unknown>[]
     ? extractGroupedSeries(rows, config.dataMapping)
     : extractSeries(rows, config.dataMapping);
 
-  return {
+  const option: EChartsOption = {
     xAxis: { type: "category", data: categories, ...config.xAxis },
     yAxis: { type: "value", ...config.yAxis },
     series: series.map((s, index) => {
@@ -126,6 +126,8 @@ export function buildLine(config: EChartsConfig, rows: Record<string, unknown>[]
     tooltip: { trigger: "axis" },
     legend: series.length > 1 ? { data: series.map((s) => s.name) } : undefined,
   };
+
+  return option;
 }
 
 export function buildArea(config: EChartsConfig, rows: Record<string, unknown>[]): EChartsOption {
@@ -134,7 +136,7 @@ export function buildArea(config: EChartsConfig, rows: Record<string, unknown>[]
     ? extractGroupedSeries(rows, config.dataMapping)
     : extractSeries(rows, config.dataMapping);
 
-  return {
+  const option: EChartsOption = {
     xAxis: { type: "category", data: categories, ...config.xAxis },
     yAxis: { type: "value", ...config.yAxis },
     series: series.map((s, index) => {
@@ -163,6 +165,8 @@ export function buildArea(config: EChartsConfig, rows: Record<string, unknown>[]
     tooltip: { trigger: "axis" },
     legend: series.length > 1 ? { data: series.map((s) => s.name) } : undefined,
   };
+
+  return option;
 }
 
 export function buildPie(config: EChartsConfig, rows: Record<string, unknown>[]): EChartsOption {

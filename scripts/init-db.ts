@@ -283,8 +283,8 @@ if (!adminExists) {
     .run();
   
   // Assign admin role to admin user
-  const adminUserId = db.query('SELECT id FROM users WHERE email = ?').get('admin@admin.com').id;
-  const adminRoleId = db.query('SELECT id FROM roles WHERE name = ?').get('Administrator').id;
+  const adminUserId = (db.query('SELECT id FROM users WHERE email = ?').get('admin@admin.com') as { id: string }).id;
+  const adminRoleId = (db.query('SELECT id FROM roles WHERE name = ?').get('Administrator') as { id: string }).id;
   db.query('INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)').get(adminUserId, adminRoleId);
   
   console.log('✓ Default admin user created (admin@admin.com / admin)');
@@ -297,7 +297,7 @@ console.log('Database initialization completed');
 console.log('========================================');
 
 // Verify database was created
-const tableCount = db.query("SELECT COUNT(*) as count FROM sqlite_master WHERE type='table'").get().count;
+const tableCount = (db.query("SELECT COUNT(*) as count FROM sqlite_master WHERE type='table'").get() as { count: number }).count;
 console.log(`✓ Database created with ${tableCount} tables`);
 
 // Close database

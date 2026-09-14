@@ -6,37 +6,48 @@ const AUTH_TAG_LENGTH = 16;
 const SALT_LENGTH = 64;
 const KEY_LENGTH = 32;
 
+/**
+ * Nothing in this file logs the key, a property of the key, or a decrypted
+ * value.
+ *
+ * It used to log all three, on the normal path: twenty-four `[ENCRYPTION
+ * DEBUG]` lines per call, reporting whether `ENCRYPTION_KEY` was set, its
+ * length, whether it was hex, the derived key's length — and, at the end of
+ * `decrypt`, the first 200 characters of the plaintext. For a data source that
+ * is the whole connection config, so every `docker compose logs` carried
+ *
+ *     {"host":"…","port":5432,"database":"…","user":"…","password":"…"}
+ *
+ * in the clear. Storing that config AES-256-GCM encrypted stops meaning
+ * anything the moment the plaintext is written to a log, which is collected,
+ * shipped and retained by whatever runs the process, usually under far weaker
+ * access control than the row it came from.
+ *
+ * The key-shape lines were the same mistake one step removed: length and
+ * character class are exactly what an attacker who has the logs wants to know
+ * before attacking the key.
+ *
+ * What survives is the one line that was load-bearing — the warning that no key
+ * is configured and a hard-coded development key is in use — and the failure
+ * path, which reports that decryption failed without reproducing either input.
+ */
 function getKey(): Buffer {
   const encryptionKey = process.env.ENCRYPTION_KEY;
-  console.warn("[ENCRYPTION DEBUG] getKey() called");
-  console.warn("[ENCRYPTION DEBUG] ENCRYPTION_KEY env variable exists:", !!encryptionKey);
-  if (encryptionKey) {
-    console.warn("[ENCRYPTION DEBUG] ENCRYPTION_KEY length:", encryptionKey.length, "characters");
-    console.warn(
-      "[ENCRYPTION DEBUG] ENCRYPTION_KEY is hex string:",
-      /^[0-9a-fA-F]+$/.test(encryptionKey)
-    );
-  }
 
   if (!encryptionKey) {
-    // For development, use a default key (DO NOT use in production)
-    console.warn("[ENCRYPTION DEBUG] Using DEFAULT development key - NOT SECURE FOR PRODUCTION!");
+    console.warn(
+      "[encryption] ENCRYPTION_KEY is not set — falling back to a hard-coded " +
+        "development key. Stored data-source passwords are NOT protected. Set " +
+        "ENCRYPTION_KEY (64 hex characters) before storing anything real."
+    );
     return crypto.scryptSync("default-dev-key-change-in-production", "salt", KEY_LENGTH);
   }
 
-  // If the key is a hex string, convert it
   if (/^[0-9a-fA-F]+$/.test(encryptionKey)) {
-    console.warn("[ENCRYPTION DEBUG] Converting hex string to Buffer");
-    const key = Buffer.from(encryptionKey, "hex");
-    console.warn("[ENCRYPTION DEBUG] Converted key length:", key.length, "bytes");
-    return key;
+    return Buffer.from(encryptionKey, "hex");
   }
 
-  // Otherwise, derive a key from the string
-  console.warn("[ENCRYPTION DEBUG] Deriving key from string using scrypt");
-  const key = crypto.scryptSync(encryptionKey, "salt", KEY_LENGTH);
-  console.warn("[ENCRYPTION DEBUG] Derived key length:", key.length, "bytes");
-  return key;
+  return crypto.scryptSync(encryptionKey, "salt", KEY_LENGTH);
 }
 
 export function encrypt(plaintext: string): string {
@@ -55,92 +66,38 @@ export function encrypt(plaintext: string): string {
 }
 
 export function decrypt(ciphertext: string): string {
-  // WARN: Log ciphertext properties for debugging
-  console.warn("[ENCRYPTION DEBUG] Decrypt called with ciphertext length:", ciphertext.length);
-  console.warn(
-    "[ENCRYPTION DEBUG] Expected ciphertext format: IV(32 chars) + AuthTag(32 chars) + EncryptedData"
-  );
-  console.warn("[ENCRYPTION DEBUG] IV_LENGTH * 2 =", IV_LENGTH * 2, "chars");
-  console.warn(
-    "[ENCRYPTION DEBUG] (IV_LENGTH + AUTH_TAG_LENGTH) * 2 =",
-    (IV_LENGTH + AUTH_TAG_LENGTH) * 2,
-    "chars"
-  );
-
   const key = getKey();
-  console.warn("[ENCRYPTION DEBUG] Key length:", key.length, "bytes");
-  console.warn("[ENCRYPTION DEBUG] Algorithm:", ALGORITHM);
+
+  const minimumLength = (IV_LENGTH + AUTH_TAG_LENGTH) * 2;
+  if (ciphertext.length < minimumLength) {
+    // The length is the diagnosis; the ciphertext itself adds nothing to it.
+    throw new Error(
+      `Invalid ciphertext length: ${ciphertext.length}. Expected at least ${minimumLength} characters (IV + auth tag).`
+    );
+  }
 
   try {
-    // Extract IV, AuthTag, and encrypted data
-    if (ciphertext.length < (IV_LENGTH + AUTH_TAG_LENGTH) * 2) {
-      console.error("[ENCRYPTION ERROR] Ciphertext is too short!");
-      console.error("[ENCRYPTION ERROR] Ciphertext length:", ciphertext.length, "characters");
-      console.error(
-        "[ENCRYPTION ERROR] Minimum required length:",
-        (IV_LENGTH + AUTH_TAG_LENGTH) * 2,
-        "characters"
-      );
-      console.error(
-        "[ENCRYPTION ERROR] Ciphertext (first 100 chars):",
-        ciphertext.substring(0, 100)
-      );
-      throw new Error(
-        `Invalid ciphertext length: ${ciphertext.length}. Expected at least ${(IV_LENGTH + AUTH_TAG_LENGTH) * 2} characters.`
-      );
-    }
-
-    console.warn(
-      "[ENCRYPTION DEBUG] Ciphertext length OK, proceeding to extract IV, AuthTag, and encrypted data"
-    );
-
     const iv = Buffer.from(ciphertext.slice(0, IV_LENGTH * 2), "hex");
-    console.warn("[ENCRYPTION DEBUG] IV extracted successfully, length:", iv.length, "bytes");
-
     const authTag = Buffer.from(
       ciphertext.slice(IV_LENGTH * 2, (IV_LENGTH + AUTH_TAG_LENGTH) * 2),
       "hex"
     );
-    console.warn(
-      "[ENCRYPTION DEBUG] AuthTag extracted successfully, length:",
-      authTag.length,
-      "bytes"
-    );
-
     const encrypted = ciphertext.slice((IV_LENGTH + AUTH_TAG_LENGTH) * 2);
-    console.warn(
-      "[ENCRYPTION DEBUG] Encrypted data extracted, length:",
-      encrypted.length,
-      "characters"
-    );
 
-    console.warn("[ENCRYPTION DEBUG] Creating decipher with algorithm:", ALGORITHM);
     const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
     decipher.setAuthTag(authTag);
 
-    console.warn("[ENCRYPTION DEBUG] Starting decryption...");
     let decrypted = decipher.update(encrypted, "hex", "utf8");
-    console.warn(
-      "[ENCRYPTION DEBUG] Decryption update successful, decrypted length:",
-      decrypted.length
-    );
-
     decrypted += decipher.final("utf8");
-    console.warn(
-      "[ENCRYPTION DEBUG] Decryption successful! Final plaintext length:",
-      decrypted.length
-    );
-    console.warn("[ENCRYPTION DEBUG] Plaintext (first 200 chars):", decrypted.substring(0, 200));
 
     return decrypted;
   } catch (error) {
-    console.error("[ENCRYPTION ERROR] Decryption failed!");
-    console.error("[ENCRYPTION ERROR] Error:", error);
-    if (error instanceof Error) {
-      console.error("[ENCRYPTION ERROR] Error name:", error.name);
-      console.error("[ENCRYPTION ERROR] Error message:", error.message);
-      console.error("[ENCRYPTION ERROR] Error stack:", error.stack);
-    }
+    // The message and name are enough to tell a wrong key from a corrupt row.
+    // Neither the ciphertext nor anything derived from the key goes in.
+    console.error(
+      "[encryption] decryption failed:",
+      error instanceof Error ? `${error.name}: ${error.message}` : String(error)
+    );
     throw error;
   }
 }

@@ -157,8 +157,8 @@ export function ReportHistoryPanel({ reports }: Props) {
     return (
       <Card>
         <CardContent className="py-8">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 w-full mb-2" />
+          {["s1", "s2", "s3"].map((k) => (
+            <Skeleton key={k} className="h-12 w-full mb-2" />
           ))}
         </CardContent>
       </Card>

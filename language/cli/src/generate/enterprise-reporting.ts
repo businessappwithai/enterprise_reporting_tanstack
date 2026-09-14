@@ -1,13 +1,13 @@
 /**
  * Enterprise Reporting stack generation target.
  *
- * Generates TanStack Start + Kysely + MariaDB application code from an EML
+ * Generates TanStack Start + Kysely + PostgreSQL application code from an EML
  * model, following the conventions of this repository:
  *
  *   src/server-fns/<entity>.ts           createServerFn with .inputValidator()
  *   src/routes/_authed/<entity>/index.tsx list page (TanStack Table + shadcn/ui)
  *   src/routes/_authed/<entity>/$id.tsx   detail/edit page (shadcn/ui form)
- *   src/lib/db/migrations/<ts>_create.ts  Kysely migration (MariaDB)
+ *   src/lib/db/migrations/<ts>_create.ts  Kysely migration (PostgreSQL)
  *   KYSELY_TYPES.md                       snippet for kysely-db.ts Database interface
  */
 
@@ -57,22 +57,27 @@ function tsType(attr: EmlAttribute): string {
   }
 }
 
+// PostgreSQL types. This platform runs PostgreSQL and nothing else — the
+// config DB, the knowledge graph and every generated table — so the DDL below
+// has to be PostgreSQL's. It used to be MySQL's (INT, TINYINT(1), DATETIME,
+// JSON, backtick-quoted identifiers, UUID(), ON UPDATE CURRENT_TIMESTAMP),
+// which no database this project talks to would accept.
 function ddlType(attr: EmlAttribute): string {
   switch (attr.type) {
     case "integer":
-      return "INT";
+      return "INTEGER";
     case "decimal":
-      return "DECIMAL(10,2)";
+      return "NUMERIC(10,2)";
     case "boolean":
-      return "TINYINT(1)";
+      return "BOOLEAN";
     case "date":
       return "DATE";
     case "datetime":
-      return "DATETIME";
+      return "TIMESTAMPTZ";
     case "text":
       return "TEXT";
     case "json":
-      return "JSON";
+      return "JSONB";
     default:
       return attr.maxLength ? `VARCHAR(${attr.maxLength})` : "VARCHAR(255)";
   }
@@ -513,15 +518,17 @@ function migrationFile(model: EmlModel): string {
     const nonPk = e.attributes.filter((a) => !a.isPrimaryKey);
 
     const cols = [
-      `  \`${pk}\` VARCHAR(36) PRIMARY KEY DEFAULT (UUID())`,
+      `  "${pk}" VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text`,
       ...nonPk.map((a) => {
         const notNull = a.required ? " NOT NULL" : " NULL";
         const uq = a.unique ? " UNIQUE" : "";
-        const def = a.type === "boolean" ? " DEFAULT 0" : "";
-        return `  \`${a.name}\` ${ddlType(a)}${notNull}${uq}${def}`;
+        const def = a.type === "boolean" ? " DEFAULT FALSE" : "";
+        return `  "${a.name}" ${ddlType(a)}${notNull}${uq}${def}`;
       }),
-      "  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP",
-      "  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+      '  "created_at" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP',
+      // PostgreSQL has no ON UPDATE CURRENT_TIMESTAMP; the application sets
+      // updated_at on write, as the platform's own tables do.
+      '  "updated_at" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP',
     ];
 
     const extraIndexes = model.indexes
@@ -533,18 +540,20 @@ function migrationFile(model: EmlModel): string {
 
     return {
       tableName,
-      ddl: `CREATE TABLE IF NOT EXISTS \`${tableName}\` (\n${cols.join(",\n")}\n);`,
+      ddl: `CREATE TABLE IF NOT EXISTS "${tableName}" (\n${cols.join(",\n")}\n)`,
       extraIndexes,
     };
   });
 
-  return `import type { Kysely } from "kysely";
+  // `sql` tag, not `db.schema.executeRaw` — Kysely has no such method, so the
+  // migration this file writes used to fail at run time as well as parse time.
+  return `import { type Kysely, sql } from "kysely";
 
 export async function up(db: Kysely<never>): Promise<void> {
 ${stmts
   .map(
     (s) =>
-      `  await db.schema.executeRaw(\`${s.ddl}\`).execute();` +
+      `  await sql\`${s.ddl}\`.execute(db);` +
       (s.extraIndexes.length ? `\n${s.extraIndexes.join("\n")}` : "")
   )
   .join("\n\n")}
@@ -602,12 +611,12 @@ function readmeFile(model: EmlModel, opts: EnterpriseReportingOptions): string {
   return `# ${opts.appName}
 
 Generated from EML model by the Enterprise Reporting EML CLI.
-Stack: **TanStack Start + Kysely + MariaDB** (enterprise-reporting target).
+Stack: **TanStack Start + Kysely + PostgreSQL** (enterprise-reporting target).
 
 ## Files generated
 
 ${entityLines}
-- \`src/lib/db/migrations/*_create_tables.ts\` — Kysely migration (MariaDB DDL)
+- \`src/lib/db/migrations/*_create_tables.ts\` — Kysely migration (PostgreSQL DDL)
 - \`KYSELY_TYPES.md\` — Kysely \`Database\` interface snippet
 
 ## Integration steps

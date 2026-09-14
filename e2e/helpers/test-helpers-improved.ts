@@ -97,7 +97,7 @@ export class ImprovedTestHelpers {
 
     // Verify the textarea is editable (Monaco uses a hidden textarea)
     const isEditable = await this.page.evaluate(() => {
-      const textarea = document.querySelector('.monaco-editor textarea');
+      const textarea = document.querySelector<HTMLTextAreaElement>('.monaco-editor textarea');
       return textarea && !textarea.disabled && !textarea.readOnly;
     });
 

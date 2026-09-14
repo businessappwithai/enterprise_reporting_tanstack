@@ -98,6 +98,7 @@ function Step({
   return (
     <div className="border rounded-lg overflow-hidden">
       <button
+        type="button"
         className="w-full flex items-center gap-3 px-4 py-3 bg-muted/30 hover:bg-muted/50 transition-colors text-left"
         onClick={() => setOpen((o) => !o)}
       >
@@ -172,8 +173,8 @@ export function ExecutionInvestigateModal({ ruleId, ruleName, open, onClose }: P
 
         {isLoading ? (
           <div className="space-y-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full" />
+            {["s1", "s2", "s3", "s4", "s5", "s6"].map((k) => (
+              <Skeleton key={k} className="h-12 w-full" />
             ))}
           </div>
         ) : !exec ? (

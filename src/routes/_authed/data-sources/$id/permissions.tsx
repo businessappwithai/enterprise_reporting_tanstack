@@ -294,10 +294,13 @@ function DataSourcePermissionsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate({ to: "/data-sources/" })}>
+        <Button variant="ghost" size="icon" onClick={() => navigate({ to: "/data-sources" })}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <PageHeader title="Data Source Entity Permissions" description="{dataSource?.name || &quot;Loading...&quot;} - Manage roles, users, and entity-level access control" />
+        <PageHeader
+          title="Data Source Entity Permissions"
+          description="{dataSource?.name || &quot;Loading...&quot;} - Manage roles, users, and entity-level access control"
+        />
       </div>
 
       <Tabs defaultValue="roles" className="space-y-4">

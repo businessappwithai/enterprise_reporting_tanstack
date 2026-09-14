@@ -9,13 +9,7 @@ import {
   emailBatchTask,
   scheduledRefreshTask,
 } from "./trigger-tasks";
-import type {
-  JobData,
-  JobOptions,
-  JobResult,
-  QueueStatus,
-  ScheduledJobOptions,
-} from "./queue/types";
+import type { JobData, JobOptions, JobResult, QueueStatus, ScheduledJobOptions } from "./types";
 
 /**
  * Add a job to the trigger.dev queue
@@ -26,20 +20,26 @@ export async function addJobViaTriggger(
 ): Promise<{ id: string; status: string }> {
   try {
     switch (data.type) {
-      case "report:generate":
-        return await reportGenerationTask.trigger(data, {
+      case "report:generate": {
+        const handle = await reportGenerationTask.trigger(data, {
           idempotencyKey: options?.jobId,
         });
+        return { id: handle.id, status: "queued" };
+      }
 
-      case "data:export":
-        return await dataExportTask.trigger(data, {
+      case "data:export": {
+        const handle = await dataExportTask.trigger(data, {
           idempotencyKey: options?.jobId,
         });
+        return { id: handle.id, status: "queued" };
+      }
 
-      case "scheduled:refresh":
-        return await scheduledRefreshTask.trigger(data, {
+      case "scheduled:refresh": {
+        const handle = await scheduledRefreshTask.trigger(data, {
           idempotencyKey: options?.jobId,
         });
+        return { id: handle.id, status: "queued" };
+      }
 
       default:
         throw new Error(`Unknown job type: ${(data as any).type}`);

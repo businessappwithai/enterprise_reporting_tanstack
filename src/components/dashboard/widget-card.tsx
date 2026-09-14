@@ -151,7 +151,12 @@ export function WidgetCard({ widget, onFilterApply }: WidgetCardProps) {
 
         return (
           <ChartRenderer
-            data={chartData.data?.rows ?? (Array.isArray(chartData.data) ? chartData.data : null) ?? chartData.rows ?? []}
+            data={
+              chartData.data?.rows ??
+              (Array.isArray(chartData.data) ? chartData.data : null) ??
+              chartData.rows ??
+              []
+            }
             chartType={chartDef.chart_type as ChartType}
             chartConfig={chartConfig}
             dataMapping={dataMapping}
@@ -197,7 +202,7 @@ export function WidgetCard({ widget, onFilterApply }: WidgetCardProps) {
               columns={columns.map((col: Record<string, unknown>) => ({
                 accessorKey: col.field || col.accessorKey,
                 header: col.header || col.field,
-                cell: ({ getValue }) => {
+                cell: ({ getValue }: { getValue: () => unknown }) => {
                   const value = getValue();
                   if (value === null || value === undefined) {
                     return <span className="text-tremor-content">-</span>;
@@ -234,7 +239,9 @@ export function WidgetCard({ widget, onFilterApply }: WidgetCardProps) {
       const textConfig = widget.widget_config ? JSON.parse(widget.widget_config) : {};
       return (
         <div className="p-2 h-full overflow-auto">
-          <p className="text-tremor-default text-tremor-content">{textConfig.content || "Text widget"}</p>
+          <p className="text-tremor-default text-tremor-content">
+            {textConfig.content || "Text widget"}
+          </p>
         </div>
       );
     }

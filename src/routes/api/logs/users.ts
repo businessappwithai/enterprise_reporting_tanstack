@@ -1,12 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { verifySession } from "@/lib/auth/session";
+import { readSessionToken, verifySession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/config";
 import { json } from "@/lib/server/response";
 
 async function getSession(request: Request) {
   const cookie = request.headers.get("cookie") || "";
-  const match = cookie.match(/session_token=([^;]+)/);
-  const token = match?.[1];
+  const token = readSessionToken(cookie);
   if (!token) return null;
   return verifySession(token);
 }
@@ -27,7 +26,7 @@ export const Route = createFileRoute("/api/logs/users")({
           const db = getDb();
 
           const sessionRoles: string[] = (session.user as any).roles ?? [];
-          const isAdmin = sessionRoles.some((r: string) => r.toLowerCase().includes('admin'));
+          const isAdmin = sessionRoles.some((r: string) => r.toLowerCase().includes("admin"));
 
           // Only return user list for admins; return empty for non-admins
           if (!isAdmin) {

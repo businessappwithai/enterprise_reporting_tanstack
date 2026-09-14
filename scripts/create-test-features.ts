@@ -84,7 +84,7 @@ async function getSession(): Promise<string> {
 
       return jwt;
     } finally {
-      await client.end();
+      client.release();
       await pool.end();
     }
   } catch (error) {

@@ -1,13 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { verifySession } from "@/lib/auth/session";
+import { readSessionToken, verifySession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/config";
 import { json } from "@/lib/server/response";
 import { isAdmin } from "@/lib/permissions/permissions";
 
 async function getSession(request: Request) {
   const cookie = request.headers.get("cookie") || "";
-  const match = cookie.match(/session_token=([^;]+)/);
-  const token = match?.[1];
+  const token = readSessionToken(cookie);
   if (!token) return null;
   return verifySession(token);
 }
@@ -85,16 +84,15 @@ export const Route = createFileRoute("/api/admin/logs-permissions")({
 
           const db = getDb();
 
-          await db
-            .deleteFrom("app_settings")
-            .where("key", "=", "logs_visible_to_users")
-            .execute();
+          await db.deleteFrom("app_settings").where("key", "=", "logs_visible_to_users").execute();
 
           await db
             .insertInto("app_settings")
             .values({
               key: "logs_visible_to_users",
               value: body.logsVisibleToUsers ? "true" : "false",
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
             })
             .execute();
 

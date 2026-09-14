@@ -23,9 +23,13 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn("business_meaning", "text") // Business context and interpretation
     .addColumn("created_at", "timestamp", (col) => col.defaultTo(sql`now()`))
     .addColumn("updated_at", "timestamp", (col) => col.defaultTo(sql`now()`))
-    .addColumn("created_by", "uuid", (col) => col.references("users.id").onDelete("setNull"))
-    .addColumn("updated_by", "uuid", (col) => col.references("users.id").onDelete("setNull"))
-    .unique(["data_source_id", "table_name", "field_name"])
+    .addColumn("created_by", "uuid", (col) => col.references("users.id").onDelete("set null"))
+    .addColumn("updated_by", "uuid", (col) => col.references("users.id").onDelete("set null"))
+    .addUniqueConstraint("schema_field_instructions_unique", [
+      "data_source_id",
+      "table_name",
+      "field_name",
+    ])
     .execute();
 
   // Store table-level instructions
@@ -42,9 +46,9 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn("business_domain", "text") // e.g., "Customer Management", "Order Processing"
     .addColumn("created_at", "timestamp", (col) => col.defaultTo(sql`now()`))
     .addColumn("updated_at", "timestamp", (col) => col.defaultTo(sql`now()`))
-    .addColumn("created_by", "uuid", (col) => col.references("users.id").onDelete("setNull"))
-    .addColumn("updated_by", "uuid", (col) => col.references("users.id").onDelete("setNull"))
-    .unique(["data_source_id", "table_name"])
+    .addColumn("created_by", "uuid", (col) => col.references("users.id").onDelete("set null"))
+    .addColumn("updated_by", "uuid", (col) => col.references("users.id").onDelete("set null"))
+    .addUniqueConstraint("schema_table_instructions_unique", ["data_source_id", "table_name"])
     .execute();
 
   // Index for fast lookups

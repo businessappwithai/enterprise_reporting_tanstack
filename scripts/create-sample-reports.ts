@@ -413,7 +413,7 @@ try {
   console.log("✓ Added NL query context examples");
 
 } finally {
-  await client.end();
+  client.release();
   await pool.end();
   process.exit(0);
 }

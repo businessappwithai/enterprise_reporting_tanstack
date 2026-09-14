@@ -70,7 +70,7 @@ Format your response as JSON:
       model: openai("gpt-4-turbo"),
       prompt,
       temperature: 0.3, // Low temperature for consistent, deterministic responses
-      maxTokens: 300,
+      maxOutputTokens: 300,
     });
 
     if (!response.text) {
