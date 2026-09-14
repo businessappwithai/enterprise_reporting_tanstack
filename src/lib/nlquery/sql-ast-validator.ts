@@ -22,6 +22,29 @@ export interface SQLAccessValidation {
 }
 
 /**
+ * The permission levels that let a role read a table.
+ *
+ * This list used to be `["read", "write", "admin"]`, and **no permission the
+ * product can create has ever been one of those**. `DsEntityPermissionLevel` in
+ * `@/types/database` is `select | insert | update | delete | all`; the
+ * permissions screen at `/data-sources/$id/permissions` offers exactly those
+ * five; `upsertDsEntityPermission` takes that union and writes it. The writer's
+ * vocabulary and the reader's were disjoint sets, so every entity permission an
+ * administrator granted through the UI was invisible here and the table it
+ * named was denied.
+ *
+ * It went unnoticed because nothing had ever *created* a `ds_entity_permissions`
+ * row outside a manual test: with no rows at all the function refuses on the
+ * earlier "user has no roles in this data source" branch, which looks like the
+ * same denial for a different and plausible reason.
+ *
+ * `insert`, `update` and `delete` are not here on purpose. They say a role may
+ * write through some other tool, not that it may read; `all` and `select` are
+ * the two that grant a SELECT.
+ */
+const READABLE_LEVELS = ["select", "all"] as const;
+
+/**
  * Extract table names from SQL using AST parser
  */
 export function extractTablesFromSQL(sql: string): string[] {
@@ -159,12 +182,8 @@ export async function validateSQLRBACAccess(
     const accessibleTables = new Set<string>();
     for (const perm of entityPerms) {
       if (perm.entity_type === "table" || perm.entity_type === "view") {
-        // Only allow if permission level is at least 'read'
-        if (
-          perm.permission_level === "read" ||
-          perm.permission_level === "write" ||
-          perm.permission_level === "admin"
-        ) {
+        // Only allow if the level actually grants a SELECT.
+        if ((READABLE_LEVELS as readonly string[]).includes(perm.permission_level)) {
           accessibleTables.add(perm.entity_name.toLowerCase());
         }
       }
@@ -239,9 +258,7 @@ export async function isTableAccessible(
       .where("data_source_id", "=", dataSourceId)
       .where("ds_role_id", "in", roleIds)
       .where("entity_name", "=", tableName)
-      .where((eb) =>
-        eb("permission_level", "in", ["read" as const, "write" as const, "admin" as const])
-      )
+      .where((eb) => eb("permission_level", "in", [...READABLE_LEVELS]))
       .executeTakeFirst();
 
     return !!perm;
