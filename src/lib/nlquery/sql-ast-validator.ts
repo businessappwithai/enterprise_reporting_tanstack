@@ -9,7 +9,7 @@
  */
 
 import { parse } from "pgsql-ast-parser";
-import { getDb } from "@/lib/db/config";
+import { checkEntityAccess } from "@/lib/permissions/ds-rbac";
 import type { User } from "@/types/database";
 
 export interface SQLAccessValidation {
@@ -22,27 +22,26 @@ export interface SQLAccessValidation {
 }
 
 /**
- * The permission levels that let a role read a table.
+ * There is one implementation of "may this user read this table", and it is not
+ * in here.
  *
- * This list used to be `["read", "write", "admin"]`, and **no permission the
- * product can create has ever been one of those**. `DsEntityPermissionLevel` in
- * `@/types/database` is `select | insert | update | delete | all`; the
- * permissions screen at `/data-sources/$id/permissions` offers exactly those
- * five; `upsertDsEntityPermission` takes that union and writes it. The writer's
- * vocabulary and the reader's were disjoint sets, so every entity permission an
- * administrator granted through the UI was invisible here and the table it
- * named was denied.
+ * This module used to answer that question itself, against
+ * `permission_level in ("read", "write", "admin")` — and **no permission the
+ * product can create has ever been one of those three**. `checkEntityAccess` in
+ * `@/lib/permissions/ds-rbac`, which the execution paths actually gate on,
+ * reads the union the type declares and the permissions screen writes:
+ * `select | insert | update | delete | all`. Two readings of one fact, and they
+ * drifted, exactly as two readings of one fact do.
  *
- * It went unnoticed because nothing had ever *created* a `ds_entity_permissions`
- * row outside a manual test: with no rows at all the function refuses on the
- * earlier "user has no roles in this data source" branch, which looks like the
- * same denial for a different and plausible reason.
+ * Nothing noticed because nothing had ever *created* a `ds_entity_permissions`
+ * row outside a manual test, and with no rows at all this function refuses on
+ * the earlier "user has no roles in this data source" branch — the same denial,
+ * for a different and entirely plausible reason. Seeding roles from a model's
+ * `%%rbac` produced the first rows and with them the real behaviour.
  *
- * `insert`, `update` and `delete` are not here on purpose. They say a role may
- * write through some other tool, not that it may read; `all` and `select` are
- * the two that grant a SELECT.
+ * So the second implementation is gone. This delegates, which also buys the
+ * system-admin bypass and the column restrictions it never had.
  */
-const READABLE_LEVELS = ["select", "all"] as const;
 
 /**
  * Extract table names from SQL using AST parser
@@ -149,53 +148,14 @@ export async function validateSQLRBACAccess(
       };
     }
 
-    // Step 2: Get user's roles and accessible entities for this data source
-    const db = getDb();
-    const userRoles = await db
-      .selectFrom("ds_user_roles")
-      .selectAll()
-      .where("data_source_id", "=", dataSourceId)
-      .where("user_id", "=", userId)
-      .execute();
+    // Step 2: Ask the one implementation which of them this user may read.
+    const results = await checkEntityAccess(
+      userId,
+      dataSourceId,
+      tablesAccessed.map((name) => ({ name, schema: undefined, type: "table" as const }))
+    );
 
-    if (userRoles.length === 0) {
-      return {
-        isValid: true,
-        accessAllowed: false,
-        tablesAccessed,
-        deniedTables: tablesAccessed,
-        warnings: [`User has no roles assigned to data source ${dataSourceId}`],
-        error: "User does not have any roles in this data source",
-      };
-    }
-
-    // Step 3: Get entity permissions for user's roles
-    const roleIds = userRoles.map((ur) => ur.ds_role_id);
-    const entityPerms = await db
-      .selectFrom("ds_entity_permissions")
-      .selectAll()
-      .where("data_source_id", "=", dataSourceId)
-      .where("ds_role_id", "in", roleIds)
-      .execute();
-
-    // Build map of accessible tables
-    const accessibleTables = new Set<string>();
-    for (const perm of entityPerms) {
-      if (perm.entity_type === "table" || perm.entity_type === "view") {
-        // Only allow if the level actually grants a SELECT.
-        if ((READABLE_LEVELS as readonly string[]).includes(perm.permission_level)) {
-          accessibleTables.add(perm.entity_name.toLowerCase());
-        }
-      }
-    }
-
-    // Step 4: Check if all accessed tables are permitted
-    const deniedTables: string[] = [];
-    for (const table of tablesAccessed) {
-      if (!accessibleTables.has(table.toLowerCase())) {
-        deniedTables.push(table);
-      }
-    }
+    const deniedTables = results.filter((r) => !r.hasAccess).map((r) => r.entity);
 
     // Step 5: Return validation result
     return {
@@ -235,33 +195,11 @@ export async function isTableAccessible(
   tableName: string
 ): Promise<boolean> {
   try {
-    const db = getDb();
-
-    // Get user's accessible tables
-    const userRoles = await db
-      .selectFrom("ds_user_roles")
-      .select("ds_role_id")
-      .where("data_source_id", "=", dataSourceId)
-      .where("user_id", "=", userId)
-      .execute();
-
-    if (userRoles.length === 0) {
-      return false;
-    }
-
-    const roleIds = userRoles.map((ur) => ur.ds_role_id);
-
-    // Check if user has read or higher access to the table
-    const perm = await db
-      .selectFrom("ds_entity_permissions")
-      .selectAll()
-      .where("data_source_id", "=", dataSourceId)
-      .where("ds_role_id", "in", roleIds)
-      .where("entity_name", "=", tableName)
-      .where((eb) => eb("permission_level", "in", [...READABLE_LEVELS]))
-      .executeTakeFirst();
-
-    return !!perm;
+    // Delegated for the same reason as above: one answer to one question.
+    const [result] = await checkEntityAccess(userId, dataSourceId, [
+      { name: tableName, schema: undefined, type: "table" as const },
+    ]);
+    return !!result?.hasAccess;
   } catch (error) {
     console.error("[SQLValidator] Table access check failed:", error);
     return false;
