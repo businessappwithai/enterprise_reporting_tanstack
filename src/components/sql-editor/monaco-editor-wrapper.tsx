@@ -67,11 +67,6 @@ export function MonacoSQLEditorWrapper(props: MonacoSQLEditorProps) {
         contextmenu: true,
       });
 
-      console.log(
-        "[INIT] Editor options set - readOnly:",
-        editor.getOption(monaco.editor.EditorOption.readOnly)
-      );
-
       // Set theme
       const monacoTheme = theme === "dark" ? "vs-dark" : "light";
       monaco.editor.setTheme(monacoTheme);
