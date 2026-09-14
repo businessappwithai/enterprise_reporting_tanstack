@@ -4,13 +4,14 @@ import { readSessionToken, verifySession } from "@/lib/auth/session";
 import { sqlEditorConfig, validatePageSize } from "@/lib/config/pagination";
 import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
+import { createLogger } from "@/lib/logging/logger";
+import { validateQueryAccess } from "@/lib/permissions/query-access-validator";
 import { logAudit } from "@/lib/security/audit";
 import { json } from "@/lib/server/response";
 import { isReadOnlyQuery } from "@/lib/sql/validator";
-import { createLogger } from "@/lib/logging/logger";
 import { AUDIT_ACTIONS } from "@/types/actions";
 import { LOG_COMPONENTS } from "@/types/components";
-import type { DataSource } from "@/types/database";
+import type { DataSource, User } from "@/types/database";
 
 async function getSession(request: Request) {
   const cookie = request.headers.get("cookie") || "";
@@ -120,6 +121,57 @@ export const Route = createFileRoute("/api/sql/execute")({
             return json(
               { success: false, error: { code: "NOT_FOUND", message: "Data source not found" } },
               { status: 404 }
+            );
+          }
+
+          /*
+           * Which tables this caller may read.
+           *
+           * Everything above this point checks the *shape* of the request — a
+           * session exists, the SQL is a SELECT, the data source is real. None
+           * of it asks whether this user may read the tables the SELECT names,
+           * and the route went straight from that to executing the query. Any
+           * signed-in user could read every table of any data source they could
+           * name, whatever their `ds_entity_permissions` said.
+           *
+           * `validateQueryAccess` is the check the NL-query path already makes
+           * before it executes (nl-query.ts, step 4). Using the same function
+           * here rather than a second one is the point: two implementations of
+           * "may this user read this table" is precisely how the reader and the
+           * writer of `ds_entity_permissions` came to disagree in the first
+           * place. It bypasses for system admins and treats a user with no
+           * roles on the data source as having no access.
+           */
+          const accessValidation = await validateQueryAccess(
+            session.user as unknown as User,
+            sql,
+            dataSourceId
+          );
+
+          if (!accessValidation.allowed) {
+            logger.warn("SQL execution denied by entity access rules", {
+              userId: session.user.id,
+              email: session.user.email,
+              dataSourceId,
+              deniedTables: accessValidation.deniedTables,
+              deniedColumns: accessValidation.deniedColumns,
+              reason: accessValidation.reason,
+              timestamp: new Date().toISOString(),
+            });
+            return json(
+              {
+                success: false,
+                error: {
+                  code: "FORBIDDEN",
+                  // Names the tables rather than refusing blankly: the caller
+                  // wrote the query and can only fix it if they know which part
+                  // of it they may not read.
+                  message:
+                    accessValidation.reason ||
+                    "You do not have access to every table in this query",
+                },
+              },
+              { status: 403 }
             );
           }
 

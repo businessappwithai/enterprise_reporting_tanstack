@@ -5,10 +5,9 @@
  * for natural language to SQL translation
  */
 
-import { createReasoningClient } from "@/lib/voice/llama-client";
-import { isLlamaReasoningAvailable } from "@/lib/voice/llama-client";
-import type { SchemaMetadata } from "@/lib/validation/translation-validator";
 import { validateSQLRBACAccess } from "@/lib/nlquery/sql-ast-validator";
+import type { SchemaMetadata } from "@/lib/validation/translation-validator";
+import { createReasoningClient, isLlamaReasoningAvailable } from "@/lib/voice/llama-client";
 
 const LLAMA_REASONING_MODEL = process.env.LLAMA_REASONING_MODEL || "qwen3.6";
 
@@ -26,12 +25,27 @@ export interface EnhancedSchemaMetadata extends SchemaMetadata {
 /**
  * Translate NL to SQL using llama.cpp Qwen3.6
  */
+/** A refusal, distinct from a failure to translate. */
+export interface LlamaTranslationDenied {
+  denied: string;
+  deniedTables: string[];
+}
+
+export type LlamaTranslation =
+  | { sql: string; explanation: string; warnings?: string[] }
+  | LlamaTranslationDenied;
+
+/** Narrow a result the caller got back. */
+export function isDenied(result: LlamaTranslation | null): result is LlamaTranslationDenied {
+  return result !== null && "denied" in result;
+}
+
 export async function translateNLToSQLViaLlama(
   nlQuestion: string,
   schema: EnhancedSchemaMetadata,
   userId?: string,
   dataSourceId?: string
-): Promise<{ sql: string; explanation: string; warnings?: string[] } | null> {
+): Promise<LlamaTranslation | null> {
   try {
     const available = await isLlamaReasoningAvailable();
     if (!available) {
@@ -69,12 +83,8 @@ export async function translateNLToSQLViaLlama(
         if (!rbacValidation.accessAllowed) {
           console.warn("[Llama] RBAC validation failed for refined SQL:", rbacValidation.error);
           return {
-            sql: refinedSQL,
-            explanation: `Refined SQL after validation: ${validationResult.errors.join(", ")}`,
-            warnings: [
-              ...["SQL was refined due to initial validation errors"],
-              ...(rbacValidation.warnings || []),
-            ],
+            denied: rbacValidation.error ?? "Access denied",
+            deniedTables: rbacValidation.deniedTables,
           };
         }
       }
@@ -86,15 +96,29 @@ export async function translateNLToSQLViaLlama(
       };
     }
 
-    // Step 3: Validate RBAC access if user context provided
+    /*
+     * Step 3: RBAC.
+     *
+     * This used to log the verdict and return the SQL anyway, which made the
+     * check decorative: the caller got a query naming tables the user may not
+     * read, and only a later gate — or, on the voice path, nothing at all —
+     * stopped it. Handing back SQL that names forbidden tables discloses the
+     * shape of the schema and of somebody else's permissions even when it
+     * cannot be run.
+     *
+     * The refusal is its own shape rather than `null`, because "you may not
+     * read bus_account" and "the model could not write a query" are different
+     * things to tell somebody, and `null` already means the second.
+     */
     const warnings: string[] = [];
     if (userId && dataSourceId) {
       const rbacValidation = await validateSQLRBACAccess(userId, dataSourceId, initialSQL);
       if (!rbacValidation.accessAllowed) {
         console.warn("[Llama] RBAC validation failed:", rbacValidation.error);
-        if (rbacValidation.warnings) {
-          warnings.push(...rbacValidation.warnings);
-        }
+        return {
+          denied: rbacValidation.error ?? "Access denied",
+          deniedTables: rbacValidation.deniedTables,
+        };
       }
     }
 

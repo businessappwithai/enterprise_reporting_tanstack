@@ -11,14 +11,17 @@ import { sql } from "kysely";
 import { requireAuth } from "@/lib/auth/middleware";
 import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
-import type { DataSource, ResultRow, User } from "@/types/database";
-import { isSafeSelectQuery } from "@/lib/nlquery/openai-translator";
-import { translateNLToSQLViaLlama } from "@/lib/nlquery/llama-translator";
-import { isLlamaReasoningAvailable } from "@/lib/voice/llama-client";
+import { formatGraphContext, getGraphContext } from "@/lib/graph/rag";
+import { isDenied, translateNLToSQLViaLlama } from "@/lib/nlquery/llama-translator";
 import {
-  translateNLToSQLViaMastra as translateViaMastra,
   isMastraAvailable,
+  translateNLToSQLViaMastra as translateViaMastra,
 } from "@/lib/nlquery/mastra-connector";
+import {
+  buildMastraContextPrompt,
+  storeNLQueryContext,
+} from "@/lib/nlquery/nl-query-context-service";
+import { isSafeSelectQuery } from "@/lib/nlquery/openai-translator";
 import { getSchemaMetadata } from "@/lib/nlquery/schema-metadata";
 import { validateQueryAccess } from "@/lib/permissions/query-access-validator";
 import { logAudit } from "@/lib/security/audit";
@@ -27,11 +30,8 @@ import {
   assessTranslationConfidence,
   reverseTranslateSql,
 } from "@/lib/validation/translation-validator";
-import {
-  storeNLQueryContext,
-  buildMastraContextPrompt,
-} from "@/lib/nlquery/nl-query-context-service";
-import { getGraphContext, formatGraphContext } from "@/lib/graph/rag";
+import { isLlamaReasoningAvailable } from "@/lib/voice/llama-client";
+import type { DataSource, ResultRow, User } from "@/types/database";
 
 export interface ExecuteNLQueryInput {
   nlQuestion: string;
@@ -215,7 +215,36 @@ export const executeNLQuery = createServerFn({
       if (!translation && (await isLlamaReasoningAvailable())) {
         console.log("[NLQuery] Mastra not available, using llama.cpp directly");
         translationSource = "llama-reasoning";
-        translation = await translateNLToSQLViaLlama(nlQuestion, enhancedSchema);
+        /*
+         * The user and data source are passed now.
+         *
+         * They were not, so the translator's RBAC branch — `if (userId &&
+         * dataSourceId)` — never ran on this path at all. Step 4 below still
+         * refused the query before it executed, so nothing unauthorised was
+         * returned; what was lost is the earlier and more precise refusal, and
+         * the audit line naming the tables.
+         */
+        translation = await translateNLToSQLViaLlama(
+          nlQuestion,
+          enhancedSchema,
+          session.user.id,
+          dataSourceId
+        );
+
+        if (translation && isDenied(translation)) {
+          await logAudit({
+            userId: session.user.id,
+            action: "view",
+            resourceType: "query",
+            resourceId: dataSourceId,
+            details: {
+              nlQuestion,
+              deniedTables: translation.deniedTables,
+              reason: translation.denied,
+            },
+          });
+          return { success: false, error: translation.denied };
+        }
       }
 
       if (!translation) {
@@ -544,8 +573,13 @@ export const nlGenerateSQL = createServerFn({ method: "POST" })
       }
 
       if (await isLlamaReasoningAvailable()) {
+        // As above: no user or data source is passed, so the translator's RBAC
+        // branch does not run. The narrowing makes that visible at the call
+        // site rather than leaving it to be inferred from the argument list.
         const result = await translateNLToSQLViaLlama(nlDescription, schema);
-        if (result?.sql) return { success: true as const, sql: result.sql, confidence: 0.7 };
+        if (result && !isDenied(result)) {
+          return { success: true as const, sql: result.sql, confidence: 0.7 };
+        }
       }
 
       return {

@@ -1,23 +1,23 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
-import type { DataSource, ResultRow } from "@/types/database";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth/middleware";
-import { isAdmin } from "@/lib/permissions/permissions";
 import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
+import { formatGraphContext, getGraphContext } from "@/lib/graph/rag";
+import { isDenied, translateNLToSQLViaLlama } from "@/lib/nlquery/llama-translator";
+import { isMastraAvailable, translateNLToSQLViaMastra } from "@/lib/nlquery/mastra-connector";
+import { buildMastraContextPrompt } from "@/lib/nlquery/nl-query-context-service";
 import { getSchemaMetadata } from "@/lib/nlquery/schema-metadata";
-import { translateNLToSQLViaMastra, isMastraAvailable } from "@/lib/nlquery/mastra-connector";
-import { translateNLToSQLViaLlama } from "@/lib/nlquery/llama-translator";
+import { isAdmin } from "@/lib/permissions/permissions";
+import { chartTypeSchema } from "@/lib/schemas/charts";
+import { logAudit } from "@/lib/security/audit";
 // llama-translator imports this symbol but does not re-export it, so taking it
 // from there broke the production build at rollup time.
 import { isLlamaReasoningAvailable } from "@/lib/voice/llama-client";
-import { getGraphContext, formatGraphContext } from "@/lib/graph/rag";
-import { buildMastraContextPrompt } from "@/lib/nlquery/nl-query-context-service";
-import { logAudit } from "@/lib/security/audit";
-import { chartTypeSchema } from "@/lib/schemas/charts";
+import type { DataSource, ResultRow } from "@/types/database";
 
 // ---------------------------------------------------------------------------
 // Shared helper: resolve NL description to SQL via available backends
@@ -57,8 +57,11 @@ async function nlToSql(
   }
 
   if (await isLlamaReasoningAvailable()) {
+    // No user or data source is passed here, so the translator's RBAC branch
+    // does not run and a refusal cannot come back — the narrowing is for the
+    // type, and to make the omission visible rather than implicit.
     const result = await translateNLToSQLViaLlama(nlDescription, schema);
-    if (result?.sql) return { sql: result.sql, confidence: 0.7 };
+    if (result && !isDenied(result)) return { sql: result.sql, confidence: 0.7 };
   }
 
   return { error: "No NL→SQL backend available. Start Mastra or llama.cpp first." };

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { transcribeAudioStream } from "@/lib/voice/qwen-asr";
-import { translateNLToSQLViaLlama } from "@/lib/nlquery/llama-translator";
 import type { EnhancedSchemaMetadata } from "@/lib/nlquery/llama-translator";
+import { isDenied, translateNLToSQLViaLlama } from "@/lib/nlquery/llama-translator";
+import { transcribeAudioStream } from "@/lib/voice/qwen-asr";
 
 /**
  * WebSocket endpoint for real-time voice transcription + NL-to-SQL
@@ -88,7 +88,19 @@ export const Route = createFileRoute("/api/voice/ws")({
                     message.dataSourceId
                   );
 
-                  if (result) {
+                  if (result && isDenied(result)) {
+                    // A refusal, not a failure. The voice path never executed
+                    // anything, but it did hand back SQL naming tables the
+                    // speaker may not read — which discloses the schema and
+                    // their permissions just as well as running it would.
+                    socket.send(
+                      JSON.stringify({
+                        type: "denied",
+                        error: result.denied,
+                        deniedTables: result.deniedTables,
+                      })
+                    );
+                  } else if (result) {
                     socket.send(
                       JSON.stringify({
                         type: "sql",
