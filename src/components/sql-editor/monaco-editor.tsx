@@ -41,16 +41,32 @@ function MonacoSQLEditorComponent({
         contextmenu: true,
       });
 
-      // Verify the options were set
-      const options = editor.getOptions();
-      console.log(
-        "[Monaco Editor] readOnly option:",
-        options.get(monaco.editor.EditorOption.readOnly)
-      );
-      console.log(
-        "[Monaco Editor] domReadOnly option:",
-        options.get(monaco.editor.EditorOption.domReadOnly)
-      );
+      /*
+       * The two readback logs that were here are gone, and with them the only
+       * type error in this project.
+       *
+       * They read `readOnly` and `domReadOnly` straight back out of the editor
+       * to confirm the `updateOptions` call above had taken — debugging left in,
+       * printing "readOnly option: false" to the console of every reader who
+       * ever opened the SQL editor.
+       *
+       * They also could not type-check, for a reason worth knowing before
+       * reaching for `monaco.editor.EditorOption` again: `@monaco-editor/react`
+       * types its two `OnMount` parameters from two different specifiers of the
+       * same package —
+       *
+       *   import { editor } from "monaco-editor";                           // the editor
+       *   import * as monaco from "monaco-editor/esm/vs/editor/editor.api";  // the namespace
+       *
+       * and the package's `exports` map sends those to two different files
+       * (`editor.main.d.ts` and `editor.api.d.ts`). TypeScript enums are
+       * nominal, so an `EditorOption` from the namespace is not the
+       * `EditorOption` the editor's own methods accept, and any call mixing
+       * them is TS2345 however obviously correct it looks.
+       *
+       * If you need to read an option back, take the value from the object you
+       * passed to `updateOptions` rather than asking the editor for it.
+       */
 
       // Add keyboard shortcut for execute (Ctrl/Cmd + Enter)
       editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
