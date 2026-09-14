@@ -64,7 +64,6 @@ export async function loadRolesAndPermissions(
 }
 
 /**
-<<<<<<< HEAD
  * Pull this application's session token out of a Cookie header.
  *
  * The name has to be matched whole, at a cookie boundary. Every caller used to
