@@ -56,6 +56,19 @@ COPY --from=builder --chown=bunuser:bunuser /app/node_modules ./node_modules
 COPY --chown=bunuser:bunuser scripts ./scripts
 COPY --chown=bunuser:bunuser src/lib/db ./src/lib/db
 COPY --chown=bunuser:bunuser src/lib/security ./src/lib/security
+# Enough of src/ for `scripts/seed-reporting-pack.ts` to run in this image.
+#
+# `src/lib/db` and `src/lib/security` are what *serving* needs, and they are one
+# directory short of registering a data source: the seeder introspects the
+# attached database's schema and caches it, which is `src/lib/mastra` over
+# `src/lib/sql`, and it types its result from `src/types`. Without these the
+# image starts and answers perfectly, and the one script that populates it
+# fails on an import — which reads as a broken seeder rather than a pruned
+# image. `tsconfig.json` travels for the same reason: `@/` resolves through it.
+COPY --chown=bunuser:bunuser src/lib/sql ./src/lib/sql
+COPY --chown=bunuser:bunuser src/lib/mastra ./src/lib/mastra
+COPY --chown=bunuser:bunuser src/types ./src/types
+COPY --chown=bunuser:bunuser tsconfig.json ./tsconfig.json
 
 # Copy server wrapper for static file serving
 COPY --chown=bunuser:bunuser server-static-wrapper.mjs ./server-static-wrapper.mjs
@@ -76,7 +89,14 @@ ENV NODE_ENV=production \
 # Switch to non-root user
 USER bunuser
 
+# `127.0.0.1`, never `localhost`.
+#
+# Inside the container `localhost` resolves to `::1` as well, curl tries the
+# IPv6 address first, and the server listens on IPv4 only — so this probe
+# reports a connection refused against a server answering 200 to everyone else.
+# The container then never goes healthy, and anything waiting on it (a compose
+# `depends_on: service_healthy`, a one-shot seeder) never starts.
 HEALTHCHECK --interval=10s --timeout=5s --start-period=45s --retries=10 \
-    CMD curl -f http://localhost:3000/api/health || exit 1
+    CMD curl -f http://127.0.0.1:3000/api/health || exit 1
 
 CMD ["bun", "server-static-wrapper.mjs"]
