@@ -114,7 +114,8 @@ File-based routing under `src/routes/`:
 
 ```
 src/routes/
-├── __root.tsx     # ThemeProvider → TanStackDBWrapper → DuckDBProvider → TooltipProvider → QueryClientProvider
+├── __root.tsx     # ErrorBoundary → ThemeProvider → TanStackDBWrapper → DuckDBProvider
+│                  #   → TooltipProvider → QueryClientProvider → HelpProvider
 ├── _authed.tsx    # Auth guard: resolves the session from request headers via
 │                  #   getSessionFromHeaders, redirects to /login when absent
 ├── _authed/       # Protected pages: dashboard, sql-editor, nl-query, charts, dashboards, reports,
@@ -306,6 +307,40 @@ Job processing runs on **Trigger.dev** (`@trigger.dev/sdk`), configured in `trig
 - **ADK pipeline** (`src/lib/adk/`): the agent/tool orchestration variant of NL query — `intent-classifier.ts`, `pipeline.ts` and `tools/`, against the same Mastra server
 - **Report generation** (`src/lib/report-generation/`): the worker that renders report definitions into stored artifacts, plus its cleanup job
 - **Record links** (`src/lib/reporting/record-link.ts`): opening a report row as a record in another application — see its own section below
+
+### Help is one toaster, and `HelpProvider` renders it
+
+`src/components/help/help-toaster.tsx` is the only help surface. A `?` opens a
+panel pinned to the top right; **its own close button is the only way out** — no
+timeout, no click-outside, no Escape, no backdrop and no focus trap, so the
+query, report or chart being explained stays visible and editable beside it. One
+panel at a time.
+
+`HelpProvider` is the **innermost** provider in `__root.tsx`, and both facts
+about its position are load-bearing: it is inside `QueryClientProvider` because
+the articles are a `useQuery`, and it renders the toaster itself so that no
+screen places a help surface of its own. A `?` anywhere below it opens the one
+panel.
+
+- `HelpButton.tsx` — the masthead `?`. It used to advertise "press ? for
+  keyboard shortcut"; nothing listens for `?`, and a global binding would fire
+  while someone typed a question mark into the SQL editor.
+- `HelpPanel.tsx` — the three views (search, an 18-category `<select>`, an
+  article) at 26rem. The rail is a `<select>` because eighteen buttons do not fit
+  beside anything; the articles, the search and the `DOMPurify` sanitising are
+  unchanged from the dialog it replaced.
+- `HelpTopicButton` — a `?` for one piece of inline help, named that way rather
+  than `HelpButton` to avoid clashing with the masthead component. The cron
+  reference on the jobs screen uses it; it was a hover `Tooltip`, available only
+  on a pointer, after a delay, and never on a touch device.
+
+**`top-20`, not `top-4`.** The header's right-hand end carries the theme
+selector, this `?`, the notification bell and the account menu — a non-modal
+panel must not be the thing making four of its own controls unclickable.
+
+This matches the generated application deliberately: `/app` and `/report` come
+up together and its dashboard links straight into this platform, so a reader who
+meets both should not have to learn two ways to ask for help.
 
 ### TanStack DB (client-side state)
 
