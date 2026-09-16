@@ -1,6 +1,7 @@
 import { type QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
+import { HelpProvider } from "@/components/help/help-toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { DuckDBProvider } from "@/components/duckdb/DuckDBProvider";
 import { ErrorBoundary } from "@/components/errors/error-boundary";
@@ -56,7 +57,13 @@ function RootComponent() {
               <DuckDBProvider>
                 <TooltipProvider>
                   <QueryClientProvider client={queryClient}>
-                    <Outlet />
+                    {/* Innermost, and inside QueryClientProvider: the help
+                        articles are a `useQuery`, and HelpProvider renders the
+                        toaster itself — so a `?` anywhere below opens it and no
+                        screen places a help surface of its own. */}
+                    <HelpProvider>
+                      <Outlet />
+                    </HelpProvider>
                     <Toaster />
                     <ReactQueryDevtools initialIsOpen={false} />
                   </QueryClientProvider>
