@@ -1,18 +1,52 @@
 "use client";
 
-import { HelpCircle, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { useState } from "react";
+import { HelpTopicButton } from "@/components/help/help-toaster";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface CronBuilderProps {
   value: string;
   onChange: (cron: string) => void;
 }
+
+/**
+ * The cron field reference, as a help topic.
+ *
+ * Hoisted out of the JSX so the object is created once rather than on every
+ * keystroke in the builder — a new `topic` identity each render would make
+ * `showHelp` replace the open panel while someone was reading it.
+ */
+const CRON_SYNTAX_HELP = {
+  key: "cron-syntax",
+  title: "Cron expression — Help",
+  body: (
+    <div className="space-y-3">
+      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+        <dt className="font-semibold">Minute</dt>
+        <dd className="text-muted-foreground">0-59 or *</dd>
+        <dt className="font-semibold">Hour</dt>
+        <dd className="text-muted-foreground">0-23 or *</dd>
+        <dt className="font-semibold">Day</dt>
+        <dd className="text-muted-foreground">1-31 or *</dd>
+        <dt className="font-semibold">Month</dt>
+        <dd className="text-muted-foreground">1-12 or *</dd>
+        <dt className="font-semibold">Weekday</dt>
+        <dd className="text-muted-foreground">0-6 (0=Sunday) or *</dd>
+      </dl>
+      <div className="space-y-1 text-xs">
+        <p className="font-semibold">Examples</p>
+        <p className="font-mono text-muted-foreground">*/5 = every 5</p>
+        <p className="font-mono text-muted-foreground">1-5 = 1 to 5</p>
+        <p className="font-mono text-muted-foreground">1,3,5 = 1, 3, and 5</p>
+      </div>
+    </div>
+  ),
+};
 
 export function CronBuilder({ value, onChange }: CronBuilderProps) {
   const [mode, setMode] = useState<"ui" | "manual">("ui");
@@ -153,36 +187,12 @@ export function CronBuilder({ value, onChange }: CronBuilderProps) {
 
           <div className="flex items-center gap-2">
             <span className="text-sm font-mono font-medium">Current: {getCronExpression()}</span>
-            <Tooltip>
-              <TooltipTrigger>
-                <HelpCircle className="h-4 w-4 text-muted-foreground" />
-              </TooltipTrigger>
-              <TooltipContent className="max-w-xs">
-                <div className="space-y-1 text-xs">
-                  <p>
-                    <strong>Minute:</strong> 0-59 or *
-                  </p>
-                  <p>
-                    <strong>Hour:</strong> 0-23 or *
-                  </p>
-                  <p>
-                    <strong>Day:</strong> 1-31 or *
-                  </p>
-                  <p>
-                    <strong>Month:</strong> 1-12 or *
-                  </p>
-                  <p>
-                    <strong>Weekday:</strong> 0-6 (0=Sunday) or *
-                  </p>
-                  <p className="mt-2">
-                    <strong>Examples:</strong>
-                  </p>
-                  <p>*/5 = every 5</p>
-                  <p>1-5 = 1 to 5</p>
-                  <p>1,3,5 = 1, 3, and 5</p>
-                </div>
-              </TooltipContent>
-            </Tooltip>
+            {/* A `?` into the help toaster, not a tooltip.
+                This was a `Tooltip` on a `HelpCircle`: cron syntax — the one
+                thing on this screen nobody remembers — appeared on hover,
+                after a delay, and never at all on a phone. It is the same
+                surface every other piece of help in this platform uses now. */}
+            <HelpTopicButton label="Cron expression" topic={CRON_SYNTAX_HELP} />
           </div>
 
           <div className="space-y-2">
