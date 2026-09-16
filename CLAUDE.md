@@ -14,7 +14,8 @@ bun run start                 # serve it — listens on :3000, PORT overrides
 biome lint src                # lint check
 biome lint src --write        # lint + auto-fix
 biome format src --write      # format files
-biome format src --check      # format check (used in precommit)
+biome format src              # format check — `format` WITHOUT --write IS the check
+                              #   (Biome v2 has no --check flag; see below)
 tsc --noEmit                  # type check
 bun run precommit             # lint + typecheck + format:check
 
@@ -29,6 +30,14 @@ bun scripts/sync-knowledge-graph.ts       # bootstrap AGE + sync schema + import
 # Background jobs (Trigger.dev tasks, or built-in cron fallback)
 bun src/lib/jobs/worker-runner.ts         # start background jobs worker
 
+# Load a generated application into this platform (see "The reporting-pack seeder")
+REPORTING_PACK=./pack.json APP_DATABASE_URL=postgresql://… \
+  bun scripts/seed-reporting-pack.ts
+
+# Unit tests (bun:test). Scope to src — see "Testing" below, a bare `bun test`
+# also picks up the Playwright specs under e2e/ and errors on all of them.
+bun test src
+
 # E2E tests (start dev server first — webServer config is commented out in playwright.config.ts)
 playwright test                             # all tests
 playwright test --headed                    # visible browser
@@ -42,7 +51,21 @@ bun run test:setup && playwright test       # setup test data then run all
 
 ### Framework and Runtime
 
-TanStack Start v1 (`@tanstack/react-start` ^1.167.65) with file-based routing. Requires Bun ≥ 1.3.0. Dev server runs on port 4050. Linting and formatting use Biome (not ESLint/Prettier).
+TanStack Start v1 (`@tanstack/react-start` ^1.167.65) with file-based routing. Requires Bun ≥ 1.3.0 (CI pins 1.3.11). React 19, Vite 7, Tailwind 3, shadcn/ui over Radix. Linting and formatting use Biome (not ESLint/Prettier).
+
+**The dev server and the production server are on different ports.** `vite dev`
+listens on **4050**; `bun run start` serves the build on **3000**, and `PORT`
+overrides it. The Playwright suite and `BASE_URL` both default to 4050.
+
+`vite.config.ts` carries three things worth not undoing:
+
+- `server.headers` sets `Cross-Origin-Opener-Policy: same-origin` and
+  `Cross-Origin-Embedder-Policy: require-corp` — cross-origin isolation, which
+  DuckDB WASM needs for `SharedArrayBuffer`.
+- `ssr.external: ['better-auth']` — see **Auth** below. Bundling it breaks every
+  sign-in at runtime while the build and typecheck both pass.
+- `resolve.dedupe` on React and `optimizeDeps.include` for the same: two copies of
+  React in one page is a hooks error with no useful stack.
 
 ### Two-Database Architecture
 
@@ -54,8 +77,17 @@ import { getDb } from "@/lib/db/config";
 
 - Connection via `DATABASE_URL`, else assembled from `POSTGRES_HOST/PORT/DB/USER/PASSWORD` (or `PGHOST`/`PGPORT`/… ), defaulting to `localhost:5432/enterprise_config` as user `enterprise`
 - `getDb()` is synchronous; bootstraps schema on first call via `bootstrapSchema()` in `src/lib/db/bootstrap.ts` — idempotent (`CREATE TABLE IF NOT EXISTS`), safe to run every boot
-- Stores everything: users, roles, user_roles, resource_permissions, data_sources, saved_queries, report_definitions, chart_definitions, dashboard_layouts, dashboard_widgets, job_definitions, job_executions, audit_log, logs, email_templates, filter_definitions, report_filters, chart_filters, ds_roles, ds_user_roles, ds_entity_permissions, schema_table_instructions, schema_field_instructions, nl_query_context, nl_query_role_stats, nl_query_feedback, help_articles
+- Stores everything: users, roles, user_roles, resource_permissions, data_sources, saved_queries, report_definitions, chart_definitions, dashboard_layouts, dashboard_widgets, job_definitions, job_executions, audit_log, logs, email_templates, filter_definitions, report_filters, chart_filters, ds_roles, ds_user_roles, ds_entity_permissions, schema_table_instructions, schema_field_instructions, metadata_entity_header, metadata_entity_field, error_messages, warning_configs, error_occurrences, app_settings, nl_query_context, nl_query_role_stats, nl_query_feedback, help_articles — plus `auth_sessions`, `auth_accounts` and `auth_verifications` for Better Auth
 - The `Database` interface in `src/lib/db/kysely-db.ts` is the authoritative type for all config DB tables — add a table there and in `bootstrap.ts` together
+
+**Seven tables exist in `bootstrap.ts` that the `Database` interface does not
+declare**, so the rule above is already broken in one direction: `ds_schema_cache`,
+`adk_intents`, `monitoring_rules`, `monitoring_executions`, `notifications`,
+`nl_report_definitions` and `generated_report_artifacts`. Code that reads them —
+`monitoring-worker.ts` and `monitoring-scheduler.ts` are the main ones — is
+selecting from a table Kysely has no type for. Adding the missing interfaces is
+worth doing; until then, do not assume the interface is a complete inventory of
+the schema. `bootstrap.ts` is.
 - **Knowledge graph** (`ers_knowledge` database): Apache AGE property graph for NL query context; separate pool in `src/lib/graph/client.ts` via `GRAPH_DATABASE_URL`
 
 There is no MariaDB or SQLite anywhere in the running system, despite what several files under `docs/` still claim (see **Stale documentation** below).
@@ -70,6 +102,9 @@ const kysely = await getConnection(dataSource);  // Kysely<any>
 - Returns a Kysely instance for the user's external database
 - Supported `client_type` values: `pg`, `mysql`, `mssql`
 - Connection configs stored AES-256-GCM encrypted (`ENCRYPTION_KEY` env var) in the config DB's `data_sources` table; decrypted via `src/lib/security/encryption.ts`
+- **An unset `ENCRYPTION_KEY` does not fail — it warns and falls back to a hard-coded development key.** Every stored data-source password is then effectively unprotected. Check the warning is absent before storing anything real.
+- **The key is the ciphertext's only input, so rotating it strands every stored config.** There is no re-encryption path; the failure looks like a data source that exists and cannot be opened. Generate it once, before first boot.
+- `encryption.ts` used to log twenty-four `[ENCRYPTION DEBUG]` lines per call on the normal path, ending with the first 200 characters of the plaintext — which for a data source is the whole connection config, password included, in every `docker compose logs`. It does not any more. Do not add diagnostics that print plaintext or key material here.
 - Connections pooled by data source ID and health-checked before reuse
 - Hostnames are resolved to IPv4 explicitly (`resolveIPv4`) because Docker DNS returns IPv6 first and that path fails against Neon pooler endpoints — keep `ssl.servername` set when changing this
 
@@ -79,11 +114,14 @@ File-based routing under `src/routes/`:
 
 ```
 src/routes/
-├── __root.tsx     # ThemeProvider → TanStackDBWrapper → DuckDBProvider → TooltipProvider → QueryClientProvider
-├── _authed.tsx    # Auth guard: reads session_token cookie, redirects to /login if absent/invalid
+├── __root.tsx     # ErrorBoundary → ThemeProvider → TanStackDBWrapper → DuckDBProvider
+│                  #   → TooltipProvider → QueryClientProvider → HelpProvider
+├── _authed.tsx    # Auth guard: resolves the session from request headers via
+│                  #   getSessionFromHeaders, redirects to /login when absent
 ├── _authed/       # Protected pages: dashboard, sql-editor, nl-query, charts, dashboards, reports,
-│                  #   data-sources, datasets, metadata, filters, jobs, monitoring, queue-management,
-│                  #   trigger-board, logs, system-logs, settings, admin, users, roles, permissions
+│                  #   queries, saved-queries, data-sources, datasets, metadata, filters, jobs,
+│                  #   monitoring, queue-management, trigger-board, logs, system-logs, settings,
+│                  #   email-templates, admin, users, roles, permissions
 ├── api/           # API routes using server.handlers pattern
 ├── share/         # Public (unauthenticated) share links: chart, dashboard, report
 ├── login.tsx      # Public login page
@@ -126,13 +164,75 @@ await otherFn();
 
 Newer server functions wrap logic in `withErrorHandler()` from `src/lib/server-fns/with-error-handler.ts`, which audit-logs failures and normalizes errors into `ServerFunctionError` subclasses (`ValidationError` 422, `UnauthorizedError` 401, `NotFoundError` 404). Older ones return `{ success: boolean, data?: T, error?: string }` directly.
 
-### Auth
+### Auth — Better Auth, not a JWT
 
-- JWT signed with `AUTH_SECRET` env var, stored in `session_token` HttpOnly cookie
-- `verifySession(token)` in `src/lib/auth/session.ts` returns `Session | null`
-- In server fns (`src/server-fns/`): `import { requireAuth } from "@/lib/auth/middleware"` then `const session = await requireAuth()`
-- In API route handlers (`src/routes/api/`): manually extract cookie and call `verifySession(token)`
-- `_authed.tsx` runs session check in `beforeLoad` and injects `{ session }` into route context via `Route.useRouteContext()`
+Authentication is **Better Auth** (`src/lib/auth/better-auth.ts`). It replaced a
+hand-rolled HS256 JWT (`jose`) that carried the user, their roles and their
+permissions inside the cookie, and the two properties that motivated the move
+are the ones to keep in mind when changing anything here:
+
+- **A JWT is a bearer claim, not a lookup.** Roles and permissions were frozen
+  into the token at sign-in, so a role revoked at 09:00 was still granted by an
+  unexpired token at 17:00. They are now read from `roles`/`user_roles` on every
+  request, against the session's user id — revocation takes effect on the next one.
+- **There was no way to end a session server-side.** Now there is a row to
+  delete, and changing a password deletes the user's other sessions.
+
+**The seam did not move.** `Session`, `SessionUser`, `auth()`, `requireAuth()`
+and `verifySession(token)` keep the shapes they had, so the ~56 files that call
+them were untouched. What changed underneath is that `verifySession` is a
+database lookup rather than a signature check.
+
+| Where you are | What to call |
+|---|---|
+| Server fn (`src/server-fns/`) | `import { requireAuth } from "@/lib/auth/middleware"`, then `await requireAuth()` |
+| API route (`src/routes/api/`) | `import { auth } from "@/lib/auth/config"`, then `await auth(request)` |
+| You hold a raw token, not a request | `verifySession(token)` from `@/lib/auth/session` |
+| Route guard | `_authed.tsx` resolves the session in `beforeLoad` and injects `{ session }` into route context (`Route.useRouteContext()`) |
+
+- `/api/auth/$` is Better Auth's own HTTP surface (sign-in, sign-out, session).
+  `basePath` is `/api/auth`, so that splat route has to stay at exactly that path
+  or every URL the library generates points at a 404.
+- **The user table is the existing `users` table.** `roles`, `user_roles`,
+  `resource_permissions`, `ds_user_roles` and the audit log all key on `users.id`,
+  so Better Auth's `user` model is *mapped onto* `users` rather than given a table
+  of its own. Only `email_verified` was added. Sessions, credentials and
+  verifications get new tables — `auth_sessions`, `auth_accounts`,
+  `auth_verifications` — with real `TIMESTAMPTZ` columns, because the older tables
+  store timestamps as `VARCHAR` and Better Auth compares `expires_at` against a
+  `Date`, which against a string does not error, it just stops expiring sessions.
+- **Passwords stay bcrypt.** Better Auth hashes with scrypt by default; every
+  password in an existing installation is a bcrypt hash and there is no converting
+  one without the plaintext, so the `hash`/`verify` hooks keep `bcryptjs`. The
+  credential lives in `auth_accounts.password` — **not** `users.password_hash`,
+  which Better Auth never reads. A password-change path that writes the old column
+  reports success while sign-in keeps accepting the old password. `bootstrapSchema()`
+  copies each `users.password_hash` into `auth_accounts` once, so existing users
+  sign in with the passwords they already have.
+
+#### Two cookie traps, both of which read as "everyone is signed out"
+
+- **Never match the cookie by hand.** The name is Better Auth's business —
+  `ers.session_token` today, `__Secure-` prefixed once served over HTTPS — so
+  prefer `auth(request)` / `getSessionFromHeaders(headers)`, which hand the real
+  headers to the library. Where a raw token is genuinely all you have,
+  `readSessionToken()` matches `SESSION_COOKIE_NAME` at a cookie boundary.
+- **`COOKIE_PREFIX` is `ers` on purpose.** The generated application this platform
+  sits beside sets `<project>_app.session_token`, Better Auth cookies are path `/`,
+  and nginx serves both from one origin. The old unanchored
+  `cookie.match(/session_token=([^;]+)/)` found the *first substring*, so
+  `crm_app.session_token` arrived first alphabetically and its value was handed to
+  `verifySession` — signed in, session valid, every permission gone, and the
+  dashboard rendering "0 of 10 modules available" to a full administrator.
+
+#### `better-auth` must stay external to the server build
+
+`vite.config.ts` carries `ssr.external: ['better-auth']`. It depends on zod `^4`
+and this application on zod `^3`; both are installed, v4 nested under
+`better-auth` and v3 hoisted. Node's resolution gets that right and the bundler
+flattens it, handing `better-auth` the hoisted v3 — which fails at runtime on
+`z.looseObject is not a function`: a 500 on every sign-in, from a build that
+succeeded and a typecheck that passed.
 
 ### NL Query Pipeline
 
@@ -154,6 +254,38 @@ Two layers, both stored in the config DB (PostgreSQL):
 1. **System-level**: `roles` + `user_roles`. Permission strings: `resource:action` (e.g. `data_source:view`, `nl_query:*`, `*:*`). Helpers in `src/lib/permissions/permissions.ts` — `hasPermission`, `hasResourceAccess`, `filterAccessibleResources`, `requirePermission`
 2. **Data-source-level**: `ds_roles`, `ds_user_roles`, `ds_entity_permissions`. Per-table/column access per data source per role. Helpers in `src/lib/permissions/ds-rbac.ts` — `checkEntityAccess`, `getUserAccessibleEntities`. Generated SQL is parsed by `src/lib/mastra/sql-parser.ts` and validated against these before execution
 
+#### Every path that executes SQL gates on `validateQueryAccess`
+
+`/api/sql/execute` used to check that a session existed, that the SQL was a
+`SELECT` and that the data source was real — and then run it. It never asked
+whether the caller may read the tables the `SELECT` names, so **any signed-in
+user could read every table of any data source they could name**, whatever their
+`ds_entity_permissions` said. Both the SQL-editor path and the NL-query path now
+gate on `validateQueryAccess` (`src/lib/permissions/query-access-validator.ts`),
+and a denial is a 403 naming the tables rather than a blank refusal.
+
+That this went unseen for so long has a specific cause worth remembering:
+**nothing had ever created a `ds_entity_permissions` row**, so there was nothing
+for a check to enforce and no way to notice one was missing. Seeding roles from a
+model's `%%rbac` produced the first rows, and with them the real behaviour.
+
+Two rules follow from the fix:
+
+- **`checkEntityAccess` is the one implementation.** `sql-ast-validator.ts` used
+  to answer "may this user read this table" itself, against
+  `permission_level in ("read", "write", "admin")` — a set **disjoint** from the
+  `select | insert | update | delete | all` that the type declares, the
+  permissions screen offers and `upsertDsEntityPermission` writes. Both of its
+  functions delegate now. Do not add a third reading of that fact; the system-admin
+  bypass (`admin:*`) and the column restrictions live in `checkEntityAccess` only.
+- **The translator refuses rather than warning.** Both call sites used to log the
+  verdict and return the SQL anyway. On the voice path nothing executed, but SQL
+  naming forbidden tables went back to the speaker — which discloses the schema
+  and somebody else's permissions just as well as running it would. The refusal
+  has its own shape rather than being folded into `null`, because "you may not
+  read `bus_account`" and "the model could not write a query" are different
+  things to tell somebody and `null` already meant the second.
+
 ### Background Jobs — Trigger.dev, not BullMQ
 
 Job processing runs on **Trigger.dev** (`@trigger.dev/sdk`), configured in `trigger.config.ts` (project `enterprise-reporting`, tasks discovered under `./src/lib/jobs`).
@@ -171,6 +303,44 @@ Job processing runs on **Trigger.dev** (`@trigger.dev/sdk`), configured in `trig
 - **OpenKB** (`src/lib/openkb/`): knowledge-base client + embedding service for help content
 - **Export** (`src/lib/export/`): CSV, Excel via `exceljs`, PDF via `jspdf` + `jspdf-autotable`
 - **Logging** (`src/lib/logging/`): Pino; logs are also persisted to the config DB `logs` table
+- **Voice** (`src/lib/voice/`, `/api/voice/ws`): Qwen ASR and TTS clients over the llama.cpp endpoints, for spoken NL queries
+- **ADK pipeline** (`src/lib/adk/`): the agent/tool orchestration variant of NL query — `intent-classifier.ts`, `pipeline.ts` and `tools/`, against the same Mastra server
+- **Report generation** (`src/lib/report-generation/`): the worker that renders report definitions into stored artifacts, plus its cleanup job
+- **Record links** (`src/lib/reporting/record-link.ts`): opening a report row as a record in another application — see its own section below
+
+### Help is one toaster, and `HelpProvider` renders it
+
+`src/components/help/help-toaster.tsx` is the only help surface. A `?` opens a
+panel pinned to the top right; **its own close button is the only way out** — no
+timeout, no click-outside, no Escape, no backdrop and no focus trap, so the
+query, report or chart being explained stays visible and editable beside it. One
+panel at a time.
+
+`HelpProvider` is the **innermost** provider in `__root.tsx`, and both facts
+about its position are load-bearing: it is inside `QueryClientProvider` because
+the articles are a `useQuery`, and it renders the toaster itself so that no
+screen places a help surface of its own. A `?` anywhere below it opens the one
+panel.
+
+- `HelpButton.tsx` — the masthead `?`. It used to advertise "press ? for
+  keyboard shortcut"; nothing listens for `?`, and a global binding would fire
+  while someone typed a question mark into the SQL editor.
+- `HelpPanel.tsx` — the three views (search, an 18-category `<select>`, an
+  article) at 26rem. The rail is a `<select>` because eighteen buttons do not fit
+  beside anything; the articles, the search and the `DOMPurify` sanitising are
+  unchanged from the dialog it replaced.
+- `HelpTopicButton` — a `?` for one piece of inline help, named that way rather
+  than `HelpButton` to avoid clashing with the masthead component. The cron
+  reference on the jobs screen uses it; it was a hover `Tooltip`, available only
+  on a pointer, after a delay, and never on a touch device.
+
+**`top-20`, not `top-4`.** The header's right-hand end carries the theme
+selector, this `?`, the notification bell and the account menu — a non-modal
+panel must not be the thing making four of its own controls unclickable.
+
+This matches the generated application deliberately: `/app` and `/report` come
+up together and its dashboard links straight into this platform, so a reader who
+meets both should not have to learn two ways to ask for help.
 
 ### TanStack DB (client-side state)
 
@@ -190,7 +360,7 @@ Job processing runs on **Trigger.dev** (`@trigger.dev/sdk`), configured in `trig
 
 **Required:**
 ```
-AUTH_SECRET=           # JWT signing key (≥32 chars)
+AUTH_SECRET=           # Better Auth secret (≥32 chars; the app refuses to boot below that)
 ENCRYPTION_KEY=        # AES-256-GCM key (64 hex chars) for data source connection configs
 DATABASE_URL=postgresql://enterprise:password@localhost:5432/enterprise_config
 GRAPH_DATABASE_URL=postgresql://enterprise:password@localhost:5432/ers_knowledge
@@ -210,6 +380,9 @@ LLAMA_TTS_URL=http://localhost:8083        # Text-to-speech
 
 **Optional:**
 ```
+BETTER_AUTH_URL=           # Better Auth baseURL; falls back to APP_URL, then http://localhost:4050
+APP_URL=http://localhost:4050
+CORS_ORIGIN=               # comma-separated; appended to Better Auth's trustedOrigins
 TRIGGER_API_URL=           # Trigger.dev server; unset falls back to the built-in cron runner
 TRIGGER_API_KEY=
 WORKER_CONCURRENCY=5
@@ -218,9 +391,14 @@ LOG_LEVEL=info             # Pino log level
 DEFAULT_PAGE_SIZE / MAX_PAGE_SIZE / DATA_TABLE_PAGE_SIZE / EXPORT_PAGE_SIZE
 ```
 
-`.env.example` documents this full set; copy it to `.env` to start.
+`.env.example` documents most of this set; copy it to `.env` to start. Two gaps to
+know about: it still describes `AUTH_SECRET` as a "JWT signing key", which it has
+not been since the Better Auth migration, and it does not mention `BETTER_AUTH_URL`
+or `CORS_ORIGIN` at all — both are read by `src/lib/auth/better-auth.ts`, and
+getting `baseURL` wrong behind a reverse proxy is a sign-in that redirects to the
+wrong origin.
 
-**Server-side pagination is mandatory.** Every data query must apply `LIMIT`/`OFFSET` at the database level; never fetch a full table and paginate on the client.
+**Server-side pagination is mandatory.** Every data query must apply `LIMIT`/`OFFSET` at the database level; never fetch a full table and paginate on the client. This is a rule with a recent counter-example: `/api/queries` selected the whole `saved_queries` table — every row and every row's `sql_content` — and reported `meta.total` as the length of what it had already fetched, while the caller asked for a page. Filtering in the browser has the matching defect: it only ever searches the rows that page happened to contain, so a query whose name matches is invisible unless it landed on the page you were looking at. Both are done at the database now; do the same for any new list endpoint.
 
 ## Default Credentials
 
@@ -230,9 +408,130 @@ Auto-created by `bootstrapSchema()` on first startup (only inserts when no users
 
 Running `bun run db:seed` also adds `analyst@example.com` / `analyst123` with a sample Sakila data source.
 
-## E2E Tests
+`bootstrapSchema()` also backfills `auth_accounts` from `users.password_hash` for
+every user that has no `credential` account yet, which is what lets these
+(and any pre-migration account) sign in through Better Auth unchanged.
+
+## Dependencies — 78, and the ones that look unused are not
+
+22 packages that nothing imported were removed (99 → 78 dependencies, 18 → 17 dev).
+Gone: 11 unused `@radix-ui/react-*` primitives, `antlr4` (the SQL parser uses
+`antlr4ng`), `idb` (the offline cache uses `idb-keyval`), `sqlite`, `sql.js` and
+`@vscode/sqlite3` (SQLite is not a supported data source), `parquet-wasm`
+(`parquet-exporter.ts` writes Arrow IPC), `pino-http`, `date-fns`, `lodash`,
+`@types/lodash` and `@tanstack/react-store`.
+
+**Six survive a grep for their own name and must not be "cleaned up":**
+`postcss` and `autoprefixer` (plugin keys in `postcss.config.js`),
+`tailwindcss-animate` (required in `tailwind.config.ts`), `pino-pretty`
+(`transport.target`, loaded by name at runtime), `typescript`, and the remaining
+`@types/*`. Two more are single-consumer and easy to mistake for dead weight:
+`redis` is imported only by `src/lib/openkb/openkb-client.ts`, and `better-sqlite3`
+is Mastra's.
+
+**A passing build does not prove a dependency is unused.** Bun keeps a removed
+direct dependency resolvable as long as something else still depends on it, so the
+evidence has to be the absence of any module specifier in the source, with the
+build as confirmation rather than as the argument.
+
+## The reporting-pack seeder — `scripts/seed-reporting-pack.ts`
+
+This 873-line script loads a **generated application** into this platform. It runs
+once, after both databases are up, and leaves the platform holding a working
+analytics workspace for whatever application was just generated:
+
+1. the generated application's database, registered as a data source with its
+   connection details encrypted the way this platform expects
+2. that database's schema, introspected and cached — which is what the NL-query
+   pipeline reads as context and what the data-source screens list as entities
+3. every saved query, report, chart, dashboard and widget in the *reporting pack*
+   derived from the model
+
+```bash
+REPORTING_PACK=<pack.json> APP_DATABASE_URL=<app db url> bun scripts/seed-reporting-pack.ts
+```
+
+It writes **eleven** of this schema's tables and is **idempotent by name**: run it
+twice and the second run updates in place. That matters because it runs on every
+`docker compose up`, not only the first.
+
+**It lives here rather than in the orchestrator, and that is the point.** It was
+written in `app-and-report-with-ai-tanstack`, where docker-compose stands this
+platform up beside a generated application, and was *copied into this tree at image
+build time* so it could import through `@/`. That is the right dependency in the
+wrong direction: the file needs this project's real `getDb`, `encrypt` and
+`introspectAndCacheSchema`, and a seeder with its own encryption or its own
+schema-cache shape drifts from the reader — the failure looks like a data source
+that exists and cannot be opened. There are now three callers (the orchestrator's
+compose file, a generated application's own compose file, and a direct run), and
+all three run *this* file rather than a copy.
+
+It hashes with `bcryptjs`, deliberately — the same algorithm `better-auth.ts`
+keeps. A seeder hashing with anything else writes accounts that cannot sign in,
+and the failure reads as a wrong password.
+
+**A pack is derived, never invented.** `buildReportingPack` in
+`app-with-ai-tanstack` (`packages/generator/src/reporting/pack.ts`) builds it from
+the model: every query comes from something the model declares, and every reporting
+role mirrors a `%%rbac` role's `read` rules. This file only writes it down.
+
+## Record links — `src/lib/reporting/record-link.ts`
+
+A report definition may carry a record link, and the read-only record view then
+grows a button that opens the same record in another application — the generated
+application it was reported on, or anything else that can address a record by id.
+`{id}` in the template is replaced with the row's id, URL-encoded.
+
+**The scheme is allow-listed in one place, and both ends go through it.** The URL
+is supplied by an administrator and ends up in an `href`, which is an injection
+sink: `javascript:alert(1)` runs on click. An administrator is trusted, but that is
+not the same as being able to store a payload that fires for every *ordinary*
+viewer of the report. Site-relative (`/app/bus_account/{id}`) and absolute
+`http:`/`https:` are permitted and nothing else — an allowlist rather than a
+denylist of `javascript:` and friends, because a denylist has to anticipate every
+scheme a browser will ever honour and is wrong in the unsafe direction.
+
+## Testing
+
+### Unit tests — real, but wired into nothing
+
+Four `bun:test` files exist:
+
+| File | Covers |
+|---|---|
+| `src/lib/reporting/__tests__/record-link.test.ts` | template validation and URL building |
+| `src/lib/sql/__tests__/validator.test.ts` | the SQL validator |
+| `src/lib/sql/__tests__/antlr-validator.test.ts` | the antlr4ng validator |
+| `src/lib/validation/__tests__/translation-validator.test.ts` | translation validation |
+
+Two things to know before you trust them:
+
+- **There is no `test` script and CI does not run them.** `precommit` is lint,
+  typecheck and format only. Nothing on GitHub executes these files, which is why
+  the state below went unnoticed.
+- **Run them as `bun test src`, not `bun test`.** A bare `bun test` also collects
+  the ~51 Playwright specs under `e2e/`, which are written against
+  `@playwright/test` and error out under Bun's runner — 51 errors that say nothing
+  about the code.
+
+**Three of them currently fail**, all in `validator.test.ts`, and all because the
+validator is more permissive than the test expects: `SELECT * FROM users;` returns
+two warnings where the test wants zero, and both `SELECT * WHERE id = 1;` and the
+empty string come back `isValid: true` where the test wants `false`. As of this
+writing `bun test src` is 78 pass / 3 fail across 4 files. Decide whether the
+validator or the test is right before changing either — and if you fix them, wiring
+`bun test src` into `precommit` is what stops it happening again.
+
+### E2E tests
 
 Playwright tests in `e2e/`. The dev server must be running on port 4050 before running tests (the `webServer` config in `playwright.config.ts` is commented out). Auth state is set up once by `e2e/global-setup.ts` and cached in `auth.json`, then reused via `storageState`. Tests run serially (1 worker, `fullyParallel: false`) to prevent session interference. Override the target with `BASE_URL`.
+
+`global-setup.ts` signs in by driving the real login form as
+`admin@admin.com` / `admin`, so it exercises Better Auth end to end rather than
+forging a cookie — which also means a broken `/api/auth/$` route fails the whole
+suite at setup rather than one spec at a time. **CI does not run this suite**: it
+needs the dev server, a PostgreSQL config database and a cached session, and
+nothing starts those for it. See **CI** below.
 
 ## `bun run typecheck` passes — keep it that way
 
@@ -263,8 +562,16 @@ Two habits are worth keeping from that:
 
 ## `bun run precommit` passes too — including across a build
 
-`precommit` is `lint && typecheck && format:check`, and all three are clean.
-Getting the last one there took a config change rather than a reformat, and the
+`precommit` is `lint && typecheck && format:check`, and all three are clean —
+verified on this tree: typecheck reports zero errors, `format:check` is clean over
+446 files, and `lint` exits 0 with 433 pre-existing **warnings** and 9 infos, which
+Biome does not fail on. Treat that 433 as a baseline: a lint change that moves it is
+worth a second look, and `lint` is not the place to argue with the backlog.
+
+**`precommit` does not run any tests** — not the four `bun:test` files and not
+Playwright. See **Testing**.
+
+Getting `format:check` clean took a config change rather than a reformat, and the
 reason is worth keeping:
 
 **`src/routeTree.gen.ts` is written by the TanStack router generator on every
@@ -310,7 +617,11 @@ generator form — but dropping it *and* formatting the file by hand, which is t
 tempting fix and the one that looks like it worked, leaves the first job green.
 Only the post-build check sees the generator put the file back.
 
-Two things it deliberately does not do. There is **no `paths:` filter**:
+It also does not run the **unit tests**, and that one is an oversight rather than
+a decision — `bun test src` is four files and under a second, and three of its
+assertions are currently red. See **Testing**.
+
+Two more things it deliberately does not do. There is **no `paths:` filter**:
 `tsconfig.json` includes `**/*.ts`, so typecheck covers `language/`, `scripts/`,
 `e2e/` and `tests/` too, and any filter narrow enough to be useful would leave
 one of them unguarded — a skipped path-filtered run also reports no status at
@@ -324,6 +635,20 @@ Bun is pinned to `1.3.11` there; `package.json` asks only for `>=1.3.0`.
 ## Stale documentation
 
 Most files under `docs/` predate the migrations to PostgreSQL and Trigger.dev and describe SQLite/MariaDB, BullMQ + Redis, Bull Board, and OpenAI-based NL query. `docs/README.md` and this file are current; verify anything else in `docs/` against source before trusting it.
+
+The ten deployment documents at the repository root (`DEPLOYMENT*.md`,
+`HOSTINGER_*.md`, `QUICK_START*.md`, `README_HOSTINGER_DEPLOYMENT.md`) were all
+written in June 2026 and none has been revised since — three months before the
+Better Auth migration and the `bun run start` fix. Check anything operational in
+them against source.
+
+One piece of advice in them is actively dangerous:
+`README_HOSTINGER_DEPLOYMENT.md` suggests "rotating `AUTH_SECRET` and
+`ENCRYPTION_KEY`" for production. **Rotating `ENCRYPTION_KEY` leaves every stored
+data-source connection config undecryptable**, and the failure presents as a broken
+data source rather than as a rotated key. Rotating `AUTH_SECRET` invalidates every
+live session. Neither is a routine hardening step; generate both once, before the
+first boot, and leave them alone.
 
 The same applies to the Docker Compose files: `docker-compose.yml` is current (PostgreSQL via `apache/age:PG16`, `DATABASE_URL`/`GRAPH_DATABASE_URL`), while `docker-compose.dev.yml`, `docker-compose.local.yml`, and `docker-compose.remote.yml` still start a MariaDB container and pass `MARIADB_*` to the app, which ignores them.
 
