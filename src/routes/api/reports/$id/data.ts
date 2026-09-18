@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { sql as kyselySql } from "kysely";
 import { json } from "@/lib/server/response";
+import { decideQueryRun } from "@/lib/permissions/runnable-query";
 import type { DataSource } from "@/types/database";
 
 async function getSession(request: Request) {
@@ -76,6 +77,22 @@ export const Route = createFileRoute("/api/reports/$id/data")({
                 error: { code: "NOT_FOUND", message: "Data source not found or inactive" },
               },
               { status: 404 }
+            );
+          }
+
+          // May this caller run this stored SQL, and is it safe to run? See
+          // src/lib/permissions/runnable-query.ts — this route used to ask
+          // neither question, so any signed-in user could read any report's
+          // data by naming its id.
+          const decision = await decideQueryRun(
+            session.user,
+            savedQuery.sql_content,
+            savedQuery.data_source_id
+          );
+          if (!decision.ok) {
+            return json(
+              { success: false, error: { code: decision.code, message: decision.message } },
+              { status: decision.status }
             );
           }
 

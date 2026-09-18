@@ -223,9 +223,11 @@ export const updateUser = createServerFn({ method: "POST" })
         }
 
         const db = getDb();
+        // Only existence is needed here, and `users` carries a legacy
+        // credential column — a query that never asks for it cannot leak it.
         const existing = await db
           .selectFrom("users")
-          .selectAll()
+          .select("id")
           .where("id", "=", input.id)
           .executeTakeFirst();
 
@@ -292,9 +294,11 @@ export const deleteUser = createServerFn({ method: "POST" })
         }
 
         const db = getDb();
+        // Only existence is needed here, and `users` carries a legacy
+        // credential column — a query that never asks for it cannot leak it.
         const existing = await db
           .selectFrom("users")
-          .selectAll()
+          .select("id")
           .where("id", "=", input.id)
           .executeTakeFirst();
 

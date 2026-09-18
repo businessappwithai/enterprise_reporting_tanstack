@@ -67,6 +67,31 @@ function buildAuth() {
       "http://localhost:3000",
     ].filter(Boolean),
 
+    /*
+     * Rate limiting, which was not configured at all.
+     *
+     * Nothing in this application throttled anything: no limiter, no lockout,
+     * and Better Auth's own `rateLimit` left at its default. Combined with the
+     * credentials `bootstrapSchema` seeds — `admin@admin.com` / `admin` and
+     * `nlquery@nlquery.com` / `nlquery` — an installation that had not changed
+     * them could be entered by guessing, at whatever rate the network allowed.
+     *
+     * The window is deliberately tighter on the credential endpoints than on
+     * the rest of the auth surface: signing in is the operation worth guessing
+     * at, and a legitimate person does it once.
+     */
+    rateLimit: {
+      enabled: true,
+      window: 60,
+      max: 60,
+      customRules: {
+        "/sign-in/email": { window: 60, max: 5 },
+        "/sign-up/email": { window: 60, max: 3 },
+        "/forget-password": { window: 60, max: 3 },
+        "/reset-password": { window: 60, max: 5 },
+      },
+    },
+
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: false,

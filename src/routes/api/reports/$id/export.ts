@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { sql as kyselySql } from "kysely";
 import { json } from "@/lib/server/response";
+import { decideQueryRun } from "@/lib/permissions/runnable-query";
 import type { ColumnDefinition, DataSource, ReportColorTheme } from "@/types/database";
 
 async function getSession(request: Request) {
@@ -109,7 +110,6 @@ export const Route = createFileRoute("/api/reports/$id/export")({
 
           const { getDb } = await import("@/lib/db/config");
           const { getConnection } = await import("@/lib/db/connection-manager");
-          const { isReadOnlyQuery } = await import("@/lib/sql/validator");
           const db = getDb();
 
           const report = await db
@@ -195,13 +195,22 @@ export const Route = createFileRoute("/api/reports/$id/export")({
             );
           }
 
-          if (!isReadOnlyQuery(query.sql_content)) {
+          /*
+           * The read-only test was already here; the access test was not, so an
+           * export was a way to read a report whose data the caller may not see
+           * — and to receive it as a file. Both questions are now asked through
+           * one gate, so this route cannot drift from the others that run
+           * stored SQL. See src/lib/permissions/runnable-query.ts.
+           */
+          const decision = await decideQueryRun(
+            session.user,
+            query.sql_content,
+            query.data_source_id
+          );
+          if (!decision.ok) {
             return json(
-              {
-                success: false,
-                error: { code: "INVALID_QUERY", message: "Report query must be a SELECT query" },
-              },
-              { status: 400 }
+              { success: false, error: { code: decision.code, message: decision.message } },
+              { status: decision.status }
             );
           }
 
