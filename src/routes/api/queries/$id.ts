@@ -2,6 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
 import { auth } from "@/lib/auth/config";
 import { getDb } from "@/lib/db/config";
+import { validateQueryAccess } from "@/lib/permissions/query-access-validator";
+import { isReadOnlyQuery } from "@/lib/sql/validator";
+import type { User } from "@/types/database";
 
 async function getSession(request: Request) {
   return auth(request);
@@ -74,6 +77,65 @@ export const Route = createFileRoute("/api/queries/$id")({
           const isAdmin = sessionRoles.some((r: string) => r.toLowerCase().includes("admin"));
           if (!isAdmin && existingQuery.created_by !== session.user.id) {
             return json({ success: false, error: { message: "Unauthorized" } }, { status: 403 });
+          }
+
+          /*
+           * An edit can replace the SQL, so it is checked exactly as a create
+           * is. Gating only the create would leave the same write path open one
+           * verb along: save `SELECT 1`, then PUT the statement you actually
+           * wanted.
+           *
+           * Checked against the data source the query will have after the edit,
+           * not the one it had before — those differ when `dataSourceId` moves.
+           */
+          if (body.sqlContent !== undefined) {
+            if (!isReadOnlyQuery(body.sqlContent)) {
+              return json(
+                {
+                  success: false,
+                  error: {
+                    message:
+                      "A saved query must be a single SELECT, WITH, EXPLAIN, SHOW or DESCRIBE statement.",
+                  },
+                },
+                { status: 403 }
+              );
+            }
+
+            const targetDataSourceId =
+              body.dataSourceId ??
+              (
+                await db
+                  .selectFrom("saved_queries")
+                  .select("data_source_id")
+                  .where("id", "=", params.id)
+                  .executeTakeFirst()
+              )?.data_source_id;
+
+            if (!targetDataSourceId) {
+              return json(
+                { success: false, error: { message: "Query has no data source" } },
+                { status: 400 }
+              );
+            }
+
+            const editAccess = await validateQueryAccess(
+              session.user as unknown as User,
+              body.sqlContent,
+              targetDataSourceId
+            );
+            if (!editAccess.allowed) {
+              return json(
+                {
+                  success: false,
+                  error: {
+                    message:
+                      editAccess.reason || "You do not have access to every table in this query",
+                  },
+                },
+                { status: 403 }
+              );
+            }
           }
 
           const updateData: Record<string, unknown> = {

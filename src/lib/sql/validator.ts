@@ -218,37 +218,81 @@ export function extractColumns(sql: string, dialect: string = "pg"): string[] {
   }
 }
 
+/**
+ * A statement separator outside of quotes — the way a `SELECT` smuggles a write.
+ *
+ * `SELECT 1; DROP TABLE users` starts with SELECT and is not one query. A
+ * prefix test cannot see that, and `sql.raw()` compiles with an empty parameter
+ * array, which puts node-postgres on the simple query protocol — where multiple
+ * statements per round trip are permitted.
+ *
+ * Semicolons *inside* string literals are ordinary characters, so the scan
+ * tracks quoting rather than searching for the byte, and a single trailing
+ * semicolon is allowed because it is how most people end a statement.
+ *
+ * Ported from `packages/generator/src/reports/index.ts` in
+ * `app-with-ai-tanstack`, which already refused this correctly. Two
+ * implementations of "is this one read-only statement" is how the two products
+ * come to disagree about the same query, so this is a copy of that function and
+ * the two should change together.
+ */
+export function hasStatementBreak(sql: string): boolean {
+  const body = sql.replace(/;\s*$/, "");
+  let quote: "'" | '"' | null = null;
+  for (let i = 0; i < body.length; i++) {
+    const ch = body[i];
+    if (quote) {
+      // Doubling is how both SQL quote styles escape themselves.
+      if (ch === quote) {
+        if (body[i + 1] === quote) i += 1;
+        else quote = null;
+      }
+      continue;
+    }
+    if (ch === "'" || ch === '"') quote = ch;
+    else if (ch === ";") return true;
+  }
+  return false;
+}
+
+/**
+ * Is this a single, read-only statement?
+ *
+ * Both halves matter. The leading keyword says the statement reads; the absence
+ * of a statement break says there is only the one. This used to test the prefix
+ * alone, which accepted `SELECT 1 LIMIT 1; DROP TABLE users`.
+ */
 export function isReadOnlyQuery(sql: string): boolean {
   // Remove leading comments (both -- and /* */ style)
   let sqlTrimmed = sql.trim();
 
-  // Remove single-line comments
-  while (sqlTrimmed.startsWith("--")) {
-    const newlineIndex = sqlTrimmed.indexOf("\n");
-    if (newlineIndex === -1) {
-      // Comment goes to end of string
-      sqlTrimmed = "";
-      break;
+  // Comments may alternate, so keep stripping until neither kind leads.
+  // A single pass of each left `-- x\n/* y */ DROP …` looking like a comment
+  // followed by a DROP, which is exactly what it is, and returned false for the
+  // wrong reason — but `/* y */ -- x\n SELECT` returned false too.
+  for (;;) {
+    if (sqlTrimmed.startsWith("--")) {
+      const newlineIndex = sqlTrimmed.indexOf("\n");
+      if (newlineIndex === -1) return false;
+      sqlTrimmed = sqlTrimmed.substring(newlineIndex + 1).trim();
+      continue;
     }
-    sqlTrimmed = sqlTrimmed.substring(newlineIndex + 1).trim();
-  }
-
-  // Remove multi-line comments
-  while (sqlTrimmed.startsWith("/*")) {
-    const endIndex = sqlTrimmed.indexOf("*/");
-    if (endIndex === -1) {
-      sqlTrimmed = "";
-      break;
+    if (sqlTrimmed.startsWith("/*")) {
+      const endIndex = sqlTrimmed.indexOf("*/");
+      if (endIndex === -1) return false;
+      sqlTrimmed = sqlTrimmed.substring(endIndex + 2).trim();
+      continue;
     }
-    sqlTrimmed = sqlTrimmed.substring(endIndex + 2).trim();
+    break;
   }
 
   const sqlUpper = sqlTrimmed.toUpperCase();
-  return (
+  const startsRead =
     sqlUpper.startsWith("SELECT") ||
     sqlUpper.startsWith("WITH") ||
     sqlUpper.startsWith("EXPLAIN") ||
     sqlUpper.startsWith("SHOW") ||
-    sqlUpper.startsWith("DESCRIBE")
-  );
+    sqlUpper.startsWith("DESCRIBE");
+
+  return startsRead && !hasStatementBreak(sqlTrimmed);
 }

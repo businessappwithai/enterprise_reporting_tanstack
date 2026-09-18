@@ -1,3 +1,7 @@
+import pkg from "node-sql-parser";
+
+const { Parser } = pkg;
+
 /**
  * SQL Validator with keyword allowlist/blocklist enforcement (D11)
  *
@@ -320,7 +324,165 @@ export function isReadOnlyQuery(sql: string): boolean {
 }
 
 /**
+ * Every base table a statement reads, or a refusal.
+ *
+ * ── Why this exists beside `extractTables` ─────────────────────────────────
+ *
+ * `extractTables` below is a regular expression, and it is the reason the
+ * data-source permission layer could be bypassed by removing a space.
+ * `validateQueryAccess` treated an empty result as "no tables named, nothing to
+ * check" and allowed the query — so every input the pattern failed to match
+ * granted full access. All of these returned no tables at all: the table
+ * wrapped in parentheses, a block comment standing in for the space after
+ * FROM, and a table read through a subquery —
+ *
+ *     SELECT * FROM(hr_salaries)
+ *     SELECT * FROM (SELECT * FROM hr_salaries) x
+ *
+ * and this one named the alias rather than the table behind it, so the check
+ * ran against something that does not exist:
+ *
+ *     WITH a AS (SELECT * FROM hr_salaries) SELECT * FROM a
+ *
+ * Two changes follow, and the second matters more than the first:
+ *
+ *   - A real parse, so the shapes above resolve. `node-sql-parser` is already a
+ *     dependency and already drives `validator.ts`.
+ *   - **A failure to parse is a refusal, not an allowance.** That inversion is
+ *     the actual fix. However good the parser, there will be a statement it
+ *     cannot read, and the question "which tables does this touch?" having no
+ *     answer can only mean the access decision cannot be made — which is a
+ *     denial. The old code answered it with silence and read silence as yes.
+ *
+ * CTE names are removed from the result: they are aliases the statement defines
+ * for itself, never tables a permission could be held on, and leaving them in
+ * would deny every legitimate `WITH` query.
+ */
+export type TableExtraction = { ok: true; tables: string[] } | { ok: false; reason: string };
+
+const PARSER_DIALECTS: Record<string, string> = {
+  pg: "postgresql",
+  mysql: "mysql",
+  mssql: "transactsql",
+};
+
+/** Names a `WITH` clause binds, at any depth, so they can be excluded. */
+function collectCteNames(node: unknown, into: Set<string>): void {
+  if (!node || typeof node !== "object") return;
+  if (Array.isArray(node)) {
+    for (const item of node) collectCteNames(item, into);
+    return;
+  }
+  const record = node as Record<string, unknown>;
+  const withClause = record.with;
+  if (Array.isArray(withClause)) {
+    for (const cte of withClause) {
+      const name = (cte as Record<string, unknown>)?.name;
+      if (typeof name === "string") into.add(name.toLowerCase());
+      // node-sql-parser also spells it { name: { value: "a" } }.
+      const nested = (name as Record<string, unknown> | undefined)?.value;
+      if (typeof nested === "string") into.add(nested.toLowerCase());
+    }
+  }
+  for (const value of Object.values(record)) collectCteNames(value, into);
+}
+
+/**
+ * Every `table` the parse tree names, at any depth.
+ *
+ * `parser.tableList()` is not sufficient on its own, and the case that proves
+ * it is the one that motivated this whole function:
+ *
+ *     SELECT * FROM(hr_salaries)
+ *
+ * `tableList` returns nothing for that, while the AST plainly carries
+ * `from[0].expr.expr[0].table === "hr_salaries"` — the list builder does not
+ * descend into a parenthesised table reference. Trusting the list alone would
+ * have reproduced the original bug behind a better parser: no tables found, so
+ * nothing to check, so allowed.
+ *
+ * Walking for the `table` key catches the shapes the list misses, and the two
+ * sources are unioned rather than chosen between.
+ */
+function collectTableNames(node: unknown, into: Set<string>): void {
+  if (!node || typeof node !== "object") return;
+  if (Array.isArray(node)) {
+    for (const item of node) collectTableNames(item, into);
+    return;
+  }
+  const record = node as Record<string, unknown>;
+  const table = record.table;
+  if (typeof table === "string" && table) into.add(table);
+  for (const value of Object.values(record)) collectTableNames(value, into);
+}
+
+/**
+ * Does any statement in this tree read from something?
+ *
+ * Distinguishes `SELECT 1`, which touches no data and so needs no permission,
+ * from a statement carrying a FROM clause that the extractor could not resolve
+ * to a name — which is an unanswered access question, and therefore a refusal.
+ */
+function hasFromClause(node: unknown): boolean {
+  if (!node || typeof node !== "object") return false;
+  if (Array.isArray(node)) return node.some(hasFromClause);
+  const record = node as Record<string, unknown>;
+  if (record.from !== null && record.from !== undefined) {
+    if (!Array.isArray(record.from) || record.from.length > 0) return true;
+  }
+  return Object.values(record).some(hasFromClause);
+}
+
+export function extractTablesStrict(sql: string, dialect: string = "pg"): TableExtraction {
+  if (!sql?.trim()) return { ok: false, reason: "empty query" };
+
+  let ast: unknown;
+  let tableList: string[];
+  try {
+    const parser = new Parser();
+    const database = PARSER_DIALECTS[dialect] ?? "postgresql";
+    ast = parser.astify(sql, { database });
+    tableList = parser.tableList(sql, { database }) as string[];
+  } catch (error) {
+    return {
+      ok: false,
+      reason: error instanceof Error ? error.message : "could not be parsed",
+    };
+  }
+
+  const cteNames = new Set<string>();
+  collectCteNames(ast, cteNames);
+
+  const found = new Set<string>();
+  for (const entry of tableList) {
+    // `type::db::table`
+    const parts = entry.split("::");
+    const name = parts[parts.length - 1];
+    if (name && name !== "null") found.add(name);
+  }
+  collectTableNames(ast, found);
+
+  const tables: string[] = [];
+  for (const name of found) {
+    if (cteNames.has(name.toLowerCase())) continue;
+    tables.push(name);
+  }
+
+  // A FROM clause that resolved to no name is an unanswered question, and an
+  // unanswered access question is a denial — the same rule as a failed parse.
+  if (tables.length === 0 && hasFromClause(ast)) {
+    return { ok: false, reason: "reads from a source this analyser could not identify" };
+  }
+
+  return { ok: true, tables };
+}
+
+/**
  * Extract table names from SQL
+ *
+ * @deprecated For display only. This is a regular expression and it misses
+ * table references that a database resolves perfectly well — see
+ * `extractTablesStrict` above, which is what an access decision must use.
  */
 export function extractTables(sql: string): string[] {
   const tables: string[] = [];

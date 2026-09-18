@@ -8,6 +8,9 @@ import { createLogger } from "@/lib/logging/logger";
 import { AUDIT_ACTIONS } from "@/types/actions";
 import { LOG_COMPONENTS } from "@/types/components";
 import { v4 as uuidv4 } from "uuid";
+import { validateQueryAccess } from "@/lib/permissions/query-access-validator";
+import { isReadOnlyQuery } from "@/lib/sql/validator";
+import type { User } from "@/types/database";
 
 async function getSession(request: Request) {
   return auth(request);
@@ -150,6 +153,70 @@ export const Route = createFileRoute("/api/queries")({
             return json(
               { success: false, error: { message: "Missing required fields" } },
               { status: 400 }
+            );
+          }
+
+          /*
+           * A saved query is SQL that something else will execute later, so it
+           * is checked here as strictly as the SQL editor checks what it runs.
+           *
+           * It was checked nowhere. `POST /api/queries` took `sqlContent` and
+           * `dataSourceId` from the body and stored the text verbatim — no
+           * read-only test, and no question about whether the caller may read
+           * the data source at all — and `POST /api/queries/:id/execute` then
+           * ran it without either check. Saving `DELETE FROM users` and calling
+           * execute was, between those two routes, a complete write path into
+           * every connected database for any account that could sign in.
+           *
+           * Both ends are checked now. This one refuses the statement; the
+           * other refuses the caller at the time of the run, because
+           * permissions change between saving a query and running it.
+           */
+          if (!isReadOnlyQuery(body.sqlContent)) {
+            logger.warn("Non-read-only SQL rejected at save time", {
+              userId: session.user.id,
+              email: session.user.email,
+              dataSourceId: body.dataSourceId,
+              sqlPreview: body.sqlContent.substring(0, 100),
+              timestamp: new Date().toISOString(),
+            });
+            return json(
+              {
+                success: false,
+                error: {
+                  code: "FORBIDDEN",
+                  message:
+                    "A saved query must be a single SELECT, WITH, EXPLAIN, SHOW or DESCRIBE statement.",
+                },
+              },
+              { status: 403 }
+            );
+          }
+
+          const saveAccess = await validateQueryAccess(
+            session.user as unknown as User,
+            body.sqlContent,
+            body.dataSourceId
+          );
+          if (!saveAccess.allowed) {
+            logger.warn("Query save denied by entity access rules", {
+              userId: session.user.id,
+              email: session.user.email,
+              dataSourceId: body.dataSourceId,
+              deniedTables: saveAccess.deniedTables,
+              reason: saveAccess.reason,
+              timestamp: new Date().toISOString(),
+            });
+            return json(
+              {
+                success: false,
+                error: {
+                  code: "FORBIDDEN",
+                  message:
+                    saveAccess.reason || "You do not have access to every table in this query",
+                },
+              },
+              { status: 403 }
             );
           }
 
