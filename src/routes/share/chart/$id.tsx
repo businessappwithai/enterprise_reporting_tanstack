@@ -9,11 +9,20 @@ const getPublicChartFn = createServerFn({ method: "GET" })
   .handler(async ({ data: id }) => {
     const { getDb } = await import("@/lib/db/config");
     const db = getDb();
+    /*
+     * Named columns, not `selectAll()`.
+     *
+     * `is_public` decides whether an anonymous visitor may see this at all, and
+     * it does that correctly. What it does not decide is how much of the row
+     * they get — and `selectAll()` handed over every internal column, including
+     * the identifiers of the saved query behind it and whatever else the table
+     * grows later. A share link is meant to expose a result, not a definition.
+     */
     const chart = await db
       .selectFrom("chart_definitions")
       .where("id", "=", id)
       .where("is_public", "=", true)
-      .selectAll()
+      .select(["id", "name", "description", "chart_type"])
       .executeTakeFirst();
     if (!chart) return null;
     return chart;

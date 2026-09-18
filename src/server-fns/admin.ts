@@ -27,6 +27,7 @@ import { getDb } from "@/lib/db/config";
 import { logAudit } from "@/lib/security/audit";
 import { isAdmin } from "@/lib/permissions/permissions";
 import { withErrorHandler } from "@/lib/server-fns/with-error-handler";
+import { BCRYPT_COST } from "@/lib/auth/bcrypt-cost";
 
 // ============================================================================
 // USER MANAGEMENT
@@ -162,7 +163,7 @@ export const createUser = createServerFn({ method: "POST" })
         }
 
         const userId = randomUUID();
-        const passwordHash = await bcrypt.hash(input.password, 10);
+        const passwordHash = await bcrypt.hash(input.password, BCRYPT_COST);
         const now = new Date().toISOString();
 
         await db
@@ -361,7 +362,7 @@ export const changePassword = createServerFn({ method: "POST" })
         }
 
         // bcrypt to match the hash/verify hooks configured on Better Auth.
-        const newPasswordHash = await bcrypt.hash(input.newPassword, 10);
+        const newPasswordHash = await bcrypt.hash(input.newPassword, BCRYPT_COST);
         await db
           .updateTable("auth_accounts")
           .set({ password: newPasswordHash, updated_at: new Date() })

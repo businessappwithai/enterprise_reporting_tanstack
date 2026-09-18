@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { encrypt } from "../../security/encryption";
 import { getDb } from "../config";
+import { BCRYPT_COST } from "@/lib/auth/bcrypt-cost";
 
 const ADMIN_PERMISSIONS = JSON.stringify([
   "*:*",
@@ -147,7 +148,7 @@ async function upsertUser(
   }
 
   const id = randomUUID();
-  const passwordHash = await bcrypt.hash(password, 10);
+  const passwordHash = await bcrypt.hash(password, BCRYPT_COST);
   await db
     .insertInto("users")
     .values({

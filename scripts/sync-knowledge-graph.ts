@@ -49,7 +49,11 @@ async function importLLMText(): Promise<void> {
   }
 
   if (sections.length === 0) {
-    sections.push({ id: "full", title: "Enterprise Reporting Platform — Full LLM Text", body: content.slice(0, 4000) });
+    sections.push({
+      id: "full",
+      title: "Enterprise Reporting Platform — Full LLM Text",
+      body: content.slice(0, 4000),
+    });
   }
 
   console.log(`[llmtext] Importing ${sections.length} section(s) into knowledge graph…`);
@@ -58,7 +62,7 @@ async function importLLMText(): Promise<void> {
     await cypherWrite(
       `MERGE (n:LLMKnowledge {section_id: $id})
        SET n.title = $title, n.body = $body, n.source = 'llmtext'`,
-      { id: sec.id, title: sec.title, body: sec.body },
+      { id: sec.id, title: sec.title, body: sec.body }
     );
   }
 
@@ -101,7 +105,11 @@ async function main() {
     const parse = (rows: { c?: unknown }[]) => {
       const raw = rows[0]?.c;
       if (typeof raw === "string") {
-        try { return JSON.parse(raw); } catch { return raw; }
+        try {
+          return JSON.parse(raw);
+        } catch {
+          return raw;
+        }
       }
       return raw ?? 0;
     };

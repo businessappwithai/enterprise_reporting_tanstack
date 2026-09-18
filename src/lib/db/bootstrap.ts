@@ -12,6 +12,7 @@ import bcrypt from "bcryptjs";
 import type { Kysely } from "kysely";
 import type { Database } from "./kysely-db";
 import { seedHelpArticles } from "./help-seed";
+import { BCRYPT_COST } from "@/lib/auth/bcrypt-cost";
 
 /*
  * The bootstrap accounts, and where their passwords come from.
@@ -64,7 +65,7 @@ const NLQUERY_ROLE_ID = "nlquery0role00000000000000000000";
  * failure reads as a wrong password.
  */
 async function bcryptHash(password: string): Promise<string> {
-  return bcrypt.hash(password, 10);
+  return bcrypt.hash(password, BCRYPT_COST);
 }
 
 export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {

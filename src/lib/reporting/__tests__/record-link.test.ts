@@ -61,6 +61,21 @@ describe("validateUrlTemplate", () => {
     expect(result.ok).toBe(false);
     expect(result.error).toContain("another site");
   });
+
+  // The same thing spelled with a backslash, which used to pass. A browser
+  // resolves `/\evil.example.com/1` against this origin as
+  // `https://evil.example.com/1` — the WHATWG URL parser treats a backslash as
+  // a forward slash for special schemes. A check that only looked for `//`
+  // read as complete and was not.
+  test("rejects the backslash spelling of a protocol-relative URL", () => {
+    const result = validateUrlTemplate("/\\evil.example.com/{id}");
+    expect(result.ok).toBe(false);
+    expect(result.error).toContain("another site");
+  });
+
+  test("still accepts an ordinary site-relative path", () => {
+    expect(validateUrlTemplate("/app/bus_account/{id}").ok).toBe(true);
+  });
 });
 
 describe("buildRecordUrl", () => {

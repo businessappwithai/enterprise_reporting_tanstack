@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
+import { canConfigureReport } from "@/lib/permissions/report-ownership";
 
 async function getSession(_request: Request) {
   const { getAuthSession } = await import("@/lib/auth/config");
@@ -14,6 +15,15 @@ export const Route = createFileRoute("/api/reports/$id/filters/$filterLinkId")({
           const session = await getSession(request);
           if (!session) {
             return json({ error: "Unauthorized" }, { status: 401 });
+          }
+
+          // Both verbs here change a report's filters, and a filter decides
+          // which rows the report returns. See report-ownership.ts — this route
+          // used to resolve the report by id alone and let any signed-in caller
+          // rewrite or remove somebody else's.
+          const ownership = await canConfigureReport(session.user.id, params.id);
+          if (!ownership.allowed) {
+            return json({ error: ownership.message }, { status: ownership.status ?? 403 });
           }
 
           const body = await request.json();
@@ -58,6 +68,15 @@ export const Route = createFileRoute("/api/reports/$id/filters/$filterLinkId")({
           const session = await getSession(request);
           if (!session) {
             return json({ error: "Unauthorized" }, { status: 401 });
+          }
+
+          // Both verbs here change a report's filters, and a filter decides
+          // which rows the report returns. See report-ownership.ts — this route
+          // used to resolve the report by id alone and let any signed-in caller
+          // rewrite or remove somebody else's.
+          const ownership = await canConfigureReport(session.user.id, params.id);
+          if (!ownership.allowed) {
+            return json({ error: ownership.message }, { status: ownership.status ?? 403 });
           }
 
           const { id: reportId, filterLinkId } = params;

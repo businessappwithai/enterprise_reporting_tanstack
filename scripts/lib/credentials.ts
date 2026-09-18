@@ -10,6 +10,7 @@
 import bcrypt from "bcryptjs";
 import type { Kysely } from "kysely";
 import type { Database } from "../../src/lib/db/kysely-db";
+import { BCRYPT_COST } from "@/lib/auth/bcrypt-cost";
 
 export async function getCredential(db: Kysely<Database>, userId: string) {
   return db
@@ -38,7 +39,7 @@ export async function setPassword(
   password: string
 ): Promise<void> {
   // bcrypt to match the hash/verify hooks in src/lib/auth/better-auth.ts.
-  const hash = await bcrypt.hash(password, 10);
+  const hash = await bcrypt.hash(password, BCRYPT_COST);
   const existing = await getCredential(db, userId);
 
   if (existing) {

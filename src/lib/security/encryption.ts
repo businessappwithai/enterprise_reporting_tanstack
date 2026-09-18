@@ -3,7 +3,6 @@ import crypto from "node:crypto";
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 16;
 const AUTH_TAG_LENGTH = 16;
-const SALT_LENGTH = 64;
 const KEY_LENGTH = 32;
 
 /**
@@ -187,17 +186,22 @@ export function decrypt(ciphertext: string): string {
   }
 }
 
-export function hashPassword(password: string): string {
-  const salt = crypto.randomBytes(SALT_LENGTH).toString("hex");
-  const hash = crypto.pbkdf2Sync(password, salt, 100000, 64, "sha512").toString("hex");
-  return `${salt}:${hash}`;
-}
-
-export function verifyPassword(password: string, hashedPassword: string): boolean {
-  const [salt, hash] = hashedPassword.split(":");
-  const verifyHash = crypto.pbkdf2Sync(password, salt, 100000, 64, "sha512").toString("hex");
-  return hash === verifyHash;
-}
+/*
+ * `hashPassword` and `verifyPassword` used to live here, PBKDF2-based and
+ * referenced by nothing.
+ *
+ * They are deleted rather than fixed. `verifyPassword` compared digests with
+ * `===`, which is not constant-time — but the reason to remove them is that
+ * this application's passwords are bcrypt, hashed and checked by the hooks in
+ * src/lib/auth/better-auth.ts against `auth_accounts.password`. A second,
+ * unused password implementation in the file named "encryption" is an
+ * invitation to call the wrong one, and an account written by it could not sign
+ * in: the failure would read as a wrong password rather than as the wrong
+ * algorithm.
+ *
+ * If something here needs to hash a password, it wants BCRYPT_COST and
+ * bcryptjs, the way bootstrap.ts and the admin server functions do.
+ */
 
 export function generateApiKey(): string {
   return crypto.randomBytes(32).toString("hex");

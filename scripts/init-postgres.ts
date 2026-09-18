@@ -26,16 +26,49 @@ try {
 
   // Drop all tables
   const tablesToDrop = [
-    "logs", "app_settings", "audit_log", "resource_permissions", "job_executions", "job_definitions",
-    "dashboard_widgets", "dashboard_layouts", "chart_filters", "chart_definitions",
-    "report_filters", "report_definitions", "filter_definitions", "saved_queries",
-    "ds_entity_permissions", "data_source_entity_permissions", "ds_user_roles",
-    "ds_roles", "data_sources", "user_roles", "roles", "notifications",
-    "email_templates", "nl_query_history", "error_messages", "warning_configs", "error_occurrences",
-    "metadata_entity_fields", "metadata_entity_registry", "data_source_filters",
-    "filters", "jobs", "reports", "charts", "dashboards", "users", "_migrations",
-    "schema_field_instructions", "schema_table_instructions", "nl_query_context", "nl_query_role_stats", "nl_query_feedback",
-    "ds_schema_cache"
+    "logs",
+    "app_settings",
+    "audit_log",
+    "resource_permissions",
+    "job_executions",
+    "job_definitions",
+    "dashboard_widgets",
+    "dashboard_layouts",
+    "chart_filters",
+    "chart_definitions",
+    "report_filters",
+    "report_definitions",
+    "filter_definitions",
+    "saved_queries",
+    "ds_entity_permissions",
+    "data_source_entity_permissions",
+    "ds_user_roles",
+    "ds_roles",
+    "data_sources",
+    "user_roles",
+    "roles",
+    "notifications",
+    "email_templates",
+    "nl_query_history",
+    "error_messages",
+    "warning_configs",
+    "error_occurrences",
+    "metadata_entity_fields",
+    "metadata_entity_registry",
+    "data_source_filters",
+    "filters",
+    "jobs",
+    "reports",
+    "charts",
+    "dashboards",
+    "users",
+    "_migrations",
+    "schema_field_instructions",
+    "schema_table_instructions",
+    "nl_query_context",
+    "nl_query_role_stats",
+    "nl_query_feedback",
+    "ds_schema_cache",
   ];
 
   for (const table of tablesToDrop) {
@@ -491,7 +524,10 @@ try {
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     if (!msg.includes("already exists")) {
-      console.warn("AGE extension not available (install apache/age or use postgres-graph service):", msg);
+      console.warn(
+        "AGE extension not available (install apache/age or use postgres-graph service):",
+        msg
+      );
     }
   }
   await client.query(`
@@ -559,20 +595,20 @@ try {
       id: "role_admin",
       name: "Admin",
       description: "Administrator with full access",
-      permissions: JSON.stringify(["read", "write", "delete", "admin"])
+      permissions: JSON.stringify(["read", "write", "delete", "admin"]),
     },
     {
       id: "role_user",
       name: "User",
       description: "Standard user",
-      permissions: JSON.stringify(["read", "write"])
+      permissions: JSON.stringify(["read", "write"]),
     },
     {
       id: "role_viewer",
       name: "Viewer",
       description: "Read-only access",
-      permissions: JSON.stringify(["read"])
-    }
+      permissions: JSON.stringify(["read"]),
+    },
   ];
 
   for (const role of roles) {
@@ -593,7 +629,6 @@ try {
   console.log("Database initialization complete.");
   console.log(`✓ Admin user: ${ADMIN_USER.email}`);
   console.log(`✓ Default roles created: Admin, User, Viewer`);
-
 } finally {
   client.release();
   await pool.end();

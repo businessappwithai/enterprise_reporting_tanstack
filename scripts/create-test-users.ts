@@ -20,13 +20,10 @@ try {
 
   // Get role IDs
   const rolesResult = await client.query("SELECT id, name FROM roles");
-  const roles = rolesResult.rows.reduce(
-    (acc: Record<string, string>, row) => {
-      acc[row.name.toLowerCase()] = row.id;
-      return acc;
-    },
-    {}
-  );
+  const roles = rolesResult.rows.reduce((acc: Record<string, string>, row) => {
+    acc[row.name.toLowerCase()] = row.id;
+    return acc;
+  }, {});
 
   console.log("Available roles:", roles);
 
@@ -103,18 +100,10 @@ try {
 
   console.log("\n✅ Test users created successfully!");
   console.log("\nTest Credentials:");
-  console.log(
-    "  Viewer: viewer@example.com / SecureViewer123!"
-  );
-  console.log(
-    "  Editor: editor@example.com / SecureEditor123!"
-  );
-  console.log(
-    "  Admin:  admin2@example.com / SecureAdmin123!"
-  );
-  console.log(
-    "  Manager: manager@example.com / SecureManager123!"
-  );
+  console.log("  Viewer: viewer@example.com / SecureViewer123!");
+  console.log("  Editor: editor@example.com / SecureEditor123!");
+  console.log("  Admin:  admin2@example.com / SecureAdmin123!");
+  console.log("  Manager: manager@example.com / SecureManager123!");
 } finally {
   client.release();
   await pool.end();

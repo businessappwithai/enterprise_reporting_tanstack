@@ -25,10 +25,7 @@ interface TestResult {
 const results: TestResult[] = [];
 
 // Simulate TanStack DB operations
-async function simulateCollectionUpdate(
-  id: string,
-  value: Record<string, unknown>
-): Promise<void> {
+async function simulateCollectionUpdate(id: string, value: Record<string, unknown>): Promise<void> {
   return new Promise((resolve) => {
     // Simulate async operation (db write, sync, etc)
     setTimeout(() => {
@@ -104,9 +101,7 @@ async function runConcurrencyTest(
     result.warnings.push(`⚠️  High memory delta: +${memDelta.toFixed(2)}MB`);
   }
   if (opsPerSecond < 1000) {
-    result.warnings.push(
-      `⚠️  Low throughput: ${opsPerSecond.toFixed(0)} ops/sec`
-    );
+    result.warnings.push(`⚠️  Low throughput: ${opsPerSecond.toFixed(0)} ops/sec`);
   }
   if (errorCount > 0) {
     result.warnings.push(`⚠️  ${errorCount} errors encountered`);
@@ -128,10 +123,7 @@ async function main() {
   ];
 
   for (const scenario of testScenarios) {
-    const result = await runConcurrencyTest(
-      scenario.concurrency,
-      scenario.operationCount
-    );
+    const result = await runConcurrencyTest(scenario.concurrency, scenario.operationCount);
     results.push(result);
 
     // Print individual result
@@ -139,10 +131,10 @@ async function main() {
     console.log(`   Concurrency: ${result.concurrency}`);
     console.log(`   Total Operations: ${result.operationCount}`);
     console.log(`   Duration: ${result.totalTime}ms`);
+    console.log(`   Throughput: ${result.opsPerSecond.toFixed(0)} ops/sec`);
     console.log(
-      `   Throughput: ${result.opsPerSecond.toFixed(0)} ops/sec`
+      `   Memory: ${result.memoryBefore.toFixed(2)}MB → ${result.memoryAfter.toFixed(2)}MB (+${result.memoryDelta.toFixed(2)}MB)`
     );
-    console.log(`   Memory: ${result.memoryBefore.toFixed(2)}MB → ${result.memoryAfter.toFixed(2)}MB (+${result.memoryDelta.toFixed(2)}MB)`);
     if (result.errors > 0) console.log(`   Errors: ${result.errors}`);
     if (result.warnings.length > 0) {
       result.warnings.forEach((w) => console.log(`   ${w}`));
@@ -168,14 +160,16 @@ async function main() {
   const bestThroughput = results.reduce((best, r) =>
     r.opsPerSecond > best.opsPerSecond ? r : best
   );
-  const worstLatency = results.reduce((worst, r) =>
-    r.totalTime > worst.totalTime ? r : worst
-  );
+  const worstLatency = results.reduce((worst, r) => (r.totalTime > worst.totalTime ? r : worst));
   const totalMemory = results.reduce((sum, r) => sum + r.memoryDelta, 0);
 
   console.log("\n📊 Performance Metrics:");
-  console.log(`   Best Throughput: ${bestThroughput.opsPerSecond.toFixed(0)} ops/sec (${bestThroughput.concurrency} concurrent)`);
-  console.log(`   Highest Latency: ${worstLatency.totalTime}ms (${worstLatency.concurrency} concurrent)`);
+  console.log(
+    `   Best Throughput: ${bestThroughput.opsPerSecond.toFixed(0)} ops/sec (${bestThroughput.concurrency} concurrent)`
+  );
+  console.log(
+    `   Highest Latency: ${worstLatency.totalTime}ms (${worstLatency.concurrency} concurrent)`
+  );
   console.log(`   Total Memory Delta: ${totalMemory.toFixed(2)}MB`);
 
   // Recommendations

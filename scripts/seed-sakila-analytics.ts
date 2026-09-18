@@ -3,20 +3,20 @@
  * Creates professional saved queries, reports, charts, and dashboards
  */
 
-import { getDb } from '../src/lib/db/config';
-import { v4 as uuidv4 } from 'uuid';
-import { encrypt } from '../src/lib/security/encryption';
+import { getDb } from "../src/lib/db/config";
+import { v4 as uuidv4 } from "uuid";
+import { encrypt } from "../src/lib/security/encryption";
 
-const DATA_SOURCE_ID = '30441bec-c1f0-4807-a9ae-f201502913d2'; // Sakila Demo DB
+const DATA_SOURCE_ID = "30441bec-c1f0-4807-a9ae-f201502913d2"; // Sakila Demo DB
 // Will get a valid user ID from the database
-let SYSTEM_USER_ID = '1cede1d1-1897-4203-aa44-292a7f7834f2'; // Default admin
+let SYSTEM_USER_ID = "1cede1d1-1897-4203-aa44-292a7f7834f2"; // Default admin
 
 const queries = [
   // REVENUE ANALYTICS
   {
-    name: 'Monthly Revenue Trend',
-    description: 'Track revenue, rentals, and customers by month',
-    category: 'Revenue',
+    name: "Monthly Revenue Trend",
+    description: "Track revenue, rentals, and customers by month",
+    category: "Revenue",
     sql: `SELECT
   strftime('%Y-%m', rental_date) as month,
   ROUND(SUM(p.amount), 2) as total_revenue,
@@ -29,9 +29,9 @@ GROUP BY strftime('%Y-%m', rental_date)
 ORDER BY month DESC`,
   },
   {
-    name: 'Revenue by Store',
-    description: 'Compare revenue performance across stores',
-    category: 'Revenue',
+    name: "Revenue by Store",
+    description: "Compare revenue performance across stores",
+    category: "Revenue",
     sql: `SELECT
   s.store_id,
   s.manager_staff_id,
@@ -47,9 +47,9 @@ GROUP BY s.store_id, s.manager_staff_id
 ORDER BY total_revenue DESC`,
   },
   {
-    name: 'Revenue by Film Category',
-    description: 'Analyze revenue by film category',
-    category: 'Revenue',
+    name: "Revenue by Film Category",
+    description: "Analyze revenue by film category",
+    category: "Revenue",
     sql: `SELECT
   c.name as category,
   ROUND(SUM(p.amount), 2) as total_revenue,
@@ -65,9 +65,9 @@ GROUP BY c.category_id, c.name
 ORDER BY total_revenue DESC`,
   },
   {
-    name: 'Top 10 Performing Films',
-    description: 'Best performing films by revenue',
-    category: 'Revenue',
+    name: "Top 10 Performing Films",
+    description: "Best performing films by revenue",
+    category: "Revenue",
     sql: `SELECT
   f.title,
   f.rental_rate,
@@ -86,9 +86,9 @@ ORDER BY total_revenue DESC
 LIMIT 10`,
   },
   {
-    name: 'Daily Revenue Trend',
-    description: 'Daily revenue for the last 30 days',
-    category: 'Revenue',
+    name: "Daily Revenue Trend",
+    description: "Daily revenue for the last 30 days",
+    category: "Revenue",
     sql: `SELECT
   DATE(r.rental_date) as rental_date,
   ROUND(SUM(p.amount), 2) as daily_revenue,
@@ -103,9 +103,9 @@ ORDER BY rental_date DESC`,
 
   // CUSTOMER ANALYTICS
   {
-    name: 'Top Customers by Spending',
-    description: 'Identify most valuable customers',
-    category: 'Customer',
+    name: "Top Customers by Spending",
+    description: "Identify most valuable customers",
+    category: "Customer",
     sql: `SELECT
   c.customer_id,
   c.first_name || ' ' || c.last_name as customer_name,
@@ -123,9 +123,9 @@ ORDER BY total_spent DESC
 LIMIT 20`,
   },
   {
-    name: 'Customer Rental Frequency',
-    description: 'Distribution of rental frequency',
-    category: 'Customer',
+    name: "Customer Rental Frequency",
+    description: "Distribution of rental frequency",
+    category: "Customer",
     sql: `SELECT
   rental_count,
   COUNT(*) as customer_count
@@ -140,9 +140,9 @@ GROUP BY rental_count
 ORDER BY rental_count DESC`,
   },
   {
-    name: 'New Customer Acquisition',
-    description: 'Track new customers over time',
-    category: 'Customer',
+    name: "New Customer Acquisition",
+    description: "Track new customers over time",
+    category: "Customer",
     sql: `SELECT
   strftime('%Y-%m', c.create_date) as month,
   COUNT(*) as new_customers
@@ -153,9 +153,9 @@ ORDER BY month DESC`,
 
   // INVENTORY ANALYTICS
   {
-    name: 'Film Category Distribution',
-    description: 'Number of films per category',
-    category: 'Inventory',
+    name: "Film Category Distribution",
+    description: "Number of films per category",
+    category: "Inventory",
     sql: `SELECT
   c.name as category,
   COUNT(DISTINCT f.film_id) as film_count
@@ -166,9 +166,9 @@ GROUP BY c.category_id, c.name
 ORDER BY film_count DESC`,
   },
   {
-    name: 'Most Rented Films',
-    description: 'Top 20 most rented films',
-    category: 'Inventory',
+    name: "Most Rented Films",
+    description: "Top 20 most rented films",
+    category: "Inventory",
     sql: `SELECT
   f.title,
   f.rental_rate,
@@ -185,9 +185,9 @@ ORDER BY rental_count DESC
 LIMIT 20`,
   },
   {
-    name: 'Inventory Utilization',
-    description: 'Track inventory utilization by category',
-    category: 'Inventory',
+    name: "Inventory Utilization",
+    description: "Track inventory utilization by category",
+    category: "Inventory",
     sql: `SELECT
   c.name as category,
   COUNT(DISTINCT i.inventory_id) as total_inventory,
@@ -204,9 +204,9 @@ ORDER BY utilization_rate DESC`,
 
   // RENTAL ANALYTICS
   {
-    name: 'Rental Duration Stats',
-    description: 'Distribution of rental durations',
-    category: 'Rental',
+    name: "Rental Duration Stats",
+    description: "Distribution of rental durations",
+    category: "Rental",
     sql: `SELECT
   ROUND(JULIANDATE(return_date) - JULIANDATE(rental_date), 1) as rental_days,
   COUNT(*) as rental_count
@@ -216,9 +216,9 @@ GROUP BY ROUND(JULIANDATE(return_date) - JULIANDATE(rental_date), 1)
 ORDER BY rental_days`,
   },
   {
-    name: 'Returns by Day of Week',
-    description: 'Rental returns by day of week',
-    category: 'Rental',
+    name: "Returns by Day of Week",
+    description: "Rental returns by day of week",
+    category: "Rental",
     sql: `SELECT
   CASE strftime('%w', return_date)
     WHEN '0' THEN 'Sunday'
@@ -246,9 +246,9 @@ END`,
 
   // STAFF PERFORMANCE
   {
-    name: 'Staff Performance',
-    description: 'Performance metrics by staff member',
-    category: 'Staff',
+    name: "Staff Performance",
+    description: "Performance metrics by staff member",
+    category: "Staff",
     sql: `SELECT
   s.staff_id,
   s.first_name || ' ' || s.last_name as staff_name,
@@ -265,9 +265,9 @@ ORDER BY total_revenue DESC`,
 
   // STORE COMPARISON
   {
-    name: 'Store Comparison',
-    description: 'Compare stores across key metrics',
-    category: 'Operations',
+    name: "Store Comparison",
+    description: "Compare stores across key metrics",
+    category: "Operations",
     sql: `SELECT
   'Store ' || s.store_id as store_name,
   (SELECT COUNT(*) FROM customer WHERE store_id = s.store_id) as customer_count,
@@ -290,21 +290,24 @@ async function seedQueries() {
   // biome-ignore lint/suspicious/noExplicitAny: seed script uses dynamic table inserts
   const db = getDb() as any;
 
-  console.log('📊 Creating saved queries...');
+  console.log("📊 Creating saved queries...");
 
   for (const query of queries) {
     const id = uuidv4();
 
-    await db.insertInto('saved_queries').values({
-      id,
-      name: query.name,
-      description: query.description,
-      data_source_id: DATA_SOURCE_ID,
-      sql_content: query.sql,
-      created_by: SYSTEM_USER_ID,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }).execute();
+    await db
+      .insertInto("saved_queries")
+      .values({
+        id,
+        name: query.name,
+        description: query.description,
+        data_source_id: DATA_SOURCE_ID,
+        sql_content: query.sql,
+        created_by: SYSTEM_USER_ID,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .execute();
 
     queryIdMap[query.name] = id;
     console.log(`  ✓ Created query: ${query.name}`);
@@ -318,54 +321,54 @@ async function seedReports(queryIds: Record<string, string>) {
   // biome-ignore lint/suspicious/noExplicitAny: seed script uses dynamic table inserts
   const db = getDb() as any;
 
-  console.log('📄 Creating reports...');
+  console.log("📄 Creating reports...");
 
   const reports = [
     {
-      name: 'Monthly Revenue Report',
-      description: 'Comprehensive monthly revenue analysis',
-      query_name: 'Monthly Revenue Trend',
+      name: "Monthly Revenue Report",
+      description: "Comprehensive monthly revenue analysis",
+      query_name: "Monthly Revenue Trend",
       column_config: JSON.stringify([
-        { key: 'month', label: 'Month', width: 120 },
-        { key: 'total_revenue', label: 'Revenue', width: 120 },
-        { key: 'rental_count', label: 'Rentals', width: 100 },
-        { key: 'unique_customers', label: 'Customers', width: 100 },
-        { key: 'avg_payment_amount', label: 'Avg Payment', width: 120 },
+        { key: "month", label: "Month", width: 120 },
+        { key: "total_revenue", label: "Revenue", width: 120 },
+        { key: "rental_count", label: "Rentals", width: 100 },
+        { key: "unique_customers", label: "Customers", width: 100 },
+        { key: "avg_payment_amount", label: "Avg Payment", width: 120 },
       ]),
     },
     {
-      name: 'Store Performance Report',
-      description: 'Compare store performance metrics',
-      query_name: 'Revenue by Store',
+      name: "Store Performance Report",
+      description: "Compare store performance metrics",
+      query_name: "Revenue by Store",
       column_config: JSON.stringify([
-        { key: 'store_id', label: 'Store', width: 80 },
-        { key: 'total_revenue', label: 'Revenue', width: 120 },
-        { key: 'rental_count', label: 'Rentals', width: 100 },
-        { key: 'unique_customers', label: 'Customers', width: 100 },
-        { key: 'avg_payment_amount', label: 'Avg Payment', width: 120 },
+        { key: "store_id", label: "Store", width: 80 },
+        { key: "total_revenue", label: "Revenue", width: 120 },
+        { key: "rental_count", label: "Rentals", width: 100 },
+        { key: "unique_customers", label: "Customers", width: 100 },
+        { key: "avg_payment_amount", label: "Avg Payment", width: 120 },
       ]),
     },
     {
-      name: 'Top Customers Report',
-      description: 'Most valuable customers list',
-      query_name: 'Top Customers by Spending',
+      name: "Top Customers Report",
+      description: "Most valuable customers list",
+      query_name: "Top Customers by Spending",
       column_config: JSON.stringify([
-        { key: 'customer_name', label: 'Customer', width: 200 },
-        { key: 'email', label: 'Email', width: 250 },
-        { key: 'total_spent', label: 'Total Spent', width: 120 },
-        { key: 'rental_count', label: 'Rentals', width: 100 },
-        { key: 'avg_spent_per_rental', label: 'Avg per Rental', width: 130 },
+        { key: "customer_name", label: "Customer", width: 200 },
+        { key: "email", label: "Email", width: 250 },
+        { key: "total_spent", label: "Total Spent", width: 120 },
+        { key: "rental_count", label: "Rentals", width: 100 },
+        { key: "avg_spent_per_rental", label: "Avg per Rental", width: 130 },
       ]),
     },
     {
-      name: 'Inventory Utilization Report',
-      description: 'Track inventory efficiency',
-      query_name: 'Inventory Utilization',
+      name: "Inventory Utilization Report",
+      description: "Track inventory efficiency",
+      query_name: "Inventory Utilization",
       column_config: JSON.stringify([
-        { key: 'category', label: 'Category', width: 150 },
-        { key: 'total_inventory', label: 'Total Inventory', width: 130 },
-        { key: 'ever_rented', label: 'Ever Rented', width: 120 },
-        { key: 'utilization_rate', label: 'Utilization %', width: 120 },
+        { key: "category", label: "Category", width: 150 },
+        { key: "total_inventory", label: "Total Inventory", width: 130 },
+        { key: "ever_rented", label: "Ever Rented", width: 120 },
+        { key: "utilization_rate", label: "Utilization %", width: 120 },
       ]),
     },
   ];
@@ -374,16 +377,19 @@ async function seedReports(queryIds: Record<string, string>) {
     const id = uuidv4();
     const queryId = queryIds[report.query_name];
 
-    await db.insertInto('report_definitions').values({
-      id,
-      name: report.name,
-      description: report.description,
-      saved_query_id: queryId,
-      column_config: report.column_config,
-      created_by: SYSTEM_USER_ID,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }).execute();
+    await db
+      .insertInto("report_definitions")
+      .values({
+        id,
+        name: report.name,
+        description: report.description,
+        saved_query_id: queryId,
+        column_config: report.column_config,
+        created_by: SYSTEM_USER_ID,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .execute();
 
     console.log(`  ✓ Created report: ${report.name}`);
   }
@@ -395,110 +401,110 @@ async function seedCharts(queryIds: Record<string, string>) {
   // biome-ignore lint/suspicious/noExplicitAny: seed script uses dynamic table inserts
   const db = getDb() as any;
 
-  console.log('📈 Creating charts...');
+  console.log("📈 Creating charts...");
 
   const charts = [
     {
-      name: 'Revenue Over Time',
-      description: 'Monthly revenue trend line chart',
-      query_name: 'Monthly Revenue Trend',
-      chart_type: 'line',
+      name: "Revenue Over Time",
+      description: "Monthly revenue trend line chart",
+      query_name: "Monthly Revenue Trend",
+      chart_type: "line",
       config: {
-        xAxis: 'month',
-        yAxis: ['total_revenue', 'rental_count'],
-        chartType: 'line',
-        title: 'Revenue Trend',
+        xAxis: "month",
+        yAxis: ["total_revenue", "rental_count"],
+        chartType: "line",
+        title: "Revenue Trend",
         height: 300,
       },
     },
     {
-      name: 'Revenue by Category',
-      description: 'Bar chart of revenue by film category',
-      query_name: 'Revenue by Film Category',
-      chart_type: 'bar',
+      name: "Revenue by Category",
+      description: "Bar chart of revenue by film category",
+      query_name: "Revenue by Film Category",
+      chart_type: "bar",
       config: {
-        xAxis: 'category',
-        yAxis: ['total_revenue'],
-        chartType: 'bar',
-        title: 'Revenue by Category',
+        xAxis: "category",
+        yAxis: ["total_revenue"],
+        chartType: "bar",
+        title: "Revenue by Category",
         height: 300,
       },
     },
     {
-      name: 'Top Films',
-      description: 'Horizontal bar chart of top films',
-      query_name: 'Top 10 Performing Films',
-      chart_type: 'bar',
+      name: "Top Films",
+      description: "Horizontal bar chart of top films",
+      query_name: "Top 10 Performing Films",
+      chart_type: "bar",
       config: {
-        xAxis: 'title',
-        yAxis: ['total_revenue'],
-        chartType: 'horizontal-bar',
-        title: 'Top 10 Films by Revenue',
+        xAxis: "title",
+        yAxis: ["total_revenue"],
+        chartType: "horizontal-bar",
+        title: "Top 10 Films by Revenue",
         height: 400,
       },
     },
     {
-      name: 'Customer Spending',
-      description: 'Bar chart of top customer spending',
-      query_name: 'Top Customers by Spending',
-      chart_type: 'bar',
+      name: "Customer Spending",
+      description: "Bar chart of top customer spending",
+      query_name: "Top Customers by Spending",
+      chart_type: "bar",
       config: {
-        xAxis: 'customer_name',
-        yAxis: ['total_spent'],
-        chartType: 'bar',
-        title: 'Top 20 Customers by Spending',
+        xAxis: "customer_name",
+        yAxis: ["total_spent"],
+        chartType: "bar",
+        title: "Top 20 Customers by Spending",
         height: 400,
       },
     },
     {
-      name: 'Store Comparison',
-      description: 'Compare stores across metrics',
-      query_name: 'Store Comparison',
-      chart_type: 'bar',
+      name: "Store Comparison",
+      description: "Compare stores across metrics",
+      query_name: "Store Comparison",
+      chart_type: "bar",
       config: {
-        xAxis: 'store_name',
-        yAxis: ['customer_count', 'rental_count', 'total_revenue'],
-        chartType: 'grouped-bar',
-        title: 'Store Performance Comparison',
+        xAxis: "store_name",
+        yAxis: ["customer_count", "rental_count", "total_revenue"],
+        chartType: "grouped-bar",
+        title: "Store Performance Comparison",
         height: 350,
       },
     },
     {
-      name: 'Inventory Utilization',
-      description: 'Utilization rate by category',
-      query_name: 'Inventory Utilization',
-      chart_type: 'pie',
+      name: "Inventory Utilization",
+      description: "Utilization rate by category",
+      query_name: "Inventory Utilization",
+      chart_type: "pie",
       config: {
-        xAxis: 'category',
-        yAxis: ['utilization_rate'],
-        chartType: 'pie',
-        title: 'Inventory Utilization by Category',
+        xAxis: "category",
+        yAxis: ["utilization_rate"],
+        chartType: "pie",
+        title: "Inventory Utilization by Category",
         height: 350,
       },
     },
     {
-      name: 'Returns by Day',
-      description: 'Returns distribution by weekday',
-      query_name: 'Returns by Day of Week',
-      chart_type: 'bar',
+      name: "Returns by Day",
+      description: "Returns distribution by weekday",
+      query_name: "Returns by Day of Week",
+      chart_type: "bar",
       config: {
-        xAxis: 'day_name',
-        yAxis: ['return_count'],
-        chartType: 'bar',
-        title: 'Rental Returns by Day of Week',
+        xAxis: "day_name",
+        yAxis: ["return_count"],
+        chartType: "bar",
+        title: "Rental Returns by Day of Week",
         height: 300,
       },
     },
     {
-      name: 'Staff Performance',
-      description: 'Performance comparison by staff',
-      query_name: 'Staff Performance',
-      chart_type: 'bar',
+      name: "Staff Performance",
+      description: "Performance comparison by staff",
+      query_name: "Staff Performance",
+      chart_type: "bar",
       config: {
-        xAxis: 'staff_name',
-        yAxis: ['total_revenue', 'rentals_processed'],
-        chartType: 'grouped-bar',
-        title: 'Staff Performance Metrics',
+        xAxis: "staff_name",
+        yAxis: ["total_revenue", "rentals_processed"],
+        chartType: "grouped-bar",
+        title: "Staff Performance Metrics",
         height: 350,
       },
     },
@@ -508,21 +514,24 @@ async function seedCharts(queryIds: Record<string, string>) {
     const id = uuidv4();
     const queryId = queryIds[chart.query_name];
 
-    await db.insertInto('chart_definitions').values({
-      id,
-      name: chart.name,
-      description: chart.description,
-      saved_query_id: queryId,
-      chart_type: chart.chart_type,
-      chart_config: JSON.stringify(chart.config),
-      data_mapping: JSON.stringify({
-        xAxis: chart.config.xAxis,
-        yAxis: chart.config.yAxis,
-      }),
-      created_by: SYSTEM_USER_ID,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }).execute();
+    await db
+      .insertInto("chart_definitions")
+      .values({
+        id,
+        name: chart.name,
+        description: chart.description,
+        saved_query_id: queryId,
+        chart_type: chart.chart_type,
+        chart_config: JSON.stringify(chart.config),
+        data_mapping: JSON.stringify({
+          xAxis: chart.config.xAxis,
+          yAxis: chart.config.yAxis,
+        }),
+        created_by: SYSTEM_USER_ID,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .execute();
 
     console.log(`  ✓ Created chart: ${chart.name}`);
   }
@@ -534,44 +543,48 @@ async function seedDashboards(queryIds: Record<string, string>) {
   // biome-ignore lint/suspicious/noExplicitAny: seed script uses dynamic table inserts
   const db = getDb() as any;
 
-  console.log('🎛️  Creating dashboards...');
+  console.log("🎛️  Creating dashboards...");
 
   // First create the dashboard layout
   const dashboardId = uuidv4();
 
-  await db.insertInto('dashboard_layouts').values({
-    id: dashboardId,
-    name: 'Sakila Analytics Dashboard',
-    description: 'Complete business analytics for Sakila DVD rental store',
-    layout_config: JSON.stringify({ rows: 'auto-fit', cols: 8, gap: 16 }),
-    theme_config: '{}',
-    is_public: true,
-    created_by: SYSTEM_USER_ID,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  }).execute();
+  await db
+    .insertInto("dashboard_layouts")
+    .values({
+      id: dashboardId,
+      name: "Sakila Analytics Dashboard",
+      description: "Complete business analytics for Sakila DVD rental store",
+      layout_config: JSON.stringify({ rows: "auto-fit", cols: 8, gap: 16 }),
+      theme_config: "{}",
+      is_public: true,
+      created_by: SYSTEM_USER_ID,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .execute();
 
   console.log(`  ✓ Created dashboard layout: Sakila Analytics Dashboard`);
 
   // Get chart IDs
-  const charts = await db.selectFrom('chart_definitions')
-    .select(['id', 'name'])
-    .where('name', 'in', [
-      'Revenue Over Time',
-      'Revenue by Category',
-      'Store Comparison',
-      'Top Films',
-      'Inventory Utilization',
+  const charts = await db
+    .selectFrom("chart_definitions")
+    .select(["id", "name"])
+    .where("name", "in", [
+      "Revenue Over Time",
+      "Revenue by Category",
+      "Store Comparison",
+      "Top Films",
+      "Inventory Utilization",
     ])
     .execute();
 
   // Create widgets for the dashboard
   const widgets = [
-    { chart_name: 'Revenue Over Time', position: { x: 0, y: 0, w: 4, h: 2 } },
-    { chart_name: 'Revenue by Category', position: { x: 4, y: 0, w: 4, h: 2 } },
-    { chart_name: 'Store Comparison', position: { x: 0, y: 2, w: 4, h: 2 } },
-    { chart_name: 'Top Films', position: { x: 4, y: 2, w: 4, h: 2 } },
-    { chart_name: 'Inventory Utilization', position: { x: 0, y: 4, w: 3, h: 2 } },
+    { chart_name: "Revenue Over Time", position: { x: 0, y: 0, w: 4, h: 2 } },
+    { chart_name: "Revenue by Category", position: { x: 4, y: 0, w: 4, h: 2 } },
+    { chart_name: "Store Comparison", position: { x: 0, y: 2, w: 4, h: 2 } },
+    { chart_name: "Top Films", position: { x: 4, y: 2, w: 4, h: 2 } },
+    { chart_name: "Inventory Utilization", position: { x: 0, y: 4, w: 3, h: 2 } },
   ];
 
   for (const widget of widgets) {
@@ -580,23 +593,26 @@ async function seedDashboards(queryIds: Record<string, string>) {
 
     const widgetId = uuidv4();
 
-    await db.insertInto('dashboard_widgets').values({
-      id: widgetId,
-      dashboard_id: dashboardId,
-      widget_type: 'chart',
-      chart_id: chart.id,
-      position_config: JSON.stringify({
-        x: widget.position.x,
-        y: widget.position.y,
-        w: widget.position.w,
-        h: widget.position.h,
-      }),
-      widget_config: JSON.stringify({
-        title: widget.chart_name,
-      }),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }).execute();
+    await db
+      .insertInto("dashboard_widgets")
+      .values({
+        id: widgetId,
+        dashboard_id: dashboardId,
+        widget_type: "chart",
+        chart_id: chart.id,
+        position_config: JSON.stringify({
+          x: widget.position.x,
+          y: widget.position.y,
+          w: widget.position.w,
+          h: widget.position.h,
+        }),
+        widget_config: JSON.stringify({
+          title: widget.chart_name,
+        }),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .execute();
 
     console.log(`  ✓ Created widget: ${widget.chart_name}`);
   }
@@ -606,15 +622,15 @@ async function seedDashboards(queryIds: Record<string, string>) {
 
 async function main() {
   try {
-    console.log('\n🚀 Starting Sakila Analytics seed...\n');
+    console.log("\n🚀 Starting Sakila Analytics seed...\n");
 
     const queryIds = await seedQueries();
     await seedReports(queryIds);
     await seedCharts(queryIds);
     await seedDashboards(queryIds);
 
-    console.log('✨ Seed completed successfully!\n');
-    console.log('Summary:');
+    console.log("✨ Seed completed successfully!\n");
+    console.log("Summary:");
     console.log(`  - ${Object.keys(queryIds).length} Saved Queries`);
     console.log(`  - 4 Reports`);
     console.log(`  - 8 Charts`);
@@ -622,7 +638,7 @@ async function main() {
 
     process.exit(0);
   } catch (error) {
-    console.error('❌ Seed failed:', error);
+    console.error("❌ Seed failed:", error);
     process.exit(1);
   }
 }

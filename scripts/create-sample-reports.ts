@@ -18,16 +18,14 @@ try {
   console.log("Creating sample reports and charts...");
 
   // Get data source ID and admin user ID
-  const dsResult = await client.query(
-    "SELECT id FROM data_sources WHERE name = $1",
-    ["Hospital Management System"]
-  );
+  const dsResult = await client.query("SELECT id FROM data_sources WHERE name = $1", [
+    "Hospital Management System",
+  ]);
   const dataSourceId = dsResult.rows[0].id;
 
-  const userResult = await client.query(
-    "SELECT id FROM users WHERE email = $1",
-    ["admin@admin.com"]
-  );
+  const userResult = await client.query("SELECT id FROM users WHERE email = $1", [
+    "admin@admin.com",
+  ]);
   const userId = userResult.rows[0].id;
 
   console.log(`Using data source: ${dataSourceId}`);
@@ -113,17 +111,7 @@ try {
     await client.query(
       `INSERT INTO saved_queries (id, name, description, data_source_id, sql_content, is_validated, created_by, created_at, updated_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-      [
-        query.id,
-        query.name,
-        query.description,
-        dataSourceId,
-        query.sql,
-        true,
-        userId,
-        now,
-        now,
-      ]
+      [query.id, query.name, query.description, dataSourceId, query.sql, true, userId, now, now]
     );
     console.log(`✓ Created query: ${query.name}`);
   }
@@ -411,7 +399,6 @@ try {
   console.log("✓ Created 4 charts");
   console.log("✓ Created 1 dashboard with 6 widgets");
   console.log("✓ Added NL query context examples");
-
 } finally {
   client.release();
   await pool.end();

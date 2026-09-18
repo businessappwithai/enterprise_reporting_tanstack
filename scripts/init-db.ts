@@ -3,18 +3,18 @@
  * This creates all necessary tables for the Enterprise Reporting System
  */
 
-import Database from 'bun:sqlite';
-import { existsSync, mkdirSync } from 'fs';
+import Database from "bun:sqlite";
+import { existsSync, mkdirSync } from "fs";
 
-const DATABASE_PATH = process.env.DATABASE_PATH || '/app/data/config.sqlite';
+const DATABASE_PATH = process.env.DATABASE_PATH || "/app/data/config.sqlite";
 
-console.log('========================================');
-console.log('Initializing database with bun:sqlite');
-console.log('========================================');
+console.log("========================================");
+console.log("Initializing database with bun:sqlite");
+console.log("========================================");
 console.log(`Database: ${DATABASE_PATH}`);
 
 // Ensure data directory exists
-const dataDir = DATABASE_PATH.split('/').slice(0, -1).join('/');
+const dataDir = DATABASE_PATH.split("/").slice(0, -1).join("/");
 if (!existsSync(dataDir)) {
   mkdirSync(dataDir, { recursive: true });
   console.log(`Created directory: ${dataDir}`);
@@ -22,7 +22,7 @@ if (!existsSync(dataDir)) {
 
 // Open database connection
 const db = new Database(DATABASE_PATH);
-db.exec('PRAGMA foreign_keys = ON');
+db.exec("PRAGMA foreign_keys = ON");
 
 // Create all tables
 const schema = `
@@ -261,46 +261,56 @@ CREATE TABLE IF NOT EXISTS nl_query_history (
 );
 `;
 
-console.log('Creating database schema...');
+console.log("Creating database schema...");
 db.exec(schema);
-console.log('✓ Database schema created');
+console.log("✓ Database schema created");
 
 // Create a simple admin user if not exists
-console.log('Checking for admin user...');
-const adminExists = db.query('SELECT 1 FROM users WHERE email = ?').get('admin@admin.com');
+console.log("Checking for admin user...");
+const adminExists = db.query("SELECT 1 FROM users WHERE email = ?").get("admin@admin.com");
 if (!adminExists) {
-  console.log('Creating default admin user...');
-  
+  console.log("Creating default admin user...");
+
   // Simple password hash for demo (in production, use proper bcrypt)
-  const passwordHash = 'admin'; // In production, this should be properly hashed
-  
-  db.query('INSERT INTO users (email, password_hash, display_name) VALUES (?, ?, ?)')
-    .get('admin@admin.com', passwordHash, 'Admin');
-  
+  const passwordHash = "admin"; // In production, this should be properly hashed
+
+  db.query("INSERT INTO users (email, password_hash, display_name) VALUES (?, ?, ?)").get(
+    "admin@admin.com",
+    passwordHash,
+    "Admin"
+  );
+
   // Create admin role
   db.query(`INSERT INTO roles (id, name, description, permissions) VALUES 
-    ('admin-role', 'Administrator', 'Full system access', '["*"]')`)
-    .run();
-  
+    ('admin-role', 'Administrator', 'Full system access', '["*"]')`).run();
+
   // Assign admin role to admin user
-  const adminUserId = (db.query('SELECT id FROM users WHERE email = ?').get('admin@admin.com') as { id: string }).id;
-  const adminRoleId = (db.query('SELECT id FROM roles WHERE name = ?').get('Administrator') as { id: string }).id;
-  db.query('INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)').get(adminUserId, adminRoleId);
-  
-  console.log('✓ Default admin user created (admin@admin.com / admin)');
+  const adminUserId = (
+    db.query("SELECT id FROM users WHERE email = ?").get("admin@admin.com") as { id: string }
+  ).id;
+  const adminRoleId = (
+    db.query("SELECT id FROM roles WHERE name = ?").get("Administrator") as { id: string }
+  ).id;
+  db.query("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)").get(adminUserId, adminRoleId);
+
+  console.log("✓ Default admin user created (admin@admin.com / admin)");
 } else {
-  console.log('⊙ Admin user already exists');
+  console.log("⊙ Admin user already exists");
 }
 
-console.log('========================================');
-console.log('Database initialization completed');
-console.log('========================================');
+console.log("========================================");
+console.log("Database initialization completed");
+console.log("========================================");
 
 // Verify database was created
-const tableCount = (db.query("SELECT COUNT(*) as count FROM sqlite_master WHERE type='table'").get() as { count: number }).count;
+const tableCount = (
+  db.query("SELECT COUNT(*) as count FROM sqlite_master WHERE type='table'").get() as {
+    count: number;
+  }
+).count;
 console.log(`✓ Database created with ${tableCount} tables`);
 
 // Close database
 db.close();
 
-console.log('✓ Database ready');
+console.log("✓ Database ready");

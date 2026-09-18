@@ -10,7 +10,8 @@ import { Pool } from "pg";
 const BASE_URL = "http://localhost:4050";
 const ADMIN_EMAIL = "admin@admin.com";
 const ADMIN_PASSWORD = "Admin123!@";
-const DATABASE_URL = process.env.DATABASE_URL || "postgresql://postgres@localhost:5432/hospital_management_system";
+const DATABASE_URL =
+  process.env.DATABASE_URL || "postgresql://postgres@localhost:5432/hospital_management_system";
 const AUTH_SECRET = process.env.AUTH_SECRET || "your-secret-key-min-32-characters-required-here";
 
 interface TestResult {
@@ -110,25 +111,20 @@ async function getDataSourceId(sessionToken: string): Promise<string> {
   );
 
   if (!hmsDatasource) {
-    throw new Error(
-      "HMS data source not found. Please create it first via UI."
-    );
+    throw new Error("HMS data source not found. Please create it first via UI.");
   }
 
   return hmsDatasource.id;
 }
 
 // Create saved queries
-async function createSavedQueries(
-  sessionToken: string,
-  dataSourceId: string
-): Promise<string[]> {
+async function createSavedQueries(sessionToken: string, dataSourceId: string): Promise<string[]> {
   const queries = [
     {
       name: "Total Patients by Gender",
       description: "Count of patients grouped by gender",
       sqlContent:
-        'SELECT gender, COUNT(*) as patient_count FROM bus_patient GROUP BY gender ORDER BY patient_count DESC',
+        "SELECT gender, COUNT(*) as patient_count FROM bus_patient GROUP BY gender ORDER BY patient_count DESC",
     },
     {
       name: "Patients by Age Group",
@@ -448,10 +444,7 @@ async function createCharts(
 }
 
 // Create dashboards
-async function createDashboards(
-  sessionToken: string,
-  chartIds: string[]
-): Promise<string[]> {
+async function createDashboards(sessionToken: string, chartIds: string[]): Promise<string[]> {
   const dashboards = [
     {
       name: "Patient Analytics Dashboard",
