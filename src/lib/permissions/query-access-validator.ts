@@ -6,7 +6,7 @@
  */
 
 import { checkEntityAccess } from "@/lib/permissions/ds-rbac";
-import { extractColumns, extractTables } from "@/lib/sql/antlr-validator";
+import { extractColumns, extractTablesStrict } from "@/lib/sql/antlr-validator";
 import type { User } from "@/types/database";
 
 export interface QueryAccessValidation {
@@ -41,14 +41,47 @@ export async function validateQueryAccess(
   dataSourceId: string
 ): Promise<QueryAccessValidation> {
   try {
-    // 1. Extract tables from SQL
-    const tables = extractTables(sql);
+    /*
+     * 1. Which base tables does this statement read?
+     *
+     * A query whose tables cannot be determined is REFUSED, and that is the
+     * whole point of this block. It used to read:
+     *
+     *     if (tables.length === 0) return { allowed: true };
+     *
+     * with a comment saying "trust it for now". The extractor behind it was a
+     * regular expression, so every statement it failed to match produced no
+     * tables and was therefore trusted — `SELECT * FROM(hr_salaries)`, and the
+     * same statement with a block comment where the space goes, among them.
+     * Deleting one space bypassed the entire data-source permission layer.
+     *
+     * An access decision that cannot be made is a denial. There is no third
+     * answer, and "no tables named" is not evidence that a query reads nothing
+     * — it is evidence that this function does not understand the query.
+     */
+    const extraction = extractTablesStrict(sql);
+    if (!extraction.ok) {
+      return {
+        allowed: false,
+        reason:
+          "This query could not be analysed for table access, so it was not run. " +
+          "Rewrite it in plain SELECT form, or save it as a report if it needs " +
+          `constructs the analyser does not cover. (${extraction.reason})`,
+      };
+    }
+
+    const tables = extraction.tables;
     const columns = extractColumns(sql);
 
+    // A statement that genuinely reads no table — `SELECT 1`, `SELECT now()` —
+    // touches no data and so has nothing to check. This is narrow on purpose:
+    // it is reached only when the parser succeeded and reported no tables,
+    // never when parsing failed.
     if (tables.length === 0) {
-      // Subquery or complex query without direct tables
-      // Trust it for now (more complex parsing needed)
-      return { allowed: true };
+      return {
+        allowed: true,
+        details: { tablesAccessed: [], columnsAccessed: columns, checkedAt: Date.now() },
+      };
     }
 
     // 2. Parse SQL entities (convert to format expected by checkEntityAccess)

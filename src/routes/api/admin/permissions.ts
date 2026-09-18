@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
 import { readSessionToken, verifySession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/config";
+import { isAdmin } from "@/lib/permissions/permissions";
 import { randomUUID } from "node:crypto";
 
 async function getSession(request: Request) {
@@ -21,6 +22,14 @@ export const Route = createFileRoute("/api/admin/permissions")({
             return json(
               { success: false, error: { message: "Not authenticated" } },
               { status: 401 }
+            );
+          }
+
+          const adminCheck = await isAdmin(session.user.id);
+          if (!adminCheck) {
+            return json(
+              { success: false, error: { message: "Insufficient permissions" } },
+              { status: 403 }
             );
           }
 
@@ -57,6 +66,14 @@ export const Route = createFileRoute("/api/admin/permissions")({
             return json(
               { success: false, error: { message: "Not authenticated" } },
               { status: 401 }
+            );
+          }
+
+          const adminCheck = await isAdmin(session.user.id);
+          if (!adminCheck) {
+            return json(
+              { success: false, error: { message: "Insufficient permissions" } },
+              { status: 403 }
             );
           }
 
@@ -110,6 +127,14 @@ export const Route = createFileRoute("/api/admin/permissions")({
             return json(
               { success: false, error: { message: "Not authenticated" } },
               { status: 401 }
+            );
+          }
+
+          const adminCheck = await isAdmin(session.user.id);
+          if (!adminCheck) {
+            return json(
+              { success: false, error: { message: "Insufficient permissions" } },
+              { status: 403 }
             );
           }
 
