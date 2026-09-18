@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { auth } from "@/lib/auth/config";
 import {
   CopilotRuntime,
   OpenAIAdapter,
@@ -55,13 +56,40 @@ function getHandler() {
   return _handler;
 }
 
+/**
+ * Every handler below requires a session.
+ *
+ * A security review found this route reachable with no authentication at all —
+ * an open proxy to the configured model, using the server's own API key. Anyone
+ * who could reach the origin could spend the budget, address the model
+ * directly, and (on the transcribe path) have arbitrary uploaded bytes written
+ * to disk and fed to ffmpeg.
+ *
+ * It is not a public surface. It is the sidebar's backend, and the sidebar is
+ * behind `_authed`.
+ */
+async function requireSession(request: Request): Promise<Response | null> {
+  const session = await auth(request);
+  if (!session?.user) {
+    return new Response(JSON.stringify({ error: "Not authenticated" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  return null;
+}
+
 export const Route = createFileRoute("/api/copilotkit/")({
   server: {
     handlers: {
       GET: async ({ request }) => {
+        const refusal = await requireSession(request);
+        if (refusal) return refusal;
         return getHandler().handleRequest(request);
       },
       POST: async ({ request }) => {
+        const refusal = await requireSession(request);
+        if (refusal) return refusal;
         return getHandler().handleRequest(request);
       },
     },

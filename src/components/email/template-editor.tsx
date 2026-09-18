@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import DOMPurify from "dompurify";
 
 interface TemplateEditorProps {
   templateId?: string;
@@ -417,10 +418,25 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
+                    {/*
+                     * Sanitised, which it was not.
+                     *
+                     * This HTML is the template with a row of query results
+                     * substituted into it, so its content comes from the
+                     * connected data source — not from the administrator
+                     * writing the template. A row holding `<img onerror=…>`
+                     * executed in the previewing administrator's session, which
+                     * is the most privileged one in the application.
+                     *
+                     * `HelpPanel.tsx` already renders untrusted-ish HTML this
+                     * way; this is the same treatment. Sanitising rather than
+                     * escaping, because the point of the preview is to show the
+                     * email as it will look.
+                     */}
                     <div
                       className="border rounded-lg p-4 bg-white"
-                      // biome-ignore lint/security/noDangerouslySetInnerHtml: email preview rendering
-                      dangerouslySetInnerHTML={{ __html: preview.preview }}
+                      // biome-ignore lint/security/noDangerouslySetInnerHtml: sanitised email preview
+                      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(preview.preview) }}
                     />
                   </CardContent>
                 </Card>

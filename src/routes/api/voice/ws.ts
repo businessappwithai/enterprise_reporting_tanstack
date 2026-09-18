@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { auth } from "@/lib/auth/config";
 import type { EnhancedSchemaMetadata } from "@/lib/nlquery/llama-translator";
 import { isDenied, translateNLToSQLViaLlama } from "@/lib/nlquery/llama-translator";
 import { transcribeAudioStream } from "@/lib/voice/qwen-asr";
@@ -18,6 +19,20 @@ export const Route = createFileRoute("/api/voice/ws")({
   server: {
     handlers: {
       GET: async ({ request }: { request: Request }) => {
+        /*
+         * Authenticated before the upgrade, not after.
+         *
+         * A socket that is checked once it is open has already been opened, and
+         * this one goes on to transcribe audio and generate SQL. The handshake
+         * carries the browser's cookies like any other request, so the session
+         * is resolvable here — which is the only point at which refusing costs
+         * nothing.
+         */
+        const session = await auth(request);
+        if (!session?.user) {
+          return new Response("Not authenticated", { status: 401 });
+        }
+
         // Check if this is a WebSocket upgrade request
         if (request.headers.get("upgrade") !== "websocket") {
           return new Response("Expected WebSocket", { status: 400 });
