@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
 import { readSessionToken, verifySession } from "@/lib/auth/session";
 import { ConnectionTestService } from "@/lib/services/connection-test.service";
+import { checkDataSourceHost } from "@/lib/security/network-target";
+import { hasPermission } from "@/lib/permissions/permissions";
 
 interface TestConnectionRequest {
   clientType: string;
@@ -59,6 +61,42 @@ export const Route = createFileRoute("/api/data-sources/test")({
           console.log(
             `[API_TEST:${testRequestId}] Config Summary: ${JSON.stringify(configSummary)}`
           );
+
+          /*
+           * Two checks this route did not make, both of which it needs because
+           * the host and port come straight from the request body.
+           *
+           * The permission check: testing a connection is part of managing data
+           * sources, so it asks for the permission that managing them asks for.
+           * Any signed-in account could previously do it.
+           *
+           * The target check: without it this is a port scanner wearing the
+           * server's own network position, and the three distinguishable
+           * outcomes — refused, TLS error, authentication failure — are the
+           * oracle that makes it a useful one. See
+           * src/lib/security/network-target.ts for what is refused and how an
+           * operator whose database really is internal turns it off.
+           */
+          if (
+            !hasPermission(
+              session.user.permissions ?? [],
+              "data_source",
+              "create",
+              session.user.roles ?? []
+            )
+          ) {
+            console.warn(`[API_TEST:${testRequestId}] Denied — missing data_source:create`);
+            return json(
+              { error: { message: "You do not have permission to manage data sources" } },
+              { status: 403 }
+            );
+          }
+
+          const target = await checkDataSourceHost(body.connectionConfig?.host);
+          if (!target.allowed) {
+            console.warn(`[API_TEST:${testRequestId}] Denied — ${target.reason}`);
+            return json({ error: { message: target.reason } }, { status: 403 });
+          }
 
           console.log(`[API_TEST:${testRequestId}] Starting connection test service...`);
           const result = await ConnectionTestService.test(body.clientType, body.connectionConfig);
