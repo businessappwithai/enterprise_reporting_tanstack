@@ -102,7 +102,7 @@ const kysely = await getConnection(dataSource);  // Kysely<any>
 - Returns a Kysely instance for the user's external database
 - Supported `client_type` values: `pg`, `mysql`, `mssql`
 - Connection configs stored AES-256-GCM encrypted (`ENCRYPTION_KEY` env var) in the config DB's `data_sources` table; decrypted via `src/lib/security/encryption.ts`
-- **An unset `ENCRYPTION_KEY` does not fail — it warns and falls back to a hard-coded development key.** Every stored data-source password is then effectively unprotected. Check the warning is absent before storing anything real.
+- **An unset `ENCRYPTION_KEY` is now fatal.** It used to warn and fall back to a hard-coded development key, which left every stored data-source password unprotected while only writing one line to a boot log that nothing failed on. Local development that wants the old behaviour must set `ALLOW_INSECURE_ENCRYPTION=1`, and that is refused outright when `NODE_ENV=production`.
 - **The key is the ciphertext's only input, so rotating it strands every stored config.** There is no re-encryption path; the failure looks like a data source that exists and cannot be opened. Generate it once, before first boot.
 - `encryption.ts` used to log twenty-four `[ENCRYPTION DEBUG]` lines per call on the normal path, ending with the first 200 characters of the plaintext — which for a data source is the whole connection config, password included, in every `docker compose logs`. It does not any more. Do not add diagnostics that print plaintext or key material here.
 - Connections pooled by data source ID and health-checked before reuse
@@ -264,6 +264,31 @@ user could read every table of any data source they could name**, whatever their
 gate on `validateQueryAccess` (`src/lib/permissions/query-access-validator.ts`),
 and a denial is a 403 naming the tables rather than a blank refusal.
 
+**The heading was aspirational until recently — four paths did not.** A security
+review found that the report, chart, export and saved-query routes each resolved
+a definition by id and ran its SQL behind a session check alone, so any signed-in
+user could read any report's data by naming its id. Those four go through
+`decideQueryRun` (`src/lib/permissions/runnable-query.ts`) now, which asks both
+questions — is this one read-only statement, and may this caller read the tables
+it names — in one place.
+
+**Reach for that module when adding a path that runs stored SQL.** The check was
+never missing; reaching it was left to each route to remember, and four of them
+did not. Both questions are asked at run time rather than trusted from save
+time: `sql_content` is an ordinary column, rows predate the validation, and the
+person running a query is frequently not the person who saved it.
+
+Two related things the same review changed:
+
+- `validateQueryAccess` **denies** a query whose tables it cannot determine. It
+  used to allow one, and the extractor behind it was a regular expression, so
+  `SELECT * FROM(hr_salaries)` — one space removed — named no tables and was
+  therefore trusted. Table extraction is a real parse now
+  (`extractTablesStrict`), but the inversion is the fix: an access decision that
+  cannot be made is a refusal.
+- `isReadOnlyQuery` refuses a statement break as well as a leading keyword.
+  `SELECT 1 LIMIT 1; DROP TABLE users` used to pass.
+
 That this went unseen for so long has a specific cause worth remembering:
 **nothing had ever created a `ds_entity_permissions` row**, so there was nothing
 for a check to enforce and no way to notice one was missing. Seeding roles from a
@@ -402,9 +427,23 @@ wrong origin.
 
 ## Default Credentials
 
-Auto-created by `bootstrapSchema()` on first startup (only inserts when no users exist):
-- `admin@admin.com` / `admin` — full administrator
-- `nlquery@nlquery.com` / `nlquery` — NL query role only
+Auto-created by `bootstrapSchema()` on first startup (the admin only when no
+users exist; the nlquery account only when that row is absent):
+
+- `admin@admin.com` — full administrator. Password from `ADMIN_PASSWORD`.
+- `nlquery@nlquery.com` — NL query role only. Password from `NLQUERY_PASSWORD`.
+
+**Neither password is compiled in any more.** Both used to be pre-computed
+bcrypt hashes of the words `admin` and `nlquery`, sitting in `bootstrap.ts` —
+so every installation that had not changed them, and nothing prompted anyone
+to, could be signed into by anyone who had read this repository. With the
+environment variable unset a random password is generated, printed once at
+boot, and stored nowhere it can be read back.
+
+The credential endpoints are rate-limited now too (`rateLimit` in
+`src/lib/auth/better-auth.ts`: 5 sign-ins per minute). Nothing throttled
+anything before, so a weak password was guessable at whatever rate the network
+allowed.
 
 Running `bun run db:seed` also adds `analyst@example.com` / `analyst123` with a sample Sakila data source.
 

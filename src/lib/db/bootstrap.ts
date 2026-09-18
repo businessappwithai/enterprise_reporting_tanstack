@@ -7,18 +7,65 @@
  */
 
 import { sql } from "kysely";
+import { randomBytes } from "node:crypto";
+import bcrypt from "bcryptjs";
 import type { Kysely } from "kysely";
 import type { Database } from "./kysely-db";
 import { seedHelpArticles } from "./help-seed";
 
-// bcrypt hash of "admin" (10 rounds) – pre-computed to avoid runtime bcrypt dependency
-const ADMIN_PASSWORD_HASH = "$2a$10$9aE.ODJU.nWyAVpLuNSnS.j2Kz5X1g27dZM6ycAb0xzUyf0/fw3bO";
-const ADMIN_ID = "1aa00cc2af0225000c5c114df3eebb69";
+/*
+ * The bootstrap accounts, and where their passwords come from.
+ *
+ * These used to be two pre-computed bcrypt hashes of the words "admin" and
+ * "nlquery", compiled into the application. Every installation that had not
+ * changed them — and nothing prompted anyone to — could be signed into by
+ * anyone who had read this file, which is public. The nlquery row was worse
+ * than the admin one: the admin is seeded only into an empty user table, while
+ * nlquery was re-inserted on every boot, so deleting it did not stick.
+ *
+ * `ADMIN_PASSWORD` / `NLQUERY_PASSWORD` name the password instead. When either
+ * is absent a random one is generated, printed once, and never stored anywhere
+ * it can be read back — so a fresh installation is reachable by whoever ran it
+ * and by nobody else, and an unattended one has no known password at all rather
+ * than a published one.
+ *
+ * Rate limiting on the credential endpoints (src/lib/auth/better-auth.ts) is
+ * the other half of this: a weak password that an operator sets deliberately
+ * should at least not be guessable at network speed.
+ */
+function resolveBootstrapPassword(envVar: string, label: string): string {
+  const configured = process.env[envVar];
+  if (configured && configured.length >= 8) return configured;
 
-// bcrypt hash of "nlquery" (10 rounds)
-const NLQUERY_PASSWORD_HASH = "$2a$10$1UDYFHzn1PDgcNfKbTpX2O7aykAUkAL.tgWGm6aGEuXG3pnMCTH3S";
+  if (configured) {
+    console.warn(
+      `[bootstrap] ${envVar} is shorter than 8 characters and was ignored. ` +
+        "Generating a random password instead."
+    );
+  }
+
+  const generated = randomBytes(18).toString("base64url");
+  console.warn(
+    `\n[bootstrap] No ${envVar} set. Generated a random password for ${label}:\n\n` +
+      `    ${generated}\n\n` +
+      "This is printed once and is not recoverable. Sign in and change it, or set " +
+      `${envVar} before first boot.\n`
+  );
+  return generated;
+}
+
+const ADMIN_ID = "1aa00cc2af0225000c5c114df3eebb69";
 const NLQUERY_USER_ID = "nlquery0user00000000000000000000";
 const NLQUERY_ROLE_ID = "nlquery0role00000000000000000000";
+
+/**
+ * bcrypt, at the cost `src/lib/auth/better-auth.ts` verifies with. A seeder
+ * hashing with anything else writes an account that cannot sign in, and the
+ * failure reads as a wrong password.
+ */
+async function bcryptHash(password: string): Promise<string> {
+  return bcrypt.hash(password, 10);
+}
 
 export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
   console.log("[bootstrap] Starting database schema bootstrap...");
@@ -752,7 +799,9 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
       .values({
         id: ADMIN_ID,
         email: "admin@admin.com",
-        password_hash: ADMIN_PASSWORD_HASH,
+        password_hash: await bcryptHash(
+          resolveBootstrapPassword("ADMIN_PASSWORD", "admin@admin.com")
+        ),
         display_name: "System Administrator",
         avatar_url: null,
         is_active: true,
@@ -778,7 +827,7 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
         );
       });
 
-    console.log("[bootstrap] Admin created: admin@admin.com / admin");
+    console.log("[bootstrap] Admin created: admin@admin.com");
   }
 
   const nlQueryPermissions = JSON.stringify(["nl_query:*"]);
@@ -802,26 +851,46 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
       );
     });
 
-  await db
-    .insertInto("users")
-    .values({
-      id: NLQUERY_USER_ID,
-      email: "nlquery@nlquery.com",
-      password_hash: NLQUERY_PASSWORD_HASH,
-      display_name: "nlquery",
-      avatar_url: null,
-      is_active: true,
-      created_at: now2,
-      updated_at: now2,
-    })
-    .onConflict((oc) => oc.column("id").doNothing())
-    .execute()
-    .catch((err) => {
-      console.warn(
-        "[bootstrap] nlquery user insert warning:",
-        (err as Error).message?.slice(0, 120)
-      );
-    });
+  /*
+   * Only insert when the row is genuinely absent.
+   *
+   * This was an unconditional insert with `onConflict … doNothing`, which reads
+   * as harmless and is not: resolving the password is now a side-effecting
+   * operation — it may generate one and print it — and doing that on every boot
+   * would print a new password each time for an account that already exists and
+   * is not being changed. Asking first keeps the generated password to the one
+   * boot that actually creates the account.
+   */
+  const existingNlQuery = await db
+    .selectFrom("users")
+    .select("id")
+    .where("id", "=", NLQUERY_USER_ID)
+    .executeTakeFirst();
+
+  if (!existingNlQuery) {
+    await db
+      .insertInto("users")
+      .values({
+        id: NLQUERY_USER_ID,
+        email: "nlquery@nlquery.com",
+        password_hash: await bcryptHash(
+          resolveBootstrapPassword("NLQUERY_PASSWORD", "nlquery@nlquery.com")
+        ),
+        display_name: "nlquery",
+        avatar_url: null,
+        is_active: true,
+        created_at: now2,
+        updated_at: now2,
+      })
+      .onConflict((oc) => oc.column("id").doNothing())
+      .execute()
+      .catch((err) => {
+        console.warn(
+          "[bootstrap] nlquery user insert warning:",
+          (err as Error).message?.slice(0, 120)
+        );
+      });
+  }
 
   await db
     .insertInto("user_roles")
@@ -835,7 +904,7 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
       );
     });
 
-  console.log("[bootstrap] NL Query user ensured: nlquery@nlquery.com / nlquery");
+  console.log("[bootstrap] NL Query user ensured: nlquery@nlquery.com");
 
   // ── Credentials into Better Auth ──────────────────────────────────────────
   //

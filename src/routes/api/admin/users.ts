@@ -29,10 +29,34 @@ export const Route = createFileRoute("/api/admin/users")({
             );
           }
 
+          /*
+           * Named columns, not `selectAll()`.
+           *
+           * `users` carries `password_hash` — a legacy bcrypt credential that
+           * Better Auth no longer reads but that is still populated for every
+           * account predating the migration. This route selected the whole row
+           * behind a session check alone, so any authenticated user could
+           * retrieve every account's hash and attack them offline.
+           *
+           * The administrator check above fixes who may call this. Listing the
+           * columns fixes what it can ever return, which is the half that
+           * survives somebody adding a second caller: a screen listing users
+           * has no use for a credential, and the safest way to keep one out of
+           * a response is for the query never to ask for it.
+           */
           const db = getDb();
           const users = await db
             .selectFrom("users")
-            .selectAll()
+            .select([
+              "id",
+              "email",
+              "display_name",
+              "avatar_url",
+              "email_verified",
+              "is_active",
+              "created_at",
+              "updated_at",
+            ])
             .orderBy("created_at", "desc")
             .execute();
 
