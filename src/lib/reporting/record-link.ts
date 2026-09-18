@@ -77,13 +77,27 @@ export function validateUrlTemplate(template: string): RecordLinkValidation {
     };
   }
 
-  // Site-relative. `//host` is protocol-relative — an absolute URL to another
-  // origin wearing a relative URL's clothes — so it is not accepted here.
+  /*
+   * Site-relative. `//host` is protocol-relative — an absolute URL to another
+   * origin wearing a relative URL's clothes — so it is not accepted here.
+   *
+   * `/\host` is the same thing spelled differently, and it used to pass. The
+   * WHATWG URL parser treats a backslash as a forward slash for special
+   * schemes, so a browser resolves `/\evil.example` against this origin as
+   * `https://evil.example` — verified. A check that tests only for `//` reads
+   * as complete and is not, which is exactly the shape of bug an allowlist is
+   * supposed to avoid.
+   *
+   * So the second character is checked rather than the second slash: anything
+   * that is not a plain path segment separator is refused.
+   */
   if (trimmed.startsWith("/")) {
-    if (trimmed.startsWith("//")) {
+    const second = trimmed[1];
+    if (second === "/" || second === "\\") {
       return {
         ok: false,
-        error: "A URL starting with // points at another site. Write it in full, with https://.",
+        error:
+          "A URL starting with // or /\\ points at another site. Write it in full, with https://.",
       };
     }
     return { ok: true };

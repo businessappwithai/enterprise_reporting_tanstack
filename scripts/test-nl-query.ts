@@ -30,7 +30,7 @@ try {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Cookie": "session_token=test",
+      Cookie: "session_token=test",
     },
     body: JSON.stringify({
       path: "/execute",

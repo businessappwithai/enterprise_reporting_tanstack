@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
+import { canConfigureReport } from "@/lib/permissions/report-ownership";
 
 async function getSession(_request: Request) {
   const { getAuthSession } = await import("@/lib/auth/config");
@@ -63,18 +64,17 @@ export const Route = createFileRoute("/api/reports/$id/filters")({
           }
 
           const { id: reportId } = params;
+
+          // Attaching a filter changes which rows this report returns for
+          // everyone who reads it, so it is a write to somebody's report and
+          // not merely a write while signed in. See report-ownership.ts.
+          const ownership = await canConfigureReport(session.user.id, reportId);
+          if (!ownership.allowed) {
+            return json({ error: ownership.message }, { status: ownership.status ?? 403 });
+          }
+
           const { getDb } = await import("@/lib/db/config");
           const db = getDb();
-
-          const report = await db
-            .selectFrom("report_definitions")
-            .select("id")
-            .where("id", "=", reportId)
-            .executeTakeFirst();
-
-          if (!report) {
-            return json({ error: "Report not found" }, { status: 404 });
-          }
 
           const maxOrderResult = await db
             .selectFrom("report_filters")
@@ -109,6 +109,14 @@ export const Route = createFileRoute("/api/reports/$id/filters")({
           }
 
           const { id: reportId } = params;
+
+          // This removes EVERY filter on the report in one call, which widens
+          // it to rows it was deliberately narrowed away from.
+          const ownership = await canConfigureReport(session.user.id, reportId);
+          if (!ownership.allowed) {
+            return json({ error: ownership.message }, { status: ownership.status ?? 403 });
+          }
+
           const { getDb } = await import("@/lib/db/config");
           const db = getDb();
 

@@ -68,7 +68,9 @@ try {
 
     // Execute a simple query to test the connection
     const result = await (connection as any)
-      .selectFrom(sql`(SELECT COUNT(*) as table_count FROM information_schema.tables WHERE table_schema = 'public')`)
+      .selectFrom(
+        sql`(SELECT COUNT(*) as table_count FROM information_schema.tables WHERE table_schema = 'public')`
+      )
       .selectAll()
       .execute();
 

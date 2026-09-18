@@ -33,6 +33,7 @@
 import { betterAuth } from "better-auth";
 import bcrypt from "bcryptjs";
 import { getDb } from "@/lib/db/config";
+import { BCRYPT_COST } from "./bcrypt-cost";
 
 const authSecret = process.env.AUTH_SECRET;
 if (!authSecret || authSecret.length < 32) {
@@ -60,11 +61,21 @@ function buildAuth() {
     baseURL: process.env.BETTER_AUTH_URL || process.env.APP_URL || "http://localhost:4050",
     basePath: "/api/auth",
 
+    /*
+     * The localhost origins are development conveniences, so they are only
+     * trusted in development.
+     *
+     * They used to be listed unconditionally. On a deployed installation that
+     * means the server accepts requests claiming a localhost origin, which is
+     * a slice of CSRF surface with nothing to pay for it — nobody signs into
+     * production from `http://localhost:4050`. A production deployment names
+     * its real origin in CORS_ORIGIN, which is where the list should come from.
+     */
     trustedOrigins: [
       ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",").map((o) => o.trim()) : []),
-      "http://localhost:4050",
-      "http://127.0.0.1:4050",
-      "http://localhost:3000",
+      ...(process.env.NODE_ENV === "production"
+        ? []
+        : ["http://localhost:4050", "http://127.0.0.1:4050", "http://localhost:3000"]),
     ].filter(Boolean),
 
     /*
@@ -97,8 +108,21 @@ function buildAuth() {
       requireEmailVerification: false,
       minPasswordLength: 8,
       // See the header: bcrypt, so existing hashes keep verifying.
+      /*
+       * bcrypt, so existing hashes keep verifying — see the header.
+       *
+       * The cost is 12 rather than the 10 it was. `bcrypt.compare` reads the
+       * cost out of the hash it is given, so every password stored at 10 keeps
+       * working and only new or changed ones are written at 12; there is no
+       * migration and nothing to coordinate. 10 has been the library default
+       * since 2010 and is low for 2026 hardware.
+       *
+       * BCRYPT_COST exists because the right number depends on the machine,
+       * and because a test suite that hashes a password per fixture should not
+       * pay for production's margin.
+       */
       password: {
-        hash: async (password: string) => bcrypt.hash(password, 10),
+        hash: async (password: string) => bcrypt.hash(password, BCRYPT_COST),
         verify: async ({ hash, password }: { hash: string; password: string }) =>
           bcrypt.compare(password, hash),
       },

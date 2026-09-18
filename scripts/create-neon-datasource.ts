@@ -85,7 +85,10 @@ try {
     const connection = await getConnection(fullDataSourceForConnection as any);
 
     // Execute a simple query to test the connection using Kysely's sql template
-    const result = await (connection as any).selectFrom(sql`(SELECT 1 as test)`).selectAll().execute();
+    const result = await (connection as any)
+      .selectFrom(sql`(SELECT 1 as test)`)
+      .selectAll()
+      .execute();
     console.log("✅ Connection test successful!");
     console.log("✅ Connected to Neon database successfully!");
   } catch (testError) {
