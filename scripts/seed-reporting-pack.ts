@@ -179,6 +179,85 @@ async function pgReachable(url: string): Promise<boolean> {
 }
 
 /**
+ * The reporting database itself, before anything tries to connect to it.
+ *
+ * `DATABASE_URL` names a database that something else is expected to have
+ * created — in a generated project, `reporting/pg-init/01-reporting-database.sh`,
+ * which PostgreSQL runs from `/docker-entrypoint-initdb.d/`. That entrypoint
+ * fires exactly once, on the first start of an *empty* data directory. A
+ * volume that predates the reporting side therefore never gets one, and
+ * nothing later puts it right:
+ *
+ *   report-1  | error: database "enterprise_config" does not exist
+ *
+ * from a service on `restart: unless-stopped`, forever, while this seeder
+ * spent its three-minute wait on a database no wait could produce and then
+ * exited 1. The compose file's own comment said to run `createdb` by hand.
+ *
+ * So create it. That is a smaller act than what this script already does one
+ * line later — `getDb()` bootstraps every table in it and the administrator
+ * who owns them — and it is the difference between a stale volume being a
+ * hiccup and being a re-install.
+ *
+ * Two failures are deliberately not fatal. A concurrent creator (42P04) means
+ * the database arrived, which is the outcome asked for; and a role without
+ * CREATEDB gets one clear line rather than a stack, because the wait below
+ * still succeeds if somebody else creates it.
+ */
+async function ensureReportingDatabase(url: string): Promise<void> {
+  let target: URL;
+  try {
+    target = new URL(url);
+  } catch {
+    // Not a URL this can reason about — leave it to the reachability wait,
+    // whose failure names DATABASE_URL.
+    return;
+  }
+
+  const name = decodeURIComponent(target.pathname.replace(/^\//, ""));
+  if (!name) return;
+
+  // `postgres` is the maintenance database every server has, and CREATE
+  // DATABASE cannot be issued from inside the database being created.
+  const maintenance = new URL(url);
+  maintenance.pathname = "/postgres";
+
+  // The server, not the database: this is also what tells the two apart. A
+  // server that is not up yet refuses the connection; one that is up answers
+  // `3D000` for a database that does not exist, which is a fact rather than
+  // something to wait for.
+  await waitFor("postgres server", () => pgReachable(maintenance.href));
+
+  const { Pool } = await import("pg");
+  const pool = new Pool({
+    connectionString: maintenance.href,
+    max: 1,
+    connectionTimeoutMillis: 3000,
+  });
+  try {
+    const existing = await pool.query("select 1 from pg_database where datname = $1", [name]);
+    if ((existing.rowCount ?? 0) > 0) return;
+
+    log(`reporting database "${name}" does not exist — creating it`);
+    // No parameter binding in DDL, so the identifier is quoted rather than
+    // interpolated: it comes from DATABASE_URL, which is configuration, but
+    // an unquoted one would also mangle any name needing quoting.
+    await pool.query(`create database "${name.replace(/"/g, '""')}"`);
+    log(`reporting database "${name}": created`);
+  } catch (err) {
+    const code = (err as { code?: string }).code;
+    if (code === "42P04") return; // Someone else got there first.
+    log(
+      `could not create the reporting database "${name}" ` +
+        `(${err instanceof Error ? err.message : String(err)}). ` +
+        `Create it by hand — createdb ${name} — or grant CREATEDB to this role.`
+    );
+  } finally {
+    await pool.end().catch(() => {});
+  }
+}
+
+/**
  * The generated application's tables, not merely its database.
  *
  * The application runs its own migrations at start, so an empty database means
@@ -827,6 +906,7 @@ async function main(): Promise<number> {
     return 1;
   }
 
+  await ensureReportingDatabase(reportingUrl);
   await waitFor("reporting database", () => pgReachable(reportingUrl));
   await waitFor("application database", () => pgReachable(APP_DB_URL));
   await waitFor("application schema (bus_ tables)", () => appSchemaReady(APP_DB_URL), 600);
