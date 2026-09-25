@@ -1,0 +1,11 @@
+page	ttfb_ms	domReady_ms	load_ms	settled_ms	console_errors
+dashboard	91	381	390	1060	1
+reports	1212	1524	1531	2609	17
+reports/ba65ba2a-7a4e-456d-b795-00530cd189d3/viewer	27	323	329	983	1
+charts	27	236	252	1264	17
+dashboards	20	315	321	940	1
+queries	17	294	301	952	1
+sql-editor	40	320	326	1917	17
+data-sources	30	340	346	1266	17
+admin/users	27	302	308	953	1
+admin/roles	20	340	347	989	1
