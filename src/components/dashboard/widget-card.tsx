@@ -11,7 +11,14 @@ import { useDuckDB } from "@/components/duckdb/DuckDBProvider";
 import { DataTable } from "@/components/reporting/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { isFeatureEnabled } from "@/lib/feature-flags";
-import type { ChartConfig, ChartType, DashboardWidget, DataMapping } from "@/types/database";
+import { formatCellValue } from "@/lib/reporting/format-cell";
+import type {
+  ChartConfig,
+  ChartType,
+  DashboardWidget,
+  DataMapping,
+  FormatterDefinition,
+} from "@/types/database";
 import type { ActiveFilter } from "@/types/filters";
 import { useDashboardState } from "./DashboardState";
 
@@ -204,10 +211,14 @@ export function WidgetCard({ widget, onFilterApply }: WidgetCardProps) {
                 header: col.header || col.field,
                 cell: ({ getValue }: { getValue: () => unknown }) => {
                   const value = getValue();
-                  if (value === null || value === undefined) {
+                  const text = formatCellValue(
+                    value,
+                    col.formatter as FormatterDefinition | undefined
+                  );
+                  if (text === null) {
                     return <span className="text-tremor-content">-</span>;
                   }
-                  return String(value);
+                  return text;
                 },
               }))}
               pageSize={10}

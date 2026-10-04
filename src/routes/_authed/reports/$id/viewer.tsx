@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ColumnDef } from "@tanstack/react-table";
+import { formatCellValue } from "@/lib/reporting/format-cell";
 import { parseRecordLinkConfig } from "@/lib/reporting/record-link";
 import type { ColumnDefinition, ReportDefinition } from "@/types/database";
 
@@ -147,12 +148,7 @@ function ReportViewerPage() {
         id: field,
         accessorKey: field,
         header: field.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
-        cell: (info: { getValue: () => unknown }) => {
-          const value = info.getValue();
-          if (value === null || value === undefined) return "-";
-          if (typeof value === "number") return value.toLocaleString();
-          return String(value);
-        },
+        cell: (info: { getValue: () => unknown }) => formatCellValue(info.getValue()) ?? "-",
       }));
     };
 
@@ -164,12 +160,8 @@ function ReportViewerPage() {
           id: col.id || col.field,
           accessorKey: col.field,
           header: col.header || col.field || col.id,
-          cell: (info: { getValue: () => unknown }) => {
-            const value = info.getValue();
-            if (value === null || value === undefined) return "-";
-            if (typeof value === "number") return value.toLocaleString();
-            return String(value);
-          },
+          cell: (info: { getValue: () => unknown }) =>
+            formatCellValue(info.getValue(), col.formatter) ?? "-",
         }));
       return withDetailAction(configured.length > 0 ? configured : columnsFromData());
     } catch {
