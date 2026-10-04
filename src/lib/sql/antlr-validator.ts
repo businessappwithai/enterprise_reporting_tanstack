@@ -411,7 +411,14 @@ function collectTableNames(node: unknown, into: Set<string>): void {
     return;
   }
   const record = node as Record<string, unknown>;
-  const table = record.table;
+  // A column reference carries its qualifier under `table` too — `o.stage` is
+  // `{ type: "column_ref", table: "o", column: "stage" }` — and that qualifier
+  // is an alias, or a table the FROM clause already named. Read as a table, it
+  // put `o` on the access list beside `bus_opportunity`, and a role that may
+  // read bus_opportunity was refused "access to: o" on every aliased query.
+  // The tables a column can come from are all in a FROM or JOIN, which this
+  // walk and the parser's own table list both still reach.
+  const table = record.type === "column_ref" ? undefined : record.table;
   if (typeof table === "string" && table) into.add(table);
   for (const value of Object.values(record)) collectTableNames(value, into);
 }

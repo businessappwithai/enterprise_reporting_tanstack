@@ -74,6 +74,30 @@ describe("extractTablesStrict", () => {
     ]);
   });
 
+  // A column's qualifier is an alias, not a table. Read as one, `o.stage` put
+  // `o` on the access list and every scoped role was refused "access to: o" on
+  // the reports a generated application's pack ships — nearly all of which
+  // alias their tables.
+  it("does not mistake a table alias for a table", () => {
+    expect(
+      tablesOf(
+        "SELECT o.stage, SUM(o.amount) AS value FROM bus_opportunity o WHERE o.deleted_at IS NULL GROUP BY 1"
+      )
+    ).toEqual(["bus_opportunity"]);
+    expect(
+      tablesOf(
+        "SELECT a.name, COUNT(c.bus_contact_id) FROM bus_account a JOIN bus_contact c ON c.account_id = a.bus_account_id GROUP BY a.name"
+      )
+    ).toEqual(["bus_account", "bus_contact"]);
+    expect(tablesOf("SELECT o.* FROM bus_opportunity AS o")).toEqual(["bus_opportunity"]);
+  });
+
+  it("still finds a table read through an aliased subquery's own alias", () => {
+    expect(tablesOf("SELECT t.x FROM (SELECT s.salary AS x FROM hr_salaries s) t")).toEqual([
+      "hr_salaries",
+    ]);
+  });
+
   it("allows a statement that genuinely reads nothing", () => {
     expect(tablesOf("SELECT 1")).toEqual([]);
   });

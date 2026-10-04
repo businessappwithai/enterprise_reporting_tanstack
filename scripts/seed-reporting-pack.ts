@@ -59,6 +59,7 @@ import { existsSync, readFileSync } from "node:fs";
  * sign in, and the failure would read as a wrong password.
  */
 import bcrypt from "bcryptjs";
+import { sql } from "kysely";
 import { getDb } from "@/lib/db/config";
 import { introspectAndCacheSchema } from "@/lib/mastra/schema-store";
 import { encrypt } from "@/lib/security/encryption";
@@ -122,7 +123,8 @@ interface ReportingPack {
   charts: ChartSpec[];
   dashboards: DashboardSpec[];
   /** Absent in a pack built before roles were derived; treated as none. */
-  access?: { roles: AccessRoleSpec[]; scoped: boolean };
+  /** `reportPassword` is what every seeded reporting account signs in with. */
+  access?: { roles: AccessRoleSpec[]; scoped: boolean; reportPassword?: string };
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: nine of this schema's tables are absent from the Database interface
@@ -286,6 +288,23 @@ async function appSchemaReady(url: string): Promise<boolean> {
  * invisible to every screen that filters by ownership.
  */
 async function adminUserId(db: Db): Promise<string> {
+  // The bootstrap administrator holds the system `admin-role-id` role, which
+  // this seeder never grants. That is what identifies it — not "the earliest
+  // user": `users.created_at` is text, the bootstrap writes ISO
+  // (`2026-10-04T15:54:34Z`) and this seeder writes `2026-10-04 15:54:36`, and
+  // a space sorts before `T`. So from the second run on, "earliest" was one of
+  // the reporting accounts this seeder had just created; nothing matched on
+  // (name, owner), and every `docker compose up` inserted the whole pack again.
+  const bootstrapAdmin = await db
+    .selectFrom("users")
+    .innerJoin("user_roles", "user_roles.user_id", "users.id")
+    .select(["users.id", "users.email"])
+    .where("user_roles.role_id", "=", "admin-role-id")
+    .orderBy(sql`CASE WHEN users.email = 'admin@admin.com' THEN 0 ELSE 1 END`)
+    .orderBy("users.id", "asc")
+    .executeTakeFirst();
+  if (bootstrapAdmin) return bootstrapAdmin.id as string;
+
   const admin = await db
     .selectFrom("users")
     .select(["id", "email"])
@@ -656,6 +675,49 @@ async function upsertDashboards(
 // --- Roles -------------------------------------------------------------------
 
 /**
+ * The administrator's password, for a demo deployment that documents one.
+ *
+ * `bootstrapSchema()` gives `admin@admin.com` a random password unless
+ * ADMIN_PASSWORD names one of at least eight characters — deliberately, so no
+ * installation ships a known administrator password. A generated application's
+ * demo does document one (its README lists the reporting administrator beside
+ * the nine accounts this seeder creates), and "admin" is shorter than that
+ * floor, so the administrator was the one documented account that could not
+ * sign in. `SEED_ADMIN_PASSWORD` is the demo's explicit opt-in.
+ *
+ * Once only. The credential is replaced only while it is still the one
+ * bootstrap wrote — `updated_at` equal to `created_at` — so this runs on the
+ * first `docker compose up` and never again, and an administrator who changes
+ * the password is not reset by the next restart.
+ */
+async function seedAdministratorPassword(
+  db: Db,
+  adminId: string,
+  password: string
+): Promise<string> {
+  const credential = await db
+    .selectFrom("auth_accounts")
+    .select(["id", "created_at", "updated_at"])
+    .where("user_id", "=", adminId)
+    .where("provider_id", "=", "credential")
+    .executeTakeFirst();
+  if (!credential) return "skipped (no credential to set)";
+
+  const created = new Date(credential.created_at as unknown as string).getTime();
+  const updated = new Date(credential.updated_at as unknown as string).getTime();
+  if (Math.abs(updated - created) > 1000) return "kept (changed since first boot)";
+
+  const hash = bcrypt.hashSync(password, 10);
+  await db
+    .updateTable("auth_accounts")
+    .set({ password: hash, updated_at: new Date(Date.now() + 2000) })
+    .where("id", "=", credential.id)
+    .execute();
+  await db.updateTable("users").set({ password_hash: hash }).where("id", "=", adminId).execute();
+  return "set";
+}
+
+/**
  * Create a reporting account per role the model declared.
  *
  * These are *not* the application's accounts. The two products have separate
@@ -692,7 +754,7 @@ async function upsertAccess(
   // The password every seeded account shares, and the one the application's
   // own seeded accounts use. A demo whose nine accounts have nine passwords is
   // a demo nobody signs into twice.
-  const passwordHash = bcrypt.hashSync("admin", 10);
+  const passwordHash = bcrypt.hashSync(pack.access?.reportPassword || "admin", 10);
   let seeded = 0;
 
   for (const role of roles) {
@@ -940,6 +1002,11 @@ async function main(): Promise<number> {
 
   const accounts = await upsertAccess(db, pack, dataSource.id, ownerId);
   log(`reporting roles: ${accounts}`);
+
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD;
+  if (adminPassword) {
+    log(`administrator password: ${await seedAdministratorPassword(db, ownerId, adminPassword)}`);
+  }
 
   log("done");
   return 0;
