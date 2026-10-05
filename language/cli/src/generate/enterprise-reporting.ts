@@ -169,6 +169,7 @@ function serverFnsFile(e: EmlEntity, model: EmlModel): string {
     .join("\n");
 
   return `import { createServerFn } from "@tanstack/react-start";
+import { sql } from "kysely";
 import { getDb } from "@/lib/db/kysely-db";
 import { requireAuth } from "@/lib/auth/middleware";
 import { z } from "zod";
@@ -178,6 +179,7 @@ import { z } from "zod";
 export type ${Type} = {
   ${pk}: string;
 ${editable.map((a) => `  ${a.name}${a.required ? "" : "?"}: ${tsType(a)} | null;`).join("\n")}
+  version: number;
   created_at: Date;
   updated_at: Date;
 };
@@ -232,15 +234,48 @@ export const create${Type}Fn = createServerFn({ method: "POST" })
     return { id };
   });
 
+/**
+ * Optimistic locking. The form sends the \`version\` it read; the UPDATE only
+ * matches while the row is still at that version, so the comparison and the
+ * write are one statement and two saves of one version cannot both apply.
+ * A stale save is refused with an error whose message starts VERSION_CONFLICT,
+ * which the detail page answers with Reload / Overwrite / Keep editing. Without
+ * a version the save is unconditional.
+ */
 export const update${Type}Fn = createServerFn({ method: "POST" })
-  .inputValidator((input: { id: string } & Partial<${Type}Input>) => input)
-  .handler(async ({ data: { id, ...rest } }) => {
+  .inputValidator(
+    (input: { id: string; version?: number | string } & Partial<${Type}Input>) => input
+  )
+  .handler(async ({ data }) => {
     await requireAuth();
-    await getDb()
+    const {
+      id,
+      version,
+      created_at: _createdAt,
+      updated_at: _updatedAt,
+      ...rest
+    } = data as Record<string, unknown> & { id: string };
+    delete rest["${pk}"];
+    const expected = version === undefined || version === "" ? undefined : Number(version);
+    let query = getDb()
       .updateTable("${tableName}")
-      .set(rest as Record<string, unknown>)
-      .where("id", "=", id)
-      .execute();
+      // Postgres has no ON UPDATE CURRENT_TIMESTAMP; the write sets it.
+      .set({ ...rest, version: sql\`version + 1\`, updated_at: new Date() } as Record<string, unknown>)
+      .where("${pk}", "=", id);
+    if (expected !== undefined) query = query.where("version", "=", expected);
+    const result = await query.executeTakeFirst();
+    if (expected !== undefined && Number(result.numUpdatedRows) === 0) {
+      const current = await getDb()
+        .selectFrom("${tableName}")
+        .select("version")
+        .where("${pk}", "=", id)
+        .executeTakeFirst();
+      if (current) {
+        throw new Error(
+          \`VERSION_CONFLICT: this record was changed by someone else after you opened it (you opened version \${expected}, it is now version \${current.version}).\`
+        );
+      }
+    }
     return { id };
   });
 
@@ -448,16 +483,35 @@ function ${Type}DetailPage() {
     }
   }, [data]);
 
+  // Optimistic locking: a save carries the version this form opened. When
+  // someone else saved first, the server refuses with VERSION_CONFLICT and the
+  // form offers to reload their version, overwrite with mine, or keep editing.
+  const [conflict, setConflict] = useState(false);
+
   const saveMutation = useMutation({
-    mutationFn: () =>
+    mutationFn: (against?: string) =>
       isNew
         ? create${Type}Fn({ data: form as never })
-        : update${Type}Fn({ data: { id, ...form } as never }),
+        : update${Type}Fn({ data: { id, ...form, version: against ?? form.version } as never }),
     onSuccess: () => {
+      setConflict(false);
       queryClient.invalidateQueries({ queryKey: ["${tableName}"] });
       navigate({ to: "/_authed/${routePath}/" });
     },
+    onError: (error) => {
+      if (String((error as Error)?.message ?? "").includes("VERSION_CONFLICT")) setConflict(true);
+    },
   });
+
+  const reloadTheirs = async () => {
+    setConflict(false);
+    await queryClient.invalidateQueries({ queryKey: ["${tableName}", id] });
+  };
+
+  const overwriteWithMine = async () => {
+    const latest = (await get${Type}Fn({ data: { id } })) as { version?: number };
+    saveMutation.mutate(String(latest.version ?? ""));
+  };
 
   const deleteMutation = useMutation({
     mutationFn: () => delete${Type}Fn({ data: { id } }),
@@ -473,13 +527,32 @@ function ${Type}DetailPage() {
         {isNew ? "New ${toLabel(e.name)}" : "Edit ${toLabel(e.name)}"}
       </h1>
 
+      {conflict && (
+        <div role="alert" className="rounded-md border border-amber-300 bg-amber-50 p-4 space-y-3">
+          <p className="text-sm">
+            Someone else saved this record after you opened it. Your changes have not been saved.
+          </p>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={reloadTheirs}>
+              Reload their version
+            </Button>
+            <Button onClick={overwriteWithMine} disabled={saveMutation.isPending}>
+              Overwrite with mine
+            </Button>
+            <Button variant="ghost" onClick={() => setConflict(false)}>
+              Keep editing
+            </Button>
+          </div>
+        </div>
+      )}
+
       <Card>
         <CardContent className="space-y-4 pt-6">
 ${formFields}
 
           <div className="flex gap-2 pt-2">
             <Button
-              onClick={() => saveMutation.mutate()}
+              onClick={() => saveMutation.mutate(undefined)}
               disabled={saveMutation.isPending}
             >
               {saveMutation.isPending ? "Saving…" : "Save"}
@@ -525,6 +598,9 @@ function migrationFile(model: EmlModel): string {
         const def = a.type === "boolean" ? " DEFAULT FALSE" : "";
         return `  "${a.name}" ${ddlType(a)}${notNull}${uq}${def}`;
       }),
+      // The optimistic-lock counter: raised by every update, compared by the
+      // update server function so a stale save is refused, not applied.
+      '  "version" INTEGER NOT NULL DEFAULT 1',
       '  "created_at" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP',
       // PostgreSQL has no ON UPDATE CURRENT_TIMESTAMP; the application sets
       // updated_at on write, as the platform's own tables do.
@@ -577,6 +653,7 @@ function kyselyTypesFile(model: EmlModel): string {
   ${tableName}: {
     ${pk}: Generated<string>;
 ${rest.map((a) => `    ${a.name}${a.required ? "" : "?"}: ${tsType(a)} | null;`).join("\n")}
+    version: Generated<number>;
     created_at: Generated<Date>;
     updated_at: Generated<Date>;
   };`;

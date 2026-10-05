@@ -758,6 +758,18 @@ generated/
 It writes a `KYSELY_TYPES.md` snippet, **not** a `kysely-db.ts` — you paste the
 snippet into the `Database` interface in `src/lib/db/kysely-db.ts` yourself.
 
+**Both targets carry optimistic locking**, the contract the product's generated
+applications use. Every generated table has a `version` column the application
+raises on each save. The `enterprise-reporting` update server function takes
+the version the form read and writes `UPDATE … WHERE version = <it>`, so a save
+against a record someone else has saved since matches no row and is refused
+with an error whose message starts `VERSION_CONFLICT`; the generated detail page
+answers it with Reload their version / Overwrite with mine / Keep editing.
+`node-rest` speaks the same contract over HTTP: `ETag` on a read, `If-Match` on
+`PUT`, 409 with `details.code: "VERSION_CONFLICT"`. Its runtime under
+`language/cli/runtime/` is byte-identical to the copies in
+`app-with-ai-tanstack` and the orchestrator — change all three or none.
+
 ### The CLI vendors two modules from app-with-ai-tanstack
 
 `language/cli/src/vendor/` holds copies of that repository's
