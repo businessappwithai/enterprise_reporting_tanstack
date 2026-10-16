@@ -35,7 +35,7 @@ export const Route = createFileRoute("/api/metadata/entities/$id/fields/$fieldId
             relationship_ui_type,
           } = body;
 
-          // biome-ignore lint/suspicious/noExplicitAny: metadata tables not in main schema
+          // metadata tables not in main schema
           const db = getDb() as any;
           const now = new Date().toISOString();
 

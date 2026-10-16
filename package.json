@@ -8,10 +8,6 @@
     "dev": "bun --bun vite dev",
     "build": "bun --bun vite build",
     "start": "bun dist/server/server.js",
-    "lint": "biome lint src",
-    "lint:fix": "biome lint src --write",
-    "format": "biome format src --write",
-    "format:check": "biome format src",
     "setup": "bun scripts/setup.ts",
     "db:migrate": "bun scripts/rebuild-db.ts",
     "db:seed": "bun src/lib/db/seeds/001_initial_data.ts",
@@ -19,15 +15,15 @@
     "db:rollback": "echo 'Use scripts/rebuild-db.ts to reset the database'",
     "db:sample": "bun src/lib/db/sample-data/seed.ts",
     "jobs:worker": "bun src/lib/jobs/worker-runner.ts",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "bun check",
     "test:setup": "bun tests/setup-data.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:all": "bun run test:setup && bun run test:e2e",
-    "precommit": "bun run lint && bun run typecheck && bun run format:check",
-    "build:check": "bun run lint && bun run typecheck && bun run build"
+    "precommit": "bun run typecheck",
+    "build:check": "bun run typecheck && bun run build"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.29",
@@ -110,7 +106,6 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.14",
     "@playwright/test": "^1.58.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/bun": "^1.4.2",
@@ -129,7 +124,7 @@
     "vite": "^7.0.0"
   },
   "engines": {
-    "bun": ">=1.3.0"
+    "bun": ">=1.4.3"
   },
   "trustedDependencies": [
     "esbuild",

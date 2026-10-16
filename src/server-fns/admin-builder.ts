@@ -100,7 +100,7 @@ export const nlBuildPreview = createServerFn({ method: "POST" })
     // Execute preview (first 20 rows)
     try {
       const conn = await getConnection(ds);
-      // biome-ignore lint/suspicious/noExplicitAny: external DB
+      // external DB
       const result = await (conn as any).executeQuery({
         sql: `${sql.trimEnd().replace(/;$/, "")} LIMIT 20`,
         parameters: [],
@@ -149,7 +149,7 @@ export const nlSaveReport = createServerFn({ method: "POST" })
     const reportId = randomUUID();
     const now = new Date().toISOString();
 
-    // biome-ignore lint/suspicious/noExplicitAny: bootstrapped schema varies between MariaDB/PG
+    // bootstrapped schema varies between MariaDB/PG
     await (db as any)
       .insertInto("saved_queries")
       .values({
@@ -217,7 +217,7 @@ export const nlSaveChart = createServerFn({ method: "POST" })
     const chartId = randomUUID();
     const now = new Date().toISOString();
 
-    // biome-ignore lint/suspicious/noExplicitAny: bootstrapped schema varies between MariaDB/PG
+    // bootstrapped schema varies between MariaDB/PG
     await (db as any)
       .insertInto("saved_queries")
       .values({

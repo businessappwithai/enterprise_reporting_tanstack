@@ -9,7 +9,7 @@ import type {
   ViewInfo,
 } from "@/types/api";
 
-// biome-ignore lint/suspicious/noExplicitAny: external data source connections have unknown schema
+// external data source connections have unknown schema
 type AnyKysely = Kysely<any>;
 
 interface IntrospectionResult {

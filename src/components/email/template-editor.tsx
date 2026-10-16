@@ -435,7 +435,7 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
                      */}
                     <div
                       className="border rounded-lg p-4 bg-white"
-                      // biome-ignore lint/security/noDangerouslySetInnerHtml: sanitised email preview
+                      // sanitised email preview
                       dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(preview.preview) }}
                     />
                   </CardContent>

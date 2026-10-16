@@ -36,7 +36,7 @@ export interface EntityDataQueryParams {
 /**
  * Data Service
  */
-// biome-ignore lint/complexity/noStaticOnlyClass: service class pattern with cohesive static methods
+// service class pattern with cohesive static methods
 export class DataService {
   /**
    * The editable data source and a live connection to it.
@@ -91,10 +91,10 @@ export class DataService {
     const searchTerm = params.search?.trim();
     const searchFields = searchTerm ? entityMetadata.fields.filter((f) => f.is_searchable) : [];
     // The table is only known at run time, so these builders are untyped.
-    // biome-ignore lint/suspicious/noExplicitAny: dynamic table name
+    // dynamic table name
     const applySearch = (q: any): any => {
       if (!searchTerm || searchFields.length === 0) return q;
-      // biome-ignore lint/suspicious/noExplicitAny: dynamic column names
+      // dynamic column names
       return q.where((eb: any) =>
         eb.or(searchFields.map((f) => sql`${sql.ref(f.field_name)} LIKE ${`%${searchTerm}%`}`))
       );

@@ -10,14 +10,9 @@ bun --bun vite dev            # dev server at http://localhost:4050
 bun --bun vite build          # production build
 bun run start                 # serve it — listens on :3000, PORT overrides
 
-# Code quality (Biome, not ESLint/Prettier)
-biome lint src                # lint check
-biome lint src --write        # lint + auto-fix
-biome format src --write      # format files
-biome format src              # format check — `format` WITHOUT --write IS the check
-                              #   (Biome v2 has no --check flag; see below)
-tsc --noEmit                  # type check
-bun run precommit             # lint + typecheck + format:check
+# Code quality — the type-checker is the whole static check (no linter, no formatter)
+bun run typecheck             # bun check — Bun's own type checker (1.4.3+)
+bun run precommit             # the same
 
 # Database (PostgreSQL — config DB and knowledge graph)
 bun scripts/rebuild-db.ts                  # full schema rebuild (drops + recreates all tables)
@@ -51,7 +46,7 @@ bun run test:setup && playwright test       # setup test data then run all
 
 ### Framework and Runtime
 
-TanStack Start v1 (`@tanstack/react-start` ^1.167.65) with file-based routing. Requires Bun ≥ 1.3.0 (CI pins 1.3.11). React 19, Vite 7, Tailwind 3, shadcn/ui over Radix. Linting and formatting use Biome (not ESLint/Prettier).
+TanStack Start v1 (`@tanstack/react-start` ^1.167.65) with file-based routing. Requires Bun ≥ 1.4.3 (CI and both Dockerfiles pin 1.4.3). React 19, Vite 7, Tailwind 3, shadcn/ui over Radix. There is no linter or formatter — see **`bun run precommit`** below.
 
 **The dev server and the production server are on different ports.** `vite dev`
 listens on **4050**; `bun run start` serves the build on **3000**, and `PORT`
@@ -545,8 +540,8 @@ Four `bun:test` files exist:
 
 Two things to know before you trust them:
 
-- **There is no `test` script and CI does not run them.** `precommit` is lint,
-  typecheck and format only. Nothing on GitHub executes these files, which is why
+- **There is no `test` script and CI does not run them.** `precommit` is
+  the type-check only. Nothing on GitHub executes these files, which is why
   the state below went unnoticed.
 - **Run them as `bun test src`, not `bun test`.** A bare `bun test` also collects
   the ~51 Playwright specs under `e2e/`, which are written against
@@ -599,43 +594,40 @@ Two habits are worth keeping from that:
 `tsc` rejects (TS5097) unless `allowImportingTsExtensions` is set — it is, in
 `tsconfig.json`, and it needs the `noEmit` that is already there.
 
-## `bun run precommit` passes too — including across a build
+## `bun run precommit` — the type-check, and nothing else
 
-`precommit` is `lint && typecheck && format:check`, and all three are clean —
-verified on this tree: typecheck reports zero errors, `format:check` is clean over
-446 files, and `lint` exits 0 with 433 pre-existing **warnings** and 9 infos, which
-Biome does not fail on. Treat that 433 as a baseline: a lint change that moves it is
-worth a second look, and `lint` is not the place to argue with the backlog.
+`precommit` is `bun run typecheck`, which is **`bun check`** — the type checker
+built into Bun since 1.4.3. It reads `tsconfig.json`, reports the same errors as
+`tsc`, and runs on every core: about 6 seconds here against 35 for `tsc --noEmit`.
+It reports zero errors. `typescript` stays a dev dependency for editors; nothing
+in a script runs `tsc` any more.
+
+One difference from the `tsc` 5.x this tree used to run, and it is why
+`src/vite-env.d.ts` exists: `bun check` reports a side-effect import it cannot
+resolve (TS2882), as newer TypeScript does by default, so the fourteen
+`import "….css"` lines failed until `vite/client`'s declarations were
+referenced. Do not delete that file to make an error go away elsewhere.
+
+**There is no linter and no formatter.** Biome was removed outright — its config,
+its dependency, its scripts, its CI steps and its suppression comments — and Bun
+has neither tool, so nothing checks style or layout. The type-checker is the
+whole static check. That was a choice, and it has a cost worth knowing: the
+rules Biome enforced as errors (`noArrayIndexKey`, `useConst`, `useTemplate`,
+`noImplicitAnyLet`) are no longer enforced by anything, and code is formatted by
+whoever's editor last touched it. Keep the existing style — 2 spaces, double
+quotes, semicolons, ES5 trailing commas, 100 columns — by hand.
+
+The suppression comments kept their reasons. `// biome-ignore lint/…: <reason>`
+became `// <reason>` — why an `any`, an index key or a `dangerouslySetInnerHTML`
+is acceptable at that spot is still worth reading, even with nothing enforcing
+the rule it once excused.
 
 **`precommit` does not run any tests** — not the four `bun:test` files and not
 Playwright. See **Testing**.
 
-Getting `format:check` clean took a config change rather than a reformat, and the
-reason is worth keeping:
-
 **`src/routeTree.gen.ts` is written by the TanStack router generator on every
-`vite build`, in a shape Biome's formatter disagrees with.** Formatting it makes
-`format:check` pass exactly until the next build regenerates it — so a tree can
-pass the check, build, and fail it again with nothing modified and nothing in
-`git status`. That is why `biome.json` now excludes the file from the formatter
-(`formatter.includes`), alongside the lint overrides it already had. Do not
-reformat it by hand; the generator wins.
-
-Two Biome details that cost time here:
-
-- **`format` without `--write` *is* the check.** There is no `--check` flag in
-  Biome v2 — `package.json`'s `format:check` used to pass it and Biome ignored
-  the whole invocation, so the check reported success without running.
-- **`organizeImports` is an assist, not a lint rule or a formatter rule.**
-  `biome check --write` applies it and touches ~190 files; neither `lint`,
-  `format:check` nor `precommit` asks for it. Reach for `biome format --write`
-  or `biome lint --only=<rule> --write`, never a bare `check --write`.
-
-Where a lint rule is genuinely wrong for the code, the suppression carries a
-reason: index keys on a query-result preview table whose rows have no id,
-`dangerouslySetInnerHTML` for the pre-paint theme script and for help articles
-already through `DOMPurify.sanitize`. Everything else was fixed rather than
-silenced.
+`vite build`.** Do not edit it by hand; the generator wins, and CI fails a build
+that leaves it modified.
 
 ## CI
 
@@ -646,15 +638,8 @@ someone last ran it in.
 
 | Job | What it runs |
 |---|---|
-| **Lint, types and format** | `bun install --frozen-lockfile`, then `lint`, `typecheck` and `format:check` as three separate steps — the parts of `precommit`, split so a failure names itself |
-| **Build** | `bun --bun vite build`, then `format:check` *again*, then an assertion that the build left no tracked file modified |
-
-**The second `format:check` is the point of the build job.** The two sides of
-the build catch different mistakes: dropping the `routeTree.gen.ts` formatter
-exclusion on its own turns the first job red, because the committed file is in
-generator form — but dropping it *and* formatting the file by hand, which is the
-tempting fix and the one that looks like it worked, leaves the first job green.
-Only the post-build check sees the generator put the file back.
+| **Types** | `bun install --frozen-lockfile`, then `bun run typecheck` (`bun check`) |
+| **Build** | `bun --bun vite build`, then an assertion that the build left no tracked file modified — the router generator rewrites `routeTree.gen.ts` on every build, and a diff means a route was added without regenerating or the file was edited by hand |
 
 It also does not run the **unit tests**, and that one is an oversight rather than
 a decision — `bun test src` is four files and under a second, and three of its
@@ -669,7 +654,8 @@ Playwright suite**: that needs a dev server on 4050, a PostgreSQL config
 database and a cached signed-in session, and `playwright.config.ts` has its
 `webServer` commented out, so it starts nothing itself.
 
-Bun is pinned to `1.3.11` there; `package.json` asks only for `>=1.3.0`.
+Bun is pinned to `1.4.3` there and in `Dockerfile` and `Dockerfile.mastra`;
+`package.json` asks for `>=1.4.3`, the first release with `bun check`.
 
 ## Stale documentation
 

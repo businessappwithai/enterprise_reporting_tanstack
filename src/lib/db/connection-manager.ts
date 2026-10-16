@@ -1,7 +1,7 @@
 import { Kysely, MssqlDialect, MysqlDialect, PostgresDialect, sql } from "kysely";
 import { Pool } from "pg";
 import { resolve4 } from "node:dns/promises";
-import { getDb } from "@/lib/db/config"; // biome-ignore lint/suspicious/noExplicitAny: external DB schema unknown
+import { getDb } from "@/lib/db/config";
 import { decrypt } from "@/lib/security/encryption";
 import type { DatabaseClientType, DataSource } from "@/types/database";
 
@@ -20,7 +20,7 @@ async function resolveIPv4(hostname: string): Promise<string | null> {
   }
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: external DB schema is unknown at compile time
+// external DB schema is unknown at compile time
 type AnyKysely = Kysely<any>;
 
 interface ConnectionPool {
@@ -209,7 +209,7 @@ async function buildKyselyConnection(
     }
 
     case "mysql": {
-      // biome-ignore lint/suspicious/noExplicitAny: dynamic import
+      // dynamic import
       const mysql2 = require("mysql2") as any;
       const pool = mysql2.createPool({
         host: connectionConfig.host,
@@ -224,7 +224,7 @@ async function buildKyselyConnection(
     }
 
     case "mssql": {
-      // biome-ignore lint/suspicious/noExplicitAny: dynamic import
+      // dynamic import
       const { ConnectionPool: MssqlPool } = require("mssql") as any;
       const pool = new MssqlPool({
         server: connectionConfig.host,

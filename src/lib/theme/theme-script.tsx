@@ -35,7 +35,7 @@ export function ThemeScript() {
   })();`;
 
   return (
-    // biome-ignore lint/security/noDangerouslySetInnerHtml: the script is a hardcoded literal above, never user input, and must run inline before first paint to prevent FOUC
+    // the script is a hardcoded literal above, never user input, and must run inline before first paint to prevent FOUC
     <script dangerouslySetInnerHTML={{ __html: themeScript }} suppressHydrationWarning />
   );
 }

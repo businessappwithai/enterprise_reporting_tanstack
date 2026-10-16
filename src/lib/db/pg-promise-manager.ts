@@ -2,7 +2,7 @@ import pgPromise from "pg-promise";
 import { Kysely, PostgresDialect, sql } from "kysely";
 import type { DataSource } from "@/types/database";
 
-// biome-ignore lint/suspicious/noExplicitAny: dynamic database schema
+// dynamic database schema
 type AnyKysely = Kysely<any>;
 
 interface PgConnectionConfig {

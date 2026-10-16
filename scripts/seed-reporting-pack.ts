@@ -127,7 +127,7 @@ interface ReportingPack {
   access?: { roles: AccessRoleSpec[]; scoped: boolean; reportPassword?: string };
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: nine of this schema's tables are absent from the Database interface
+// nine of this schema's tables are absent from the Database interface
 type Db = any;
 
 const PACK_PATH = process.env.REPORTING_PACK ?? "/pack/reporting-pack.json";

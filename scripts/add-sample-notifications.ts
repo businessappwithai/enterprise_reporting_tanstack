@@ -56,7 +56,7 @@ async function addSampleNotifications() {
     },
   ];
 
-  // biome-ignore lint/suspicious/noExplicitAny: notifications table not in main schema
+  // notifications table not in main schema
   await (db as any).insertInto("notifications").values(notifications).execute();
 
   console.log("Sample notifications created successfully!");

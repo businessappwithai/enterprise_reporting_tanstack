@@ -380,7 +380,7 @@ export function NlBuilderPanel() {
                   </TableHeader>
                   <TableBody>
                     {preview.rows.map((row, i) => (
-                      // biome-ignore lint/suspicious/noArrayIndexKey: preview rows are ephemeral
+                      // preview rows are ephemeral
                       <TableRow key={i}>
                         {preview.columns.map((col) => (
                           <TableCell key={col} className="text-xs">
