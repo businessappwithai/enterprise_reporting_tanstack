@@ -1,5 +1,5 @@
-// Vendored from businessappwithai/app-with-ai-tanstack at 34e5f17346dfc77550c7bf38cef5e550c2d12dd4
-//   packages/web/src/lib/mermaid-flowchart-parser.ts
+// Vendored from businessappwithai/app-with-ai-tanstack at 1c1b492bad13e83f85ed55473c104536e1300bf9
+//   packages/editors/src/lib/mermaid-flowchart-parser.ts
 //
 // Copied rather than imported across the repository boundary: this repository has
 // no packages/web, and the import that used to reach for one resolved nowhere, so

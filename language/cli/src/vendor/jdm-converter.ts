@@ -1,4 +1,4 @@
-// Vendored from businessappwithai/app-with-ai-tanstack at 34e5f17346dfc77550c7bf38cef5e550c2d12dd4
+// Vendored from businessappwithai/app-with-ai-tanstack at 1c1b492bad13e83f85ed55473c104536e1300bf9
 //   packages/web/src/lib/jdm-converter.ts
 //
 // Copied rather than imported across the repository boundary: this repository has
