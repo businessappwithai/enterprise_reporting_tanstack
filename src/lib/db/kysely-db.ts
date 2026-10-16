@@ -634,7 +634,7 @@ export function getDb(): KyselyDB {
       .then(() => console.log("[db] Database ready"))
       .catch((err) => console.error("[db] Bootstrap failed:", err));
 
-    // biome-ignore lint/suspicious/noExplicitAny: internal bootstrap tracking
+    // internal bootstrap tracking
     (db as any).__bootstrapPromise = bootstrapPromise;
   }
   return db;

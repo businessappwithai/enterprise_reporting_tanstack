@@ -20,7 +20,7 @@ export const Route = createFileRoute("/api/metadata/entities/$id/fields")({
             return json({ error: { message: "Unauthorized" } }, { status: 401 });
           }
 
-          // biome-ignore lint/suspicious/noExplicitAny: metadata tables not in main schema
+          // metadata tables not in main schema
           const db = getDb() as any;
           const fields = await db
             .selectFrom("metadata_entity_field")

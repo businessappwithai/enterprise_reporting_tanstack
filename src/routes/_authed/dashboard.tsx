@@ -40,7 +40,7 @@ const getDashboardStatsFn = createServerFn({ method: "GET" }).handler(async () =
 
   const safeCount = async (tableName: string) => {
     try {
-      // biome-ignore lint/suspicious/noExplicitAny: dynamic table name
+      // dynamic table name
       const result = await (db as any)
         .selectFrom(tableName)
         .select(db.fn.countAll().as("count"))

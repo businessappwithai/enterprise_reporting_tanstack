@@ -72,7 +72,7 @@ export class DataSourceService {
 
     if (options?.inspectedOnly) {
       try {
-        // biome-ignore lint/suspicious/noExplicitAny: is_inspected not in generated Kysely types
+        // is_inspected not in generated Kysely types
         query = (query as any).where("is_inspected", "=", true);
       } catch (err) {
         console.error("Error filtering by is_inspected:", err);
@@ -81,7 +81,7 @@ export class DataSourceService {
     }
 
     const dataSources = await (query as any).orderBy("name", "asc").execute();
-    // biome-ignore lint/suspicious/noExplicitAny: returning runtime shape
+    // returning runtime shape
     return (dataSources as any[]).map(({ connection_config: _cc, ...rest }) => rest);
   }
 

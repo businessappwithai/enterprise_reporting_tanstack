@@ -110,7 +110,7 @@ export function ChartAppearance({
         </p>
         <div className="flex flex-wrap gap-2">
           {colors.map((color, index) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: order matters for color palette
+            // order matters for color palette
             <div key={index} className="flex items-center gap-1">
               <input
                 type="color"

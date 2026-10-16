@@ -27,7 +27,7 @@ export const Route = createFileRoute("/api/metadata/entities/$id/fields/batch")(
             return json({ error: { message: "updates array is required" } }, { status: 400 });
           }
 
-          // biome-ignore lint/suspicious/noExplicitAny: metadata tables not in main schema
+          // metadata tables not in main schema
           const db = getDb() as any;
           const now = new Date().toISOString();
           const results = [];

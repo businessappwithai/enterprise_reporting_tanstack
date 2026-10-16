@@ -13,7 +13,7 @@ import type {
   MetadataEntityWithFields,
 } from "@/types/database";
 
-// biome-ignore lint/suspicious/noExplicitAny: metadata tables not in main schema
+// metadata tables not in main schema
 type AnyDB = Kysely<any>;
 
 interface FilterCondition {
@@ -116,7 +116,7 @@ export class EntityQueryBuilder {
 /**
  * Entity Service
  */
-// biome-ignore lint/complexity/noStaticOnlyClass: service class pattern with cohesive static methods
+// service class pattern with cohesive static methods
 export class EntityService {
   static async list(
     params: MetadataEntityListParams = {}

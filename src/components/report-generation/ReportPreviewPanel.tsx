@@ -130,7 +130,7 @@ export function ReportPreviewPanel({ rows, columns, sql, intent }: Props) {
                   </TableRow>
                 ) : (
                   rows.map((row, i) => (
-                    // biome-ignore lint/suspicious/noArrayIndexKey: preview rows come from an arbitrary query and carry no stable id; the whole table is replaced on every run
+                    // preview rows come from an arbitrary query and carry no stable id; the whole table is replaced on every run
                     <TableRow key={i}>
                       {columns.map((col) => (
                         <TableCell key={col} className="text-sm whitespace-nowrap">

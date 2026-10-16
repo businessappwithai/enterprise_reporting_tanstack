@@ -287,7 +287,7 @@ ORDER BY total_revenue DESC`,
 const queryIdMap: Record<string, string> = {};
 
 async function seedQueries() {
-  // biome-ignore lint/suspicious/noExplicitAny: seed script uses dynamic table inserts
+  // seed script uses dynamic table inserts
   const db = getDb() as any;
 
   console.log("📊 Creating saved queries...");
@@ -318,7 +318,7 @@ async function seedQueries() {
 }
 
 async function seedReports(queryIds: Record<string, string>) {
-  // biome-ignore lint/suspicious/noExplicitAny: seed script uses dynamic table inserts
+  // seed script uses dynamic table inserts
   const db = getDb() as any;
 
   console.log("📄 Creating reports...");
@@ -398,7 +398,7 @@ async function seedReports(queryIds: Record<string, string>) {
 }
 
 async function seedCharts(queryIds: Record<string, string>) {
-  // biome-ignore lint/suspicious/noExplicitAny: seed script uses dynamic table inserts
+  // seed script uses dynamic table inserts
   const db = getDb() as any;
 
   console.log("📈 Creating charts...");
@@ -540,7 +540,7 @@ async function seedCharts(queryIds: Record<string, string>) {
 }
 
 async function seedDashboards(queryIds: Record<string, string>) {
-  // biome-ignore lint/suspicious/noExplicitAny: seed script uses dynamic table inserts
+  // seed script uses dynamic table inserts
   const db = getDb() as any;
 
   console.log("🎛️  Creating dashboards...");

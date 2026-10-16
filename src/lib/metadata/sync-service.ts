@@ -12,13 +12,13 @@ import { introspectSchema } from "@/lib/sql/schema-introspection";
 import type { TableInfo } from "@/types/api";
 import type { MetadataEntityField } from "@/types/database";
 
-// biome-ignore lint/suspicious/noExplicitAny: metadata tables not in main schema
+// metadata tables not in main schema
 type AnyDB = Kysely<any>;
 
 /**
  * Sync Service
  */
-// biome-ignore lint/complexity/noStaticOnlyClass: service class pattern with cohesive static methods
+// service class pattern with cohesive static methods
 export class SyncService {
   /**
    * Sync a single datasource (create/update entity and field metadata)

@@ -12,7 +12,7 @@ import type { MetadataEntityField } from "@/types/database";
 /**
  * Field Service
  */
-// biome-ignore lint/complexity/noStaticOnlyClass: service class pattern with cohesive static methods
+// service class pattern with cohesive static methods
 export class FieldService {
   /**
    * Get fields by entity header ID

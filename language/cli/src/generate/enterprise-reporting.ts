@@ -14,7 +14,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import type { EmlAttribute, EmlEntity, EmlIndex, EmlModel } from "../model.ts";
-import { camelCase, kebabCase, plural, toSnakeCase } from "../util.ts";
+import { plural, toSnakeCase } from "../util.ts";
 
 export interface EnterpriseReportingOptions {
   outDir: string;
@@ -134,12 +134,6 @@ function serverFnsFile(e: EmlEntity, model: EmlModel): string {
   const editable = e.attributes.filter((a) => !a.isPrimaryKey);
   const enumMap = Object.fromEntries(model.enums.map((en) => [en.name, en.values]));
 
-  const inputTypeFields = editable
-    .map((a) => {
-      const opt = a.required ? "" : "?";
-      return `  ${a.name}${opt}: ${tsType(a)};`;
-    })
-    .join("\n");
 
   const zodFields = editable
     .map((a) => {

@@ -100,7 +100,7 @@ export function HelpPanel() {
           <h3 className="text-sm font-semibold leading-tight">{selectedArticle.title}</h3>
           <p className="mt-1 text-xs text-muted-foreground">{selectedArticle.summary}</p>
         </div>
-        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: sanitised above */}
+        {/* sanitised above */}
         <div className="help-article-content" dangerouslySetInnerHTML={articleHtml} />
       </div>
     );
