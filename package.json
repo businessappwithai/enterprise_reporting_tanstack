@@ -108,7 +108,7 @@
   "devDependencies": {
     "@playwright/test": "^1.58.0",
     "@types/bcryptjs": "^2.4.6",
-    "@types/bun": "^1.4.2",
+    "@types/bun": "^1.4.3",
     "@types/nodemailer": "^7.0.9",
     "@types/pg": "^8.11.10",
     "@types/react": "^19.0.0",
