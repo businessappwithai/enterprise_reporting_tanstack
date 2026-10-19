@@ -2,10 +2,11 @@
 
 import { useCopilotAction, useCopilotReadable } from "@copilotkit/react-core";
 import { useQuery } from "@tanstack/react-query";
-import { AlertCircle, CheckCircle, Loader2, ShieldAlert } from "lucide-react";
+import { AlertCircle, CheckCircle, Download, Loader2, ShieldAlert } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -316,6 +317,59 @@ export function IntelligentUiContent() {
     },
   });
 
+  const [isExporting, setIsExporting] = useState(false);
+
+  // The server re-runs the query under this user's permissions and rebuilds every view
+  // itself; only the question, SQL and view specs are sent, never rows.
+  const exportExcel = useCallback(async () => {
+    if (!result || !dataSourceId) return;
+    setIsExporting(true);
+    try {
+      const res = await fetch("/api/intelligent-ui/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          query: result.question,
+          data_source_id: dataSourceId,
+          generated_sql: result.sql,
+          views,
+        }),
+      });
+
+      if (!res.ok) {
+        let message = `Export failed (${res.status})`;
+        try {
+          const body = await res.json();
+          const details = body.error?.details?.errors as string[] | undefined;
+          message = [body.error?.message, ...(details ?? [])].filter(Boolean).join(" — ") || message;
+        } catch {
+          // Non-JSON error body: the status line above is all there is to report.
+        }
+        toast.error(message);
+        return;
+      }
+
+      const blob = await res.blob();
+      const filename =
+        /filename="([^"]+)"/.exec(res.headers.get("Content-Disposition") ?? "")?.[1] ??
+        "intelligent-ui.xlsx";
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      toast.success(`Downloaded ${filename}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Export failed");
+    } finally {
+      setIsExporting(false);
+    }
+  }, [result, dataSourceId, views]);
+
   const onDataSourceChange = (id: string) => {
     setSelectedDsId(id);
     clearResult();
@@ -372,6 +426,14 @@ export function IntelligentUiContent() {
             <span className="text-muted-foreground">
               {result.question} · {result.rows.length} rows · {result.executionTimeMs}ms
             </span>
+            <Button variant="outline" size="sm" onClick={exportExcel} disabled={isExporting}>
+              {isExporting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="mr-2 h-4 w-4" />
+              )}
+              Download Excel
+            </Button>
           </div>
           <details className="rounded-md border p-2 text-xs">
             <summary className="cursor-pointer">Generated SQL</summary>

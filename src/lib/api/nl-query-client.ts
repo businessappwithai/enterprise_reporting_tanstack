@@ -66,7 +66,7 @@ export async function fetchDataSourceSchema(
 export async function executeNlQuery(params: {
   query: string;
   dataSourceId: string;
-  generatedSql?: string;
+  generatedSql: string;
 }): Promise<NlQueryPipelineResult> {
   const res = await fetch("/api/nl-query/execute", {
     method: "POST",

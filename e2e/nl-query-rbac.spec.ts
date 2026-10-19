@@ -295,21 +295,23 @@ test.describe('NL Query Execution API @batch6', () => {
     expect(data.data).toHaveProperty('generatedSql');
   });
 
-  test('should return schema prompt when no SQL provided', async ({ request }) => {
-    const response = await request.post('/api/nl-query/execute', {
-      headers: { 'Content-Type': 'application/json', Cookie: authCookie },
-      data: {
-        query: 'Show me all actors',
-        data_source_id: dataSourceId,
-      },
-    });
+  test('should refuse a request that supplies no SQL rather than running a stand-in', async ({
+    request,
+  }) => {
+    for (const data of [
+      { query: 'Show me all actors', data_source_id: dataSourceId },
+      { query: 'Show me all actors', data_source_id: dataSourceId, generated_sql: '   ' },
+    ]) {
+      const response = await request.post('/api/nl-query/execute', {
+        headers: { 'Content-Type': 'application/json', Cookie: authCookie },
+        data,
+      });
 
-    expect(response.status()).toBe(200);
-    const data = await response.json();
-    expect(data.success).toBe(true);
-    expect(data.data).toHaveProperty('prompt');
-    expect(data.data).toHaveProperty('schemaText');
-    expect(data.data).toHaveProperty('dialect');
+      expect(response.status()).toBe(400);
+      const body = await response.json();
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe('SQL_REQUIRED');
+    }
   });
 
   test('should track query in history', async ({ request }) => {

@@ -32,6 +32,15 @@ is gone).
 **Here:** CI (`.github/workflows/ci.yml`), `Dockerfile` and `Dockerfile.mastra`
 pin 1.4.3, and `package.json` asks for `>=1.4.3`. `bun run typecheck` is `bun check`, which does not exist before 1.4.3.
 
+**Cloud sessions are pinned too.** `.bun-version` is the single statement of the
+version, and the `SessionStart` hook in `.claude/settings.json`
+(`.claude/hooks/session-start.sh`) installs exactly that Bun when the image ships a
+different one, then runs `bun install --frozen-lockfile`. It exits non-zero rather
+than carry on if it cannot get the pinned version, because a session on 1.4.2 can
+report a clean type-check that never ran. It only acts when `CLAUDE_CODE_REMOTE=true`.
+Moving to another Bun means changing `.bun-version`, CI, both Dockerfiles and the other
+three repositories together.
+
 ## Commands
 
 ```bash
@@ -354,6 +363,23 @@ entity-level RBAC, so a denial there is a denial here.
 - Charts and tables reuse `NlResultsChart` / `NlResultsTable`; there is no generated
   HTML/JS and so no sandbox. If one is ever added, it needs the network restrictions that
   design currently avoids.
+- **Excel export** (`POST /api/intelligent-ui/export`, `export-xlsx.ts`) is laid out like the
+  report generator's workbooks: a Summary sheet (question, SQL, who, when), one sheet per
+  view with the chart picture above its table (`renderChartPng` in
+  `src/lib/report-generation/chart-image.ts`, shared with the report worker), and a Data
+  sheet with the full result. **The request carries the question, SQL and view specs —
+  never rows.** The server re-runs the query through `executeNlQueryPipeline` (so the
+  entity checks apply to the file exactly as they do to the page), re-validates every view
+  and rebuilds the workbook with `applySpec`. Accepting rows from the browser would let
+  anyone mint a "report" with numbers of their choosing. The file therefore reflects the
+  data now, not the page as it was left. Exports are audit-logged (`export` / `query`).
+
+**`/api/nl-query/execute` runs the SQL it is given and generates none.** A request without
+`generated_sql` is a 400 `SQL_REQUIRED`; it used to run `SELECT 1;` in its place, which
+returned a successful-looking one-row result for a question nothing had answered. The
+route's errors are `{ success: false, error: { code, message } }` throughout, and
+`generatedSql` is required in `executeNlQuery` and `useExecuteNlQuery` so a caller that
+forgets it fails to compile.
 
 ### Background Jobs — Trigger.dev, not BullMQ
 

@@ -26,6 +26,7 @@ import { sendEmail } from "@/lib/email/email-service";
 import { createNotification } from "@/lib/notifications";
 import { logAudit } from "@/lib/security/audit";
 import { resolveRBACContext, detectRBACDrift } from "@/lib/monitoring/rbac-workflow-context";
+import { renderChartPng } from "./chart-image";
 import type { NLReportDefinition, OutputFormat, ReportGenerationResult } from "./types";
 
 const OUTPUT_DIR = process.env.JOB_OUTPUT_PATH || "./job-outputs";
@@ -229,82 +230,7 @@ async function executeReportSQL(
   return { rows, columns, executionMs };
 }
 
-// ─── Phase 4: Chart Rendering (ECharts SSR → SVG → sharp → PNG) ──
-
-async function renderChartPng(
-  rows: Record<string, unknown>[],
-  columns: string[],
-  chartType: string,
-  metrics: string[],
-  dimensions: string[]
-): Promise<Buffer | null> {
-  if (chartType === "none" || rows.length === 0) return null;
-
-  try {
-    const echarts = await import("echarts");
-
-    const chart = echarts.init(null, null, {
-      renderer: "svg",
-      ssr: true,
-      width: 900,
-      height: 450,
-    });
-
-    const xCol = dimensions[0] ?? columns[0];
-    const yCols = metrics.length > 0 ? metrics : columns.filter((c) => c !== xCol);
-
-    const option: Record<string, any> = {
-      backgroundColor: "#ffffff",
-      tooltip: { trigger: "axis" },
-      legend: { data: yCols, top: 10 },
-      grid: { top: 50, bottom: 30, left: 60, right: 20 },
-      xAxis: { type: "category", data: rows.map((r) => String(r[xCol] ?? "")) },
-      yAxis: { type: "value" },
-      series: yCols.map((col) => ({
-        name: col,
-        type: chartType === "area" ? "line" : chartType,
-        data: rows.map((r) => Number(r[col]) || 0),
-        areaStyle: chartType === "area" ? {} : undefined,
-      })),
-    };
-
-    if (chartType === "pie") {
-      const yCol = yCols[0] ?? columns[1];
-      option.xAxis = undefined;
-      option.yAxis = undefined;
-      option.grid = undefined;
-      option.series = [
-        {
-          type: "pie",
-          radius: "60%",
-          data: rows.slice(0, 20).map((r) => ({
-            name: String(r[xCol] ?? ""),
-            value: Number(r[yCol]) || 0,
-          })),
-        },
-      ];
-    }
-
-    chart.setOption(option);
-    const svgStr = chart.renderToSVGString();
-    chart.dispose();
-
-    // Convert SVG → PNG using sharp (prebuilt binaries, works on Alpine)
-    const sharp = (await import("sharp")).default;
-    const pngBuffer = (await sharp(Buffer.from(svgStr) as any)
-      .resize(1800, 900)
-      .png()
-      .toBuffer()) as Buffer;
-
-    return pngBuffer;
-  } catch (err) {
-    console.warn(
-      "[report-worker] Chart rendering failed, reports will be generated without charts:",
-      err
-    );
-    return null;
-  }
-}
+// ─── Phase 4: Chart Rendering — see ./chart-image.ts ────────────
 
 // ─── Phase 5: Excel Build ───────────────────────────────────────
 

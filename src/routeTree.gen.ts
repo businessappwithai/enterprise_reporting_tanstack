@@ -72,6 +72,7 @@ import { Route as ApiLogsSearchRouteImport } from './routes/api/logs/search'
 import { Route as ApiLogsComponentsRouteImport } from './routes/api/logs/components'
 import { Route as ApiJobsStatusRouteImport } from './routes/api/jobs/status'
 import { Route as ApiJobsExecutionsRouteImport } from './routes/api/jobs/executions'
+import { Route as ApiIntelligentUiExportRouteImport } from './routes/api/intelligent-ui/export'
 import { Route as ApiHelpArticlesRouteImport } from './routes/api/help/articles'
 import { Route as ApiDataSourcesUploadRouteImport } from './routes/api/data-sources/upload'
 import { Route as ApiDataSourcesTestRouteImport } from './routes/api/data-sources/test'
@@ -444,6 +445,11 @@ const ApiJobsExecutionsRoute = ApiJobsExecutionsRouteImport.update({
   path: '/executions',
   getParentRoute: () => ApiJobsRoute,
 } as any)
+const ApiIntelligentUiExportRoute = ApiIntelligentUiExportRouteImport.update({
+  id: '/api/intelligent-ui/export',
+  path: '/api/intelligent-ui/export',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiHelpArticlesRoute = ApiHelpArticlesRouteImport.update({
   id: '/api/help/articles',
   path: '/api/help/articles',
@@ -772,6 +778,7 @@ export interface FileRoutesByFullPath {
   '/api/data-sources/test': typeof ApiDataSourcesTestRoute
   '/api/data-sources/upload': typeof ApiDataSourcesUploadRoute
   '/api/help/articles': typeof ApiHelpArticlesRoute
+  '/api/intelligent-ui/export': typeof ApiIntelligentUiExportRoute
   '/api/jobs/executions': typeof ApiJobsExecutionsRoute
   '/api/jobs/status': typeof ApiJobsStatusRoute
   '/api/logs/components': typeof ApiLogsComponentsRoute
@@ -890,6 +897,7 @@ export interface FileRoutesByTo {
   '/api/data-sources/test': typeof ApiDataSourcesTestRoute
   '/api/data-sources/upload': typeof ApiDataSourcesUploadRoute
   '/api/help/articles': typeof ApiHelpArticlesRoute
+  '/api/intelligent-ui/export': typeof ApiIntelligentUiExportRoute
   '/api/jobs/executions': typeof ApiJobsExecutionsRoute
   '/api/jobs/status': typeof ApiJobsStatusRoute
   '/api/logs/components': typeof ApiLogsComponentsRoute
@@ -1010,6 +1018,7 @@ export interface FileRoutesById {
   '/api/data-sources/test': typeof ApiDataSourcesTestRoute
   '/api/data-sources/upload': typeof ApiDataSourcesUploadRoute
   '/api/help/articles': typeof ApiHelpArticlesRoute
+  '/api/intelligent-ui/export': typeof ApiIntelligentUiExportRoute
   '/api/jobs/executions': typeof ApiJobsExecutionsRoute
   '/api/jobs/status': typeof ApiJobsStatusRoute
   '/api/logs/components': typeof ApiLogsComponentsRoute
@@ -1130,6 +1139,7 @@ export interface FileRouteTypes {
     | '/api/data-sources/test'
     | '/api/data-sources/upload'
     | '/api/help/articles'
+    | '/api/intelligent-ui/export'
     | '/api/jobs/executions'
     | '/api/jobs/status'
     | '/api/logs/components'
@@ -1248,6 +1258,7 @@ export interface FileRouteTypes {
     | '/api/data-sources/test'
     | '/api/data-sources/upload'
     | '/api/help/articles'
+    | '/api/intelligent-ui/export'
     | '/api/jobs/executions'
     | '/api/jobs/status'
     | '/api/logs/components'
@@ -1367,6 +1378,7 @@ export interface FileRouteTypes {
     | '/api/data-sources/test'
     | '/api/data-sources/upload'
     | '/api/help/articles'
+    | '/api/intelligent-ui/export'
     | '/api/jobs/executions'
     | '/api/jobs/status'
     | '/api/logs/components'
@@ -1473,6 +1485,7 @@ export interface RootRouteChildren {
   ApiDataSourcesTestRoute: typeof ApiDataSourcesTestRoute
   ApiDataSourcesUploadRoute: typeof ApiDataSourcesUploadRoute
   ApiHelpArticlesRoute: typeof ApiHelpArticlesRoute
+  ApiIntelligentUiExportRoute: typeof ApiIntelligentUiExportRoute
   ApiLogsComponentsRoute: typeof ApiLogsComponentsRoute
   ApiLogsSearchRoute: typeof ApiLogsSearchRoute
   ApiLogsUsersRoute: typeof ApiLogsUsersRoute
@@ -1945,6 +1958,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/jobs/executions'
       preLoaderRoute: typeof ApiJobsExecutionsRouteImport
       parentRoute: typeof ApiJobsRoute
+    }
+    '/api/intelligent-ui/export': {
+      id: '/api/intelligent-ui/export'
+      path: '/api/intelligent-ui/export'
+      fullPath: '/api/intelligent-ui/export'
+      preLoaderRoute: typeof ApiIntelligentUiExportRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/help/articles': {
       id: '/api/help/articles'
@@ -2667,6 +2687,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiDataSourcesTestRoute: ApiDataSourcesTestRoute,
   ApiDataSourcesUploadRoute: ApiDataSourcesUploadRoute,
   ApiHelpArticlesRoute: ApiHelpArticlesRoute,
+  ApiIntelligentUiExportRoute: ApiIntelligentUiExportRoute,
   ApiLogsComponentsRoute: ApiLogsComponentsRoute,
   ApiLogsSearchRoute: ApiLogsSearchRoute,
   ApiLogsUsersRoute: ApiLogsUsersRoute,

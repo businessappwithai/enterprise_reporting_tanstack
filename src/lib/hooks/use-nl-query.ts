@@ -125,7 +125,7 @@ export function useRefreshSchema() {
 interface ExecuteNlQueryVariables {
   query: string;
   dataSourceId: string;
-  generatedSql?: string;
+  generatedSql: string;
 }
 
 /**
