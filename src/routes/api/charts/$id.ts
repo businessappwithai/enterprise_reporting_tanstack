@@ -144,6 +144,85 @@ export const Route = createFileRoute("/api/charts/$id")({
         }
       },
 
+      PATCH: async ({ request, params }) => {
+        try {
+          const session = await getSession(request);
+          if (!session?.user) {
+            return json(
+              { success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } },
+              { status: 401 }
+            );
+          }
+
+          const denied = refuseWithoutPermission(session.user, "chart", "edit");
+          if (denied) return denied;
+
+          const { id } = params;
+          const { getDb } = await import("@/lib/db/config");
+          const { logAudit } = await import("@/lib/security/audit");
+          const db = getDb();
+          const owner = await db
+            .selectFrom("chart_definitions")
+            .select("created_by")
+            .where("id", "=", id)
+            .executeTakeFirst();
+          if (!owner) {
+            return json(
+              { success: false, error: { code: "NOT_FOUND", message: "Chart not found" } },
+              { status: 404 }
+            );
+          }
+          const notYours = refuseUnlessOwnerOrAdmin(session.user, owner.created_by, "chart");
+          if (notYours) return notYours;
+
+          /*
+           * Visibility is the only thing PATCH changes here. The Share dialog sends
+           * { isPublic } to this URL; with no PATCH handler the request fell through to
+           * the application's HTML page — a 200 that changed nothing — so a chart could
+           * not be made public or private from the dialog at all.
+           */
+          const body = (await request.json().catch(() => null)) as {
+            isPublic?: unknown;
+            is_public?: unknown;
+          } | null;
+          const isPublic = body?.isPublic ?? body?.is_public;
+          if (typeof isPublic !== "boolean") {
+            return json(
+              {
+                success: false,
+                error: { code: "INVALID_INPUT", message: "isPublic must be true or false" },
+              },
+              { status: 422 }
+            );
+          }
+
+          await db
+            .updateTable("chart_definitions")
+            .set({ is_public: isPublic, updated_at: new Date().toISOString() })
+            .where("id", "=", id)
+            .execute();
+
+          await logAudit({
+            userId: session.user.id,
+            action: "update",
+            resourceType: "chart",
+            resourceId: id,
+            details: { is_public: isPublic },
+          });
+
+          return json({ success: true, data: { id, is_public: isPublic } });
+        } catch (error) {
+          console.error("Error updating chart visibility:", error);
+          return json(
+            {
+              success: false,
+              error: { code: "SERVER_ERROR", message: "Failed to update visibility" },
+            },
+            { status: 500 }
+          );
+        }
+      },
+
       DELETE: async ({ request, params }) => {
         try {
           const session = await getSession(request);
