@@ -40,6 +40,7 @@ import { Route as AuthedQueriesIndexRouteImport } from './routes/_authed/queries
 import { Route as AuthedNlQueryIndexRouteImport } from './routes/_authed/nl-query/index'
 import { Route as AuthedMonitoringIndexRouteImport } from './routes/_authed/monitoring/index'
 import { Route as AuthedJobsIndexRouteImport } from './routes/_authed/jobs/index'
+import { Route as AuthedIntelligentUiIndexRouteImport } from './routes/_authed/intelligent-ui/index'
 import { Route as AuthedFiltersIndexRouteImport } from './routes/_authed/filters/index'
 import { Route as AuthedEmailTemplatesIndexRouteImport } from './routes/_authed/email-templates/index'
 import { Route as AuthedDatasetsIndexRouteImport } from './routes/_authed/datasets/index'
@@ -280,6 +281,12 @@ const AuthedJobsIndexRoute = AuthedJobsIndexRouteImport.update({
   path: '/jobs/',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedIntelligentUiIndexRoute =
+  AuthedIntelligentUiIndexRouteImport.update({
+    id: '/intelligent-ui/',
+    path: '/intelligent-ui/',
+    getParentRoute: () => AuthedRoute,
+  } as any)
 const AuthedFiltersIndexRoute = AuthedFiltersIndexRouteImport.update({
   id: '/filters/',
   path: '/filters/',
@@ -796,6 +803,7 @@ export interface FileRoutesByFullPath {
   '/datasets/': typeof AuthedDatasetsIndexRoute
   '/email-templates/': typeof AuthedEmailTemplatesIndexRoute
   '/filters/': typeof AuthedFiltersIndexRoute
+  '/intelligent-ui/': typeof AuthedIntelligentUiIndexRoute
   '/jobs/': typeof AuthedJobsIndexRoute
   '/monitoring/': typeof AuthedMonitoringIndexRoute
   '/nl-query/': typeof AuthedNlQueryIndexRoute
@@ -913,6 +921,7 @@ export interface FileRoutesByTo {
   '/datasets': typeof AuthedDatasetsIndexRoute
   '/email-templates': typeof AuthedEmailTemplatesIndexRoute
   '/filters': typeof AuthedFiltersIndexRoute
+  '/intelligent-ui': typeof AuthedIntelligentUiIndexRoute
   '/jobs': typeof AuthedJobsIndexRoute
   '/monitoring': typeof AuthedMonitoringIndexRoute
   '/nl-query': typeof AuthedNlQueryIndexRoute
@@ -1032,6 +1041,7 @@ export interface FileRoutesById {
   '/_authed/datasets/': typeof AuthedDatasetsIndexRoute
   '/_authed/email-templates/': typeof AuthedEmailTemplatesIndexRoute
   '/_authed/filters/': typeof AuthedFiltersIndexRoute
+  '/_authed/intelligent-ui/': typeof AuthedIntelligentUiIndexRoute
   '/_authed/jobs/': typeof AuthedJobsIndexRoute
   '/_authed/monitoring/': typeof AuthedMonitoringIndexRoute
   '/_authed/nl-query/': typeof AuthedNlQueryIndexRoute
@@ -1151,6 +1161,7 @@ export interface FileRouteTypes {
     | '/datasets/'
     | '/email-templates/'
     | '/filters/'
+    | '/intelligent-ui/'
     | '/jobs/'
     | '/monitoring/'
     | '/nl-query/'
@@ -1268,6 +1279,7 @@ export interface FileRouteTypes {
     | '/datasets'
     | '/email-templates'
     | '/filters'
+    | '/intelligent-ui'
     | '/jobs'
     | '/monitoring'
     | '/nl-query'
@@ -1386,6 +1398,7 @@ export interface FileRouteTypes {
     | '/_authed/datasets/'
     | '/_authed/email-templates/'
     | '/_authed/filters/'
+    | '/_authed/intelligent-ui/'
     | '/_authed/jobs/'
     | '/_authed/monitoring/'
     | '/_authed/nl-query/'
@@ -1707,6 +1720,13 @@ declare module '@tanstack/react-router' {
       path: '/jobs'
       fullPath: '/jobs/'
       preLoaderRoute: typeof AuthedJobsIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/intelligent-ui/': {
+      id: '/_authed/intelligent-ui/'
+      path: '/intelligent-ui'
+      fullPath: '/intelligent-ui/'
+      preLoaderRoute: typeof AuthedIntelligentUiIndexRouteImport
       parentRoute: typeof AuthedRoute
     }
     '/_authed/filters/': {
@@ -2349,6 +2369,7 @@ interface AuthedRouteChildren {
   AuthedDatasetsIndexRoute: typeof AuthedDatasetsIndexRoute
   AuthedEmailTemplatesIndexRoute: typeof AuthedEmailTemplatesIndexRoute
   AuthedFiltersIndexRoute: typeof AuthedFiltersIndexRoute
+  AuthedIntelligentUiIndexRoute: typeof AuthedIntelligentUiIndexRoute
   AuthedJobsIndexRoute: typeof AuthedJobsIndexRoute
   AuthedMonitoringIndexRoute: typeof AuthedMonitoringIndexRoute
   AuthedNlQueryIndexRoute: typeof AuthedNlQueryIndexRoute
@@ -2388,6 +2409,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedDatasetsIndexRoute: AuthedDatasetsIndexRoute,
   AuthedEmailTemplatesIndexRoute: AuthedEmailTemplatesIndexRoute,
   AuthedFiltersIndexRoute: AuthedFiltersIndexRoute,
+  AuthedIntelligentUiIndexRoute: AuthedIntelligentUiIndexRoute,
   AuthedJobsIndexRoute: AuthedJobsIndexRoute,
   AuthedMonitoringIndexRoute: AuthedMonitoringIndexRoute,
   AuthedNlQueryIndexRoute: AuthedNlQueryIndexRoute,

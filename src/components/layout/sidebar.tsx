@@ -15,6 +15,7 @@ import {
   Play,
   Settings,
   Shield,
+  Sparkles,
   Terminal,
   Users,
 } from "lucide-react";
@@ -52,6 +53,12 @@ const mainNavItems = [
     permissionKey: "monitoring_rule" as const,
   },
   { href: "/nl-query", label: "NL Query", icon: MessageSquare, permissionKey: "nl_query" as const },
+  {
+    href: "/intelligent-ui",
+    label: "Intelligent UI",
+    icon: Sparkles,
+    permissionKey: "nl_query" as const,
+  },
   {
     href: "/reports/generate",
     label: "Report Generator",

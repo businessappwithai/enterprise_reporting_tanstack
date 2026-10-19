@@ -336,6 +336,25 @@ Two rules follow from the fix:
   read `bus_account`" and "the model could not write a query" are different
   things to tell somebody and `null` already meant the second.
 
+### Intelligent UI — views over one access-checked result
+
+`/intelligent-ui` (`src/routes/_authed/intelligent-ui/`, linked from the sidebar next to
+NL Query) lets the assistant present the result of an NL-generated query as a table,
+chart or KPI. It adds no way to reach data: SQL is generated the way NL Query generates
+it and goes through the same `/api/nl-query/execute` → `executeNlQueryPipeline` →
+entity-level RBAC, so a denial there is a denial here.
+
+- **The model sees the shape of a result, never its rows.** `runQuestion` returns column
+  names, kinds and a row count. The rows stay in the browser.
+- **The model emits a spec, not markup or code.** `src/lib/intelligent-ui/spec.ts`
+  (`validateSpec`) refuses any column the result does not have, an aggregation the column
+  type cannot support, and a limit above `MAX_VIEW_ROWS`.
+- **Every figure is computed by `applySpec`** (`apply-spec.ts`), a pure function over the
+  returned rows. Do not add a path where model text supplies a number.
+- Charts and tables reuse `NlResultsChart` / `NlResultsTable`; there is no generated
+  HTML/JS and so no sandbox. If one is ever added, it needs the network restrictions that
+  design currently avoids.
+
 ### Background Jobs — Trigger.dev, not BullMQ
 
 Job processing runs on **Trigger.dev** (`@trigger.dev/sdk`), configured in `trigger.config.ts` (project `enterprise-reporting`, tasks discovered under `./src/lib/jobs`).
