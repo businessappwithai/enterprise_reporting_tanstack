@@ -1,6 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
+import {
+  refuseWithoutPermission,
+} from "@/lib/permissions/resource-guard";
 import { createReportSchema } from "@/lib/schemas/reports";
 
 async function getSession(request: Request) {
@@ -20,6 +23,9 @@ export const Route = createFileRoute("/api/reports")({
               { status: 401 }
             );
           }
+
+          const denied = refuseWithoutPermission(session.user, "report", "view");
+          if (denied) return denied;
 
           const { searchParams } = new URL(request.url);
           const page = parseInt(searchParams.get("page") || "0", 10);
@@ -67,6 +73,9 @@ export const Route = createFileRoute("/api/reports")({
               { status: 401 }
             );
           }
+
+          const denied = refuseWithoutPermission(session.user, "report", "create");
+          if (denied) return denied;
 
           const body = await request.json();
           const result = await createReportSchema.safeParseAsync(body);

@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { readSessionToken, verifySession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/config";
 import { json } from "@/lib/server/response";
+import { refuseWithoutPermission } from "@/lib/permissions/resource-guard";
 import { sqlEditorConfig, validatePageSize } from "@/lib/config/pagination";
 import { generateId } from "@/lib/utils";
 
@@ -74,6 +75,9 @@ export const Route = createFileRoute("/api/logs/")({
               { status: 401 }
             );
           }
+
+          const denied = refuseWithoutPermission(session.user, "log", "view");
+          if (denied) return denied;
 
           const url = new URL(request.url);
           const level = url.searchParams.get("level");

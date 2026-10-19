@@ -2,6 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { readSessionToken, verifySession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/config";
 import { json } from "@/lib/server/response";
+import {
+  refuseWithoutPermission,
+} from "@/lib/permissions/resource-guard";
 
 async function getSession(request: Request) {
   const cookie = request.headers.get("cookie") || "";
@@ -22,6 +25,9 @@ export const Route = createFileRoute("/api/logs/components")({
               { status: 401 }
             );
           }
+
+          const denied = refuseWithoutPermission(session.user, "log", "view");
+          if (denied) return denied;
 
           const db = getDb();
 

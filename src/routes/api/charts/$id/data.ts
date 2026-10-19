@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { sql as kyselySql } from "kysely";
 import { json } from "@/lib/server/response";
+import {
+  refuseWithoutPermission,
+} from "@/lib/permissions/resource-guard";
 import { decideQueryRun } from "@/lib/permissions/runnable-query";
 import type { DataSource } from "@/types/database";
 
@@ -21,6 +24,9 @@ export const Route = createFileRoute("/api/charts/$id/data")({
               { status: 401 }
             );
           }
+
+          const denied = refuseWithoutPermission(session.user, "chart", "view");
+          if (denied) return denied;
 
           const { id: chartId } = params;
           const { getDb } = await import("@/lib/db/config");

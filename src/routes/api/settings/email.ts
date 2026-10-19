@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { readSessionToken, verifySession } from "@/lib/auth/session";
 import { json } from "@/lib/server/response";
+import {
+  refuseWithoutPermission,
+} from "@/lib/permissions/resource-guard";
 
 async function getSession(request: Request) {
   const cookie = request.headers.get("cookie") || "";
@@ -21,6 +24,9 @@ export const Route = createFileRoute("/api/settings/email")({
               { status: 401 }
             );
           }
+
+          const denied = refuseWithoutPermission(session.user, "setting", "view");
+          if (denied) return denied;
 
           return json({
             success: true,
@@ -64,6 +70,9 @@ export const Route = createFileRoute("/api/settings/email")({
               { status: 401 }
             );
           }
+
+          const denied = refuseWithoutPermission(session.user, "setting", "edit");
+          if (denied) return denied;
 
           const body = (await request.json()) as { action?: string; to?: string };
 

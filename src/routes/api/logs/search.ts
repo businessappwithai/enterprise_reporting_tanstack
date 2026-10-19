@@ -2,6 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { readSessionToken, verifySession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/config";
 import { json } from "@/lib/server/response";
+import {
+  refuseWithoutPermission,
+} from "@/lib/permissions/resource-guard";
 import { generateLogEmbedding } from "@/lib/embeddings/vector-embeddings";
 
 async function getSession(request: Request) {
@@ -23,6 +26,9 @@ export const Route = createFileRoute("/api/logs/search")({
               { status: 401 }
             );
           }
+
+          const denied = refuseWithoutPermission(session.user, "log", "view");
+          if (denied) return denied;
 
           const body = (await request.json()) as {
             query: string;

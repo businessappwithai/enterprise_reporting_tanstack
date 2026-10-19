@@ -1,5 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
+import {
+  refuseUnlessOwnerOrAdmin,
+  refuseWithoutPermission,
+} from "@/lib/permissions/resource-guard";
 
 async function getSession(request: Request) {
   const { auth } = await import("@/lib/auth/config");
@@ -18,6 +22,9 @@ export const Route = createFileRoute("/api/charts/$id")({
               { status: 401 }
             );
           }
+
+          const denied = refuseWithoutPermission(session.user, "chart", "view");
+          if (denied) return denied;
 
           const { id } = params;
           const { getDb } = await import("@/lib/db/config");
@@ -55,6 +62,9 @@ export const Route = createFileRoute("/api/charts/$id")({
             );
           }
 
+          const denied = refuseWithoutPermission(session.user, "chart", "edit");
+          if (denied) return denied;
+
           const { id } = params;
           const body = await request.json();
           const {
@@ -70,6 +80,19 @@ export const Route = createFileRoute("/api/charts/$id")({
           const { getDb } = await import("@/lib/db/config");
           const { logAudit } = await import("@/lib/security/audit");
           const db = getDb();
+          const owner = await db
+            .selectFrom("chart_definitions")
+            .select("created_by")
+            .where("id", "=", id)
+            .executeTakeFirst();
+          if (!owner) {
+            return json(
+              { success: false, error: { code: "NOT_FOUND", message: "Chart not found" } },
+              { status: 404 }
+            );
+          }
+          const notYours = refuseUnlessOwnerOrAdmin(session.user, owner.created_by, "chart");
+          if (notYours) return notYours;
           const existing = await db
             .selectFrom("chart_definitions")
             .selectAll()
@@ -131,10 +154,26 @@ export const Route = createFileRoute("/api/charts/$id")({
             );
           }
 
+          const denied = refuseWithoutPermission(session.user, "chart", "delete");
+          if (denied) return denied;
+
           const { id } = params;
           const { getDb } = await import("@/lib/db/config");
           const { logAudit } = await import("@/lib/security/audit");
           const db = getDb();
+          const owner = await db
+            .selectFrom("chart_definitions")
+            .select("created_by")
+            .where("id", "=", id)
+            .executeTakeFirst();
+          if (!owner) {
+            return json(
+              { success: false, error: { code: "NOT_FOUND", message: "Chart not found" } },
+              { status: 404 }
+            );
+          }
+          const notYours = refuseUnlessOwnerOrAdmin(session.user, owner.created_by, "chart");
+          if (notYours) return notYours;
 
           await db.deleteFrom("chart_definitions").where("id", "=", id).execute();
 

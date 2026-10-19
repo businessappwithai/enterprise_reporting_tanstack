@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
+import {
+  refuseWithoutPermission,
+} from "@/lib/permissions/resource-guard";
 import { auth } from "@/lib/auth/config";
 import { getDb } from "@/lib/db/config";
 
@@ -19,6 +22,9 @@ export const Route = createFileRoute("/api/charts/")({
               { status: 401 }
             );
           }
+
+          const denied = refuseWithoutPermission(session.user, "chart", "view");
+          if (denied) return denied;
 
           const { searchParams } = new URL(request.url);
           const page = parseInt(searchParams.get("page") || "0", 10);
@@ -65,6 +71,9 @@ export const Route = createFileRoute("/api/charts/")({
               { status: 401 }
             );
           }
+
+          const denied = refuseWithoutPermission(session.user, "chart", "create");
+          if (denied) return denied;
 
           const body = (await request.json()) as {
             name: string;

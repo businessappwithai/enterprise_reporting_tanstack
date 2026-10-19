@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import type { ExpressionBuilder } from "kysely";
 import type { Database } from "@/lib/db/kysely-db";
 import { json } from "@/lib/server/response";
+import { refuseWithoutPermission } from "@/lib/permissions/resource-guard";
 import { auth } from "@/lib/auth/config";
 import { getDb } from "@/lib/db/config";
 import { createLogger } from "@/lib/logging/logger";
@@ -33,6 +34,9 @@ export const Route = createFileRoute("/api/queries")({
               { status: 401 }
             );
           }
+
+          const denied = refuseWithoutPermission(session.user, "query", "view");
+          if (denied) return denied;
 
           /*
            * Paginate and search at the database.
@@ -130,6 +134,9 @@ export const Route = createFileRoute("/api/queries")({
               { status: 401 }
             );
           }
+
+          const denied = refuseWithoutPermission(session.user, "query", "create");
+          if (denied) return denied;
 
           const body = (await request.json()) as {
             name: string;

@@ -1,5 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
+import {
+  refuseWithoutPermission,
+  refuseUnlessOwnerOrAdmin,
+} from "@/lib/permissions/resource-guard";
 
 async function getSession(request: Request) {
   const { auth } = await import("@/lib/auth/config");
@@ -18,6 +22,24 @@ export const Route = createFileRoute("/api/dashboards/$id/widgets/$widgetId")({
               { status: 401 }
             );
           }
+
+          const denied = refuseWithoutPermission(session.user, "dashboard", "edit");
+          if (denied) return denied;
+
+          const { getDb: getParentDb } = await import("@/lib/db/config");
+          const parent = await getParentDb()
+            .selectFrom("dashboard_layouts")
+            .select("created_by")
+            .where("id", "=", params.id)
+            .executeTakeFirst();
+          if (!parent) {
+            return json(
+              { success: false, error: { code: "NOT_FOUND", message: "Dashboard not found" } },
+              { status: 404 }
+            );
+          }
+          const notYours = refuseUnlessOwnerOrAdmin(session.user, parent.created_by, "dashboard");
+          if (notYours) return notYours;
 
           const { id, widgetId } = params;
           const { getDb } = await import("@/lib/db/config");
@@ -62,6 +84,24 @@ export const Route = createFileRoute("/api/dashboards/$id/widgets/$widgetId")({
               { status: 401 }
             );
           }
+
+          const denied = refuseWithoutPermission(session.user, "dashboard", "edit");
+          if (denied) return denied;
+
+          const { getDb: getParentDb } = await import("@/lib/db/config");
+          const parent = await getParentDb()
+            .selectFrom("dashboard_layouts")
+            .select("created_by")
+            .where("id", "=", params.id)
+            .executeTakeFirst();
+          if (!parent) {
+            return json(
+              { success: false, error: { code: "NOT_FOUND", message: "Dashboard not found" } },
+              { status: 404 }
+            );
+          }
+          const notYours = refuseUnlessOwnerOrAdmin(session.user, parent.created_by, "dashboard");
+          if (notYours) return notYours;
 
           const { id, widgetId } = params;
           const { getDb } = await import("@/lib/db/config");
