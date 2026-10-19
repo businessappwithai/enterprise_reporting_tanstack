@@ -28,6 +28,11 @@ async function setupClient(client: PoolClient): Promise<void> {
 function getPool(): Pool {
   if (_pool) return _pool;
   _pool = new Pool({ connectionString: GRAPH_DATABASE_URL, max: 10 });
+  // As the config pool (kysely-db.ts): without a listener, a dropped idle connection
+  // is an unhandled `error` event and exits the process.
+  _pool.on("error", (err: Error) => {
+    console.warn(`[graph] Idle knowledge-graph connection lost: ${err.message}`);
+  });
   _pool.on("connect", (client) => {
     setupClient(client).catch(() => {});
   });

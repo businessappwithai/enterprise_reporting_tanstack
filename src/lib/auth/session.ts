@@ -16,6 +16,7 @@
 
 import { getDb } from "@/lib/db/config";
 import { getAuth, SESSION_COOKIE_NAME } from "./better-auth";
+import { SESSION_UNAVAILABLE_MESSAGE } from "./session-errors";
 
 export interface SessionUser {
   id: string;
@@ -91,34 +92,77 @@ export function readSessionToken(cookieHeader: string): string | null {
 }
 
 /**
+ * The session could not be checked — the database (or Better Auth's view of it) failed.
+ *
+ * This is deliberately not `null`. `null` means "signed out" and every caller answers it
+ * with a redirect to /login or a 401; an outage answered that way signs out everyone who
+ * happens to load a page while the database is restarting, and tells them their
+ * password is the problem. Callers that cannot handle it let it propagate, which is a
+ * 500 or the route's error page: "could not check", which is what happened.
+ */
+export class SessionUnavailableError extends Error {
+  constructor(cause: unknown) {
+    super(SESSION_UNAVAILABLE_MESSAGE, { cause });
+    this.name = "SessionUnavailableError";
+  }
+}
+
+const SESSION_RETRY_DELAY_MS = 200;
+
+/**
+ * Run a session lookup, retrying once on a throw — a dropped pooled connection is the
+ * common case and the second attempt gets a fresh one — and then surface the failure
+ * as `SessionUnavailableError`. A lookup that *returns* null is not retried: that is
+ * the answer "no session".
+ */
+async function lookUpWithOneRetry(
+  lookup: () => Promise<Session | null>
+): Promise<Session | null> {
+  try {
+    return await lookup();
+  } catch {
+    await new Promise((resolve) => setTimeout(resolve, SESSION_RETRY_DELAY_MS));
+    try {
+      return await lookup();
+    } catch (e) {
+      console.error("Failed to resolve session:", e);
+      throw new SessionUnavailableError(e);
+    }
+  }
+}
+
+async function resolveSession(headers: Headers): Promise<Session | null> {
+  const result = await getAuth().api.getSession({ headers });
+  if (!result?.user?.id) return null;
+
+  const user = result.user as { id: string; email: string; name?: string | null };
+  const { roles, permissions } = await loadRolesAndPermissions(user.id);
+
+  const expiresAt = (result.session as { expiresAt?: Date | string } | undefined)?.expiresAt;
+  return {
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name ?? user.email,
+      roles,
+      permissions,
+    },
+    expires: expiresAt ? new Date(expiresAt).toISOString() : new Date().toISOString(),
+  };
+}
+
+/**
  * Resolve the session for a request, from its cookies.
  *
  * This is the preferred entry point: it hands Better Auth the real headers and
  * lets it do the cookie parsing, rather than a regex over the Cookie header.
+ *
+ * `null` only when there is no session. Better Auth answers a missing, expired or
+ * forged cookie with `null`; it *throws* when it cannot reach the database, and so
+ * does the role lookup. A throw becomes `SessionUnavailableError`, not "signed out".
  */
 export async function getSessionFromHeaders(headers: Headers): Promise<Session | null> {
-  try {
-    const result = await getAuth().api.getSession({ headers });
-    if (!result?.user?.id) return null;
-
-    const user = result.user as { id: string; email: string; name?: string | null };
-    const { roles, permissions } = await loadRolesAndPermissions(user.id);
-
-    const expiresAt = (result.session as { expiresAt?: Date | string } | undefined)?.expiresAt;
-    return {
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name ?? user.email,
-        roles,
-        permissions,
-      },
-      expires: expiresAt ? new Date(expiresAt).toISOString() : new Date().toISOString(),
-    };
-  } catch (e) {
-    console.error("Failed to resolve session:", e);
-    return null;
-  }
+  return lookUpWithOneRetry(() => resolveSession(headers));
 }
 
 /**
@@ -138,7 +182,7 @@ export async function verifySession(token: string): Promise<Session | null> {
   const bareToken = decodeURIComponent(token).split(".")[0];
   if (!bareToken) return null;
 
-  try {
+  const lookup = async (): Promise<Session | null> => {
     const db = getDb();
     const row = await db
       .selectFrom("auth_sessions")
@@ -167,7 +211,8 @@ export async function verifySession(token: string): Promise<Session | null> {
       },
       expires: new Date(row.expires_at).toISOString(),
     };
-  } catch {
-    return null;
-  }
+  };
+
+  // As getSessionFromHeaders: no row is "signed out", a failed lookup is not.
+  return lookUpWithOneRetry(lookup);
 }

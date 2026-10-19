@@ -623,6 +623,15 @@ function initializeDatabase(): KyselyDB {
     connectionTimeoutMillis: 5_000,
   });
 
+  // An idle client that the server drops (a restart, a failover, an idle timeout on a
+  // pooler) is reported as an `error` event on the pool. With no listener, Node treats
+  // that as unhandled and the whole process exits: stopping PostgreSQL for a moment took
+  // the application down with it. The pool discards the broken client itself, and the
+  // next query gets a fresh one, so logging is all there is to do here.
+  pool.on("error", (err: Error) => {
+    console.warn(`[db] Idle config-database connection lost: ${err.message}`);
+  });
+
   return new Kysely<Database>({ dialect: new PostgresDialect({ pool }) });
 }
 
