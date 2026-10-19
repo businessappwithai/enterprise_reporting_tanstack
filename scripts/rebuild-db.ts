@@ -21,7 +21,15 @@ async function rebuildDatabase() {
   console.log("Dropping all tables...");
 
   // Drop in reverse dependency order
+  // Better Auth's tables go first. They key on users.id, and the bootstrap accounts have
+  // fixed ids, so a rebuild that leaves them behind gives the new admin the *previous*
+  // run's credential (bootstrapSchema only backfills a user that has none) — a rebuilt
+  // database where the configured ADMIN_PASSWORD is rejected — and keeps live sessions
+  // for users that no longer exist.
   const tables = [
+    "auth_sessions",
+    "auth_accounts",
+    "auth_verifications",
     "generated_report_artifacts",
     "nl_report_definitions",
     "monitoring_executions",
