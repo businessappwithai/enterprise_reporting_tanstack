@@ -328,6 +328,36 @@ That this went unseen for so long has a specific cause worth remembering:
 for a check to enforce and no way to notice one was missing. Seeding roles from a
 model's `%%rbac` produced the first rows, and with them the real behaviour.
 
+QA found *why* nothing could create one, and it was two things, both fixed: the
+Data Source Permissions screen called `/api/data-sources/:id/roles`, `/user-roles`
+and `/entity-permissions`, **none of which existed** (they are in
+`src/routes/api/data-sources/$id/` now, behind `data_source:edit`); and
+`upsertDsEntityPermission` was `INSERT … ON CONFLICT (…)` with **no unique index** on
+those columns, so Postgres refused every call. It is update-then-insert now, and
+bootstrap adds a unique index with `NULLS NOT DISTINCT` (`entity_schema` is nullable and
+almost always NULL; that is Postgres 15+, and the function does not depend on the index).
+The tables have no foreign keys, so `deleteDsRole` removes the role's assignments and
+permissions itself.
+
+#### Who may do what — three guards, one rule each
+
+QA, probing as the lowest-privileged account (`nlquery`: `nl_query:*` and nothing else),
+found it could delete an administrator's report, read every saved query's SQL and the audit
+log, read every data source's **decrypted password**, and register a connection to
+`169.254.169.254`. Each route checked that a session existed and nothing more. The checks
+now live in three small modules, and a new route should reach for one rather than write its own:
+
+| Module | Asks |
+|---|---|
+| `permissions/resource-guard.ts` | `refuseWithoutPermission(user, "report", "delete")` — does the **role** grant it (the seeded roles already distinguish Viewer, Analyst, NLQueryUser); and `refuseUnlessOwnerOrAdmin` — for a *change*, is the row the caller's own, or is the caller an administrator |
+| `permissions/data-source-guard.ts` | `data_source:create`/`edit`, and `refuseForbiddenTarget` — the SSRF host check `/test` always had, now also on create and update |
+| `permissions/ds-rbac-api.ts` | everything the `…/roles`, `…/user-roles`, `…/entity-permissions` routes need: the caller, `data_source:edit`, the data source exists |
+
+Rules that came out of it: **never return `connection_config`** from a data-source route
+(`getById` is called without `includeConfig`; the list and `active` routes omit the column);
+a missing row on update or delete is a **404**, not a silent 200; and a role id or permission
+id in a URL is checked against the data source in the same URL.
+
 Two rules follow from the fix:
 
 - **`checkEntityAccess` is the one implementation.** `sql-ast-validator.ts` used
@@ -374,12 +404,31 @@ entity-level RBAC, so a denial there is a denial here.
   anyone mint a "report" with numbers of their choosing. The file therefore reflects the
   data now, not the page as it was left. Exports are audit-logged (`export` / `query`).
 
+**`executeNlQueryPipeline` refuses anything that is not one read-only statement.** Entity
+access says *which tables a user may read*; it says nothing about writing them, and the
+pipeline never asked. Through `/api/nl-query/execute` — so the NL page, the Intelligent UI and
+its Excel export — an `INSERT`, or `UPDATE …; SELECT 1`, ran as written (the appended `LIMIT`
+only broke statements that did not end in a `SELECT`). Refusals are audit-logged, and so are
+successful runs, as the SQL editor's are. `src/lib/mastra/__tests__/nl-query-pipeline-readonly.test.ts`
+fails without the check.
+
 **`/api/nl-query/execute` runs the SQL it is given and generates none.** A request without
 `generated_sql` is a 400 `SQL_REQUIRED`; it used to run `SELECT 1;` in its place, which
 returned a successful-looking one-row result for a question nothing had answered. The
 route's errors are `{ success: false, error: { code, message } }` throughout, and
 `generatedSql` is required in `executeNlQuery` and `useExecuteNlQuery` so a caller that
 forgets it fails to compile.
+
+### Sharing — between the people who use the system first
+
+A share link (`/share/{dashboard,chart,report}/:id`) resolves through `resolveShareFn`
+(`src/server-fns/share.ts`): signed in **and** the role may view that kind of thing → redirected
+to the real page; otherwise, if the owner made it public → the limited public page (a name, no
+data); otherwise one "not available" answer, the same whether the item is private or does not
+exist. The Share dialog always shows the link. `PATCH /api/dashboards/:id` and `/api/charts/:id`
+set `is_public` (they did not exist, so the dialog's toggle fell through to the HTML shell and a
+200). An anonymous visitor is offered **Sign in**, which returns to the link via
+`/login?redirect=…`; `safeRedirectTarget` accepts only a path on this site.
 
 ### Background Jobs — Trigger.dev, not BullMQ
 
@@ -604,7 +653,9 @@ scheme a browser will ever honour and is wrong in the unsafe direction.
 
 ### Unit tests — real, but wired into nothing
 
-Four `bun:test` files exist:
+Four `bun:test` files existed; ten more were added by QA (the guards, the NL read-only check, the
+Intelligent UI engine and export, share redirects, id schemas, and a static test that no route reads
+a request body inside a `catch`). The original four:
 
 | File | Covers |
 |---|---|
@@ -627,7 +678,7 @@ Two things to know before you trust them:
 validator is more permissive than the test expects: `SELECT * FROM users;` returns
 two warnings where the test wants zero, and both `SELECT * WHERE id = 1;` and the
 empty string come back `isValid: true` where the test wants `false`. As of this
-writing `bun test src` is 78 pass / 3 fail across 4 files. Decide whether the
+writing `bun test src` is 168 pass / 3 fail across 14 files (the three are those). Decide whether the
 validator or the test is right before changing either — and if you fix them, wiring
 `bun test src` into `precommit` is what stops it happening again.
 
@@ -636,11 +687,18 @@ validator or the test is right before changing either — and if you fix them, w
 Playwright tests in `e2e/`. The dev server must be running on port 4050 before running tests (the `webServer` config in `playwright.config.ts` is commented out). Auth state is set up once by `e2e/global-setup.ts` and cached in `auth.json`, then reused via `storageState`. Tests run serially (1 worker, `fullyParallel: false`) to prevent session interference. Override the target with `BASE_URL`.
 
 `global-setup.ts` signs in by driving the real login form as
-`admin@admin.com` / `admin`, so it exercises Better Auth end to end rather than
+`admin@admin.com` with `E2E_ADMIN_PASSWORD` (default `admin`), so it exercises Better Auth end to end rather than
 forging a cookie — which also means a broken `/api/auth/$` route fails the whole
 suite at setup rather than one spec at a time. **CI does not run this suite**: it
 needs the dev server, a PostgreSQL config database and a cached session, and
 nothing starts those for it. See **CI** below.
+
+**`admin` / `admin` cannot exist on a fresh install.** The bootstrap ignores a password under
+8 characters and generates a random one, so a suite expecting `admin` fails at setup against any
+database created since. Set `ADMIN_PASSWORD` (≥ 8) when the database is created and the same value as
+`E2E_ADMIN_PASSWORD` when the suite runs; `e2e/SETUP.md` has the commands. `scripts/rebuild-db.ts` now
+drops the Better Auth tables too — it did not, so a rebuilt database handed the fixed-id admin the
+*previous* run's credential and the configured password was rejected.
 
 ## `bun run typecheck` passes — keep it that way
 
