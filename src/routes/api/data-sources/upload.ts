@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
+import { refuseWithoutDataSourcePermission } from "@/lib/permissions/data-source-guard";
 import { auth } from "@/lib/auth/config";
 import { getDb } from "@/lib/db/config";
 
@@ -19,6 +20,9 @@ export const Route = createFileRoute("/api/data-sources/upload")({
               { status: 401 }
             );
           }
+
+          const refusal = refuseWithoutDataSourcePermission(session.user, "create");
+          if (refusal) return refusal;
 
           const formData = await request.formData();
           const file = formData.get("file") as File | null;

@@ -3,6 +3,10 @@ import { json } from "@/lib/server/response";
 import { readSessionToken, verifySession } from "@/lib/auth/session";
 import { DataSourceService } from "@/lib/services/data-source.service";
 import { logAudit } from "@/lib/security/audit";
+import {
+  refuseForbiddenTarget,
+  refuseWithoutDataSourcePermission,
+} from "@/lib/permissions/data-source-guard";
 
 async function getSession(request: Request) {
   const cookie = request.headers.get("cookie") || "";
@@ -61,8 +65,14 @@ export const Route = createFileRoute("/api/data-sources/")({
             return json({ error: { message: "Unauthorized" } }, { status: 401 });
           }
 
+          const refusal = refuseWithoutDataSourcePermission(session.user, "create");
+          if (refusal) return refusal;
+
           const body = await request.json();
           const { name, description, clientType, connectionConfig } = body;
+
+          const forbiddenTarget = await refuseForbiddenTarget(connectionConfig);
+          if (forbiddenTarget) return forbiddenTarget;
 
           const dataSource = await DataSourceService.create({
             name,

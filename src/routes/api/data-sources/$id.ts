@@ -5,6 +5,7 @@ import { DataSourceService } from "@/lib/services/data-source.service";
 import { getDb } from "@/lib/db/config";
 import { closeConnection } from "@/lib/db/connection-manager";
 import { logAudit } from "@/lib/security/audit";
+import { refuseForbiddenTarget } from "@/lib/permissions/data-source-guard";
 
 async function getSession(request: Request) {
   const cookie = request.headers.get("cookie") || "";
@@ -30,7 +31,10 @@ export const Route = createFileRoute("/api/data-sources/$id")({
             return json({ error: { message: "Unauthorized" } }, { status: 401 });
           }
 
-          const dataSource = await DataSourceService.getById(params.id, true);
+          // No `includeConfig`: this used to pass `true`, so any signed-in account — including the
+          // lowest-privileged one — received every data source's host, user and *password* in
+          // plaintext. The edit form never needs the secret ("Leave empty to keep current").
+          const dataSource = await DataSourceService.getById(params.id);
 
           if (!dataSource) {
             return json({ error: { message: "Data source not found" } }, { status: 404 });
@@ -88,6 +92,9 @@ export const Route = createFileRoute("/api/data-sources/$id")({
             body.connectionConfig = body.connection_config;
           }
 
+          const forbiddenTarget = await refuseForbiddenTarget(body.connectionConfig);
+          if (forbiddenTarget) return forbiddenTarget;
+
           await DataSourceService.update(params.id, body, session.user.id);
           await closeConnection(params.id);
 
@@ -129,6 +136,11 @@ export const Route = createFileRoute("/api/data-sources/$id")({
           }
 
           const body = await request.json();
+
+          const forbiddenTarget = await refuseForbiddenTarget(
+            body.connectionConfig ?? body.connection_config
+          );
+          if (forbiddenTarget) return forbiddenTarget;
 
           await DataSourceService.update(params.id, body, session.user.id);
 

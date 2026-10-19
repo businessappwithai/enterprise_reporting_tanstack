@@ -7,6 +7,17 @@ async function getSession(request: Request) {
   return auth(request);
 }
 
+/**
+ * A data source as these routes return it: without `connection_config`. That column is
+ * the encrypted connection string, password included, and both handlers used to
+ * `selectAll()` it into a response any signed-in account could read.
+ */
+function withoutConnectionConfig<T extends { connection_config?: unknown }>(row: T | null) {
+  if (!row) return null;
+  const { connection_config: _omitted, ...safe } = row;
+  return safe;
+}
+
 export const Route = createFileRoute("/api/data-sources/active")({
   server: {
     handlers: {
@@ -29,7 +40,7 @@ export const Route = createFileRoute("/api/data-sources/active")({
             .selectAll()
             .execute();
 
-          const activeDataSource = dataSources[0] || null;
+          const activeDataSource = withoutConnectionConfig(dataSources[0] ?? null);
 
           return json({
             success: true,
@@ -96,7 +107,7 @@ export const Route = createFileRoute("/api/data-sources/active")({
           return json({
             success: true,
             data: {
-              activeDataSource: dataSource,
+              activeDataSource: withoutConnectionConfig(dataSource),
             },
           });
         } catch (error) {
