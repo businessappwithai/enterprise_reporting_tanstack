@@ -156,18 +156,31 @@ export function IntelligentUiContent() {
         required: true,
       },
     ],
-    render: ({ status, args }) =>
-      status !== "complete" ? (
-        <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          <span className="text-sm">Running: &quot;{args.query}&quot;...</span>
-        </div>
-      ) : (
+    render: ({ status, args, result }) => {
+      if (status !== "complete") {
+        return (
+          <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="text-sm">Running: &quot;{args.query}&quot;...</span>
+          </div>
+        );
+      }
+      const outcome = result as { error?: string; rowCount?: number } | undefined;
+      if (outcome?.error) {
+        return (
+          <div className="flex items-center gap-2 p-3 bg-destructive/10 text-destructive rounded-lg">
+            <ShieldAlert className="h-4 w-4 shrink-0" />
+            <span className="text-sm">{outcome.error}</span>
+          </div>
+        );
+      }
+      return (
         <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
           <CheckCircle className="h-4 w-4 text-emerald-600" />
-          <span className="text-sm">Query finished. See the page for the outcome.</span>
+          <span className="text-sm">Query returned {outcome?.rowCount ?? 0} rows.</span>
         </div>
-      ),
+      );
+    },
     handler: async ({ query, generatedSql }) => {
       if (!dataSourceId) return { error: "No data source is available." };
 
@@ -268,18 +281,41 @@ export function IntelligentUiContent() {
         required: false,
       },
     ],
-    render: ({ status }) =>
-      status !== "complete" ? (
-        <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          <span className="text-sm">Building view...</span>
-        </div>
-      ) : (
+    render: ({ status, args, result }) => {
+      if (status !== "complete") {
+        return (
+          <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="text-sm">Building view...</span>
+          </div>
+        );
+      }
+      // The handler refuses a view that does not fit the result; saying "added" over a
+      // refusal would tell the reader something is on the page that is not.
+      const outcome = result as { errors?: string[] } | undefined;
+      if (outcome?.errors?.length) {
+        return (
+          <div className="p-3 bg-amber-50 text-amber-900 dark:bg-amber-900/20 dark:text-amber-200 rounded-lg text-sm">
+            <div className="font-medium">
+              {args.title ? `"${args.title}" was not added` : "The view was not added"}
+            </div>
+            <ul className="mt-1 list-disc pl-5">
+              {outcome.errors.map((e) => (
+                <li key={e}>{e}</li>
+              ))}
+            </ul>
+          </div>
+        );
+      }
+      return (
         <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
           <CheckCircle className="h-4 w-4 text-emerald-600" />
-          <span className="text-sm">View added to the page.</span>
+          <span className="text-sm">
+            {args.title ? `Added "${args.title}" to the page.` : "View added to the page."}
+          </span>
         </div>
-      ),
+      );
+    },
     handler: async (args) => {
       const current = resultRef.current;
       if (!current) return { errors: ["No result yet. Call runQuestion first."] };

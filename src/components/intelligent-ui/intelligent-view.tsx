@@ -41,12 +41,12 @@ export function IntelligentView({ spec, columns, rows, onRemove }: IntelligentVi
     if (spec.view === "table" || spec.view === "kpi" || !spec.x || !spec.y?.length) return null;
     return {
       chartType: spec.view,
-      title,
+      title: "",
       xAxis: { field: spec.x, label: spec.x },
       yAxis: spec.y.map((field) => ({ field, label: field })),
       colors: getTremorChartPalette(Math.max(spec.y.length, 5)),
     };
-  }, [spec, title]);
+  }, [spec]);
 
   return (
     <Card>
@@ -74,7 +74,9 @@ export function IntelligentView({ spec, columns, rows, onRemove }: IntelligentVi
             {formatValue(applied.rows[0]?.[spec.y?.[0] ?? ""])}
           </div>
         ) : chartConfig ? (
-          <div className="h-80">
+          // The chart sizes itself (title + a 400px plot); a fixed-height wrapper clipped its
+          // rotated axis labels. Its own title would repeat the card's, so it is hidden.
+          <div className="[&_h3:empty]:hidden">
             <NlResultsChart data={applied.rows} config={chartConfig} />
           </div>
         ) : (
