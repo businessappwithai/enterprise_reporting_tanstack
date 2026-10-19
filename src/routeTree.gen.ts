@@ -109,8 +109,11 @@ import { Route as ApiReportGenerationArtifactsIdRouteImport } from './routes/api
 import { Route as ApiQueriesIdExecuteRouteImport } from './routes/api/queries/$id/execute'
 import { Route as ApiMonitoringRulesIdRouteImport } from './routes/api/monitoring/rules.$id'
 import { Route as ApiMetadataEntitiesIdRouteImport } from './routes/api/metadata/entities/$id'
+import { Route as ApiDataSourcesIdUserRolesRouteImport } from './routes/api/data-sources/$id/user-roles'
 import { Route as ApiDataSourcesIdUsageRouteImport } from './routes/api/data-sources/$id/usage'
+import { Route as ApiDataSourcesIdRolesRouteImport } from './routes/api/data-sources/$id/roles'
 import { Route as ApiDataSourcesIdInspectRouteImport } from './routes/api/data-sources/$id/inspect'
+import { Route as ApiDataSourcesIdEntityPermissionsRouteImport } from './routes/api/data-sources/$id/entity-permissions'
 import { Route as ApiDataSourcesIdEntitiesRouteImport } from './routes/api/data-sources/$id/entities'
 import { Route as ApiDashboardsIdWidgetsRouteImport } from './routes/api/dashboards/$id/widgets'
 import { Route as ApiChartsIdFiltersRouteImport } from './routes/api/charts/$id/filters'
@@ -124,6 +127,7 @@ import { Route as AuthedMetadataEntitiesIdIndexRouteImport } from './routes/_aut
 import { Route as ApiReportsIdFiltersFilterLinkIdRouteImport } from './routes/api/reports/$id/filters/$filterLinkId'
 import { Route as ApiMonitoringRulesIdExecutionsRouteImport } from './routes/api/monitoring/rules.$id.executions'
 import { Route as ApiMetadataEntitiesIdFieldsRouteImport } from './routes/api/metadata/entities/$id/fields'
+import { Route as ApiDataSourcesIdRolesRoleIdRouteImport } from './routes/api/data-sources/$id/roles/$roleId'
 import { Route as ApiDashboardsIdWidgetsWidgetIdRouteImport } from './routes/api/dashboards/$id/widgets/$widgetId'
 import { Route as ApiMetadataEntitiesIdFieldsBatchRouteImport } from './routes/api/metadata/entities/$id/fields/batch'
 import { Route as ApiMetadataEntitiesIdFieldsFieldIdRouteImport } from './routes/api/metadata/entities/$id/fields/$fieldId'
@@ -640,9 +644,20 @@ const ApiMetadataEntitiesIdRoute = ApiMetadataEntitiesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ApiMetadataEntitiesRoute,
 } as any)
+const ApiDataSourcesIdUserRolesRoute =
+  ApiDataSourcesIdUserRolesRouteImport.update({
+    id: '/user-roles',
+    path: '/user-roles',
+    getParentRoute: () => ApiDataSourcesIdRoute,
+  } as any)
 const ApiDataSourcesIdUsageRoute = ApiDataSourcesIdUsageRouteImport.update({
   id: '/usage',
   path: '/usage',
+  getParentRoute: () => ApiDataSourcesIdRoute,
+} as any)
+const ApiDataSourcesIdRolesRoute = ApiDataSourcesIdRolesRouteImport.update({
+  id: '/roles',
+  path: '/roles',
   getParentRoute: () => ApiDataSourcesIdRoute,
 } as any)
 const ApiDataSourcesIdInspectRoute = ApiDataSourcesIdInspectRouteImport.update({
@@ -650,6 +665,12 @@ const ApiDataSourcesIdInspectRoute = ApiDataSourcesIdInspectRouteImport.update({
   path: '/inspect',
   getParentRoute: () => ApiDataSourcesIdRoute,
 } as any)
+const ApiDataSourcesIdEntityPermissionsRoute =
+  ApiDataSourcesIdEntityPermissionsRouteImport.update({
+    id: '/entity-permissions',
+    path: '/entity-permissions',
+    getParentRoute: () => ApiDataSourcesIdRoute,
+  } as any)
 const ApiDataSourcesIdEntitiesRoute =
   ApiDataSourcesIdEntitiesRouteImport.update({
     id: '/entities',
@@ -720,6 +741,12 @@ const ApiMetadataEntitiesIdFieldsRoute =
     id: '/fields',
     path: '/fields',
     getParentRoute: () => ApiMetadataEntitiesIdRoute,
+  } as any)
+const ApiDataSourcesIdRolesRoleIdRoute =
+  ApiDataSourcesIdRolesRoleIdRouteImport.update({
+    id: '/$roleId',
+    path: '/$roleId',
+    getParentRoute: () => ApiDataSourcesIdRolesRoute,
   } as any)
 const ApiDashboardsIdWidgetsWidgetIdRoute =
   ApiDashboardsIdWidgetsWidgetIdRouteImport.update({
@@ -831,8 +858,11 @@ export interface FileRoutesByFullPath {
   '/api/charts/$id/filters': typeof ApiChartsIdFiltersRoute
   '/api/dashboards/$id/widgets': typeof ApiDashboardsIdWidgetsRouteWithChildren
   '/api/data-sources/$id/entities': typeof ApiDataSourcesIdEntitiesRoute
+  '/api/data-sources/$id/entity-permissions': typeof ApiDataSourcesIdEntityPermissionsRoute
   '/api/data-sources/$id/inspect': typeof ApiDataSourcesIdInspectRoute
+  '/api/data-sources/$id/roles': typeof ApiDataSourcesIdRolesRouteWithChildren
   '/api/data-sources/$id/usage': typeof ApiDataSourcesIdUsageRoute
+  '/api/data-sources/$id/user-roles': typeof ApiDataSourcesIdUserRolesRoute
   '/api/metadata/entities/$id': typeof ApiMetadataEntitiesIdRouteWithChildren
   '/api/monitoring/rules/$id': typeof ApiMonitoringRulesIdRouteWithChildren
   '/api/queries/$id/execute': typeof ApiQueriesIdExecuteRoute
@@ -852,6 +882,7 @@ export interface FileRoutesByFullPath {
   '/reports/generate/': typeof AuthedReportsGenerateIndexRoute
   '/settings/email/': typeof AuthedSettingsEmailIndexRoute
   '/api/dashboards/$id/widgets/$widgetId': typeof ApiDashboardsIdWidgetsWidgetIdRoute
+  '/api/data-sources/$id/roles/$roleId': typeof ApiDataSourcesIdRolesRoleIdRoute
   '/api/metadata/entities/$id/fields': typeof ApiMetadataEntitiesIdFieldsRouteWithChildren
   '/api/monitoring/rules/$id/executions': typeof ApiMonitoringRulesIdExecutionsRoute
   '/api/reports/$id/filters/$filterLinkId': typeof ApiReportsIdFiltersFilterLinkIdRoute
@@ -950,8 +981,11 @@ export interface FileRoutesByTo {
   '/api/charts/$id/filters': typeof ApiChartsIdFiltersRoute
   '/api/dashboards/$id/widgets': typeof ApiDashboardsIdWidgetsRouteWithChildren
   '/api/data-sources/$id/entities': typeof ApiDataSourcesIdEntitiesRoute
+  '/api/data-sources/$id/entity-permissions': typeof ApiDataSourcesIdEntityPermissionsRoute
   '/api/data-sources/$id/inspect': typeof ApiDataSourcesIdInspectRoute
+  '/api/data-sources/$id/roles': typeof ApiDataSourcesIdRolesRouteWithChildren
   '/api/data-sources/$id/usage': typeof ApiDataSourcesIdUsageRoute
+  '/api/data-sources/$id/user-roles': typeof ApiDataSourcesIdUserRolesRoute
   '/api/metadata/entities/$id': typeof ApiMetadataEntitiesIdRouteWithChildren
   '/api/monitoring/rules/$id': typeof ApiMonitoringRulesIdRouteWithChildren
   '/api/queries/$id/execute': typeof ApiQueriesIdExecuteRoute
@@ -971,6 +1005,7 @@ export interface FileRoutesByTo {
   '/reports/generate': typeof AuthedReportsGenerateIndexRoute
   '/settings/email': typeof AuthedSettingsEmailIndexRoute
   '/api/dashboards/$id/widgets/$widgetId': typeof ApiDashboardsIdWidgetsWidgetIdRoute
+  '/api/data-sources/$id/roles/$roleId': typeof ApiDataSourcesIdRolesRoleIdRoute
   '/api/metadata/entities/$id/fields': typeof ApiMetadataEntitiesIdFieldsRouteWithChildren
   '/api/monitoring/rules/$id/executions': typeof ApiMonitoringRulesIdExecutionsRoute
   '/api/reports/$id/filters/$filterLinkId': typeof ApiReportsIdFiltersFilterLinkIdRoute
@@ -1071,8 +1106,11 @@ export interface FileRoutesById {
   '/api/charts/$id/filters': typeof ApiChartsIdFiltersRoute
   '/api/dashboards/$id/widgets': typeof ApiDashboardsIdWidgetsRouteWithChildren
   '/api/data-sources/$id/entities': typeof ApiDataSourcesIdEntitiesRoute
+  '/api/data-sources/$id/entity-permissions': typeof ApiDataSourcesIdEntityPermissionsRoute
   '/api/data-sources/$id/inspect': typeof ApiDataSourcesIdInspectRoute
+  '/api/data-sources/$id/roles': typeof ApiDataSourcesIdRolesRouteWithChildren
   '/api/data-sources/$id/usage': typeof ApiDataSourcesIdUsageRoute
+  '/api/data-sources/$id/user-roles': typeof ApiDataSourcesIdUserRolesRoute
   '/api/metadata/entities/$id': typeof ApiMetadataEntitiesIdRouteWithChildren
   '/api/monitoring/rules/$id': typeof ApiMonitoringRulesIdRouteWithChildren
   '/api/queries/$id/execute': typeof ApiQueriesIdExecuteRoute
@@ -1092,6 +1130,7 @@ export interface FileRoutesById {
   '/_authed/reports/generate/': typeof AuthedReportsGenerateIndexRoute
   '/_authed/settings/email/': typeof AuthedSettingsEmailIndexRoute
   '/api/dashboards/$id/widgets/$widgetId': typeof ApiDashboardsIdWidgetsWidgetIdRoute
+  '/api/data-sources/$id/roles/$roleId': typeof ApiDataSourcesIdRolesRoleIdRoute
   '/api/metadata/entities/$id/fields': typeof ApiMetadataEntitiesIdFieldsRouteWithChildren
   '/api/monitoring/rules/$id/executions': typeof ApiMonitoringRulesIdExecutionsRoute
   '/api/reports/$id/filters/$filterLinkId': typeof ApiReportsIdFiltersFilterLinkIdRoute
@@ -1192,8 +1231,11 @@ export interface FileRouteTypes {
     | '/api/charts/$id/filters'
     | '/api/dashboards/$id/widgets'
     | '/api/data-sources/$id/entities'
+    | '/api/data-sources/$id/entity-permissions'
     | '/api/data-sources/$id/inspect'
+    | '/api/data-sources/$id/roles'
     | '/api/data-sources/$id/usage'
+    | '/api/data-sources/$id/user-roles'
     | '/api/metadata/entities/$id'
     | '/api/monitoring/rules/$id'
     | '/api/queries/$id/execute'
@@ -1213,6 +1255,7 @@ export interface FileRouteTypes {
     | '/reports/generate/'
     | '/settings/email/'
     | '/api/dashboards/$id/widgets/$widgetId'
+    | '/api/data-sources/$id/roles/$roleId'
     | '/api/metadata/entities/$id/fields'
     | '/api/monitoring/rules/$id/executions'
     | '/api/reports/$id/filters/$filterLinkId'
@@ -1311,8 +1354,11 @@ export interface FileRouteTypes {
     | '/api/charts/$id/filters'
     | '/api/dashboards/$id/widgets'
     | '/api/data-sources/$id/entities'
+    | '/api/data-sources/$id/entity-permissions'
     | '/api/data-sources/$id/inspect'
+    | '/api/data-sources/$id/roles'
     | '/api/data-sources/$id/usage'
+    | '/api/data-sources/$id/user-roles'
     | '/api/metadata/entities/$id'
     | '/api/monitoring/rules/$id'
     | '/api/queries/$id/execute'
@@ -1332,6 +1378,7 @@ export interface FileRouteTypes {
     | '/reports/generate'
     | '/settings/email'
     | '/api/dashboards/$id/widgets/$widgetId'
+    | '/api/data-sources/$id/roles/$roleId'
     | '/api/metadata/entities/$id/fields'
     | '/api/monitoring/rules/$id/executions'
     | '/api/reports/$id/filters/$filterLinkId'
@@ -1431,8 +1478,11 @@ export interface FileRouteTypes {
     | '/api/charts/$id/filters'
     | '/api/dashboards/$id/widgets'
     | '/api/data-sources/$id/entities'
+    | '/api/data-sources/$id/entity-permissions'
     | '/api/data-sources/$id/inspect'
+    | '/api/data-sources/$id/roles'
     | '/api/data-sources/$id/usage'
+    | '/api/data-sources/$id/user-roles'
     | '/api/metadata/entities/$id'
     | '/api/monitoring/rules/$id'
     | '/api/queries/$id/execute'
@@ -1452,6 +1502,7 @@ export interface FileRouteTypes {
     | '/_authed/reports/generate/'
     | '/_authed/settings/email/'
     | '/api/dashboards/$id/widgets/$widgetId'
+    | '/api/data-sources/$id/roles/$roleId'
     | '/api/metadata/entities/$id/fields'
     | '/api/monitoring/rules/$id/executions'
     | '/api/reports/$id/filters/$filterLinkId'
@@ -2218,6 +2269,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMetadataEntitiesIdRouteImport
       parentRoute: typeof ApiMetadataEntitiesRoute
     }
+    '/api/data-sources/$id/user-roles': {
+      id: '/api/data-sources/$id/user-roles'
+      path: '/user-roles'
+      fullPath: '/api/data-sources/$id/user-roles'
+      preLoaderRoute: typeof ApiDataSourcesIdUserRolesRouteImport
+      parentRoute: typeof ApiDataSourcesIdRoute
+    }
     '/api/data-sources/$id/usage': {
       id: '/api/data-sources/$id/usage'
       path: '/usage'
@@ -2225,11 +2283,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiDataSourcesIdUsageRouteImport
       parentRoute: typeof ApiDataSourcesIdRoute
     }
+    '/api/data-sources/$id/roles': {
+      id: '/api/data-sources/$id/roles'
+      path: '/roles'
+      fullPath: '/api/data-sources/$id/roles'
+      preLoaderRoute: typeof ApiDataSourcesIdRolesRouteImport
+      parentRoute: typeof ApiDataSourcesIdRoute
+    }
     '/api/data-sources/$id/inspect': {
       id: '/api/data-sources/$id/inspect'
       path: '/inspect'
       fullPath: '/api/data-sources/$id/inspect'
       preLoaderRoute: typeof ApiDataSourcesIdInspectRouteImport
+      parentRoute: typeof ApiDataSourcesIdRoute
+    }
+    '/api/data-sources/$id/entity-permissions': {
+      id: '/api/data-sources/$id/entity-permissions'
+      path: '/entity-permissions'
+      fullPath: '/api/data-sources/$id/entity-permissions'
+      preLoaderRoute: typeof ApiDataSourcesIdEntityPermissionsRouteImport
       parentRoute: typeof ApiDataSourcesIdRoute
     }
     '/api/data-sources/$id/entities': {
@@ -2322,6 +2394,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/metadata/entities/$id/fields'
       preLoaderRoute: typeof ApiMetadataEntitiesIdFieldsRouteImport
       parentRoute: typeof ApiMetadataEntitiesIdRoute
+    }
+    '/api/data-sources/$id/roles/$roleId': {
+      id: '/api/data-sources/$id/roles/$roleId'
+      path: '/$roleId'
+      fullPath: '/api/data-sources/$id/roles/$roleId'
+      preLoaderRoute: typeof ApiDataSourcesIdRolesRoleIdRouteImport
+      parentRoute: typeof ApiDataSourcesIdRolesRoute
     }
     '/api/dashboards/$id/widgets/$widgetId': {
       id: '/api/dashboards/$id/widgets/$widgetId'
@@ -2567,16 +2646,36 @@ const ApiDashboardsIdRouteWithChildren = ApiDashboardsIdRoute._addFileChildren(
   ApiDashboardsIdRouteChildren,
 )
 
+interface ApiDataSourcesIdRolesRouteChildren {
+  ApiDataSourcesIdRolesRoleIdRoute: typeof ApiDataSourcesIdRolesRoleIdRoute
+}
+
+const ApiDataSourcesIdRolesRouteChildren: ApiDataSourcesIdRolesRouteChildren = {
+  ApiDataSourcesIdRolesRoleIdRoute: ApiDataSourcesIdRolesRoleIdRoute,
+}
+
+const ApiDataSourcesIdRolesRouteWithChildren =
+  ApiDataSourcesIdRolesRoute._addFileChildren(
+    ApiDataSourcesIdRolesRouteChildren,
+  )
+
 interface ApiDataSourcesIdRouteChildren {
   ApiDataSourcesIdEntitiesRoute: typeof ApiDataSourcesIdEntitiesRoute
+  ApiDataSourcesIdEntityPermissionsRoute: typeof ApiDataSourcesIdEntityPermissionsRoute
   ApiDataSourcesIdInspectRoute: typeof ApiDataSourcesIdInspectRoute
+  ApiDataSourcesIdRolesRoute: typeof ApiDataSourcesIdRolesRouteWithChildren
   ApiDataSourcesIdUsageRoute: typeof ApiDataSourcesIdUsageRoute
+  ApiDataSourcesIdUserRolesRoute: typeof ApiDataSourcesIdUserRolesRoute
 }
 
 const ApiDataSourcesIdRouteChildren: ApiDataSourcesIdRouteChildren = {
   ApiDataSourcesIdEntitiesRoute: ApiDataSourcesIdEntitiesRoute,
+  ApiDataSourcesIdEntityPermissionsRoute:
+    ApiDataSourcesIdEntityPermissionsRoute,
   ApiDataSourcesIdInspectRoute: ApiDataSourcesIdInspectRoute,
+  ApiDataSourcesIdRolesRoute: ApiDataSourcesIdRolesRouteWithChildren,
   ApiDataSourcesIdUsageRoute: ApiDataSourcesIdUsageRoute,
+  ApiDataSourcesIdUserRolesRoute: ApiDataSourcesIdUserRolesRoute,
 }
 
 const ApiDataSourcesIdRouteWithChildren =

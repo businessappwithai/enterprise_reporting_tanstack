@@ -57,6 +57,19 @@ const ENTITY_TYPES: { value: DsEntityType; label: string }[] = [
   { value: "view", label: "View" },
 ];
 
+/**
+ * Read a JSON response, or throw the server's own message.
+ *
+ * These queries used to do `return json.data || []` whatever the status, so a 403 or a
+ * 404 looked exactly like "nothing here yet" — or, with the endpoints missing, a spinner
+ * that never ended.
+ */
+async function readJson<T>(res: Response, fallback: string): Promise<T> {
+  const body = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(body?.error?.message || `${fallback} (HTTP ${res.status})`);
+  return body as T;
+}
+
 export const Route = createFileRoute("/_authed/data-sources/$id/permissions")({
   component: DataSourcePermissionsPage,
 });
@@ -85,33 +98,31 @@ function DataSourcePermissionsPage() {
     queryKey: ["data-source", dataSourceId],
     queryFn: async () => {
       const res = await fetch(`/api/data-sources/${dataSourceId}`);
-      const json = await res.json();
-      return json.data;
+      const body = await readJson<DataSource & { data?: DataSource }>(res, "Failed to load data source");
+      return body.data ?? body;
     },
   });
 
   // Fetch DS roles
-  const { data: roles = [], isLoading: rolesLoading } = useQuery<DsRole[]>({
+  const { data: roles = [], isLoading: rolesLoading, error: rolesError } = useQuery<DsRole[]>({
     queryKey: ["ds-roles", dataSourceId],
     queryFn: async () => {
       const res = await fetch(`/api/data-sources/${dataSourceId}/roles`);
-      const json = await res.json();
-      return json.data || [];
+      return (await readJson<{ data?: never[] }>(res, "Failed to load roles")).data ?? [];
     },
   });
 
   // Fetch DS user-role assignments
-  const { data: userRoles = [], isLoading: userRolesLoading } = useQuery<DsUserRoleJoinRow[]>({
+  const { data: userRoles = [], isLoading: userRolesLoading, error: userRolesError } = useQuery<DsUserRoleJoinRow[]>({
     queryKey: ["ds-user-roles", dataSourceId],
     queryFn: async () => {
       const res = await fetch(`/api/data-sources/${dataSourceId}/user-roles`);
-      const json = await res.json();
-      return json.data || [];
+      return (await readJson<{ data?: never[] }>(res, "Failed to load assignments")).data ?? [];
     },
   });
 
   // Fetch entity permissions
-  const { data: entityPermissions = [], isLoading: permissionsLoading } = useQuery<
+  const { data: entityPermissions = [], isLoading: permissionsLoading, error: permissionsError } = useQuery<
     DsEntityPermission[]
   >({
     queryKey: ["ds-entity-permissions", dataSourceId, selectedRoleId],
@@ -120,8 +131,7 @@ function DataSourcePermissionsPage() {
         ? `/api/data-sources/${dataSourceId}/entity-permissions?ds_role_id=${selectedRoleId}`
         : `/api/data-sources/${dataSourceId}/entity-permissions`;
       const res = await fetch(url);
-      const json = await res.json();
-      return json.data || [];
+      return (await readJson<{ data?: never[] }>(res, "Failed to load permissions")).data ?? [];
     },
   });
 
@@ -299,7 +309,7 @@ function DataSourcePermissionsPage() {
         </Button>
         <PageHeader
           title="Data Source Entity Permissions"
-          description="{dataSource?.name || &quot;Loading...&quot;} - Manage roles, users, and entity-level access control"
+          description={`${dataSource?.name ?? "Loading..."} - Manage roles, users, and entity-level access control`}
         />
       </div>
 
@@ -331,7 +341,11 @@ function DataSourcePermissionsPage() {
               </Button>
             </CardHeader>
             <CardContent>
-              {rolesLoading ? (
+              {rolesError ? (
+                <p role="alert" className="text-center text-destructive py-8">
+                  {((rolesError) as Error).message}
+                </p>
+              ) : rolesLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-6 w-6 animate-spin" />
                 </div>
@@ -363,7 +377,15 @@ function DataSourcePermissionsPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => deleteRoleMutation.mutate(role.id)}
+                            onClick={() => {
+                              if (
+                                window.confirm(
+                                  `Delete the role "${role.name}"? Its user assignments and entity permissions are deleted with it.`
+                                )
+                              ) {
+                                deleteRoleMutation.mutate(role.id);
+                              }
+                            }}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -392,7 +414,11 @@ function DataSourcePermissionsPage() {
               </Button>
             </CardHeader>
             <CardContent>
-              {userRolesLoading ? (
+              {userRolesError ? (
+                <p role="alert" className="text-center text-destructive py-8">
+                  {((userRolesError) as Error).message}
+                </p>
+              ) : userRolesLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-6 w-6 animate-spin" />
                 </div>
@@ -471,7 +497,11 @@ function DataSourcePermissionsPage() {
               </div>
             </CardHeader>
             <CardContent>
-              {permissionsLoading ? (
+              {permissionsError ? (
+                <p role="alert" className="text-center text-destructive py-8">
+                  {((permissionsError) as Error).message}
+                </p>
+              ) : permissionsLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-6 w-6 animate-spin" />
                 </div>
