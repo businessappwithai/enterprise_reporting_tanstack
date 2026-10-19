@@ -11,7 +11,7 @@ export class ImprovedTestHelpers {
    * IMPROVED: Login with multiple verification strategies
    * Fixes the dashboard heading timeout issues
    */
-  async login(email = 'admin@admin.com', password = 'admin') {
+  async login(email = 'admin@admin.com', password = process.env.E2E_ADMIN_PASSWORD ?? 'admin') {
     await this.page.goto('/');
 
     // Fill in login form

@@ -7,7 +7,7 @@ export class TestHelpers {
    * Verify authentication - called by tests to ensure logged in
    * In most cases, global setup handles auth, this is just for verification
    */
-  async login(email = 'admin@admin.com', password = 'admin') {
+  async login(email = 'admin@admin.com', password = process.env.E2E_ADMIN_PASSWORD ?? 'admin') {
     const BASE_URL = process.env.BASE_URL || 'http://localhost:4050';
 
     // Navigate to home

@@ -43,7 +43,15 @@ export const Route = createFileRoute("/api/data-sources/test")({
 
           console.log(`[API_TEST:${testRequestId}] User: ${session.user.email || session.user.id}`);
 
-          const body = (await request.json()) as TestConnectionRequest;
+          const body = (await request.json().catch(() => null)) as TestConnectionRequest | null;
+          // Checked before anything reads body.connectionConfig: this used to throw a TypeError
+          // and answer 500 to a request that was simply missing a field.
+          if (!body?.clientType || typeof body.connectionConfig !== "object" || !body.connectionConfig) {
+            return json(
+              { error: { message: "clientType and connectionConfig are required" } },
+              { status: 400 }
+            );
+          }
           console.log(`[API_TEST:${testRequestId}] Request body received`);
           console.log(`[API_TEST:${testRequestId}] Client type: ${body.clientType}`);
 

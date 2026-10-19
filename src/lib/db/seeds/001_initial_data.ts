@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import bcrypt from "bcryptjs";
-import { encrypt } from "../../security/encryption";
 import { getDb } from "../config";
 import { BCRYPT_COST } from "@/lib/auth/bcrypt-cost";
 
@@ -186,88 +185,6 @@ async function assignRoleIfMissing(
   }
 }
 
-async function upsertDataSource(
-  db: ReturnType<typeof getDb>,
-  name: string,
-  adminUserId: string,
-  now: string
-): Promise<string> {
-  const existing = await db
-    .selectFrom("data_sources")
-    .select("id")
-    .where("name", "=", name)
-    .executeTakeFirst();
-
-  if (existing) return existing.id;
-
-  const id = randomUUID();
-  await db
-    .insertInto("data_sources")
-    .values({
-      id,
-      name,
-      description: "Sample Sakila database for testing",
-      client_type: "sqlite3",
-      connection_config: encrypt(JSON.stringify({ filename: "./data/uploads/sakila.db" })),
-      is_active: true,
-      is_editable: false,
-      is_deleted: false,
-      deleted_at: null,
-      deleted_by: null,
-      created_by: adminUserId,
-      created_at: now,
-      updated_at: now,
-    })
-    .execute();
-  return id;
-}
-
-async function upsertQuery(
-  db: ReturnType<typeof getDb>,
-  name: string,
-  description: string,
-  dataSourceId: string,
-  sqlContent: string,
-  adminUserId: string,
-  now: string
-): Promise<void> {
-  const existing = await db
-    .selectFrom("saved_queries")
-    .select("id")
-    .where("name", "=", name)
-    .where("created_by", "=", adminUserId)
-    .executeTakeFirst();
-
-  if (existing) {
-    await db
-      .updateTable("saved_queries")
-      .set({ description, data_source_id: dataSourceId, sql_content: sqlContent, updated_at: now })
-      .where("id", "=", existing.id)
-      .execute();
-    return;
-  }
-
-  await db
-    .insertInto("saved_queries")
-    .values({
-      id: randomUUID(),
-      name,
-      description,
-      data_source_id: dataSourceId,
-      sql_content: sqlContent,
-      parameters_schema: null,
-      is_validated: false,
-      validation_result: null,
-      is_deleted: false,
-      deleted_at: null,
-      deleted_by: null,
-      created_by: adminUserId,
-      created_at: now,
-      updated_at: now,
-    })
-    .execute();
-}
-
 async function upsertChart(
   db: ReturnType<typeof getDb>,
   name: string,
@@ -407,37 +324,13 @@ export async function seed(): Promise<void> {
   );
   await assignRoleIfMissing(db, analystUserId, analystRoleId, now);
 
-  // ── Demo data source ─────────────────────────────────────────────────────
-  const dataSourceId = await upsertDataSource(db, "Sakila Demo DB", adminUserId, now);
-
-  // ── Default saved queries (only the system examples, user queries untouched)
-  await upsertQuery(
-    db,
-    "Top 10 Actors by Film Count",
-    "Shows the top 10 actors who have appeared in the most films",
-    dataSourceId,
-    "SELECT\n  a.first_name,\n  a.last_name,\n  COUNT(fa.film_id) as film_count\nFROM actor a\nJOIN film_actor fa ON a.actor_id = fa.actor_id\nGROUP BY a.actor_id, a.first_name, a.last_name\nORDER BY film_count DESC\nLIMIT 10;",
-    adminUserId,
-    now
-  );
-  await upsertQuery(
-    db,
-    "Monthly Revenue Summary",
-    "Total revenue grouped by month and year",
-    dataSourceId,
-    "SELECT\n  strftime('%Y-%m', p.payment_date) as month,\n  SUM(p.amount) as total_revenue,\n  COUNT(p.payment_id) as payment_count\nFROM payment p\nGROUP BY month\nORDER BY month DESC\nLIMIT 24;",
-    adminUserId,
-    now
-  );
-  await upsertQuery(
-    db,
-    "Film Inventory by Category",
-    "Number of films in each category",
-    dataSourceId,
-    "SELECT\n  c.name as category,\n  COUNT(fc.film_id) as film_count\nFROM category c\nJOIN film_category fc ON c.category_id = fc.category_id\nGROUP BY c.category_id, c.name\nORDER BY film_count DESC;",
-    adminUserId,
-    now
-  );
+  // ── No demo data source ──────────────────────────────────
+  //
+  // This used to register "Sakila Demo DB" as a sqlite3 data source with three saved queries
+  // written in SQLite (strftime). SQLite data sources are not supported — connection-manager
+  // refuses them — so every fresh installation got a data source that is offered in every
+  // dropdown and fails whenever it is chosen, and three queries that cannot run. Register a
+  // PostgreSQL, MySQL or SQL Server database under Data Sources instead.
 
   // ── Default charts ───────────────────────────────────────────────────────
   const chartId0 = await upsertChart(
@@ -513,9 +406,11 @@ export async function seed(): Promise<void> {
 
   console.log("Seed completed (non-destructive — user data preserved)");
   console.log("=================================");
-  console.log("DEFAULT ADMIN CREDENTIALS:");
+  console.log("ADMIN ACCOUNT:");
   console.log("Email: admin@admin.com");
-  console.log("Password: admin");
+  console.log("Password: the value of ADMIN_PASSWORD (at least 8 characters). If it was not set");
+  console.log("when the database was first bootstrapped, a random one was printed once at that");
+  console.log("point and is not stored anywhere.");
   console.log("=================================");
   console.log("Analyst user: analyst@example.com / analyst123");
   console.log("=================================");

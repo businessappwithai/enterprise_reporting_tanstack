@@ -206,6 +206,25 @@ export async function executeNlQueryPipeline(
 
     const resultRows: Record<string, unknown>[] = result.rows as Record<string, unknown>[];
 
+    // The SQL editor audit-logs every run; this path logged only the refusals. Who read what,
+    // through the assistant, is exactly what an audit trail is for.
+    try {
+      await logAudit({
+        userId,
+        action: "execute",
+        resourceType: "query",
+        resourceId: dataSource.id,
+        details: {
+          source: "nl-query",
+          sql: generatedSql.slice(0, 500),
+          rowCount: resultRows.length,
+          executionTime: executionTimeMs,
+        },
+      });
+    } catch (auditError) {
+      console.error("[nl-query] Failed to audit-log an execution:", auditError);
+    }
+
     const columns = resultRows.length > 0 ? Object.keys(resultRows[0]) : [];
 
     // Update history with success

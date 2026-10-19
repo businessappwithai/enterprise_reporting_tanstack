@@ -36,7 +36,7 @@ async function globalSetup(config: FullConfig) {
       // Fill password
       const passwordInput = page.getByLabel('Password');
       await passwordInput.waitFor({ state: 'visible', timeout: 5000 });
-      await passwordInput.fill('admin');
+      await passwordInput.fill(process.env.E2E_ADMIN_PASSWORD ?? 'admin');
       console.log('   ✓ Password entered');
 
       // Click sign in

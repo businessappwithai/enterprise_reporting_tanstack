@@ -28,7 +28,7 @@ export async function getAuthCookie(request: APIRequestContext): Promise<string>
  * Simple login function for E2E tests - emergency re-auth only
  * In most cases, global setup authentication is sufficient
  */
-export async function login(page: Page, email: string = 'admin@admin.com', password: string = 'admin'): Promise<void> {
+export async function login(page: Page, email: string = 'admin@admin.com', password: string = process.env.E2E_ADMIN_PASSWORD ?? 'admin'): Promise<void> {
   // Navigate to home - should redirect to login if needed
   await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(500);

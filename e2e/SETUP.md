@@ -16,7 +16,20 @@ npm run db:migrate
 npm run db:sample
 ```
 
-### 2. Default Test User
+### 2. Test user credentials
+
+`admin@admin.com` is created by the bootstrap with the password in `ADMIN_PASSWORD`, which must be
+at least 8 characters — so the old `admin` / `admin` pair **cannot exist on a fresh install**.
+Set the password the suite should use:
+
+```bash
+ADMIN_PASSWORD='AdminPass2026!' bun scripts/rebuild-db.ts     # when the database is created
+E2E_ADMIN_PASSWORD='AdminPass2026!' playwright test            # when the suite runs
+```
+
+`E2E_ADMIN_PASSWORD` defaults to `admin` for databases created before that rule existed.
+
+### 2b. Default Test User (older notes)
 
 The tests use this default user:
 - **Email**: `admin@admin.com`
