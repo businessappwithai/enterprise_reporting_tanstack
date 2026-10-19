@@ -13,6 +13,8 @@
 import { sql } from "kysely";
 import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
+import { logAudit } from "@/lib/security/audit";
+import { isReadOnlyQuery } from "@/lib/sql/validator";
 import type { DataSource, NlQueryPipelineResult } from "@/types/database";
 import { validateSqlAccess, validateSqlTokens } from "./sql-parser";
 
@@ -114,6 +116,33 @@ export async function executeNlQueryPipeline(
     };
   }
 
+  // Step 1b: Only a single read-only statement may run. Entity access answers "may this
+  // user read these tables"; it says nothing about writing them, so without this an
+  // INSERT, or `UPDATE …; SELECT 1`, into a table the user can read ran as written —
+  // the SQL editor already refuses both. See src/lib/permissions/runnable-query.ts.
+  if (!isReadOnlyQuery(generatedSql)) {
+    const message = "This query is not a single read-only statement and was not run.";
+    try {
+      await logAudit({
+        userId,
+        action: "execute",
+        resourceType: "query",
+        resourceId: dataSource.id,
+        details: { blocked: "not_read_only", source: "nl-query", sql: generatedSql.slice(0, 500) },
+      });
+    } catch (auditError) {
+      console.error("[nl-query] Failed to audit-log a refused statement:", auditError);
+    }
+    return {
+      naturalLanguageQuery,
+      generatedSql,
+      parsedEntities: [],
+      accessCheckResults: [],
+      accessGranted: false,
+      error: message,
+    };
+  }
+
   // Step 2: Parse SQL and check RBAC
   const { entities, accessResults, allGranted, deniedEntities } = await validateSqlAccess(
     generatedSql,
@@ -164,7 +193,10 @@ export async function executeNlQueryPipeline(
 
     // Add LIMIT if not present
     let executableSql = generatedSql.trim();
-    if (!executableSql.toLowerCase().includes("limit")) {
+    // A word-boundary test, not a substring one: `.includes("limit")` also matched a
+    // column called `rate_limit`, a literal 'limit', or `unlimited`, and the row cap was
+    // silently skipped for any query that contained them.
+    if (!/\blimit\s+\d+/i.test(executableSql)) {
       executableSql = executableSql.replace(/;?\s*$/, ` LIMIT ${maxRows};`);
     }
 
