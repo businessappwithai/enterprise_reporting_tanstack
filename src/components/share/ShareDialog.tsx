@@ -71,8 +71,8 @@ export function ShareDialog({
       queryClient.invalidateQueries({ queryKey: [resourceType, resourceId] });
       toast.success(
         isPublic
-          ? "Dashboard is now private. Only logged in users can view it."
-          : "Dashboard is now public. Anyone with the link can view it."
+          ? `This ${resourceType} is now private. Only signed-in users with access can open the link.`
+          : `This ${resourceType} is now public. Anyone with the link can see its public page.`
       );
       onTogglePublic(!isPublic);
     },
@@ -91,8 +91,8 @@ export function ShareDialog({
           </DialogTitle>
           <DialogDescription>
             {isPublic
-              ? "This is publicly visible. Anyone with the link can view it."
-              : "This is private. Only you can view it."}
+              ? `This ${resourceType} is public. Anyone with the link can see its public page; signed-in users go straight to the full ${resourceType}.`
+              : `Send the link to colleagues: anyone signed in whose role can view ${resourceType}s will open it.`}
           </DialogDescription>
         </DialogHeader>
 
@@ -103,8 +103,8 @@ export function ShareDialog({
               <Label className="text-base">Make Public</Label>
               <p className="text-tremor-default text-tremor-content">
                 {isPublic
-                  ? "Anyone with the link can view this without logging in."
-                  : "Only you can view this. Users must be logged in."}
+                  ? "Visitors who are not signed in can see a limited public page."
+                  : "Off: people must sign in, and their role must allow viewing."}
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -121,41 +121,27 @@ export function ShareDialog({
             </div>
           </div>
 
-          {/* Share Link */}
-          {isPublic && (
-            <div className="space-y-2">
-              <Label htmlFor="share-url">Public Share Link</Label>
-              <div className="flex space-x-2">
-                <Input id="share-url" value={shareUrl} readOnly className="flex-1" />
-                <Button
-                  size="icon"
-                  variant={copied ? "default" : "outline"}
-                  onClick={copyToClipboard}
-                  disabled={togglePublicMutation.isPending}
-                >
-                  {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                </Button>
-              </div>
-              <p className="text-tremor-label text-tremor-content">
-                Share this link to give others view access.
-              </p>
+          {/* Share Link — shown whether or not it is public: sharing with the people who use
+              the system is the main case, and it needs no public switch. */}
+          <div className="space-y-2">
+            <Label htmlFor="share-url">Share Link</Label>
+            <div className="flex space-x-2">
+              <Input id="share-url" value={shareUrl} readOnly className="flex-1" />
+              <Button
+                size="icon"
+                variant={copied ? "default" : "outline"}
+                onClick={copyToClipboard}
+                disabled={togglePublicMutation.isPending}
+              >
+                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              </Button>
             </div>
-          )}
-
-          {!isPublic && (
-            <div className="rounded-md border p-4 bg-muted/50">
-              <div className="flex items-start gap-3">
-                <Lock className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">Private Sharing</p>
-                  <p className="text-tremor-label text-tremor-content">
-                    Make this {resourceType} public to generate a share link that doesn't require
-                    login.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
+            <p className="text-tremor-label text-tremor-content">
+              {isPublic
+                ? "Anyone can open this; signed-in users go straight to the full page."
+                : "Colleagues who are signed in open it directly; anyone else is asked to sign in first."}
+            </p>
+          </div>
         </div>
 
         <DialogFooter>

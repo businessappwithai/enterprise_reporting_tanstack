@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getAuth } from "@/lib/auth/better-auth";
 import { loadRolesAndPermissions } from "@/lib/auth/session";
+import { safeRedirectTarget } from "@/lib/share/safe-redirect";
 import { createLogger } from "@/lib/logging/logger";
 import { AUDIT_ACTIONS } from "@/types/actions";
 import { LOG_COMPONENTS } from "@/types/components";
@@ -120,7 +121,9 @@ function LoginPage() {
     try {
       await loginFn({ data: { email, password } });
       queryClient.clear();
-      await navigate({ to: "/dashboard" });
+      // A link that needed a sign-in (a share link, say) carries where to go afterwards.
+      const target = safeRedirectTarget(new URLSearchParams(window.location.search).get("redirect"));
+      await (target ? navigate({ href: target }) : navigate({ to: "/dashboard" }));
     } catch (err: unknown) {
       setServerError(err instanceof Error ? err.message : "An error occurred. Please try again.");
     } finally {
