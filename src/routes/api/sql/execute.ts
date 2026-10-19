@@ -27,6 +27,12 @@ export const Route = createFileRoute("/api/sql/execute")({
         const logger = createLogger({ component: LOG_COMPONENTS.SQL_EXECUTOR });
         const startTime = Date.now();
 
+        // Kept outside the try: the catch needs it for the log, and the request body can only
+        // be read once. The catch used to call request.json() a second time, which throws on a
+        // body already consumed — so an error in the handler raised another error inside the
+        // error handler and the request never got a response. Every SQL error (a typo in a
+        // table name, an unreachable database, an unsupported data source) hung the SQL Editor.
+        let requestedSql: string | undefined;
         try {
           const session = await getSession(request);
           if (!session?.user) {
@@ -50,6 +56,7 @@ export const Route = createFileRoute("/api/sql/execute")({
           };
 
           const { sql, dataSourceId, limit, offset } = body;
+          requestedSql = sql;
 
           if (!sql) {
             logger.warn("SQL execution with empty query", {
@@ -317,7 +324,6 @@ export const Route = createFileRoute("/api/sql/execute")({
           const errorMessage = error instanceof Error ? error.message : "Unknown error";
           const totalTime = Date.now() - startTime;
 
-          const body = (await request.json()) as { sql: string };
           logger.error(
             "SQL execution failed",
             error instanceof Error ? error : new Error(errorMessage),
@@ -326,7 +332,7 @@ export const Route = createFileRoute("/api/sql/execute")({
               email: session?.user?.email || "unknown",
               errorMessage,
               errorType: error?.constructor?.name || "Unknown",
-              sql: body?.sql,
+              sql: requestedSql,
               action: AUDIT_ACTIONS.SQL.QUERY_EXECUTION_FAILED,
               executionTime: totalTime,
               timestamp: new Date().toISOString(),
