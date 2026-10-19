@@ -16,6 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { PageHeader } from "@/components/layout/page-header";
 
 import { CopilotKit } from "@copilotkit/react-core";
+import { copilotRuntimeUrl, onCopilotError } from "@/lib/copilot/runtime-url";
 import { CopilotSidebar } from "@copilotkit/react-ui";
 import { useCopilotAction, useCopilotReadable } from "@copilotkit/react-core";
 import "@copilotkit/react-ui/styles.css";
@@ -171,6 +172,7 @@ function QueueManagementContent() {
 
   return (
     <CopilotSidebar
+      onError={onCopilotError}
       instructions="You are a background job scheduling assistant for Trigger.dev.\nHelp users understand the registered task types, create scheduled jobs, and interpret cron schedules.\nWhen the user describes a job they want, call createScheduledJob with the appropriate task type and cron.\nIf they ask about cron syntax, call explainCronSyntax.\nAvailable task types: report:generate, data:export, email:batch, scheduled:refresh."
       defaultOpen={false}
       labels={{
@@ -341,7 +343,7 @@ function QueueManagementContent() {
 
 function TriggerBoardPage() {
   return (
-    <CopilotKit runtimeUrl="/api/copilotkit" showDevConsole={false}>
+    <CopilotKit runtimeUrl={copilotRuntimeUrl()} showDevConsole={false}>
       <QueueManagementContent />
     </CopilotKit>
   );

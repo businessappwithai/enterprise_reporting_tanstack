@@ -22,6 +22,7 @@ import type {
 } from "@/types/database";
 
 import { CopilotKit } from "@copilotkit/react-core";
+import { copilotRuntimeUrl, onCopilotError } from "@/lib/copilot/runtime-url";
 import { CopilotSidebar } from "@copilotkit/react-ui";
 import { useCopilotAction, useCopilotReadable } from "@copilotkit/react-core";
 import "@copilotkit/react-ui/styles.css";
@@ -332,6 +333,7 @@ function ChartEditorContent() {
 
   return (
     <CopilotSidebar
+      onError={onCopilotError}
       instructions={
         "You are a chart configuration assistant. Help users configure charts.\nWORKFLOW:\n1. Ask what data they want to visualise.\n2. Suggest an appropriate chart type based on the data (bar for comparisons, line for trends, pie for proportions).\n3. Call selectQuery to pick the saved query with the data.\n4. Call setAxisMapping with column names from the query.\n5. Call setChartType and setChartName.\n6. Tell the user to click Save when done.\nRULES: Never invent column names — only use columns the user mentions or that appear in the query."
       }
@@ -435,7 +437,7 @@ function ChartEditorContent() {
 
 function ChartEditorPage() {
   return (
-    <CopilotKit runtimeUrl="/api/copilotkit" showDevConsole={false}>
+    <CopilotKit runtimeUrl={copilotRuntimeUrl()} showDevConsole={false}>
       <ChartEditorContent />
     </CopilotKit>
   );

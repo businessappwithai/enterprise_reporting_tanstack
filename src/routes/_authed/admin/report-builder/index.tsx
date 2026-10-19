@@ -1,5 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { CopilotKit } from "@copilotkit/react-core";
+import { copilotRuntimeUrl, onCopilotError } from "@/lib/copilot/runtime-url";
 import { CopilotSidebar } from "@copilotkit/react-ui";
 import "@copilotkit/react-ui/styles.css";
 import { NlBuilderPanel } from "@/components/admin/NlBuilderPanel";
@@ -16,8 +17,9 @@ export const Route = createFileRoute("/_authed/admin/report-builder/")({
 
 function NlReportBuilderPage() {
   return (
-    <CopilotKit runtimeUrl="/api/copilotkit" showDevConsole={false}>
+    <CopilotKit runtimeUrl={copilotRuntimeUrl()} showDevConsole={false}>
       <CopilotSidebar
+      onError={onCopilotError}
         defaultOpen={true}
         instructions={`You are an admin assistant that builds reports and charts from natural language descriptions.
 

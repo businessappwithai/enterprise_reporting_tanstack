@@ -44,6 +44,7 @@ import type { DataSource } from "@/types/database";
 import { PageHeader } from "@/components/layout/page-header";
 
 import { CopilotKit } from "@copilotkit/react-core";
+import { copilotRuntimeUrl, onCopilotError } from "@/lib/copilot/runtime-url";
 import { CopilotSidebar } from "@copilotkit/react-ui";
 import { useCopilotAction, useCopilotReadable } from "@copilotkit/react-core";
 import "@copilotkit/react-ui/styles.css";
@@ -486,6 +487,7 @@ function DataSourcesContent() {
 
   return (
     <CopilotSidebar
+      onError={onCopilotError}
       instructions="You are a database connection assistant. Help users connect and manage data sources.\n\nWORKFLOW:\n1. When a user wants to add a data source, call explainDatabaseSetup to tell them what fields they need, then openAddDataSourceForm with the pre-filled values.\n2. After a data source is added, suggest running inspectDataSource to load schema metadata.\n3. Answer questions about connection troubleshooting (firewall rules, credentials, SSL, etc.).\n\nTIPS:\n- PostgreSQL default port: 5432\n- MySQL default port: 3306\n- SQL Server default port: 1433\n- For cloud databases, recommend using the connection string option."
       defaultOpen={false}
       labels={{
@@ -836,7 +838,7 @@ function DataSourcesContent() {
 
 function DataSourcesPage() {
   return (
-    <CopilotKit runtimeUrl="/api/copilotkit" showDevConsole={false}>
+    <CopilotKit runtimeUrl={copilotRuntimeUrl()} showDevConsole={false}>
       <DataSourcesContent />
     </CopilotKit>
   );

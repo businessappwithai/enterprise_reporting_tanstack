@@ -1,16 +1,18 @@
 import { CopilotKit } from "@copilotkit/react-core";
+import { copilotRuntimeUrl, onCopilotError } from "@/lib/copilot/runtime-url";
 import { CopilotSidebar } from "@copilotkit/react-ui";
 import { NlQueryContent } from "@/components/nl-query/nl-query-content";
 
 export default function CopilotNlQuery() {
   return (
     <CopilotKit
-      runtimeUrl="/api/copilotkit"
+      runtimeUrl={copilotRuntimeUrl()}
       transcribeAudioUrl="/api/copilotkit/transcribe"
       textToSpeechUrl="/api/copilotkit/tts"
       showDevConsole={false}
     >
       <CopilotSidebar
+      onError={onCopilotError}
         instructions={`You are a SQL generation agent for the Enterprise Reporting System.
 
 STRICT WORKFLOW — follow these steps IN ORDER, exactly once each:

@@ -19,6 +19,7 @@ import type { SQLExecutionResponse } from "@/types/api";
 import type { DataSource } from "@/types/database";
 import { PageHeader } from "@/components/layout/page-header";
 import { CopilotKit } from "@copilotkit/react-core";
+import { copilotRuntimeUrl, onCopilotError } from "@/lib/copilot/runtime-url";
 import { CopilotSidebar } from "@copilotkit/react-ui";
 import { useCopilotAction, useCopilotReadable } from "@copilotkit/react-core";
 import "@copilotkit/react-ui/styles.css";
@@ -436,6 +437,7 @@ RULES:
 
   return (
     <CopilotSidebar
+      onError={onCopilotError}
       instructions={SQL_EDITOR_INSTRUCTIONS}
       defaultOpen={false}
       labels={{
@@ -864,7 +866,7 @@ RULES:
 
 function SQLEditorPage() {
   return (
-    <CopilotKit runtimeUrl="/api/copilotkit" showDevConsole={false}>
+    <CopilotKit runtimeUrl={copilotRuntimeUrl()} showDevConsole={false}>
       <SQLEditorContent />
     </CopilotKit>
   );

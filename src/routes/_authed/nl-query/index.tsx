@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CopilotKit } from "@copilotkit/react-core";
+import { copilotRuntimeUrl, onCopilotError } from "@/lib/copilot/runtime-url";
 import { CopilotSidebar } from "@copilotkit/react-ui";
 import "@copilotkit/react-ui/styles.css";
 import { NlQueryContent } from "@/components/nl-query/nl-query-content";
@@ -11,11 +12,12 @@ export const Route = createFileRoute("/_authed/nl-query/")({
 function NlQueryPage() {
   return (
     <CopilotKit
-      runtimeUrl="/api/copilotkit"
+      runtimeUrl={copilotRuntimeUrl()}
       textToSpeechUrl="/api/copilotkit/tts"
       showDevConsole={false}
     >
       <CopilotSidebar
+      onError={onCopilotError}
         instructions={`SQL agent for PostgreSQL. Use ONLY tables/columns from the schema context — never invent names.
 
 WORKFLOW: Call fetchSimilarQueries FIRST to get proven SQL examples and schema context, then call executeNaturalLanguageQuery with the SQL you generate. Use the top matching past queries from RAG as templates.

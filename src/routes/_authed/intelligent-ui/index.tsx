@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CopilotKit } from "@copilotkit/react-core";
+import { copilotRuntimeUrl, onCopilotError } from "@/lib/copilot/runtime-url";
 import { CopilotSidebar } from "@copilotkit/react-ui";
 import "@copilotkit/react-ui/styles.css";
 import { IntelligentUiContent } from "@/components/intelligent-ui/intelligent-ui-content";
@@ -11,11 +12,12 @@ export const Route = createFileRoute("/_authed/intelligent-ui/")({
 function IntelligentUiPage() {
   return (
     <CopilotKit
-      runtimeUrl="/api/copilotkit"
+      runtimeUrl={copilotRuntimeUrl()}
       textToSpeechUrl="/api/copilotkit/tts"
       showDevConsole={false}
     >
       <CopilotSidebar
+      onError={onCopilotError}
         instructions={`You build views over ONE SQL result. You never see its rows and you never write code or markup.
 
 WORKFLOW: Call fetchSimilarQueries ONCE with the user's question, then runQuestion with the SQL you generate (SELECT only, exact table and column names from the schema context, GROUP BY with aggregates, ORDER BY with LIMIT). Then call renderView one or more times to present the result.

@@ -16,6 +16,7 @@ import {
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { CopilotKit } from "@copilotkit/react-core";
+import { copilotRuntimeUrl, onCopilotError } from "@/lib/copilot/runtime-url";
 import { CopilotSidebar } from "@copilotkit/react-ui";
 import { useCopilotAction, useCopilotReadable } from "@copilotkit/react-core";
 import "@copilotkit/react-ui/styles.css";
@@ -66,7 +67,7 @@ export const Route = createFileRoute("/_authed/charts/")({
 
 function ChartsPage() {
   return (
-    <CopilotKit runtimeUrl="/api/copilotkit" showDevConsole={false}>
+    <CopilotKit runtimeUrl={copilotRuntimeUrl()} showDevConsole={false}>
       <ChartsContent />
     </CopilotKit>
   );
@@ -262,6 +263,7 @@ RULES:
 
   return (
     <CopilotSidebar
+      onError={onCopilotError}
       instructions={CHARTS_AI_INSTRUCTIONS}
       defaultOpen={false}
       labels={{

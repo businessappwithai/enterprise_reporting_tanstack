@@ -34,6 +34,7 @@ import type { JobDefinition, JobExecution } from "@/types/database";
 import { PageHeader } from "@/components/layout/page-header";
 
 import { CopilotKit } from "@copilotkit/react-core";
+import { copilotRuntimeUrl, onCopilotError } from "@/lib/copilot/runtime-url";
 import { CopilotSidebar } from "@copilotkit/react-ui";
 import { useCopilotAction, useCopilotReadable } from "@copilotkit/react-core";
 import "@copilotkit/react-ui/styles.css";
@@ -182,6 +183,7 @@ function JobsContent() {
 
   return (
     <CopilotSidebar
+      onError={onCopilotError}
       instructions="You are a background job scheduling assistant.\nHelp users create and understand background jobs.\nWORKFLOW:\n1. When user describes a job, ask: what should it do? how often?\n2. Convert their schedule description to a cron expression.\n3. Call createJobFromNL to create the job.\n4. Use explainCron to explain cron syntax when asked.\nCommon job types: report_export (generates and emails reports), monitoring (checks metric thresholds)."
       defaultOpen={false}
       labels={{
@@ -420,7 +422,7 @@ function JobsContent() {
 
 function JobsPage() {
   return (
-    <CopilotKit runtimeUrl="/api/copilotkit" showDevConsole={false}>
+    <CopilotKit runtimeUrl={copilotRuntimeUrl()} showDevConsole={false}>
       <JobsContent />
     </CopilotKit>
   );

@@ -1,4 +1,5 @@
 import { CopilotKit } from "@copilotkit/react-core";
+import { copilotRuntimeUrl, onCopilotError } from "@/lib/copilot/runtime-url";
 import { CopilotSidebar } from "@copilotkit/react-ui";
 import { createFileRoute } from "@tanstack/react-router";
 import { ReportBuilderPanel } from "@/components/report-generation/ReportBuilderPanel";
@@ -10,8 +11,9 @@ export const Route = createFileRoute("/_authed/reports/generate/")({
 
 function ReportGeneratePage() {
   return (
-    <CopilotKit runtimeUrl="/api/copilotkit" showDevConsole={false}>
+    <CopilotKit runtimeUrl={copilotRuntimeUrl()} showDevConsole={false}>
       <CopilotSidebar
+      onError={onCopilotError}
         defaultOpen={true}
         instructions={`You are a report generation assistant for an enterprise reporting platform.
 

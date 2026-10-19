@@ -25,6 +25,7 @@ import type { FilterDefinition } from "@/types/database";
 import { PageHeader } from "@/components/layout/page-header";
 
 import { CopilotKit } from "@copilotkit/react-core";
+import { copilotRuntimeUrl, onCopilotError } from "@/lib/copilot/runtime-url";
 import { CopilotSidebar } from "@copilotkit/react-ui";
 import { useCopilotAction, useCopilotReadable } from "@copilotkit/react-core";
 import "@copilotkit/react-ui/styles.css";
@@ -306,6 +307,7 @@ function FiltersContent() {
 
   return (
     <CopilotSidebar
+      onError={onCopilotError}
       instructions="You are a filter definition assistant. Filters define reusable query parameters.\nHelp users create filters by explaining options and pre-filling the form.\nWhen the user describes a filter they need, call fillFilterForm to open the form with suggested values."
       defaultOpen={false}
       labels={{
@@ -463,7 +465,7 @@ function FiltersContent() {
 
 function FiltersPage() {
   return (
-    <CopilotKit runtimeUrl="/api/copilotkit" showDevConsole={false}>
+    <CopilotKit runtimeUrl={copilotRuntimeUrl()} showDevConsole={false}>
       <FiltersContent />
     </CopilotKit>
   );
