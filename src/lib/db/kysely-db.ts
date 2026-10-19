@@ -305,6 +305,8 @@ export interface EmailTemplatesTable {
   body: string;
   html_body: string | null;
   column_mappings: string | null;
+  query_id: string | null;
+  created_by: string | null;
   created_at: string;
   updated_at: string;
 }

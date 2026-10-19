@@ -140,7 +140,7 @@ function EmailTemplatesPage() {
                     <TableCell className="font-medium">{template.name}</TableCell>
                     <TableCell className="text-tremor-content">
                       <code className="text-xs bg-muted px-1 py-0.5 rounded">
-                        {template.subject.substring(0, 60)}...
+                        {template.subject.length > 60 ? `${template.subject.substring(0, 60)}…` : template.subject}
                       </code>
                     </TableCell>
                     <TableCell>

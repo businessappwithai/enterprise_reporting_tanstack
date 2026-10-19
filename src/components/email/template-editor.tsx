@@ -100,7 +100,12 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
     queryKey: ["query-results", selectedQueryId],
     queryFn: async () => {
       if (!selectedQueryId) return [];
-      const res = await fetch(`/api/queries/${selectedQueryId}/execute`);
+      // The execute route is POST-only; a GET answered 405 and the column list stayed empty.
+      const res = await fetch(`/api/queries/${selectedQueryId}/execute`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+      });
       if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to execute query`);
       const data = await res.json();
       return (data.data?.rows?.slice(0, 5) || []) as Record<string, unknown>[];
@@ -124,7 +129,13 @@ export function TemplateEditor({ templateId, onSave, onCancel }: TemplateEditorP
     onSuccess: (data) => {
       if (data.success) {
         setActiveTab("preview");
+      } else {
+        // A refused or failed query used to leave the editor exactly as it was, with no word.
+        toast.error(data.error?.message || "Preview failed");
       }
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Preview failed");
     },
   });
 

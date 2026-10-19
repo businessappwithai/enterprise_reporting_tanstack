@@ -134,59 +134,74 @@ const builtInTemplates = {
   },
 };
 
-// Simple template engine with query result support
+const HTML_ESCAPES: Record<string, string> = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;",
+};
+
+export function escapeHtml(value: unknown): string {
+  return String(value ?? "").replace(/[&<>"']/g, (c) => HTML_ESCAPES[c]);
+}
+
+/**
+ * Simple template engine with query result support.
+ *
+ * `{{name}}` is replaced with a value; `{{#if name}}…{{/if}}` keeps its content when the
+ * value is truthy; `{{queryResults}}` becomes a table of the first ten rows.
+ *
+ * Values are HTML-escaped when rendering an HTML body (`html: true`, the default) and left
+ * alone for a plain-text subject. They used to be inserted raw, so a value held in a
+ * database row — a recipient's name, a product description — became live markup in every
+ * email sent from it: a link, a form, an image that phones home. And they are replaced with
+ * a function, not a replacement string, because String.replace reads `$&`, `$1` and `$$`
+ * inside a replacement string, so a value containing a dollar sign could rewrite itself.
+ */
 export function renderTemplate(
   template: string,
   variables: Record<string, any>,
-  queryResults?: Record<string, unknown>[] | null
+  queryResults?: Record<string, unknown>[] | null,
+  options: { html?: boolean } = {}
 ): string {
+  const html = options.html ?? true;
+  const out = (value: unknown) => (html ? escapeHtml(value) : String(value ?? ""));
   let result = template;
 
-  // Replace simple variables first
-  Object.entries(variables).forEach(([key, value]) => {
-    const regex = new RegExp(`{{${key}}}`, "g");
-    result = result.replace(regex, String(value ?? ""));
+  // Conditionals first, so a placeholder inside a dropped block is never rendered.
+  result = result.replace(/{{#if (\w+)}}([\s\S]*?){{\/if}}/g, (_, varName, content) => {
+    return variables[varName] ? content : "";
   });
 
   // Handle query results placeholder
-  if (queryResults && queryResults.length > 0) {
+  if (queryResults && queryResults.length > 0 && result.includes("{{queryResults}}")) {
     const columns = Object.keys(queryResults[0]);
+    let tableHtml = '<table class="data-table">\n<thead>\n<tr>\n';
+    tableHtml += columns.map((col) => `<th>${escapeHtml(col)}</th>`).join("\n");
+    tableHtml += "\n</tr>\n</thead>\n<tbody>\n";
 
-    // Check if template has queryResults placeholder
-    if (result.includes("{{queryResults}}")) {
-      // Generate HTML table from query results
-      let tableHtml = '<table class="data-table">\n<thead>\n<tr>\n';
-      tableHtml += columns.map((col) => `<th>${col}</th>`).join("\n");
-      tableHtml += "\n</tr>\n</thead>\n<tbody>\n";
-
-      queryResults.slice(0, 10).forEach((row) => {
-        // Limit to 10 rows for email
-        tableHtml += "<tr>\n";
-        tableHtml += columns.map((col) => `<td>${row[col] ?? ""}</td>`).join("\n");
-        tableHtml += "\n</tr>\n";
-      });
-
-      if (queryResults.length > 10) {
-        tableHtml += `<tr><td colspan="${columns.length}" style="text-align: center; color: #6b7280;">... and ${queryResults.length - 10} more rows</td></tr>`;
-      }
-
-      tableHtml += "\n</tbody>\n</table>";
-
-      result = result.replace("{{queryResults}}", tableHtml);
+    // Limit to 10 rows for email
+    for (const row of queryResults.slice(0, 10)) {
+      tableHtml += "<tr>\n";
+      tableHtml += columns.map((col) => `<td>${escapeHtml(row[col])}</td>`).join("\n");
+      tableHtml += "\n</tr>\n";
     }
 
-    // Replace individual column placeholders like {{column_name}}
-    if (queryResults.length > 0) {
-      columns.forEach((col) => {
-        const regex = new RegExp(`{{${col}}}`, "g");
-        result = result.replace(regex, String(queryResults[0][col] ?? ""));
-      });
+    if (queryResults.length > 10) {
+      tableHtml += `<tr><td colspan="${columns.length}" style="text-align: center; color: #6b7280;">... and ${queryResults.length - 10} more rows</td></tr>`;
     }
+
+    tableHtml += "\n</tbody>\n</table>";
+    result = result.replace("{{queryResults}}", () => tableHtml);
   }
 
-  // Handle conditionals {{#if var}}...{{/if}}
-  result = result.replace(/{{#if (\w+)}}([\s\S]*?){{\/if}}/g, (_, varName, content) => {
-    return variables[varName] ? content : "";
+  // {{name}} placeholders: explicit variables win; otherwise a column of the first result row.
+  const firstRow = queryResults && queryResults.length > 0 ? queryResults[0] : undefined;
+  result = result.replace(/{{(\w+)}}/g, (whole, name: string) => {
+    if (Object.prototype.hasOwnProperty.call(variables, name)) return out(variables[name]);
+    if (firstRow && Object.prototype.hasOwnProperty.call(firstRow, name)) return out(firstRow[name]);
+    return whole;
   });
 
   return result;
@@ -227,7 +242,7 @@ export async function sendEmail(
 
     // Render template with variables and query results
     const html = renderTemplate(template.htmlBody, variables, queryResults);
-    const subject = renderTemplate(template.subject, variables);
+    const subject = renderTemplate(template.subject, variables, null, { html: false });
 
     const mailOptions = {
       from,

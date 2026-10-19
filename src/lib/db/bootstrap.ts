@@ -772,6 +772,23 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
     );
   }
 
+  /*
+   * email_templates: the query a template is written against, and who wrote it. The editor
+   * has always sent `queryId`, and the original migration had a `query_id` column, but the
+   * table bootstrap creates did not — so the choice could not be stored. Additive and
+   * idempotent; an existing installation keeps its rows.
+   */
+  for (const stmt of [
+    sql`ALTER TABLE email_templates ADD COLUMN IF NOT EXISTS query_id VARCHAR(255)`,
+    sql`ALTER TABLE email_templates ADD COLUMN IF NOT EXISTS created_by VARCHAR(255)`,
+  ]) {
+    try {
+      await stmt.execute(db);
+    } catch (err) {
+      console.warn("[bootstrap] email_templates column warning:", (err as Error).message?.slice(0, 120));
+    }
+  }
+
   // Seed admin user and role
   console.log("[bootstrap] Seeding admin user...");
   const adminRoleId = "admin-role-id";

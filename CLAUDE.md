@@ -430,6 +430,25 @@ set `is_public` (they did not exist, so the dialog's toggle fell through to the 
 200). An anonymous visitor is offered **Sign in**, which returns to the link via
 `/login?redirect=…`; `safeRedirectTarget` accepts only a path on this site.
 
+### Email templates — `/api/email-templates`
+
+The Email Templates page and editor were written against an API that did not exist, so the page
+showed an error. The routes are `src/routes/api/email-templates/` (list/create, get/update/delete,
+`$id/preview`), behind `setting:view` / `setting:edit` (the Administrator role): templates go to whole
+recipient lists through the batch email worker, so they are installation configuration.
+
+- **Stored as the worker reads them.** `email_templates` keeps `html_body` (and `body`, NOT NULL, with
+  the same HTML — the worker falls back to it) and `column_mappings` as JSON; `query_id` and
+  `created_by` are added at bootstrap. `src/lib/email/templates.ts` converts rows to the camelCase
+  `EmailTemplate` the UI uses.
+- **The preview renders what would be sent**: the same `renderTemplate`, the same placeholder→column
+  rule as `email-batch-worker.ts` (`variablesForRow`), against the first five rows of the template's
+  query — which runs through `decideQueryRun`. It also lists placeholders with no mapping; those are
+  left visible as `{{name}}`, as they would be in a sent email.
+- **`renderTemplate` escapes values in an HTML body** (not in the plain-text subject). It used to insert
+  them raw, so a value in a database row became live markup in every email sent from it. Replacements
+  are functions, because `String.replace` reads `$&` in a replacement string.
+
 ### Background Jobs — Trigger.dev, not BullMQ
 
 Job processing runs on **Trigger.dev** (`@trigger.dev/sdk`), configured in `trigger.config.ts` (project `enterprise-reporting`, tasks discovered under `./src/lib/jobs`).
