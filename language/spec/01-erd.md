@@ -84,7 +84,7 @@ A column ending in `_by` names a person by the role they played
 (`reported_by_id`, `registered_by_id`, `approved_by_id`), so it resolves to the
 user entity rather than to a `bus_reported_by` table that does not exist. The
 full list of person-role columns is in `foreignKeys.personRoleColumns` in
-`erdwithai-language.json`.
+`appwithai-language.json`.
 
 **A column that resolves to nothing is silently degraded**: the generator stores
 it as a plain string, so grids and forms render the raw UUID with no lookup and
@@ -109,7 +109,7 @@ A column named like a reference to an entity this document declares, with no
 The same is true one field over: a `%%enum` does nothing to a column until a
 `%%field` binds it. An unbound `status`, `state` or `stage` column is recorded as
 free text, and the form will accept values the state machine cannot act on —
-`EML146`. See `applicationDictionary` in `erdwithai-language.json` for the whole
+`EML146`. See `applicationDictionary` in `appwithai-language.json` for the whole
 derivation.
 
 ## Relationships
@@ -147,6 +147,23 @@ Quote   ||--o{ QuoteItem : "contains"
 User    ||--|| Team      : "managed_by"
 Student }o--o{ Course    : "enrolls"
 ```
+
+### A relationship does not say whether the many side is a line item
+
+`Quote ||--o{ QuoteItem` and `Company ||--o{ Contact` are the same edge, and a
+renderer cannot tell them apart — yet a quote item has no life away from its
+quote and a contact has a great deal. That distinction decides where the
+Application Dictionary puts the entity: its own window and dashboard card, or a
+tab inside its owner's window. The ERD cannot carry it, so one directive does:
+
+```
+%%entity QuoteItem parent: Quote
+```
+
+See `%%entity parent:` in [05-directives.md](05-directives.md). A model that
+never writes it gets a dashboard card listing every quote item ever written, and
+a quote that does not show its own items — which is the default rather than an
+error, and why the checker reports `EML149` on every entity shaped like one.
 
 ## Complete ERD example
 

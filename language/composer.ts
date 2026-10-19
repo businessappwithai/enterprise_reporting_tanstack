@@ -22,7 +22,7 @@
  * an AI pass) and must survive round-trips through the rules editor untouched,
  * byte for byte.
  *
- * Everything here emits directives exactly as `erdwithai-language.json`
+ * Everything here emits directives exactly as `appwithai-language.json`
  * declares them; see spec/05-directives.md.
  *
  * Deliberately dependency-free — the generator package re-exports it, so it has
@@ -200,7 +200,7 @@ export function composeEml(document: EmlDocument): string {
     "%%meta kind: erd",
     `%%meta version: ${document.version ?? EML_VERSION}`,
   ];
-  if (document.description) header.push(`%% ${document.description}`);
+  if (document.description) header.push(`%%meta description: ${document.description}`);
   blocks.push(header.join("\n"));
 
   if (document.enums?.length) {

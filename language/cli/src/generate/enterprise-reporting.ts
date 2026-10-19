@@ -2,19 +2,35 @@
  * Enterprise Reporting stack generation target.
  *
  * Generates TanStack Start + Kysely + PostgreSQL application code from an EML
- * model, following the conventions of this repository:
+ * model, following the conventions of `enterprise_reporting_tanstack`:
  *
- *   src/server-fns/<entity>.ts           createServerFn with .inputValidator()
+ *   src/server-fns/<entity>.ts            createServerFn with .inputValidator()
  *   src/routes/_authed/<entity>/index.tsx list page (TanStack Table + shadcn/ui)
  *   src/routes/_authed/<entity>/$id.tsx   detail/edit page (shadcn/ui form)
- *   src/lib/db/migrations/<ts>_create.ts  Kysely migration (PostgreSQL)
+ *   src/lib/db/migrations/<ts>_create.ts  Kysely migration (PostgreSQL DDL)
  *   KYSELY_TYPES.md                       snippet for kysely-db.ts Database interface
+ *
+ * Three conventions of that repository are load-bearing, and the generator
+ * exists largely to get them right every time:
+ *
+ *   1. `.inputValidator()`, never `.validator()`. The TanStack Start v1 Vite
+ *      plugin preserves unknown method names verbatim in the client bundle, so
+ *      `.validator()` compiles and then crashes at runtime.
+ *   2. A client call passes `{ data: input }` whenever the server function
+ *      declares an input validator.
+ *   3. The config database is **PostgreSQL only** — there is no MariaDB or
+ *      SQLite in the running system, whatever `docs/` still says. DDL is
+ *      emitted for Postgres, and identifiers are double-quoted, not backticked.
+ *
+ * Route links carry no `_authed` segment: `_authed` is a pathless layout route,
+ * so its children are addressed as `/reports/$id`, while `createFileRoute` is
+ * still keyed by the file path `/_authed/reports/$id`.
  */
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import type { EmlAttribute, EmlEntity, EmlIndex, EmlModel } from "../model.ts";
-import { plural, toSnakeCase } from "../util.ts";
+import { kebabCase, plural, toSnakeCase } from "../util.ts";
 
 export interface EnterpriseReportingOptions {
   outDir: string;
@@ -30,7 +46,7 @@ function tbl(e: EmlEntity): string {
 
 /** kebab-case URL segment, e.g. "report_items" → "report-items" */
 function slug(e: EmlEntity): string {
-  return tbl(e).replace(/_/g, "-");
+  return kebabCase(tbl(e));
 }
 
 /** Human-readable label for a field name */
@@ -57,12 +73,15 @@ function tsType(attr: EmlAttribute): string {
   }
 }
 
-// PostgreSQL types. This platform runs PostgreSQL and nothing else — the
-// config DB, the knowledge graph and every generated table — so the DDL below
-// has to be PostgreSQL's. It used to be MySQL's (INT, TINYINT(1), DATETIME,
-// JSON, backtick-quoted identifiers, UUID(), ON UPDATE CURRENT_TIMESTAMP),
-// which no database this project talks to would accept.
+/**
+ * PostgreSQL column type. The config database is Postgres — `TINYINT(1)`,
+ * `DATETIME` and `JSON` are MariaDB spellings and none of them parse here.
+ */
 function ddlType(attr: EmlAttribute): string {
+  // A foreign key has to be the type of the key it points at, and every primary
+  // key this generator emits is a UUID. Left as VARCHAR(255) the column takes
+  // the value fine and then refuses the ALTER TABLE ... ADD FOREIGN KEY.
+  if (attr.isForeignKey) return "UUID";
   switch (attr.type) {
     case "integer":
       return "INTEGER";
@@ -134,7 +153,6 @@ function serverFnsFile(e: EmlEntity, model: EmlModel): string {
   const editable = e.attributes.filter((a) => !a.isPrimaryKey);
   const enumMap = Object.fromEntries(model.enums.map((en) => [en.name, en.values]));
 
-
   const zodFields = editable
     .map((a) => {
       const enumRef = a.enumRef ? enumMap[a.enumRef] : undefined;
@@ -164,9 +182,9 @@ function serverFnsFile(e: EmlEntity, model: EmlModel): string {
 
   return `import { createServerFn } from "@tanstack/react-start";
 import { sql } from "kysely";
-import { getDb } from "@/lib/db/kysely-db";
-import { requireAuth } from "@/lib/auth/middleware";
 import { z } from "zod";
+import { requireAuth } from "@/lib/auth/middleware";
+import { getDb } from "@/lib/db/config";
 
 // --------------- Types --------------------------------------------------------
 
@@ -185,6 +203,9 @@ ${zodFields}
 type ${Type}Input = z.infer<typeof ${Type}InputSchema>;
 
 // --------------- Server functions --------------------------------------------
+//
+// Every list is paginated at the database. Server-side pagination is mandatory
+// in this codebase: never select a whole table and slice it on the client.
 
 export const list${Type}sFn = createServerFn({ method: "GET" })
   .inputValidator((input: { page?: number; pageSize?: number }) => input)
@@ -215,7 +236,7 @@ export const get${Type}Fn = createServerFn({ method: "GET" })
     return getDb()
       .selectFrom("${tableName}")
       .selectAll()
-      .where("id", "=", id)
+      .where("${pk}", "=", id)
       .executeTakeFirstOrThrow();
   });
 
@@ -224,7 +245,10 @@ export const create${Type}Fn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await requireAuth();
     const id = crypto.randomUUID();
-    await getDb().insertInto("${tableName}").values({ id, ...data }).execute();
+    await getDb()
+      .insertInto("${tableName}")
+      .values({ ${pk}: id, ...data })
+      .execute();
     return { id };
   });
 
@@ -277,7 +301,7 @@ export const delete${Type}Fn = createServerFn({ method: "POST" })
   .inputValidator((input: { id: string }) => input)
   .handler(async ({ data: { id } }) => {
     await requireAuth();
-    await getDb().deleteFrom("${tableName}").where("id", "=", id).execute();
+    await getDb().deleteFrom("${tableName}").where("${pk}", "=", id).execute();
     return { id };
   });
 `;
@@ -291,20 +315,20 @@ function listPageFile(e: EmlEntity): string {
   const routePath = slug(e);
   const sfModule = toSnakeCase(e.name);
   const pluralLabel = plural(toLabel(e.name));
+  const pk = e.primaryKey || "id";
   const displayCols = e.attributes.filter((a) => !a.isPrimaryKey).slice(0, 4);
 
   const headCells = displayCols
-    .map((a) => `                <TableHead>${e.label ? toLabel(a.name) : toLabel(a.name)}</TableHead>`)
+    .map((a) => `                <TableHead>${toLabel(a.name)}</TableHead>`)
     .join("\n");
 
   const bodyCells = displayCols
     .map((a) => `                    <TableCell>{String(row.${a.name} ?? "")}</TableCell>`)
     .join("\n");
 
-  return `import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+  return `import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { list${Type}sFn } from "@/server-fns/${sfModule}";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -315,6 +339,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { list${Type}sFn } from "@/server-fns/${sfModule}";
 
 export const Route = createFileRoute("/_authed/${routePath}/")({
   component: ${Type}ListPage,
@@ -329,14 +354,14 @@ function ${Type}ListPage() {
     queryFn: () => list${Type}sFn({ data: { page, pageSize } }),
   });
 
-  const totalPages = data ? Math.ceil(data.total / pageSize) : 1;
+  const totalPages = data ? Math.max(1, Math.ceil(data.total / pageSize)) : 1;
 
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">${pluralLabel}</h1>
         <Button asChild>
-          <Link to="/_authed/${routePath}/$id" params={{ id: "new" }}>
+          <Link to="/${routePath}/$id" params={{ id: "new" }}>
             New ${toLabel(e.name)}
           </Link>
         </Button>
@@ -366,11 +391,11 @@ ${headCells}
                 </TableRow>
               ) : (
                 data?.items.map((row) => (
-                  <TableRow key={row.id}>
+                  <TableRow key={row.${pk}}>
 ${bodyCells}
                     <TableCell className="text-right">
                       <Button variant="ghost" size="sm" asChild>
-                        <Link to="/_authed/${routePath}/$id" params={{ id: row.id }}>
+                        <Link to="/${routePath}/$id" params={{ id: row.${pk} }}>
                           Edit
                         </Link>
                       </Button>
@@ -435,19 +460,19 @@ function detailPageFile(e: EmlEntity): string {
     )
     .join("\n");
 
-  return `import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+  return `import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   create${Type}Fn,
   delete${Type}Fn,
   get${Type}Fn,
   update${Type}Fn,
 } from "@/server-fns/${sfModule}";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/_authed/${routePath}/$id")({
   component: ${Type}DetailPage,
@@ -490,7 +515,7 @@ function ${Type}DetailPage() {
     onSuccess: () => {
       setConflict(false);
       queryClient.invalidateQueries({ queryKey: ["${tableName}"] });
-      navigate({ to: "/_authed/${routePath}/" });
+      navigate({ to: "/${routePath}" });
     },
     onError: (error) => {
       if (String((error as Error)?.message ?? "").includes("VERSION_CONFLICT")) setConflict(true);
@@ -511,7 +536,7 @@ function ${Type}DetailPage() {
     mutationFn: () => delete${Type}Fn({ data: { id } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["${tableName}"] });
-      navigate({ to: "/_authed/${routePath}/" });
+      navigate({ to: "/${routePath}" });
     },
   });
 
@@ -551,10 +576,7 @@ ${formFields}
             >
               {saveMutation.isPending ? "Saving…" : "Save"}
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigate({ to: "/_authed/${routePath}/" })}
-            >
+            <Button variant="outline" onClick={() => navigate({ to: "/${routePath}" })}>
               Cancel
             </Button>
             {!isNew && (
@@ -585,7 +607,7 @@ function migrationFile(model: EmlModel): string {
     const nonPk = e.attributes.filter((a) => !a.isPrimaryKey);
 
     const cols = [
-      `  "${pk}" VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text`,
+      `  "${pk}" UUID PRIMARY KEY DEFAULT gen_random_uuid()`,
       ...nonPk.map((a) => {
         const notNull = a.required ? " NOT NULL" : " NULL";
         const uq = a.unique ? " UNIQUE" : "";
@@ -595,10 +617,8 @@ function migrationFile(model: EmlModel): string {
       // The optimistic-lock counter: raised by every update, compared by the
       // update server function so a stale save is refused, not applied.
       '  "version" INTEGER NOT NULL DEFAULT 1',
-      '  "created_at" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP',
-      // PostgreSQL has no ON UPDATE CURRENT_TIMESTAMP; the application sets
-      // updated_at on write, as the platform's own tables do.
-      '  "updated_at" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP',
+      '  "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()',
+      '  "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()',
     ];
 
     const extraIndexes = model.indexes
@@ -610,14 +630,15 @@ function migrationFile(model: EmlModel): string {
 
     return {
       tableName,
-      ddl: `CREATE TABLE IF NOT EXISTS "${tableName}" (\n${cols.join(",\n")}\n)`,
+      ddl: `CREATE TABLE IF NOT EXISTS "${tableName}" (\n${cols.join(",\n")}\n);`,
       extraIndexes,
     };
   });
 
-  // `sql` tag, not `db.schema.executeRaw` — Kysely has no such method, so the
-  // migration this file writes used to fail at run time as well as parse time.
   return `import { type Kysely, sql } from "kysely";
+
+// PostgreSQL DDL. gen_random_uuid() is built in from Postgres 13 on; on an
+// older server enable it with CREATE EXTENSION IF NOT EXISTS pgcrypto.
 
 export async function up(db: Kysely<never>): Promise<void> {
 ${stmts
@@ -656,6 +677,9 @@ ${rest.map((a) => `    ${a.name}${a.required ? "" : "?"}: ${tsType(a)} | null;`)
   return `# Kysely Database types — EML generated
 
 Paste these entries into the \`Database\` interface in \`src/lib/db/kysely-db.ts\`.
+That interface is the authoritative type for every config-database table: a table
+added there must be added to \`bootstrapSchema()\` in \`src/lib/db/bootstrap.ts\`
+in the same change, or the types describe a schema the database does not have.
 
 \`\`\`typescript
 // Ensure this import is present at the top of kysely-db.ts:
@@ -681,8 +705,13 @@ function readmeFile(model: EmlModel, opts: EnterpriseReportingOptions): string {
 
   return `# ${opts.appName}
 
-Generated from EML model by the Enterprise Reporting EML CLI.
-Stack: **TanStack Start + Kysely + PostgreSQL** (enterprise-reporting target).
+Generated from an EML model by the \`eml\` CLI, \`--stack enterprise-reporting\`.
+Stack: **TanStack Start v1 + Kysely + PostgreSQL**.
+
+Unlike the \`tanstack-nestjs\` target, this one does not emit a standalone
+application. It emits code shaped to drop into an existing
+\`enterprise_reporting_tanstack\` checkout, which already carries the auth,
+RBAC, connection manager, job runner and UI shell these files assume.
 
 ## Files generated
 
@@ -695,20 +724,28 @@ ${entityLines}
 1. **Copy files** into the repository at the paths shown above.
 2. **Add Kysely types**: paste the snippet from \`KYSELY_TYPES.md\` into the
    \`Database\` interface in \`src/lib/db/kysely-db.ts\`.
-3. **Bootstrap tables**: add the \`CREATE TABLE\` statements from the migration
-   to \`bootstrapSchema()\` in \`src/lib/db/bootstrap.ts\`, or run the migration
-   with \`bun run db:migrate\`.
-4. **Add navigation links** to the new routes in
-   \`src/components/layout/Sidebar.tsx\`.
-5. **Customise**: add permission checks (\`requirePermission()\`), refine Zod
-   schemas, and apply your UI patterns as needed.
+3. **Bootstrap the tables**: add the \`CREATE TABLE\` statements to
+   \`bootstrapSchema()\` in \`src/lib/db/bootstrap.ts\` — it is idempotent and
+   runs on every boot — or apply the migration directly. A full rebuild is
+   \`bun scripts/rebuild-db.ts\` (it drops and recreates everything).
+4. **Add navigation links** for the new routes in the sidebar under
+   \`src/components/layout/\`.
+5. **Add permission checks**: \`requireAuth()\` establishes *who* is calling;
+   \`requirePermission()\` from \`@/lib/permissions/permissions\` decides what
+   they may do. Add the \`<resource>:<action>\` strings for these entities to the
+   roles that should hold them.
 
-## Server function conventions enforced by this generator
+## Conventions this generator enforces
 
 - \`.inputValidator()\` is always used — never \`.validator()\`. The TanStack
-  Start v1 Vite plugin only preserves \`.inputValidator()\` across the
-  server/client boundary.
-- Client calls always pass \`{ data: input }\` — the wrapper is required.
+  Start v1 Vite plugin preserves unknown method names verbatim in the client
+  bundle, so \`.validator()\` builds cleanly and then crashes at runtime.
+- Client calls always pass \`{ data: input }\` — required whenever the server
+  function declares an input validator.
 - \`requireAuth()\` is called at the top of every handler.
+- Every list applies \`LIMIT\`/\`OFFSET\` at the database. Server-side pagination
+  is mandatory in this codebase.
+- DDL is PostgreSQL. The config database is Postgres only, whatever the older
+  files under \`docs/\` still say about MariaDB or SQLite.
 `;
 }

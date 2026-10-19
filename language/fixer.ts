@@ -28,6 +28,10 @@
  *   EML117  No primary key → prepend  string id PK  to entity block
  *   EML421  State workflow: no [*] → FirstState → insert initial transition
  *   EML422  State workflow: no terminal state → append LastState --> [*]
+ *   EML172  Columns no %%section row places → append them to the entity's last
+ *           section, two per row
+ *   EML174  A %%section row of three or more columns → split it into rows of two
+ *   EML175  A column placed in two %%section rows → remove the later placement
  *
  * All other codes are reported but left for the developer to fix manually.
  */
@@ -35,6 +39,7 @@
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { isPersonRoleColumn } from "./checker";
+import { formatRows, parseRows } from "./sections";
 
 // ---------------------------------------------------------------------------
 // ANSI helpers
@@ -147,10 +152,135 @@ function applyFix(lines: string[], issue: Issue): FixResult {
       return fixMissingInitialTransition(lines, issue, base);
     case "EML422":
       return fixMissingTerminalTransition(lines, issue, base);
+    case "EML287":
+      return fixCamelCaseRuleCondition(lines, issue, base);
+    case "EML172":
+      return fixUnplacedColumns(lines, issue, base);
+    case "EML174":
+      return fixWideRow(lines, issue, base);
+    case "EML175":
+      return fixDoublePlacement(lines, issue, base);
     default:
       base.description = `No auto-fix strategy for ${issue.code}.`;
       return base;
   }
+}
+
+// ---------------------------------------------------------------------------
+// Fix: EML172, EML174, EML175 — %%section rows
+//
+// All three rewrite the `rows:` value of one %%section line and nothing else,
+// so no line is inserted or removed and the line numbers of every other fix in
+// the same run stay true. The rows are read and written by language/sections.ts
+// — the same reading the checker and the generator use.
+// ---------------------------------------------------------------------------
+
+/** The `rows:` value of a %%section line: where it starts and ends in the text. */
+function rowsSpan(text: string): { start: number; end: number } | undefined {
+  if (!/^\s*%%section\b/i.test(text)) return undefined;
+  const open = text.match(/(^|;)\s*rows\s*:/i);
+  if (open?.index === undefined) return undefined;
+  const start = open.index + open[0].length;
+  const rest = text.slice(start);
+  const close = rest.match(/;\s*(entity|name|help|collapsed)\s*:/i);
+  return { start, end: close?.index === undefined ? text.length : start + close.index };
+}
+
+/** Replace the rows of a %%section line, keeping everything around them. */
+function rewriteRows(
+  lines: string[],
+  issue: Issue,
+  base: FixResult,
+  change: (rows: string[][]) => string[][] | undefined,
+  description: string
+): FixResult {
+  const index = (issue.line ?? 0) - 1;
+  const before = lines[index];
+  const span = before === undefined ? undefined : rowsSpan(before);
+  if (before === undefined || !span) {
+    base.description = `Line ${issue.line ?? "?"} is not a %%section with rows:; left alone.`;
+    return base;
+  }
+  const rows = change(parseRows(before.slice(span.start, span.end)));
+  if (!rows) {
+    base.description = `Nothing to change on line ${issue.line}.`;
+    return base;
+  }
+  const after = `${before.slice(0, span.start)} ${formatRows(rows)}${before.slice(span.end)}`;
+  lines[index] = after;
+  base.applied = true;
+  base.description = description;
+  base.changes = [{ lineNo: index + 1, before, after, action: "replace" }];
+  return base;
+}
+
+function fixUnplacedColumns(lines: string[], issue: Issue, base: FixResult): FixResult {
+  const match = issue.message.match(/^(\w+) leaves \d+ columns? out of every %%section: (.+)\.$/);
+  if (!match?.[2]) {
+    base.description = "Could not read the unplaced columns from the issue message.";
+    return base;
+  }
+  const columns = match[2].split(",").map((column) => column.trim()).filter(Boolean);
+  const added: string[][] = [];
+  for (let i = 0; i < columns.length; i += 2) added.push(columns.slice(i, i + 2));
+  return rewriteRows(
+    lines,
+    issue,
+    base,
+    (rows) => [...rows, ...added],
+    `Placed ${columns.join(", ")} in ${match[1]}'s last section, two per row — move them to where they belong.`
+  );
+}
+
+function fixWideRow(lines: string[], issue: Issue, base: FixResult): FixResult {
+  return rewriteRows(
+    lines,
+    issue,
+    base,
+    (rows) => {
+      if (!rows.some((row) => row.length > 2)) return undefined;
+      return rows.flatMap((row) => {
+        const pairs: string[][] = [];
+        for (let i = 0; i < row.length; i += 2) pairs.push(row.slice(i, i + 2));
+        return pairs;
+      });
+    },
+    "Split a row of more than two columns into rows of two."
+  );
+}
+
+function fixDoublePlacement(lines: string[], issue: Issue, base: FixResult): FixResult {
+  const match = issue.message.match(/^"\w+\.(\w+)" is placed in two %%section rows\.$/);
+  const column = match?.[1];
+  if (!column) {
+    base.description = "Could not read the column from the issue message.";
+    return base;
+  }
+  return rewriteRows(
+    lines,
+    issue,
+    base,
+    (rows) => {
+      /* The issue's line is the later placement. Remove the last occurrence on
+         it, which is the duplicate whether the first placement is on this line
+         or an earlier one. */
+      let rowIndex = -1;
+      let colIndex = -1;
+      rows.forEach((row, r) =>
+        row.forEach((name, c) => {
+          if (name === column) {
+            rowIndex = r;
+            colIndex = c;
+          }
+        })
+      );
+      if (rowIndex < 0) return undefined;
+      const next = rows.map((row) => [...row]);
+      next[rowIndex]?.splice(colIndex, 1);
+      return next.filter((row) => row.length > 0);
+    },
+    `Removed the second placement of "${column}".`
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -189,6 +319,84 @@ function fixMissingMetaName(lines: string[], _issue: Issue, base: FixResult): Fi
   base.applied = true;
   base.description = `Inserted  ${newLine}  at line ${insertAt + 1}.`;
   base.changes.push({ lineNo: insertAt + 1, before: "", after: newLine, action: "insert" });
+  return base;
+}
+
+// ---------------------------------------------------------------------------
+// Fix: EML287 — A rule condition naming a column that does not exist
+// ---------------------------------------------------------------------------
+
+/**
+ * Rewrite a camelCase identifier in a `%%action … when:` condition to the
+ * snake_case column it meant.
+ *
+ * A rule is evaluated against the record being written, whose keys are the
+ * ERD's column names — and every column an EML ERD declares is snake_case. So
+ * `when: encounterId == null` compares `undefined` to `null`, which is true,
+ * and the rule refuses every write to that entity; `when: isCritical == true`
+ * compares `undefined` to `true`, which is false, and the rule never fires at
+ * all. Neither reports anything: the rule is seeded, listed in the admin
+ * screen and drawn by the viewer, and the only symptom is an entity that
+ * cannot be created or a rule nobody notices is dead.
+ *
+ * The rewrite is confined to the `when:` value, and only to identifiers that
+ * carry a lower-to-upper transition. A string literal is left alone — the
+ * values a condition compares against are the model's own enum values and are
+ * not columns — and so is every other key on the line.
+ */
+function fixCamelCaseRuleCondition(lines: string[], issue: Issue, base: FixResult): FixResult {
+  const lineNo = issue.line ? issue.line - 1 : -1;
+  if (lineNo < 0 || lineNo >= lines.length) {
+    base.description = "EML287 carries no line to repair.";
+    return base;
+  }
+
+  const original = lines[lineNo] ?? "";
+  if (!/^\s*%%action\b/.test(original)) {
+    base.description = `Line ${issue.line} is not a %%action directive.`;
+    return base;
+  }
+
+  // The condition runs from `when:` to the next key on the line. Splitting on
+  // the keys rather than on whitespace is what keeps `message:` prose — which
+  // routinely contains words with capitals — out of the rewrite.
+  const WHEN = /^(.*?\bwhen:\s*)(.*?)(\s+(?:message|field|value|workflow|to|target):\s.*)?$/;
+  const match = original.match(WHEN);
+  if (!match) {
+    base.description = "Could not isolate the when: condition.";
+    return base;
+  }
+
+  type WhenParts = [string, string, string, string | undefined];
+  const [, head, condition, tail] = match as unknown as WhenParts;
+
+  const renamed: string[] = [];
+  // Skip quoted literals: a condition compares against the model's own enum
+  // values, and `'critical_high'` is not a column to rename.
+  const repaired = condition.replace(/'[^']*'|"[^"]*"|\b[a-z][A-Za-z0-9]*\b/g, (token) => {
+    if (token.startsWith("'") || token.startsWith('"')) return token;
+    if (!/[a-z][A-Z]/.test(token)) return token;
+    const snake = token.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase();
+    renamed.push(`${token} → ${snake}`);
+    return snake;
+  });
+
+  if (renamed.length === 0) {
+    base.description = "No camelCase identifier found in the condition.";
+    return base;
+  }
+
+  lines[lineNo] = `${head}${repaired}${tail ?? ""}`;
+  base.applied = true;
+  base.description = `Rewrote ${renamed.join(", ")} in the rule condition.`;
+  base.changes = [
+    {
+      lineNo: issue.line ?? lineNo + 1,
+      before: original,
+      after: lines[lineNo] ?? "",
+      action: "replace",
+    },
+  ];
   return base;
 }
 
@@ -702,6 +910,10 @@ ${c.bold("AUTO-FIXABLE CODES")}
             a plain string that renders as a raw UUID)
   EML112   Duplicate attribute → delete the later line, keeping the stronger constraints
   EML103   A column the generator adds anyway → delete the line
+  EML287   camelCase in a %%action when: → rewrite it as the snake_case column
+  EML172   columns no %%section row places → append them to the last section
+  EML174   a %%section row of three or more → split it into rows of two
+  EML175   a column placed in two %%section rows → remove the later one
   EML117   No primary key → insert  string id PK  as first attribute
   EML421   State workflow: no [*]→First transition → insert it
   EML422   State workflow: no terminal state (→[*]) → insert it

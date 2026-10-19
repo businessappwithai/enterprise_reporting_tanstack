@@ -51,12 +51,102 @@
 %% ---- Entity categories ------------------------------------------------------
 %% Group entities into dashboard sections. One block per category.
 %%category name: Accounts and Contacts; description: Customer organisations, their people and the territories that cover them; icon: Building2; color: #6366f1; entities: Account, Contact, Territory
-%%category name: Demand Generation; description: Campaigns, campaign membership and inbound leads; icon: Megaphone; color: #ec4899; entities: Campaign, CampaignMember, Lead
-%%category name: Sales Pipeline; description: Opportunities, their line items and the products sold; icon: TrendingUp; color: #0ea5e9; entities: Opportunity, OpportunityLineItem, Product
-%%category name: Quotes and Contracts; description: Priced quotes, their line items and signed agreements; icon: FileSignature; color: #14b8a6; entities: Quote, QuoteLineItem, Contract
+%%category name: Demand Generation; description: Campaigns, campaign membership and inbound leads; icon: Megaphone; color: #ec4899; entities: Campaign, Lead
+%%category name: Sales Pipeline; description: Opportunities and the products sold; line items live inside the opportunity; icon: TrendingUp; color: #0ea5e9; entities: Opportunity, Product
+%%category name: Quotes and Contracts; description: Priced quotes and signed agreements; line items live inside the quote; icon: FileSignature; color: #14b8a6; entities: Quote, Contract
 %%category name: Customer Service; description: Support cases and the service levels that govern them; icon: LifeBuoy; color: #f59e0b; entities: SupportCase, SlaPolicy
 %%category name: Activities; description: Calls, emails, meetings and tasks logged against any record; icon: CalendarClock; color: #8b5cf6; entities: Activity
 %%category name: People and Teams; description: Users, selling teams and organisational structure; icon: Users; color: #64748b; default: true; entities: User, Team
+
+%% ---- Access by functional role ---------------------------------------------
+%% Every entity belongs to at least one functional role, and `read` is the
+%% operation that decides it: a role that may not read an entity does not see it
+%% in the navigation at all, so signing in as `support.agent@…` gives you the
+%% service desk rather than the whole CRM with most of it refusing to open.
+%% The roles are the ones UserRole already names. Administrator bypasses all of
+%% it, which is what makes it the account to compare the others against.
+%% Restricting `read` is deliberately separate from the update and transition
+%% rules further down: those say who may change a record, this says whose
+%% application it is part of.
+%%rbac role:sales_rep|account_executive|sales_manager|sales_ops|marketing_manager|support_agent|support_manager on Account.read
+%%rbac role:sales_rep|account_executive|sales_manager|sales_ops|marketing_manager|support_agent|support_manager on Contact.read
+%%rbac role:sales_rep|account_executive|sales_manager|sales_ops|marketing_manager|support_agent|support_manager on Activity.read
+%%rbac role:sales_manager|sales_ops on Territory.read
+%%rbac role:marketing_manager|sales_ops on Campaign.read
+%%rbac role:marketing_manager|sales_ops on CampaignMember.read
+%%rbac role:sales_rep|account_executive|sales_manager|sales_ops|marketing_manager on Lead.read
+%%rbac role:sales_rep|account_executive|sales_manager|sales_ops on Opportunity.read
+%%rbac role:sales_rep|account_executive|sales_manager|sales_ops on OpportunityLineItem.read
+%%rbac role:sales_rep|account_executive|sales_manager|sales_ops on Product.read
+%%rbac role:sales_rep|account_executive|sales_manager|sales_ops on Quote.read
+%%rbac role:sales_rep|account_executive|sales_manager|sales_ops on QuoteLineItem.read
+%%rbac role:account_executive|sales_manager|sales_ops on Contract.read
+%%rbac role:support_agent|support_manager on SupportCase.read
+%%rbac role:support_agent|support_manager on SlaPolicy.read
+%%rbac role:sales_manager|sales_ops|support_manager on User.read
+%%rbac role:sales_manager|sales_ops on Team.read
+
+%% ---- The reporting pass (llms.md §1.1.7) ----------------------------------
+%%
+%% What the derived pack already gives this model without being asked: a
+%% register per entity, a breakdown per %%enum-bound column, created-per-month,
+%% a lifecycle report over every state machine in the diagram's own order, and
+%% children-per-parent for all 39 relationships. None of that needed anyone who
+%% understands selling.
+%%
+%% These do. Every role on the %%rbac matrix above is walked through the four
+%% questions — what they open first, what tells them something is wrong today,
+%% what they are asked for weekly, and what rots silently if nobody looks — so
+%% each role can do its whole job from what it can see.
+
+%% -- sales_rep: their own book of work --------------------------------------
+    %%report rep-stalled-deals title: Deals with no activity in 14 days entity: Opportunity chart: bar x: owner y: deals help: The rep's own pipeline hygiene and the manager's Monday question. A deal nobody has touched in a fortnight is not a forecast, it is a hope. sql: SELECT u.first_name || ' ' || u.last_name AS owner, COUNT(*) AS deals FROM bus_opportunity o JOIN bus_user u ON u.id = o.owner_id WHERE o.deleted_at IS NULL AND o.stage NOT IN ('closed_won', 'closed_lost') AND o.updated_at < now() - interval '14 days' GROUP BY 1 ORDER BY deals DESC
+    %%report rep-overdue-activities title: Overdue calls, tasks and meetings entity: Activity help: The first screen of the day. An activity past its due date is a promise made to a customer and not kept, and it is the cheapest thing in this application to fix. sql: SELECT u.first_name || ' ' || u.last_name AS owner, a.activity_type, a.subject, a.priority, a.due_at FROM bus_activity a JOIN bus_user u ON u.id = a.owner_id WHERE a.deleted_at IS NULL AND a.status IN ('planned', 'in_progress') AND a.due_at < now() ORDER BY a.due_at
+    %%report rep-unworked-leads title: New leads nobody has worked entity: Lead help: A lead still sitting in new after 48 hours has gone cold, and whoever it was routed to has not noticed. The age column is the argument. sql: SELECT l.first_name || ' ' || l.last_name AS lead, l.company_name, l.lead_source, l.rating, EXTRACT(hour FROM now() - l.created_at)::int AS hours_old FROM bus_lead l WHERE l.deleted_at IS NULL AND l.status = 'new' AND l.created_at < now() - interval '48 hours' ORDER BY hours_old DESC
+    %%report rep-pipeline-by-stage title: Open pipeline value by stage entity: Opportunity chart: bar x: stage y: value help: What the rep is carrying, in money rather than deal count. Stage order is the sales process, so a fat prospecting column and a thin negotiation one is a rep who is prospecting instead of closing. sql: SELECT o.stage, SUM(o.amount) AS value, COUNT(*) AS deals FROM bus_opportunity o WHERE o.deleted_at IS NULL AND o.stage NOT IN ('closed_won', 'closed_lost') GROUP BY 1 ORDER BY value DESC
+
+%% -- account_executive: named accounts, end to end --------------------------
+    %%report ae-closing-this-month title: Deals closing this month entity: Opportunity help: The commit list. Sorted by close date rather than value, because the question is what has to be done this week, not what is worth most. sql: SELECT o.name AS opportunity, a.name AS account, o.stage, o.amount, o.expected_close_date FROM bus_opportunity o JOIN bus_account a ON a.id = o.account_id WHERE o.deleted_at IS NULL AND o.stage NOT IN ('closed_won', 'closed_lost') AND o.expected_close_date >= date_trunc('month', now())::date AND o.expected_close_date < (date_trunc('month', now()) + interval '1 month')::date ORDER BY o.expected_close_date
+    %%report ae-accounts-at-risk title: Accounts at risk entity: Account chart: bar x: account y: health help: Customers whose health score has fallen or who are on hold. An account executive who learns about churn from the renewal date learns too late. sql: SELECT a.name AS account, a.tier, COALESCE(a.health_score, 0) AS health, a.status FROM bus_account a WHERE a.deleted_at IS NULL AND a.account_type = 'customer' AND (a.status = 'on_hold' OR a.health_score < 50) ORDER BY health
+    %%report ae-quotes-with-customer title: Quotes presented and not answered entity: Quote help: A quote sitting with the customer past its validity date is a deal that has quietly expired. Nobody is told; the date simply passes. sql: SELECT q.quote_number, a.name AS account, q.grand_total, q.valid_until, EXTRACT(day FROM now() - q.valid_until)::int AS days_past_validity FROM bus_quote q JOIN bus_account a ON a.id = q.account_id WHERE q.deleted_at IS NULL AND q.status = 'presented' AND q.valid_until < now()::date ORDER BY days_past_validity DESC
+    %%report ae-renewals-next-quarter title: Renewals due next quarter entity: Contract help: The renewal conversation has to start a quarter early to be a conversation rather than an invoice. Auto-renew is shown because those need a different one. sql: SELECT c.contract_number, a.name AS account, c.end_date, c.annual_value, c.auto_renew, c.renewal_notice_days FROM bus_contract c JOIN bus_account a ON a.id = c.account_id WHERE c.deleted_at IS NULL AND c.status IN ('active', 'expiring') AND c.end_date BETWEEN (now() + interval '90 days')::date AND (now() + interval '180 days')::date ORDER BY c.end_date
+
+%% -- sales_manager: the team, and the number --------------------------------
+    %%report manager-quota-attainment title: Quota attainment by rep entity: User chart: bar x: rep y: won help: What goes into the forecast call. Closed-won against the annual quota the model already records on each user, so the two numbers cannot disagree. sql: SELECT u.first_name || ' ' || u.last_name AS rep, COALESCE(SUM(o.amount) FILTER (WHERE o.stage = 'closed_won'), 0) AS won, MAX(u.quota_annual) AS quota FROM bus_user u LEFT JOIN bus_opportunity o ON o.owner_id = u.id AND o.deleted_at IS NULL WHERE u.deleted_at IS NULL AND u.is_active AND u.quota_annual IS NOT NULL GROUP BY u.id, u.first_name, u.last_name ORDER BY won DESC
+    %%report manager-loss-reasons title: Why deals were lost entity: Opportunity chart: pie x: reason y: deals help: The only report here that changes what the team does next quarter rather than what it does this week. A blank loss reason is itself the finding. sql: SELECT COALESCE(NULLIF(o.loss_reason, ''), '(not recorded)') AS reason, COUNT(*) AS deals, SUM(o.amount) AS value FROM bus_opportunity o WHERE o.deleted_at IS NULL AND o.stage = 'closed_lost' GROUP BY 1 ORDER BY deals DESC
+    %%report manager-team-coverage title: Pipeline coverage by team entity: Team chart: bar x: team y: pipeline help: Open pipeline against the team quota. Coverage under about three times quota means the quarter is already lost and nobody has said so. sql: SELECT t.name AS team, COALESCE(SUM(o.amount) FILTER (WHERE o.stage NOT IN ('closed_won','closed_lost')), 0) AS pipeline, MAX(t.quota_annual) AS quota FROM bus_team t LEFT JOIN bus_user u ON u.team_id = t.id AND u.deleted_at IS NULL LEFT JOIN bus_opportunity o ON o.owner_id = u.id AND o.deleted_at IS NULL WHERE t.deleted_at IS NULL AND t.is_active GROUP BY t.id, t.name ORDER BY pipeline DESC
+    %%report manager-slipping-deals title: Deals that have slipped their close date entity: Opportunity help: An open deal whose expected close date is in the past has slipped and nobody re-forecast it. These are the ones that make a forecast wrong twice. sql: SELECT o.name AS opportunity, a.name AS account, u.first_name || ' ' || u.last_name AS owner, o.stage, o.amount, o.expected_close_date FROM bus_opportunity o JOIN bus_account a ON a.id = o.account_id LEFT JOIN bus_user u ON u.id = o.owner_id WHERE o.deleted_at IS NULL AND o.stage NOT IN ('closed_won','closed_lost') AND o.expected_close_date < now()::date ORDER BY o.expected_close_date
+
+%% -- sales_ops: the machine that has to keep working ------------------------
+    %%report ops-quotes-awaiting-approval title: Quotes waiting on an approver entity: Quote help: Sales ops owns the approval queue. A quote sitting in review is a deal that cannot be signed, and the age column is what turns that into a phone call. sql: SELECT q.quote_number, a.name AS account, q.grand_total, q.discount_percent, EXTRACT(day FROM now() - q.created_at)::int AS days_waiting FROM bus_quote q JOIN bus_account a ON a.id = q.account_id WHERE q.deleted_at IS NULL AND q.status = 'in_review' ORDER BY days_waiting DESC
+    %%report ops-accounts-without-contacts title: Accounts with nobody to call entity: Account help: An account with no contact cannot be sold to or supported. Usually a migration that half-finished, and invisible until somebody tries to use it. sql: SELECT a.name AS account, a.account_type, a.tier FROM bus_account a LEFT JOIN bus_contact c ON c.account_id = a.id AND c.deleted_at IS NULL WHERE a.deleted_at IS NULL GROUP BY a.id, a.name, a.account_type, a.tier HAVING COUNT(c.id) = 0 ORDER BY a.name
+    %%report ops-empty-opportunities title: Opportunities with no products entity: Opportunity help: A deal with an amount and no line items is a number somebody typed. It cannot be quoted from, and it is the most common reason a quote total does not match its opportunity. sql: SELECT o.name AS opportunity, a.name AS account, o.stage, o.amount FROM bus_opportunity o JOIN bus_account a ON a.id = o.account_id LEFT JOIN bus_opportunity_line_item li ON li.opportunity_id = o.id AND li.deleted_at IS NULL WHERE o.deleted_at IS NULL AND o.stage NOT IN ('closed_lost') GROUP BY o.id, o.name, a.name, o.stage, o.amount HAVING COUNT(li.id) = 0 ORDER BY o.amount DESC
+    %%report ops-discount-exposure title: Discount exposure by tier entity: Quote chart: bar x: tier y: discounted_value help: What the discount policy is actually costing, grouped by the account tier that is supposed to justify it. Deep discounts concentrated outside the strategic tier mean the policy is being worked around. sql: SELECT COALESCE(a.tier, '(unset)') AS tier, ROUND(SUM(q.discount_amount)::numeric, 2) AS discounted_value, ROUND(AVG(q.discount_percent)::numeric, 1) AS avg_discount_pct FROM bus_quote q JOIN bus_account a ON a.id = q.account_id WHERE q.deleted_at IS NULL AND q.status IN ('approved','presented','accepted') GROUP BY 1 ORDER BY discounted_value DESC
+    %%report ops-territory-coverage title: Accounts per territory entity: Territory chart: bar x: territory y: accounts help: A territory with no accounts is a routing rule that never fires; one with far too many is a rep who cannot cover it. Both are invisible from inside a single account. sql: SELECT t.name AS territory, t.region, COUNT(a.id) AS accounts FROM bus_territory t LEFT JOIN bus_account a ON a.territory_id = t.id AND a.deleted_at IS NULL WHERE t.deleted_at IS NULL AND t.is_active GROUP BY t.id, t.name, t.region ORDER BY accounts DESC
+
+%% -- marketing_manager: what the spend bought -------------------------------
+    %%report marketing-campaign-response title: Campaign response rate entity: Campaign chart: bar x: campaign y: responded help: The one number. Members who responded against members targeted, so a campaign that reached nobody is visibly different from one that reached everybody and convinced none of them. sql: SELECT c.name AS campaign, COUNT(m.id) FILTER (WHERE m.has_responded) AS responded, COUNT(m.id) AS members FROM bus_campaign c LEFT JOIN bus_campaign_member m ON m.campaign_id = c.id AND m.deleted_at IS NULL WHERE c.deleted_at IS NULL GROUP BY c.id, c.name ORDER BY responded DESC
+    %%report marketing-campaign-return title: Cost against influenced revenue entity: Campaign chart: bar x: campaign y: won_value help: Actual cost against closed-won revenue on the opportunities the campaign is attached to. The only report that decides next year's budget. sql: SELECT c.name AS campaign, c.actual_cost, COALESCE(SUM(o.amount) FILTER (WHERE o.stage = 'closed_won'), 0) AS won_value FROM bus_campaign c LEFT JOIN bus_opportunity o ON o.campaign_id = c.id AND o.deleted_at IS NULL WHERE c.deleted_at IS NULL AND c.status = 'completed' GROUP BY c.id, c.name, c.actual_cost ORDER BY won_value DESC
+    %%report marketing-lead-source title: Lead quality by source entity: Lead chart: bar x: source y: qualified help: Volume flatters the cheap sources. Qualified and converted counts alongside it are what separate a source worth paying for from one worth switching off. sql: SELECT COALESCE(l.lead_source, '(unset)') AS source, COUNT(*) AS leads, COUNT(*) FILTER (WHERE l.status IN ('qualified','converted')) AS qualified, COUNT(*) FILTER (WHERE l.status = 'converted') AS converted FROM bus_lead l WHERE l.deleted_at IS NULL GROUP BY 1 ORDER BY qualified DESC
+    %%report marketing-spent-no-response title: Campaigns that spent and got nothing entity: Campaign help: Money out, no responses in. Nobody runs this report voluntarily, which is exactly why it belongs on the dashboard. sql: SELECT c.name AS campaign, c.campaign_type, c.actual_cost, COUNT(m.id) AS members FROM bus_campaign c LEFT JOIN bus_campaign_member m ON m.campaign_id = c.id AND m.has_responded AND m.deleted_at IS NULL WHERE c.deleted_at IS NULL AND c.status = 'completed' AND COALESCE(c.actual_cost, 0) > 0 GROUP BY c.id, c.name, c.campaign_type, c.actual_cost HAVING COUNT(m.id) = 0 ORDER BY c.actual_cost DESC
+
+%% -- support_agent: the queue in front of them ------------------------------
+    %%report agent-cases-past-first-response title: Cases past their first-response target entity: SupportCase help: What gets checked before standup. A case past its first-response time is an SLA breach that is already happening, not one that might. sql: SELECT sc.case_number, sc.subject, sc.priority, sc.created_at, sc.first_response_due_at FROM bus_support_case sc WHERE sc.deleted_at IS NULL AND sc.first_response_at IS NULL AND sc.first_response_due_at < now() AND sc.status NOT IN ('closed', 'resolved') ORDER BY sc.first_response_due_at
+    %%report agent-open-by-priority title: Open cases by priority entity: SupportCase chart: bar x: priority y: cases help: The shape of the queue. An agent with four critical cases works differently from one with forty low ones, and the register alone does not show which they have. sql: SELECT sc.priority, COUNT(*) AS cases FROM bus_support_case sc WHERE sc.deleted_at IS NULL AND sc.status NOT IN ('resolved','closed') GROUP BY 1 ORDER BY cases DESC
+    %%report agent-waiting-on-customer title: Cases waiting on a customer for over a week entity: SupportCase help: Waiting on customer is where cases go to be forgotten. After a week it is not the customer who has stopped replying, it is the case that has stopped being chased. sql: SELECT sc.case_number, sc.subject, sc.priority, sc.updated_at, EXTRACT(day FROM now() - sc.updated_at)::int AS days_waiting FROM bus_support_case sc WHERE sc.deleted_at IS NULL AND sc.status = 'waiting_on_customer' AND sc.updated_at < now() - interval '7 days' ORDER BY days_waiting DESC
+    %%report agent-resolution-due title: Cases approaching their resolution deadline entity: SupportCase help: Answered on time and then left unresolved is the second SLA, and the one nobody watches. These are still savable. sql: SELECT sc.case_number, sc.subject, sc.priority, sc.resolution_due_at FROM bus_support_case sc WHERE sc.deleted_at IS NULL AND sc.resolved_at IS NULL AND sc.resolution_due_at IS NOT NULL AND sc.resolution_due_at BETWEEN now() AND now() + interval '24 hours' ORDER BY sc.resolution_due_at
+
+%% -- support_manager: the service, not the ticket ---------------------------
+    %%report support-breaches-by-priority title: SLA breaches by priority entity: SupportCase chart: bar x: priority y: breached help: The weekly review. Breaches concentrated in one priority band mean the SLA policy is wrong, not that the team is slow. sql: SELECT sc.priority, COUNT(*) AS breached FROM bus_support_case sc WHERE sc.deleted_at IS NULL AND sc.is_sla_breached GROUP BY 1 ORDER BY breached DESC
+    %%report support-resolution-time title: Median resolution hours by agent entity: User chart: bar x: agent y: median_hours help: Median rather than average, because one case that sat open over a holiday makes an average meaningless. Case count alongside it, so a fast agent with three cases is not mistaken for a fast team. sql: SELECT u.first_name || ' ' || u.last_name AS agent, COUNT(*) AS resolved, ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY EXTRACT(epoch FROM sc.resolved_at - sc.created_at) / 3600.0)::numeric, 1) AS median_hours FROM bus_support_case sc JOIN bus_user u ON u.id = sc.owner_id WHERE sc.deleted_at IS NULL AND sc.resolved_at IS NOT NULL GROUP BY u.id, u.first_name, u.last_name ORDER BY median_hours
+    %%report support-satisfaction title: Satisfaction by case type entity: SupportCase chart: bar x: case_type y: avg_score help: Where the team is disliked rather than merely slow. A low score on defects is a product problem; a low score on questions is a documentation problem. sql: SELECT sc.case_type, ROUND(AVG(sc.satisfaction_score)::numeric, 2) AS avg_score, COUNT(*) FILTER (WHERE sc.satisfaction_score IS NOT NULL) AS responses FROM bus_support_case sc WHERE sc.deleted_at IS NULL AND sc.satisfaction_score IS NOT NULL GROUP BY 1 ORDER BY avg_score
+    %%report support-escalated-open title: Escalated cases still open entity: SupportCase help: An escalation that is still open is one the manager already agreed to own. Sorted oldest first, because the escalation itself is the promise. sql: SELECT sc.case_number, a.name AS account, sc.subject, sc.priority, sc.created_at FROM bus_support_case sc LEFT JOIN bus_account a ON a.id = sc.account_id WHERE sc.deleted_at IS NULL AND sc.status = 'escalated' ORDER BY sc.created_at
+
+%% -- administrator: what nobody else can see --------------------------------
+    %%report admin-contracts-expiring title: Contracts expiring in 90 days entity: Contract help: The renewal list, and the only report here nobody asks for until it is too late. Auto-renew is shown because a contract that renews itself needs a different conversation from one that lapses. sql: SELECT c.contract_number, a.name AS account, c.end_date, c.annual_value, c.auto_renew FROM bus_contract c JOIN bus_account a ON a.id = c.account_id WHERE c.deleted_at IS NULL AND c.status = 'active' AND c.end_date BETWEEN now()::date AND (now() + interval '90 days')::date ORDER BY c.end_date
+    %%report admin-inactive-owners title: Open work owned by deactivated users entity: User help: When somebody leaves, their pipeline and their cases stay pointed at them. Nothing in the application complains; the work simply stops moving. sql: SELECT u.first_name || ' ' || u.last_name AS former_user, u.email, COUNT(DISTINCT o.id) AS open_deals, COUNT(DISTINCT sc.id) AS open_cases FROM bus_user u LEFT JOIN bus_opportunity o ON o.owner_id = u.id AND o.deleted_at IS NULL AND o.stage NOT IN ('closed_won','closed_lost') LEFT JOIN bus_support_case sc ON sc.owner_id = u.id AND sc.deleted_at IS NULL AND sc.status NOT IN ('resolved','closed') WHERE u.deleted_at IS NULL AND NOT u.is_active GROUP BY u.id, u.first_name, u.last_name, u.email HAVING COUNT(DISTINCT o.id) + COUNT(DISTINCT sc.id) > 0 ORDER BY open_deals DESC
+    %%report admin-stale-logins title: Licensed users who have stopped signing in entity: User chart: bar x: user y: days_since_login help: Every one is a seat being paid for and a set of records nobody is watching. Ninety days is the point at which it is a decision rather than a holiday. sql: SELECT u.first_name || ' ' || u.last_name AS "user", u.role, COALESCE(EXTRACT(day FROM now() - u.last_login), 999)::int AS days_since_login FROM bus_user u WHERE u.deleted_at IS NULL AND u.is_active AND (u.last_login IS NULL OR u.last_login < now() - interval '90 days') ORDER BY days_since_login DESC
+    %%report admin-orphaned-records title: Records with no owner entity: Account help: An unowned record answers to nobody and appears on no rep's list. It is not visible from inside any single screen, which is why only an administrator ever finds it. sql: SELECT 'Account' AS record_type, COUNT(*) AS records FROM bus_account WHERE deleted_at IS NULL AND owner_id IS NULL UNION ALL SELECT 'Opportunity', COUNT(*) FROM bus_opportunity WHERE deleted_at IS NULL AND owner_id IS NULL UNION ALL SELECT 'SupportCase', COUNT(*) FROM bus_support_case WHERE deleted_at IS NULL AND owner_id IS NULL UNION ALL SELECT 'Lead', COUNT(*) FROM bus_lead WHERE deleted_at IS NULL AND owner_id IS NULL ORDER BY records DESC
 
 %% ---- Enumerations ----------------------------------------------------------
 %% Lifecycle enums carry exactly the states of the matching state workflow in
@@ -437,6 +527,302 @@ erDiagram
     %%field Opportunity.description           ui: textarea
     %%field SupportCase.description           ui: textarea
     %%field Contract.auto_renew               default: false
+
+    %% ---- Help text -----------------------------------------------------------
+    %% What `%%entity … help:` and `%%field … help:` buy: they are compiled into
+    %% sys_table.description and sys_column.description, which are the only help
+    %% the generated application has — the tooltip beside a control, and the lede
+    %% of that entity's section in the generated manual. A model without them
+    %% produces an application whose every field is a label somebody guesses at.
+
+    %%entity User help: Someone who signs in and does the work — a rep, a manager, an agent. Every business record names one as its owner.
+    %%entity Team help: A group of users under one manager, carrying a shared quota. Teams are how sales targets roll up.
+    %%entity Territory help: A slice of the market — a region, a country, a company-size band — that accounts are assigned to.
+    %%entity Account help: A company you sell to or support. Almost everything else in this application hangs off an account.
+    %%entity Contact help: A person at an account. Contacts are who you talk to; accounts are who you invoice.
+    %%entity Lead help: An unqualified enquiry that has not been connected to an account yet. A lead is either converted into an account, a contact and an opportunity, or disqualified.
+    %%entity Campaign help: A marketing programme with a budget and a window, run to generate leads.
+    %%entity CampaignMember help: One person on one campaign's target list, and whether they responded.
+    %%entity CampaignMember parent: Campaign
+    %%entity Opportunity help: A deal in progress against an account, with an amount, a stage and a close date. The pipeline is the sum of these.
+    %%entity OpportunityLineItem help: One product on one opportunity, priced. The opportunity's amount is what these add up to.
+    %%entity OpportunityLineItem parent: Opportunity
+    %%entity Product help: Something you sell, with a list price. Products are what line items point at.
+    %%entity Quote help: A priced, versioned offer to an account for one opportunity. A quote is what gets approved and sent.
+    %%entity QuoteLineItem help: One product on one quote, priced, in the order it appears on the document.
+    %%entity QuoteLineItem parent: Quote
+    %%entity Contract help: The signed commitment that follows an accepted quote — a term, an annual value and a renewal date.
+    %%entity SupportCase help: A customer problem, from the moment it arrives to the moment it is resolved, measured against an SLA.
+    %%entity SlaPolicy help: How quickly cases must be answered and resolved for a given tier of customer.
+    %%entity Activity help: A call, a meeting, an email or a task, attached to whatever it was about. The history of a relationship is its activities.
+
+    %%field User.email help: The address this user signs in with. It must be unique across the application.
+    %%field User.first_name help: Given name, as it should appear on screen and in email.
+    %%field User.last_name help: Family name, as it should appear on screen and in email.
+    %%field User.role help: What this user is allowed to do. The role decides which records they can see at all.
+    %%field User.job_title help: The title shown on this user's profile. Presentation only — it grants nothing.
+    %%field User.phone help: A direct number for this user, for colleagues rather than customers.
+    %%field User.team_id help: The team this user belongs to, and whose quota their numbers roll up into.
+    %%field User.quota_annual help: This user's own annual target, in the reporting currency.
+    %%field User.is_active help: Clear this instead of deleting a user who has left — their records keep their owner.
+    %%field User.last_login help: When this account last signed in. Set by the application, not by hand.
+
+    %%field Team.name help: What this team is called on reports and in the team picker.
+    %%field Team.manager_id help: The user who runs this team and reviews its pipeline.
+    %%field Team.region help: The part of the world this team sells into.
+    %%field Team.quota_annual help: The team's combined annual target. Its members' quotas should add up to about this.
+    %%field Team.is_active help: Clear this to retire a team without losing the history of who was in it.
+
+    %%field Territory.name help: What this territory is called when an account is assigned to it.
+    %%field Territory.region help: The geography this territory covers.
+    %%field Territory.country_code help: The ISO country code, when the territory is a single country.
+    %%field Territory.manager_id help: The user accountable for everything in this territory.
+    %%field Territory.employee_count_floor help: The smallest company that belongs in this territory, by headcount. Leave empty for no lower bound.
+    %%field Territory.employee_count_ceiling help: The largest company that belongs in this territory, by headcount. Leave empty for no upper bound.
+    %%field Territory.is_active help: Clear this to stop new accounts being assigned here without disturbing the ones already in it.
+
+    %%field Account.name help: The company's name as it should appear on a contract or an invoice.
+    %%field Account.account_number help: Your own reference for this customer. Unique, and usually the key that matches your finance system.
+    %%field Account.account_type help: What this company is to you — a customer, a prospect, a partner.
+    %%field Account.tier help: The service level this account is entitled to. It decides which SLA its cases are measured against.
+    %%field Account.industry help: The sector this company trades in, used for segmentation and reporting.
+    %%field Account.website help: The company's public website.
+    %%field Account.phone help: The main switchboard number.
+    %%field Account.billing_street help: Street address for invoicing.
+    %%field Account.billing_city help: City for invoicing.
+    %%field Account.billing_postal_code help: Postal or ZIP code for invoicing.
+    %%field Account.billing_country help: Country for invoicing, which may decide tax treatment.
+    %%field Account.employee_count help: Roughly how many people work here. Used to size the account and to pick a territory.
+    %%field Account.annual_revenue help: The company's own annual turnover, not what they spend with you.
+    %%field Account.health_score help: A 0-100 read on how well this relationship is going. Maintained by the account team.
+    %%field Account.territory_id help: The territory this account is covered by, and so which team works it.
+    %%field Account.sla_policy_id help: The response and resolution times this account's support cases are held to.
+    %%field Account.status help: Whether this account is live, on hold, or closed.
+    %%field Account.owner_id help: The user accountable for this relationship.
+
+    %%field Contact.account_id help: The company this person works for. Leave empty only for a contact you have not placed yet.
+    %%field Contact.first_name help: Given name, as you would address them.
+    %%field Contact.last_name help: Family name, as it appears on correspondence.
+    %%field Contact.email help: Their work address. It must be unique — two records for one person is how a relationship gets lost.
+    %%field Contact.phone help: Desk or switchboard number.
+    %%field Contact.mobile help: Mobile number, where they have given you one.
+    %%field Contact.job_title help: Their role at the company, which is how you judge whether they can sign.
+    %%field Contact.department help: The part of the business they sit in.
+    %%field Contact.lead_source help: Where this person first came from.
+    %%field Contact.is_primary help: Set on the one contact who is your main relationship at this account.
+    %%field Contact.email_opt_out help: Set when they have asked not to receive marketing email. Campaigns must respect it.
+    %%field Contact.do_not_call help: Set when they have asked not to be telephoned. Respect it the same way.
+    %%field Contact.status help: Whether this is a live contact, or someone who has moved on.
+    %%field Contact.owner_id help: The user who looks after this person.
+
+    %%field Lead.first_name help: Given name, as supplied on the enquiry.
+    %%field Lead.last_name help: Family name, as supplied on the enquiry.
+    %%field Lead.company_name help: The company they said they were from. It becomes the account name on conversion.
+    %%field Lead.email help: The address the enquiry came from, and the one you will reply to.
+    %%field Lead.phone help: A number to call them back on.
+    %%field Lead.job_title help: Their stated role, which is most of what decides whether this lead is worth working.
+    %%field Lead.industry help: The sector their company trades in.
+    %%field Lead.employee_count help: Roughly how big their company is. Feeds the score.
+    %%field Lead.annual_revenue help: Their company's turnover, where you know it. Feeds the score.
+    %%field Lead.lead_source help: How this lead reached you — a campaign, a referral, the website.
+    %%field Lead.rating help: A quick judgement of quality. The scoring rule sets it; you may override it.
+    %%field Lead.score help: A 0-100 fit score the scoring rule calculates from title, size and source. Do not type into it.
+    %%field Lead.campaign_id help: The campaign that produced this lead, so its cost can be measured against what it generated.
+    %%field Lead.status help: Where this lead has got to, from new through to converted or disqualified.
+    %%field Lead.owner_id help: The user working this lead.
+    %%field Lead.converted_at help: When this lead became an account. Set by the conversion process, not by hand.
+    %%field Lead.disqualification_reason help: Why this lead was dropped. Required when you disqualify one, and it is what makes the report worth reading.
+
+    %%field Campaign.name help: What this programme is called in reporting.
+    %%field Campaign.campaign_type help: The kind of programme — an event, a mailing, a webinar.
+    %%field Campaign.status help: Whether this campaign is planned, running, or finished.
+    %%field Campaign.start_date help: The day the campaign goes live.
+    %%field Campaign.end_date help: The day it stops. Leave empty for an open-ended programme.
+    %%field Campaign.budgeted_cost help: What you agreed to spend.
+    %%field Campaign.actual_cost help: What it actually cost, which is the half that decides whether to run it again.
+    %%field Campaign.expected_revenue help: The pipeline this campaign is expected to generate.
+    %%field Campaign.expected_response_count help: How many responses you planned for, to compare against what arrived.
+    %%field Campaign.target_audience help: Who this campaign was aimed at, in a sentence.
+    %%field Campaign.owner_id help: The user accountable for this programme.
+
+    %%field CampaignMember.campaign_id help: The campaign this person was targeted by.
+    %%field CampaignMember.lead_id help: The lead who was targeted, when the target was not yet a known contact.
+    %%field CampaignMember.contact_id help: The contact who was targeted, when they were already known to you.
+    %%field CampaignMember.member_status help: Where this person got to in the campaign — sent, opened, responded.
+    %%field CampaignMember.responded_at help: When they responded. Empty until they do.
+    %%field CampaignMember.has_responded help: Set once any response arrives, so response rates can be counted without reading dates.
+
+    %%field Opportunity.account_id help: The company this deal is with.
+    %%field Opportunity.contact_id help: The person championing this deal inside the account.
+    %%field Opportunity.campaign_id help: The campaign this deal can be attributed to, where there is one.
+    %%field Opportunity.name help: A short description of what is being bought, as it reads in the pipeline list.
+    %%field Opportunity.description help: The detail — what they need, what you proposed, what is still open.
+    %%field Opportunity.amount help: The value of this deal. It should agree with its line items.
+    %%field Opportunity.currency_code help: The currency the amount is in.
+    %%field Opportunity.stage help: How far along this deal is. The stage is what the forecast is built from.
+    %%field Opportunity.probability help: The 0-100 chance of winning. The forecasting rule derives it from the stage.
+    %%field Opportunity.forecast_category help: Which forecast bucket this deal falls in — pipeline, best case, commit.
+    %%field Opportunity.expected_close_date help: When you expect to win it. Moving this date is the single most watched change on a deal.
+    %%field Opportunity.actual_close_date help: When it actually closed, won or lost. Set when the stage becomes final.
+    %%field Opportunity.lead_source help: Where the deal originally came from.
+    %%field Opportunity.next_step help: The one thing that has to happen next, and by when.
+    %%field Opportunity.loss_reason help: Why the deal was lost. Required on a closed-lost deal, and the reason loss reports mean anything.
+    %%field Opportunity.owner_id help: The user selling this deal.
+
+    %%field OpportunityLineItem.opportunity_id help: The deal this line belongs to.
+    %%field OpportunityLineItem.product_id help: What is being sold on this line.
+    %%field OpportunityLineItem.quantity help: How many.
+    %%field OpportunityLineItem.unit_price help: The price for one, before any discount on this line.
+    %%field OpportunityLineItem.discount_percent help: The discount applied to this line, as a percentage.
+    %%field OpportunityLineItem.line_total help: Quantity times unit price, less the discount. Calculated — do not type into it.
+    %%field OpportunityLineItem.line_description help: Anything about this line the product name does not say.
+
+    %%field Product.product_code help: Your own catalogue code for this product. Unique, and what an order refers to.
+    %%field Product.name help: The product's name as it appears on a quote.
+    %%field Product.description help: What it is and what it includes, in the words a customer would read.
+    %%field Product.family help: The group this product belongs to, for reporting and for the product picker.
+    %%field Product.list_price help: The published price before any discount.
+    %%field Product.unit_cost help: What it costs you, which is what makes margin calculable.
+    %%field Product.billing_frequency help: How often this is charged — once, monthly, annually.
+    %%field Product.is_active help: Clear this to stop the product being added to new quotes without disturbing the ones it is already on.
+
+    %%field Quote.quote_number help: The reference the customer will quote back at you. Unique.
+    %%field Quote.opportunity_id help: The deal this quote prices.
+    %%field Quote.account_id help: The company the quote is addressed to.
+    %%field Quote.name help: A short title for this quote, so several versions can be told apart.
+    %%field Quote.status help: Where this quote is — draft, waiting for approval, sent, accepted, rejected.
+    %%field Quote.version_number help: Which revision this is. A new version is raised rather than an old one edited.
+    %%field Quote.valid_until help: The day this offer expires.
+    %%field Quote.subtotal help: The line items added up, before discount and tax.
+    %%field Quote.discount_percent help: A discount across the whole quote. Past the approval threshold it needs a manager.
+    %%field Quote.discount_amount help: The discount in money, where it was agreed as an amount rather than a percentage.
+    %%field Quote.tax_amount help: Tax on the discounted subtotal.
+    %%field Quote.grand_total help: What the customer will actually pay. Calculated — do not type into it.
+    %%field Quote.approved_by_id help: The manager who approved this quote's discount. Empty until one does.
+    %%field Quote.approved_at help: When approval was given.
+    %%field Quote.approval_notes help: What the approver said — the conditions, or why they refused.
+    %%field Quote.owner_id help: The user who raised this quote.
+
+    %%field QuoteLineItem.quote_id help: The quote this line appears on.
+    %%field QuoteLineItem.product_id help: What is being quoted on this line.
+    %%field QuoteLineItem.quantity help: How many.
+    %%field QuoteLineItem.unit_price help: The price for one, before any discount on this line.
+    %%field QuoteLineItem.discount_percent help: The discount applied to this line, as a percentage.
+    %%field QuoteLineItem.line_total help: Quantity times unit price, less the discount. Calculated — do not type into it.
+    %%field QuoteLineItem.sort_order help: Where this line sits on the printed quote.
+
+    %%field Contract.contract_number help: The reference this agreement is known by. Unique.
+    %%field Contract.account_id help: The company that signed.
+    %%field Contract.quote_id help: The accepted quote this contract was written from.
+    %%field Contract.status help: Where the agreement is — drafted, out for signature, active, expired.
+    %%field Contract.start_date help: The day the term begins.
+    %%field Contract.end_date help: The day the term ends, and so the day the renewal conversation is already late.
+    %%field Contract.term_months help: How long the term runs, in months.
+    %%field Contract.annual_value help: What this agreement is worth per year. The renewal book is the sum of these.
+    %%field Contract.auto_renew help: Set when the term rolls over unless someone cancels it.
+    %%field Contract.renewal_notice_days help: How many days' notice either side must give. It decides when the renewal work has to start.
+    %%field Contract.signed_by_id help: The user who countersigned on your side.
+    %%field Contract.signed_at help: When it was signed.
+    %%field Contract.owner_id help: The user accountable for this agreement and its renewal.
+
+    %%field SupportCase.case_number help: The reference the customer quotes when they chase. Unique.
+    %%field SupportCase.account_id help: The company reporting the problem. It decides which SLA applies.
+    %%field SupportCase.contact_id help: The person who reported it, and who you will reply to.
+    %%field SupportCase.sla_policy_id help: The response and resolution times this case is measured against.
+    %%field SupportCase.subject help: The problem in one line, as it reads in the queue.
+    %%field SupportCase.description help: What happened, what they expected, and what they have already tried.
+    %%field SupportCase.case_type help: What kind of case this is — a question, an incident, a defect, a request.
+    %%field SupportCase.priority help: How urgent it is. The triage rule sets it from type and account tier.
+    %%field SupportCase.origin help: How the case reached you — email, phone, the web, the partner portal.
+    %%field SupportCase.status help: Where the case is, from new through to closed.
+    %%field SupportCase.first_response_due_at help: When the customer must have heard from a person. Calculated from the SLA on arrival.
+    %%field SupportCase.first_response_at help: When they actually did. Empty until someone replies.
+    %%field SupportCase.resolution_due_at help: When the case must be resolved by, under the SLA.
+    %%field SupportCase.resolved_at help: When it actually was resolved.
+    %%field SupportCase.is_sla_breached help: Set when a due time passed unmet. It is what breach reporting counts.
+    %%field SupportCase.resolution_notes help: What fixed it, in enough detail that the next person with this problem is helped.
+    %%field SupportCase.satisfaction_score help: What the customer scored the handling, 1 to 5, after it closed.
+    %%field SupportCase.escalated_by_id help: The user who escalated this case, when one did.
+    %%field SupportCase.owner_id help: The agent handling it.
+
+    %%field SlaPolicy.name help: What this policy is called when an account or a case is assigned to it.
+    %%field SlaPolicy.tier help: The customer tier this policy is written for.
+    %%field SlaPolicy.first_response_minutes help: How long a customer may wait to hear from a person, in minutes.
+    %%field SlaPolicy.resolution_hours help: How long they may wait for the problem to be fixed, in hours.
+    %%field SlaPolicy.business_hours_only help: Set when the clock stops overnight and at weekends.
+    %%field SlaPolicy.is_active help: Clear this to retire a policy without disturbing the cases already measured against it.
+
+    %%field Activity.activity_type help: What happened — a call, a meeting, an email, a task.
+    %%field Activity.subject help: The activity in one line, as it reads on a timeline.
+    %%field Activity.description help: What was said, agreed or found out.
+    %%field Activity.status help: Whether this is still to do, in hand, or done.
+    %%field Activity.priority help: How urgent it is, for the person whose list it is on.
+    %%field Activity.due_at help: When it has to happen by.
+    %%field Activity.completed_at help: When it actually did.
+    %%field Activity.duration_minutes help: How long it took, for calls and meetings.
+    %%field Activity.account_id help: The company this activity was about.
+    %%field Activity.contact_id help: The person it involved.
+    %%field Activity.lead_id help: The lead it was about, before there is an account.
+    %%field Activity.opportunity_id help: The deal it moved forward.
+    %%field Activity.support_case_id help: The case it was part of handling.
+    %%field Activity.contract_id help: The agreement it concerned.
+    %%field Activity.owner_id help: The user who did it, or has to.
+
+    %% ---------------------------------------------------------------
+    %% Form layout. Each record's form is headed sections of two-column
+    %% rows: `|` between rows, `,` between the two fields of a row, and a
+    %% row of one spans the full width.
+    %% ---------------------------------------------------------------
+    %%section entity: User; name: Person; help: Who this user is and how colleagues reach them — the name on every record they own.; rows: first_name, last_name | email, phone | job_title, role
+    %%section entity: User; name: Team and target; help: Where the user sits in the sales organisation and what they are measured against; rows: team_id, quota_annual | is_active, last_login
+    %%section entity: Team; name: Team; help: The selling group, who leads it, and the target its members' quotas roll up to.; rows: name, manager_id | region, quota_annual | is_active
+    %%section entity: Territory; name: Territory; help: The patch of the market this territory covers and the manager accounts in it report to.; rows: name, manager_id | region, country_code | is_active
+    %%section entity: Territory; name: Account size; help: The band of company sizes routed here — accounts outside it belong to another territory.; rows: employee_count_floor, employee_count_ceiling
+    %%section entity: Account; name: Account; help: The customer organisation, the number it is known by, where it stands, and who owns the relationship.; rows: name, account_number | account_type, status | owner_id, territory_id
+    %%section entity: Account; name: Company profile; help: What kind of business this is and how big — what segmentation, tiering and routing read.; rows: industry, tier | employee_count, annual_revenue | website, phone
+    %%section entity: Account; name: Billing address; help: Where invoices are sent; it must match what the customer's accounts payable expects.; rows: billing_street | billing_city, billing_postal_code | billing_country
+    %%section entity: Account; name: Service; help: The support terms the account is entitled to and how healthy the relationship currently looks.; rows: sla_policy_id, health_score
+    %%section entity: Contact; name: Person; help: Who the person is, which account they work for, and their role there.; rows: first_name, last_name | account_id, is_primary | job_title, department
+    %%section entity: Contact; name: Reaching them; help: The channels sales and support use — the email is where every notification goes.; rows: email, phone | mobile
+    %%section entity: Contact; name: Consent; help: What the person has said they do not want; campaigns and dialers must honour both before contacting them.; rows: email_opt_out, do_not_call
+    %%section entity: Contact; name: Ownership; help: Whether the contact is current, who looks after them, and where they first came from.; rows: status, owner_id | lead_source
+    %%section entity: Lead; name: Lead; help: The person who showed interest and how to get back to them.; rows: first_name, last_name | email, phone | job_title
+    %%section entity: Lead; name: Company; help: The business behind the lead — what decides whether it is worth a sales rep's time.; rows: company_name, industry | employee_count, annual_revenue
+    %%section entity: Lead; name: Qualification; help: Where the lead stands, who is working it, how warm it is, and which campaign produced it.; rows: status, owner_id | rating, score | lead_source, campaign_id
+    %%section entity: Lead; name: Outcome; help: How the lead ended — converted into an account and opportunity, or ruled out and why.; rows: converted_at | disqualification_reason
+    %%section entity: Campaign; name: Campaign; help: What the campaign is, who runs it, and whom it is aimed at.; rows: name, campaign_type | status, owner_id | target_audience
+    %%section entity: Campaign; name: Schedule; help: When the campaign runs; members can only respond inside these dates.; rows: start_date, end_date
+    %%section entity: Campaign; name: Budget and return; help: What the campaign was allowed to spend, what it did spend, and what it was expected to bring back.; rows: budgeted_cost, actual_cost | expected_revenue, expected_response_count
+    %%section entity: CampaignMember; name: Member; help: Who was targeted by the campaign — a lead or a contact, never both.; rows: campaign_id | lead_id, contact_id
+    %%section entity: CampaignMember; name: Response; help: Whether and when the member answered, which is what the campaign's results are counted from.; rows: member_status, has_responded | responded_at
+    %%section entity: Opportunity; name: Deal; help: What is being sold, to which account and buyer, and who is selling it.; rows: name, owner_id | account_id, contact_id | description
+    %%section entity: Opportunity; name: Value; help: What the deal is worth and in which currency — the figure the forecast adds up.; rows: amount, currency_code
+    %%section entity: Opportunity; name: Pipeline; help: How far the deal has got and when it is expected to close; probability and forecast follow from the stage.; rows: stage, probability | forecast_category, expected_close_date | next_step
+    %%section entity: Opportunity; name: Origin; help: Where the deal came from, so marketing is credited with what it produced.; rows: lead_source, campaign_id
+    %%section entity: Opportunity; name: Outcome; help: When the deal closed and, if it was lost, the reason — what the win-loss review is built on.; rows: actual_close_date | loss_reason
+    %%section entity: OpportunityLineItem; name: Line; help: Which product this line of the deal is for, in the words the buyer will read.; rows: opportunity_id, product_id | line_description
+    %%section entity: OpportunityLineItem; name: Pricing; help: How many, at what price and discount, and what the line adds to the deal's amount.; rows: quantity, unit_price | discount_percent, line_total
+    %%section entity: Product; name: Product; help: What is sold, the code it is ordered by, its product family, and whether it can still be quoted.; rows: name, product_code | family, is_active | description
+    %%section entity: Product; name: Price; help: What the product lists at, what it costs to deliver, and how often it is billed.; rows: list_price, unit_cost | billing_frequency
+    %%section entity: Quote; name: Quote; help: Which quote this is, the deal and account it prices, where it stands, and how long it is valid.; rows: quote_number, version_number | name | opportunity_id, account_id | status, owner_id | valid_until
+    %%section entity: Quote; name: Totals; help: What the customer is asked to pay — the lines' subtotal, the discount, tax, and the grand total.; rows: subtotal, discount_percent | discount_amount, tax_amount | grand_total
+    %%section entity: Quote; name: Approval; help: Who signed off a discount beyond a rep's authority, when, and on what grounds.; rows: approved_by_id, approved_at | approval_notes
+    %%section entity: QuoteLineItem; name: Line; help: Which product this line prices and where it sits on the printed quote.; rows: quote_id, sort_order | product_id
+    %%section entity: QuoteLineItem; name: Pricing; help: How many, at what price and discount, and what the line adds to the quote's subtotal.; rows: quantity, unit_price | discount_percent, line_total
+    %%section entity: Contract; name: Contract; help: The agreement, the account it binds, the quote it came from, and who manages it.; rows: contract_number, status | account_id, quote_id | owner_id
+    %%section entity: Contract; name: Term; help: When the contract runs and what it is worth a year — what revenue recognition reads.; rows: start_date, end_date | term_months, annual_value
+    %%section entity: Contract; name: Renewal; help: Whether the contract renews itself and how much notice either side must give to stop it.; rows: auto_renew, renewal_notice_days
+    %%section entity: Contract; name: Signature; help: Who signed for the customer and when; the contract is not in force until both are set.; rows: signed_by_id, signed_at
+    %%section entity: SupportCase; name: Case; help: The number the customer quotes, where the case stands, and what is wrong in their words.; rows: case_number, status | subject | description
+    %%section entity: SupportCase; name: Customer; help: Who raised the case and which account it is charged against.; rows: account_id, contact_id
+    %%section entity: SupportCase; name: Triage; help: What kind of problem it is, how urgent, how it arrived, and who is working it.; rows: case_type, priority | origin, owner_id | escalated_by_id
+    %%section entity: SupportCase; name: Service level; help: The response and resolution deadlines the account's SLA sets, and whether either was missed.; rows: sla_policy_id, is_sla_breached | first_response_due_at, first_response_at | resolution_due_at, resolved_at
+    %%section entity: SupportCase; name: Resolution; help: What fixed it and how the customer rated the outcome.; rows: resolution_notes | satisfaction_score
+    %%section entity: SlaPolicy; name: Policy; help: The support promise, the account tier it is sold to, and whether it is still offered.; rows: name, tier | is_active
+    %%section entity: SlaPolicy; name: Targets; help: How fast a case must be answered and resolved, and whether the clock stops outside office hours.; rows: first_response_minutes, resolution_hours | business_hours_only
+    %%section entity: Activity; name: Activity; help: What was done or has to be done, how urgent it is, and whose it is.; rows: activity_type, subject | status, priority | owner_id | description
+    %%section entity: Activity; name: Timing; help: When it is due, when it was done, and how long it took.; rows: due_at, completed_at | duration_minutes
+    %%section entity: Activity; name: Related to; help: The records this activity is about; it appears on the timeline of each one set here.; rows: account_id, contact_id | lead_id, opportunity_id | support_case_id, contract_id
 
     %%index User(email) unique
     %%index Account(account_number) unique

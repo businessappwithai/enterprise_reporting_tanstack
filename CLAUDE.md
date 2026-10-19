@@ -709,20 +709,28 @@ The same applies to the Docker Compose files: `docker-compose.yml` is current (P
 
 ## EML Language System
 
-`language/` and `llmtext/` contain the Enterprise Reporting Modeling Language (EML) system — a Mermaid-based language for describing an application as ERD + business rules + workflows, then generating a complete TanStack Start + Kysely application from that description.
+`language/` contains the EML modeling-language system — a Mermaid-based language for describing an application as ERD + business rules + workflows, then generating a complete TanStack Start + Kysely application from that description.
 
 Every EML document is valid, renderable Mermaid (`erDiagram`, `flowchart`, `stateDiagram-v2`). EML is a semantic superset: it assigns generator meaning to standard Mermaid syntax and to `%%` directive comments.
 
 ### Key files
 
-- `language/erdwithai-language.json` — canonical machine-readable language definition (grammar, directives, validation rules)
+- `language/appwithai-language.json` — machine-readable language definition (grammar, directives, validation rules). Renamed from `erdwithai-language.json`; `index.ts` loads it by that name
 - `language/checker.ts` — validates an `.mmd` file against the language definition
 - `language/fixer.ts` — auto-repairs fixable checker diagnostics in-place
 - `language/index.ts` — programmatic API (`loadLanguageDefinition`, `parseEml`, `validateModel`)
 - `language/rag.ts` — RAG indexing for EML-aware LLM completions
 - `language/cli/eml.ts` — CLI entry point (run with Bun)
-- `language/examples/` — sample EML models (`minimal.eml.mmd`, `ecommerce.eml.mmd`, `helpdesk.eml.mmd`, `crm.eml.mmd`)
-- `llmtext/llms-full.txt` — full application context spec for LLMs (architecture, conventions, patterns)
+- `language/sections.ts` — the one reading of `%%section`, shared by the checker and the fixer
+- `language/examples/` — sample EML models (`minimal`, `ecommerce`, `helpdesk`, `crm`, `dance-studio`), every form laid out with `%%section`
+
+The protocol document a language model is pointed at to write or change a model is `llms.md`, published at `https://www.appwithai.org/llms.md`. It is not in this repository.
+
+### Where this copy comes from
+
+The engine here — `checker.ts`, `fixer.ts`, `index.ts`, `composer.ts`, `rag.ts`, `sections.ts`, `browser/`, `grammar/`, `spec/`, the language definition, the examples, and the CLI's `model.ts`, `parser.ts` and `generate/enterprise-reporting.ts` — is a copy of `app-and-report-with-ai-tanstack/common/language/`, which is canonical when the product repositories disagree about the language. It had drifted behind (no line items, no help-text or dictionary-completeness codes, no `%%section`, an `icon` that was still "not compiled"), and was brought level in one change. **Copy, don't edit**, and when the orchestrator's copy moves, copy again; nothing checks one against the other.
+
+What stays specific to this repository: `cli/src/cli.ts` (two stacks, `enterprise-reporting` the default — `tanstack-nestjs` belongs to `app-with-ai-tanstack` and is rejected), `cli/src/generate/jdm.ts` and `cli/src/vendor/` (below), `cli/package.json`, and the README files.
 
 ### CLI usage
 
@@ -789,7 +797,7 @@ answers it with Reload their version / Overwrite with mine / Keep editing.
 ### The CLI vendors two modules from app-with-ai-tanstack
 
 `language/cli/src/vendor/` holds copies of that repository's
-`packages/web/src/lib/{jdm-converter,mermaid-flowchart-parser}.ts`, so a `%%rule`
+`packages/web/src/lib/jdm-converter.ts` and `packages/editors/src/lib/mermaid-flowchart-parser.ts` (the parser moved from `packages/web` when the editors became their own package), so a `%%rule`
 flow compiles to the same JDM graph on both sides. They used to be imported
 across the repository boundary as `../../../../packages/web/...`, which resolves
 nowhere here — this repository has no `packages/` directory at all. Because

@@ -4,7 +4,7 @@ Directives are `%%`-prefixed comment lines that carry generator meaning while
 staying invisible to Mermaid renderers.
 
 Each directive has a **status**, declared canonically in its own entry in
-`erdwithai-language.json` and repeated in the heading below:
+`appwithai-language.json` and repeated in the heading below:
 
 | Status | Meaning |
 |--------|---------|
@@ -17,7 +17,7 @@ a `%%` line beginning with one of them is a directive, never a plain comment:
 
 | | | | | |
 |---|---|---|---|---|
-| `%%meta` *(compiled)* | `%%hook` *(compiled)* | `%%step` *(compiled)* | `%%action` *(compiled)* | `%%entity` *(validated)* |
+| `%%meta` *(compiled)* | `%%hook` *(compiled)* | `%%step` *(compiled)* | `%%action` *(compiled)* | `%%entity` *(compiled)* |
 | `%%field` *(compiled)* | `%%enum` *(compiled)* | `%%category` *(compiled)* | `%%index` *(compiled)* | `%%rule` *(validated)* |
 | `%%guard` *(compiled)* | `%%loop` *(compiled)* | `%%rbac` *(compiled)* | `%%trigger` *(validated)* | `%%workflow` *(compiled)* |
 
@@ -35,7 +35,7 @@ a `%%` line beginning with one of them is a directive, never a plain comment:
 | `kind` | `erd` \| `rules` \| `workflow` (classifies the following diagram) |
 | `version` | Semantic version of the model |
 | `entity` | Default entity binding for the section |
-| `stack` | Target stack hint (`enterprise-reporting` \| `node-rest`) |
+| `stack` | Target stack hint (`tanstack-start-nestjs` \| `openui5-odatav4`) |
 
 ```
 %%meta name: CRM Core
@@ -96,7 +96,7 @@ step created.
 Per-type required properties and the row-targeting rules are in
 [`03-workflows.md`](03-workflows.md#3-saga-workflows--multi-step-processes) and
 declared canonically under `workflowConstructs.stepNodes` in
-`erdwithai-language.json`.
+`appwithai-language.json`.
 
 ## `%%action` — declare a rule's side effect *(compiled)*
 
@@ -146,7 +146,7 @@ rule evaluate to nothing.
 `when` decides, and its `trigger-workflow` action names the workflow by the name
 its `%%workflow` directive gave it.
 
-## `%%entity` — entity-level metadata *(validated)*
+## `%%entity` — entity-level metadata *(compiled: `help:`/`description:` and `parent:`)*
 
 ```
 %%entity <Name> <key>: <value>
@@ -154,16 +154,85 @@ its `%%workflow` directive gave it.
 
 | Key | Meaning |
 |-----|---------|
-| `prefix` | `bus` \| `sys` table prefix |
-| `audited` | `true` \| `false` — emit audit trail |
-| `softDelete` | `true` \| `false` — use `deleted_at` |
-| `label` | UI display label |
-| `icon` | UI icon name |
+| `prefix` | `bus` \| `sys` table prefix *(validated)* |
+| `audited` | `true` \| `false` — emit audit trail *(validated)* |
+| `softDelete` | `true` \| `false` — use `deleted_at` *(validated)* |
+| `label` | UI display label *(validated)* |
+| `icon` | UI icon name *(validated)* |
+| `help` | Human-readable description — stored in `sys_table.description` and used as the opening paragraph of that entity's section in `manual.html`. Required on every entity, and it has to be domain knowledge rather than the name again — see below *(compiled)* |
+| `parent` | This entity is a **line item** of the one named — see below *(compiled)* |
 
 ```
 %%entity Order audited: true
 %%entity Account prefix: bus
+%%entity Lead help: A prospective customer contact who has shown interest but has not yet been qualified by a sales representative.
 ```
+
+The `help:` value runs to end-of-line. It is the only prose an author controls for an entity; every other part of that section in the manual (fields, relationships, lifecycle, rules, RBAC) is derived automatically from the model structure. An entity with no `help:` gets a placeholder sentence in the manual and nothing in the form — write one for every entity.
+
+### `parent:` — a line item, and where the dictionary puts it
+
+```
+%%entity InvoiceLine parent: Invoice
+```
+
+Some entities have no life away from their owner: an invoice line, an order
+line, a prescription item. **The ERD cannot say so.** `InvoiceLine.invoice_id`
+and `Invoice.patient_id` are both a foreign key with a relationship behind it,
+and nothing in Mermaid distinguishes a line that means nothing without its
+invoice from a patient who means a great deal without one. This directive is the
+only place a model can say which it is.
+
+Decide it with three questions, in this order:
+
+1. Would a list of these records, *away from their owner*, be useful to anyone?
+   A screen of every invoice line ever written is not a screen anyone opens.
+   If no — it is a child.
+2. Does the row's identity depend on the owner? "Line 1 of invoice 7", not
+   "line 1". If yes — it is a child.
+3. Would deleting the owner make the row meaningless? If yes — it is a child.
+
+A reference is the opposite on all three. Most foreign keys are references.
+
+| | Parent | Child |
+|---|---|---|
+| `sys_window` | its own | **none** |
+| Dashboard | a card | **no card — not navigable** |
+| `sys_tab` | `tab_level: 0` | `tab_level: 1`, in the *parent's* window |
+| Reached by | opening the window | opening a parent record |
+
+The tab links on the child's own foreign key back to the parent — the one
+already in the ERD. It is marked `sys_column.is_parent` and stored as
+`sys_tab.link_column_id`. Do not declare a second column for it, and do not drop
+the relationship line: the directive names the parent, the ERD still draws the
+edge.
+
+**Leave a child out of `%%category`.** A category is the dashboard's grouping
+and a child has no card, so naming one there asks for a card the dictionary will
+not create (`EML150`).
+
+A child is still a real table with real rules, access control and a form. Only
+its *placement* changes.
+
+Four codes police it:
+
+| Code | Severity | Fires when |
+|---|---|---|
+| `EML147` | error | the parent is not declared, or an entity names itself |
+| `EML148` | error | the child has no foreign key back — nothing for the tab to link on |
+| `EML149` | info | an entity is *shaped* like a line item and declares no `parent:` |
+| `EML150` | warning | a declared child is named in a `%%category` |
+
+`EML149` is an `info` and never an error, because the three questions above are
+about the business and not about the document — the checker can only name the
+candidate and the column a tab would link on. It fires on two shapes, both of
+which also require the foreign key: an entity whose name *begins* with a
+declared entity's name (`InvoiceLine`/`Invoice`, `TeamMember`/`Team`), and an
+entity whose name *ends* in a line-item noun — `Line`, `LineItem`, `Item`,
+`Detail`, `Entry`, `Row` — with a foreign key resolving to a declared entity
+(`RecommendationItem` under `InvestmentRecommendation`). Answer it either way:
+declare the parent, or leave the entity alone because it is a thing in its own
+right.
 
 ## `%%field` — extended field metadata *(compiled: the `enum:` key only)*
 
@@ -184,7 +253,90 @@ its `%%workflow` directive gave it.
 %%field Order.status enum: OrderStatus
 %%field Product.price min: 0
 %%field User.bio ui: textarea
+%%field Order.placed_at help: When the customer committed, not when we shipped.
 ```
+
+`enum:` and `help:` are the two keys a compiler reads; the rest are validated
+only. `help:` has **two** consumers: `sys_column.description`, which the
+generated form prints as hint text beneath the control, and `manual.html`, where
+it fills the "Purpose" column of the field table. A field with no `help:` shows a
+dash in the manual and no hint in the form. Write help on every field, not only
+the ambiguous ones — the manual has no other way to explain what a field is for.
+
+### The manual and what comes from help text vs. the model
+
+The generated `manual.html` is built entirely from the `ParsedModel` —
+`packages/generator/src/manual/index.ts`, zero runtime dependencies. Each
+entity section has five subsections:
+
+| Subsection | Source | Needs `help:`? |
+|---|---|---|
+| Opening paragraph | `%%entity <Name> help:` | Yes — blank if omitted |
+| **Fields** — name, control type, constraints, enumerated values, purpose | Model attributes; purpose from `%%field <E>.<f> help:` | Yes for "Purpose" column |
+| **Relationships** — what this entity links to and from | `erDiagram` FK declarations | No — auto-derived |
+| **Lifecycle** — state machine table (From / To / Event) | `%%workflow … kind: state` transitions | No — auto-derived |
+| **Rules and automation** — decision rules, sagas, hooks | `%%rule`, `%%workflow kind: saga`, `%%hook` | No — auto-derived |
+| **Access** — which roles may read / create / update / delete | `%%rbac` directives | No — auto-derived |
+
+The global sections (all rules, all processes, how the application was built) are
+also entirely automatic. **The model author's only lever is `%%entity help:` and
+`%%field help:`** — everything else the manual says about the application is
+derived from the model's structure.
+
+### Help is not optional, and it must be domain knowledge
+
+Three codes police it, all warnings:
+
+| Code | Fires when |
+|---|---|
+| `EML152` | an entity carries no `%%entity … help:` at all |
+| `EML153` | an entity has columns with no `%%field … help:` — reported once, naming them |
+| `EML151` | help that restates its own subject rather than describing it |
+
+`EML151` is the one worth dwelling on, because coverage can be complete and the
+help still worthless. A published model once carried 642 field descriptions of
+which 699 lines in total were of this kind:
+
+```
+Bad:   %%field HouseholdMember.household_id help: Household id for HouseholdMember.
+Good:  %%field HouseholdMember.household_id help: The family this membership is in. Listed inside the household's own screen — a membership away from its household is not something anybody looks up.
+
+Bad:   %%entity Address help: Address is a business record in the wealth-management platform.
+Good:  %%entity Address help: A postal address belonging to a party, kept as its own record because a party has several — registered, correspondence, often an overseas one — and because a change of address is a KYC event that has to be evidenced rather than typed over the old one.
+```
+
+The first of each pair passes a coverage check and tells the reader nothing they
+could not already see. **Help is where the business lands in the model**, and it
+is compiled, so the difference between the two reaches every form, every
+dictionary row and every page of the manual.
+
+The three shapes `EML151` reports are `Unique identifier for X`, the column name
+in prose (`Status for Client`), and a template sentence (`X is a business record
+in …`). It is deliberately narrow: real help that happens to be short — *The day
+this offer expires.* — is not a restatement and does not fire.
+
+**The primary key needs no help** and `EML153` does not ask for any: it is a
+generated uuid, read-only on every form, and the only sentence anybody could
+write about it restates its name. Writing one anyway is what `EML151` reports.
+
+### Authoring guidance for `%%field help:`
+
+Good help text answers: *what business purpose does this field serve, and what
+value is expected here?*
+
+- One or two sentences. Avoid restating the field name.
+- Name the business decision or event the field records:
+  `%%field Contract.signed_at help: The date and time the counterparty returned a signed copy. Left blank until signature is confirmed.`
+- Describe the domain constraint, not the database constraint:
+  `%%field Invoice.due_date help: Payment must be received by this date or a late-fee workflow starts automatically.`
+- For enum fields, explain what each value means:
+  `%%field Lead.status help: new — just entered; contacted — first outreach made; qualified — sales accepted; lost — no longer pursuing.`
+- For FK fields, explain the relationship in business terms:
+  `%%field Order.account_id help: The company this order belongs to. Must match an approved account before shipping.`
+
+A field whose purpose is truly self-evident (`%%field User.email`) still benefits
+from a sentence when there are business rules attached to it — the manual is the
+only place those rules are explained in plain language.
 
 ## `%%enum` — named enumeration *(compiled)*
 
@@ -217,9 +369,83 @@ may declare it.
 A model that declares no categories gets a single `General` default holding
 every entity, so the directive is optional.
 
+**A line item does not belong in one.** `%%entity <Child> parent: <Parent>`
+takes the child's dashboard card away, so listing it in a category asks for a
+card that will never be created. Reported as `EML150`.
+
+**`name:` is required, and there is no shorthand.** `%%category Sources:
+DataSource, SchemaEntity` reads perfectly well and declares nothing:
+`category.parser.ts` requires a `name:` key and skips the line without one, so
+the grouping is lost and its entities fall into the default `General` category.
+The model still checks clean — the directive is a comment Mermaid ignores and a
+directive the generator ignores too — which is why `EML154` reports it.
+
 ```
 %%category name: Compound Registry; description: Structures and aliases; icon: FlaskConical; color: #6366f1; entities: Compound, CompoundAlias
 %%category name: People and Teams; default: true; entities: User, Team
+```
+
+## `%%section` — lay a form out in sections of two-column rows *(compiled)*
+
+```
+%%section entity: <Entity>; name: <Label>; help: <text>; rows: <column>, <column> | <column> | …; collapsed: true
+```
+
+A column says what is stored; a field says it is on the screen; a section says
+**where, and beside what**. Each `%%section` line is one headed section of one
+entity's form:
+
+| Key | Required | Compiled to |
+|---|---|---|
+| `entity` | yes | the entity's tab |
+| `name` | yes | `sys_field_group.name` — the section heading |
+| `help` | completeness (`EML177`) | `sys_field_group.description` — the sentence under the heading |
+| `rows` | yes | each field's `sys_field_group_id`, `seq_no`, `is_same_line`, `x_position`, `y_position`, `column_span` |
+| `collapsed` | no | `sys_field_group.is_collapsed_by_default` |
+
+`rows` separates rows with `|` and the columns of a row with `,`. **A row holds
+one or two columns.** Two sit side by side; one spans the full width — the place
+for a `text` column, an address, or a reference whose label is long. Sections
+render in the order they are declared and fields in row order; repeating a
+section's `entity` and `name` continues it on the next line. `help` may contain
+`;`; no other value may.
+
+**It is mandatory.** Every entity declares its sections, and every column but
+the primary key is placed in exactly one row. An entity without sections is
+generated as one flat, unheaded list in declared order (`EML170`); a column no
+row names is put in a collapsed `Other` section at the end (`EML172`, which the
+fixer repairs by appending it to the last section — a repair, not a design).
+
+How to lay a form out:
+
+- **Pair what is filled in together** — `first_name, last_name`; `start_date,
+  end_date`; `quantity, unit_price`; a reference beside the status it moves
+  through.
+- **Name a section for what the person is doing**, not the kind of column:
+  *Identity, Contact, Terms, Delivery* — never *References, Dates, Numbers*.
+- **Open with what identifies the record** — the columns its display value is
+  built from, and the one or two someone checks first.
+- **Two to six rows a section.** Eight columns is two or three sections.
+- **Last, and `collapsed: true`:** what is rarely touched — internal notes,
+  integration references, administrator-only figures.
+- **Line items too.** A `parent:` entity's sections are what its own form shows
+  when a row is opened from the parent's tab.
+
+| Code | Severity | Meaning |
+|---|---|---|
+| `EML170` | warning · completeness | the entity declares no `%%section` |
+| `EML171` | error | a `%%section` without `entity:`, `name:` or `rows:` |
+| `EML172` | warning · completeness · auto-fix | columns placed in no row |
+| `EML173` | error | the entity is not declared |
+| `EML174` | error · auto-fix | a row with more than two columns |
+| `EML175` | warning · auto-fix | a column placed twice |
+| `EML176` | error | a row names a column the entity lacks, or its primary key |
+| `EML177` | warning · completeness | a section with no `help:`, or help that restates its name |
+
+```
+%%section entity: Order; name: Order; help: Who placed the order, when, and where it stands.; rows: order_number, order_date | customer_id, status
+%%section entity: Order; name: Delivery; help: Where the goods go and how they travel there.; rows: shipping_address | carrier, tracking_number
+%%section entity: Order; name: Notes; help: Anything the next person handling this order should know.; rows: notes; collapsed: true
 ```
 
 ## `%%index` — database index *(compiled)*
@@ -347,6 +573,53 @@ incidentally restrict a different event that happens to land on `approved`.
 An event written with spaces or dashes in the diagram (`close won`) is named in
 one token in the directive (`close_won`).
 
+### `read` decides which functional role an entity belongs to
+
+Every other operation only refuses a write. `read` is the one that changes what a
+role *sees*: an entity a role may not read is absent from that role's navigation
+entirely — no menu entry, no dashboard card, no lookup — because a menu full of
+entries that answer `403` is a worse application than a shorter one.
+
+That makes one `read` directive per entity the way a model says who an entity
+belongs to:
+
+```
+%%rbac role:sales_rep|sales_manager|support_agent on Account.read
+%%rbac role:sales_rep|sales_manager on Opportunity.read
+%%rbac role:support_agent|support_manager on SupportCase.read
+%%rbac role:marketing_manager on Campaign.read
+```
+
+A model is expected to name **every** entity on at least one such directive, so
+every entity belongs to somebody. Declaring none leaves every entity visible to
+every signed-in caller, which is what every model did before this rule existed —
+the fallback, not the target.
+
+Three things follow, and each has caught a model out:
+
+- **A role that may act on an entity must also be able to read it.** A rule
+  letting `sales_manager` run `Opportunity.close_won` is useless if the
+  `Opportunity.read` line does not name `sales_manager`.
+- **Overlap is normal and is one line.** `Account` belongs to sales, marketing
+  and support in most businesses; name all three. Two directives on one target
+  merge, so either spelling works.
+- **Do not reach for `.*` to express ownership.** It restricts creating,
+  updating and deleting to the same list, and it *merges with* rather than
+  overrides the narrower `update` rules elsewhere in the document — widening
+  them.
+
+### One account per role, seeded
+
+Every role a directive names is created, and one account is seeded holding it,
+beside the administrator who bypasses everything and a role-less `User`.
+
+This is not a convenience. The administrator is exempt from every rule the model
+wrote, so an application whose only account is the administrator is one whose
+access control cannot be looked at. Both stacks derive the list from
+`packages/generator/src/rbac/roles.ts`, and both sign-in screens print it with
+the number of entities each role can see — `Support Agent · 5 of 17` is the
+invitation to check.
+
 ### What it compiles to
 
 | | |
@@ -354,19 +627,24 @@ one token in the directive (`close_won`).
 | CRUD rules | `sys_operation_access` (table, operation, role) |
 | Transition rules | `sys_transition_access` (table, transition, status field, from, to, role) |
 | Enforcement | `EntityAccessGuard`, applied to the generated `/bus` CRUD routes |
-| Roles | any role a directive names is created in `sys_role` if absent |
+| Roles | every role a directive names is created in `sys_role`, with one account holding it |
+| `read` rules | additionally narrow the dictionary window scope and the entity navigation |
 
 Rules carry `entity_type = 'D'` (declared by the model) and are replaced on every
 regeneration. Rules an administrator adds in the running application are marked
 `'U'` and survive — the same ownership split the workflow definitions use.
 
-> **These rules deliberately do not write `sys_access`.** That is a *grant* table
-> feeding `sys_refresh_dictionary_scope()`, which recomputes `allowed_roles` on
-> every dictionary table: a table with no rows there is visible to all roles, and
-> the first row added narrows it to that role alone. Seeding one from
+> **A rule about anything other than `read` deliberately does not write
+> `sys_access`.** That is a *grant* table feeding
+> `sys_refresh_dictionary_scope()`, which recomputes `allowed_roles` on every
+> dictionary table: a table with no rows there is visible to all roles, and the
+> first row added narrows it to that role alone. Seeding one from
 > `%%rbac role:admin on Order.delete` would hide the Order window from everyone
 > but admin — a restriction on deleting quietly becoming a restriction on
-> looking. The two concerns keep two tables.
+> looking.
+>
+> `read` is the one operation where the two coincide, and it is the exception on
+> purpose: a role that may not read an entity has no use for a window onto it.
 
 > Spelled `%%guard` before that keyword was needed unambiguously for automation
 > conditions. That sense had no shipped parser and no stored data, so it is the

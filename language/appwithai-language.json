@@ -1,14 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://erdwithai.dev/language/erdwithai-language.json",
+  "$id": "https://appwithai.dev/language/appwithai-language.json",
   "language": {
-    "id": "erdwithai-eml",
-    "name": "ERDwithAI Modeling Language",
+    "id": "appwithai-eml",
+    "name": "APPWITHAI Modeling Language",
     "abbreviation": "EML",
     "version": "1.2.0",
     "basedOn": "mermaid",
     "mermaidCompatibility": "All EML documents are valid, renderable Mermaid. EML is a semantic superset that assigns generator meaning to standard Mermaid constructs (erDiagram, flowchart, stateDiagram-v2) and to `%%`-prefixed directive comments.",
-    "description": "A single, standalone, Mermaid-based language for describing an application's Entity Relationship Diagram (ERD), its business rules, and its business workflows in one place. EML is the source language read by the Enterprise Reporting EML CLI to generate TanStack Start + Kysely + MariaDB application code (enterprise-reporting stack).",
+    "description": "A single, standalone, Mermaid-based language for describing an application's Entity Relationship Diagram (ERD), its business rules, and its business workflows in one place. EML is the source language read by the APPWITHAI generator to produce full-stack applications (TanStack Start + NestJS, or OpenUI5 + OData V4), and by the enterprise-reporting target to produce entities for the enterprise_reporting_tanstack analytics platform. See generatorContract.targets: the targets differ in what they write, never in what they understand.",
     "fileExtensions": [".eml.mmd", ".erd.mmd", ".flow.mmd", ".rules.mmd", ".mmd"],
     "encoding": "utf-8",
     "caseSensitivity": {
@@ -255,12 +255,12 @@
     "description": "How an FK column name resolves to the table it points at. The generator derives the target from the column name alone — there is no explicit target syntax on the attribute — so the name has to carry the reference.",
     "suffix": "_id",
     "resolution": [
-      "1. A person-role name (see personRoleColumns) resolves to the user entity.",
+      "1. A person-role name (see personRoleColumns) resolves to the model's person entity (User if it exists, then Staff, then Employee).",
       "2. Otherwise <entity>_id resolves to bus_<entity>.",
       "3. A column that resolves to nothing is stored as a plain string: no lookup, no display name, the raw id renders in grids and forms."
     ],
     "personRoleColumns": {
-      "description": "Columns naming a person by the role they played rather than by entity. All resolve to the model's user entity (bus_user).",
+      "description": "Columns naming a person by the role they played rather than by entity. All resolve to the model's person entity (User > Staff > Employee, whichever exists first).",
       "suffixes": ["_by", "_by_id"],
       "names": [
         "assigned_to",
@@ -274,13 +274,13 @@
         "user_id"
       ],
       "examples": [
-        "reported_by_id -> bus_user",
-        "registered_by_id -> bus_user",
-        "pi_id -> bus_user (a principal investigator is a user, not a bus_pi table)"
+        "reported_by_id -> bus_user (or bus_staff when the model has no User entity)",
+        "registered_by_id -> bus_user (or bus_staff / bus_employee)",
+        "pi_id -> bus_user (a principal investigator is a person, not a bus_pi table)"
       ]
     },
     "checkerCodes": {
-      "EML114": "FK column does not end in _id. Auto-fixable: the fixer appends the suffix, so `reported_by FK` becomes `reported_by_id FK` and starts resolving to bus_user.",
+      "EML114": "FK column does not end in _id. Auto-fixable: the fixer appends the suffix, so `reported_by FK` becomes `reported_by_id FK` and starts resolving to the person entity.",
       "EML119": "A column named like a reference (_id/_by, resolving to a declared entity) that carries no FK modifier. Both conditions are required for TABLE_DIRECT, and a column that fails either is recorded as a plain String."
     }
   },
@@ -387,17 +387,149 @@
       "manual": "The generated manual carries a section, When two people change the same record, naming the three choices."
     },
     "alsoDerived": [
-      "Each entity becomes a sys_table with a window and a tab; attributes become fields in declared order (seqNo = (index + 1) * 10).",
+      "Each entity becomes a sys_table with a window and a tab; attributes become fields in declared order (seqNo = (index + 1) * 10), unless the entity declares %%section - then the fields follow the sections and their rows. See formLayout.",
       "%%index becomes real indexes; a unique attribute or a `name` column is indexed automatically (mergeIndexes).",
       "%%category becomes the dashboard grouping; a model declaring none gets a single General category holding every entity.",
       "%%field <Entity>.<column> help: and %%entity <Name> help: become sys_column.description and sys_table.description - the help a reader sees under the field and beside the table. %%entity description: is the same key under its other name.",
-      "The remaining %%entity keys (label, icon, prefix, softDelete, audited) are validated but not yet compiled."
+      "%%entity <Child> parent: <Parent> makes the child a line item: no window and no dashboard card, a tab inside the parent's window instead. See masterDetail.",
+      "The remaining %%entity keys (label, prefix, softDelete, audited) are validated but not yet compiled. `icon` is not among them any more: it is compiled to sys_table.icon, which the entity's dashboard card, its window heading and the navigation all draw. That is the same column Application Dictionary -> Table and Column writes, where an administrator may override the model's choice or upload an image instead - so the model sets the default and the dictionary keeps the last word, and the two never disagree about where an icon lives. See directives.reserved %%entity.iconNaming."
     ],
+    "helpText": {
+      "description": "The only explanation a generated application has. `%%entity <Name> help:` becomes sys_table.description and opens that entity's section of manual.html; `%%field <Entity>.<column> help:` becomes sys_column.description, the hint under the control, and the column's row in the manual. There is no second source \u2014 no hand-written tooltip, no README beside the form, no designer to ask \u2014 so a model that skips it produces an application whose manual is a table of dashes.",
+      "required": "On every entity and every column, without exception, including the ones that feel self-evident. The primary key is the one thing that needs none: it is a generated uuid, read-only on every form, and the only sentence anyone could write about it restates its name.",
+      "mustBeDomainKnowledge": "Help is where the *business* lands in the model, not where the schema is paraphrased. `Household id for HouseholdMember.` is the column name in a sentence and leaves the reader exactly where they started; `The family this membership is in \u2014 listed inside the household's own screen, since a membership away from its household is not something anybody looks up.` is what the field is for. The distinction is not style: help is compiled, so the difference between the two reaches every form, every dictionary row and every page of the manual.",
+      "whatToSay": [
+        "An entity: what this record is for in the business, when one comes into existence, what distinguishes it from the entities it sounds like, and what it must not be confused with.",
+        "A column: why the value matters, what is expected in it, what reads it downstream, and what goes wrong when it is wrong.",
+        "A reference column: what the reference is *for* \u2014 `the ward this bed stands in`, not `the ward id`.",
+        "An enum-bound column: what each value means to the business, because the dictionary lists the values and nothing else says what choosing one does.",
+        "A lifecycle column: which moves are possible from which state, since the state machine enforces a topology the form cannot show."
+      ],
+      "whenToWriteIt": "While the model is being written, and nowhere else. The moment a model is authored is the only moment anybody knows the answers, and no later pass adds them \u2014 which is why this is the most-skipped part of a model and the most expensive to skip.",
+      "checkerCodes": {
+        "EML151": "warning \u2014 help that restates its own subject: `Unique identifier for X`, the column name in prose (`Status for Client`), or a template sentence (`Address is a business record in the wealth-management platform`). Deliberately narrow: real help that happens to be short is not a restatement and does not fire.",
+        "EML152": "warning \u2014 an entity with no `%%entity ... help:` at all.",
+        "EML153": "warning \u2014 the columns of one entity with no `%%field ... help:`, reported once per entity and naming them. One diagnostic per column would bury every other finding on a model that skipped help entirely, which is the common case."
+      }
+    },
+    "completeness": {
+      "description": "Every Application Dictionary value is mandatory, in the model itself. The generated application has no screen, label, lookup, dropdown or explanation the model does not declare, and nothing after authoring adds one \u2014 so a value the model leaves out is a gap in every application generated from it.",
+      "codes": {
+        "EML119": "the FK modifier on a reference column \u2014 without it the lookup is lost",
+        "EML146": "the %%field ... enum: binding on a status, state or stage column \u2014 without it the dropdown is lost",
+        "EML151": "help that describes its subject rather than restating its name",
+        "EML152": "%%entity <Name> help: on an entity",
+        "EML153": "%%field <Entity>.<column> help: on every column but the primary key",
+        "EML154": "name: on a %%category \u2014 without it the grouping is dropped",
+        "EML170": "%%section on every entity \u2014 without it the form is one flat, unheaded column of fields",
+        "EML172": "every column but the primary key placed in a %%section row \u2014 an unplaced column falls into a trailing Other section",
+        "EML177": "help: on every %%section that says what the section is for \u2014 it is the sentence under the heading"
+      },
+      "required": "A delivered model carries none of these nine. They are warnings by severity and gaps by consequence: audit-model.mjs fails a model carrying any of them, and formatReport's verdict names them apart from the advisory warnings (DICTIONARY_COMPLETENESS in language/browser/checker.entry.ts).",
+      "planFirst": "Decide every value before writing the document \u2014 per entity its help, category and parent; per column its type, modifiers, FK target, enum binding and help; per cross-entity step the row it aims at (targetSource or targetField, else EML265). A value improvised while typing the ERD is the one that comes out as a restatement.",
+      "reviewUntilClean": "A clean checker run starts the review rather than ending it: re-read the file against the plan, confirm none of the nine codes and a clean audit, read every help line as the person on the generated screen would, and after any fix re-run the checker and the audit from zero. The review ends when a full pass finds nothing to change, not when a cycle count runs out."
+    },
+    "formLayout": {
+      "description": "How a record's form is laid out: headed sections, each of rows of one or two fields. It is the third layer of the dictionary - a column says what is stored, a field says that it is on the screen, and a section says where and beside what. Declared by `%%section`, compiled to one sys_field_group per section (sys_field_group.columns = 2, description = the section's help) and to each field's sys_field_group_id, seq_no, is_same_line, x_position (1 or 2), y_position (the row) and column_span (2 for a row of one). Both stacks draw it: the NestJS form as a two-column grid per group, the browser form the same way.",
+      "directive": "%%section entity: <Entity>; name: <Label>; help: <text>; rows: <column>, <column> | <column> | ...; collapsed: true",
+      "mandatory": "Every entity declares its sections, and every column but the primary key sits in exactly one row of one of them. A form is the screen people use all day; the model is the only place its layout is decided, and an entity without sections is generated as one flat, unheaded list in declared order - correct, and nothing anyone designed.",
+      "rows": [
+        "Two columns per row is the norm. Pair columns a person fills or reads together: first_name beside last_name, start_date beside end_date, quantity beside unit_price, a reference beside the status it moves through.",
+        "A row of one spans the full width. Use it for text and memo columns (reference 14), for an address, and for a reference whose label is long - never to avoid deciding what pairs with what.",
+        "More than two columns in a row is an error (EML174): the form is a two-column grid, and a third column has nowhere to go."
+      ],
+      "sections": [
+        "Name a section for what the person is doing in it - Identity, Contact, Terms, Delivery, Clinical findings - not for the kind of column it holds. `References`, `Dates` and `Numbers` are a schema, not a form.",
+        "Open with the section that identifies the record: its name or number and the one or two values someone checks first. The display value's columns belong there.",
+        "Keep a section to the fields that are read together - roughly two to six rows. An entity with eight columns has two or three sections, not one; an entity with three columns may have one.",
+        "Put what is rarely touched last, and mark it `collapsed: true`: internal notes, integration references, figures only an administrator reads.",
+        "A line item (`%%entity <Child> parent:`) has sections too: they are what its own form shows when a row is opened from the parent's tab."
+      ],
+      "help": "`help:` on a section is compiled to sys_field_group.description and printed under the heading. Say what the section is for and what has to be true before it is complete - `What was agreed with the supplier: the price, the terms and the date it stops applying.` - not `Terms fields.`. It is part of the help contract (helpText) and held to it the same way: EML177 reports a section with none, or one that restates its name.",
+      "unplaced": "A column of a sectioned entity that no row names is not lost: it is generated into a trailing collapsed `Other` section, and EML172 reports it. The fixer places it for you by appending rows of two to the entity's last section, which is a repair and not a design - move it to where it belongs.",
+      "entitiesWithoutSections": "An entity with no %%section is generated exactly as it was before the directive existed: one tab, every field in declared order, no headings. It is legal, it is what an older model produces, and it is EML170.",
+      "checkerCodes": {
+        "EML170": "warning — an entity declares no %%section. Dictionary completeness.",
+        "EML171": "error — a %%section without one of its required keys: entity, name or rows.",
+        "EML172": "warning — columns of a sectioned entity placed in no row. Dictionary completeness. Auto-fixable: appended to the entity's last section, two per row.",
+        "EML173": "error — a %%section names an entity the model does not declare.",
+        "EML174": "error — a row with more than two columns. Auto-fixable: split into rows of two.",
+        "EML175": "warning — a column placed in two rows. Auto-fixable: the later placement is removed.",
+        "EML176": "error — a row names a column the entity does not declare, or its primary key, which no form shows.",
+        "EML177": "warning — a %%section with no help:, or help that restates the section's name. Dictionary completeness."
+      }
+    },
+    "masterDetail": {
+      "description": "A line item is an entity with no life away from its owner - an invoice line, an order line, a prescription item. The ERD cannot tell one from an ordinary reference, because InvoiceLine.invoice_id and Invoice.patient_id are both a foreign key with a relationship behind it. The modeller says which it is.",
+      "directive": "%%entity <Child> parent: <Parent>",
+      "effects": [
+        "The child gets no sys_window and no dashboard card: it is not somewhere the user navigates to.",
+        "The child's sys_tab is created under the parent's window at tab_level 1, sequenced after the master tab.",
+        "sys_tab.link_column_id is set to the child's own foreign key back to the parent, and that column is marked sys_column.is_parent.",
+        "Opening a parent record lists its children beneath the form, filtered to that record."
+      ],
+      "linkColumn": "The child's existing foreign key to the parent - <parent_snake>_id when present, else the first FK column whose name begins with the parent's snake_case name. Never declared twice: the relationship is already in the ERD.",
+      "identifyingAChild": [
+        "Would a list of these records, away from their owner, be useful to anyone? If not, it is a child.",
+        "Does the row's identity depend on the owner - line 1 of invoice 7, rather than line 1? If so, it is a child.",
+        "Would deleting the owner make the row meaningless? If so, it is a child.",
+        "A reference is the opposite: Invoice.patient_id points at a Patient who exists, and matters, independently."
+      ],
+      "whyItMustBeDeclared": "Nothing derives it, and the default is not an error. A model that never writes the directive produces an application in which every line item carries its own dashboard card and its own screen, and no parent record shows its own lines \u2014 an invoice whose lines cannot be read from it, beside a card listing every line ever written. EML149 exists to name the candidates, because a silent default is the one thing a checker can still be useful about.",
+      "leaveItOutOfCategory": "A %%category is the dashboard's grouping, and a child has no card, so naming a child in one asks for a card the dictionary will not create. Reported as EML150.",
+      "detection": {
+        "description": "EML149 is an info rather than an error, because whether a list of these records away from their owner is useful to anyone is a question about the business and not about the document. The checker names the candidate parent and the foreign key the tab would link on; the author answers it either way.",
+        "shapes": [
+          "The entity's name begins with a declared entity's name and it carries a foreign key to that entity \u2014 InvoiceLine/Invoice, OrderItem/Order, TeamMember/Team, FinancialPlanAssumption/FinancialPlan. The longest match wins, so a name that begins with two declared entities belongs to the longer one.",
+          "The entity's name ends in a line-item noun (Line, LineItem, Item, Detail, Entry, Row, singular or plural) and one of its foreign keys resolves to a declared entity \u2014 RecommendationItem under InvestmentRecommendation."
+        ],
+        "quietOn": "An entity that merely references another. Most foreign keys are references, and neither shape fires on one."
+      }
+    },
     "checkerCodes": {
       "EML103": "A column the generator already adds (id, version, the audit pair, the soft-delete pair), declared in the model.",
       "EML119": "A reference-shaped column with no FK modifier - the lookup is lost.",
       "EML146": "A status/state/stage column with no %%field enum binding - the dropdown is lost.",
+      "EML147": "%%entity ... parent: names an entity that is not declared, or the entity names itself.",
+      "EML148": "%%entity ... parent: is declared but the child has no foreign key back to the parent, so the detail tab has nothing to link on.",
+      "EML149": "info \u2014 an entity shaped like a line item that declares no parent:. Names the candidate parent and the column a tab would link on. Never an error: identifyingAChild's three questions are about the business, not the document.",
+      "EML150": "warning \u2014 an entity declared parent: is also named in a %%category. The category asks for a dashboard card the directive has taken away.",
+      "EML151": "warning \u2014 entity or column help that restates its own name instead of describing it. See helpText.mustBeDomainKnowledge.",
+      "EML152": "warning \u2014 an entity with no help text at all.",
+      "EML153": "warning \u2014 columns with no help text, reported once per entity.",
+      "EML154": "warning \u2014 a %%category with no `name:` key. category.parser.ts requires one and skips the line without it, so the whole grouping is silently lost and its entities fall into the default General category.",
       "EML500": "A `kind: state` workflow bound to an entity with no status/state/stage column at all - the machine has nothing to track."
+    },
+    "reportDesigns": {
+      "description": "Generated applications include a document report subsystem backed by the AnkaReport library. One default AnkaReport layout is seeded per entity into sys_report_designs at generation time. Administrators can customise any layout at Admin → Report Designs. Users get a Print button on a record's detail view (visible only when a design exists for that table), and can export the rendered report to PDF.",
+      "table": "sys_report_designs",
+      "columns": {
+        "id": "UUID primary key",
+        "table_name": "Entity table name; UNIQUE — one design per table",
+        "name": "Human-readable design name (e.g. \"Contact Default Report\")",
+        "layout": "JSONB AnkaReport ILayout object — headerSection, contentSection, footerSection"
+      },
+      "defaultLayout": {
+        "description": "Generated by packages/generator/templates/common/seeds/report-designs.ts.hbs. Fields in the layout are every non-audit, non-PK column: not id, created_at, updated_at, deleted_at, version.",
+        "structure": {
+          "headerSection": "height 56; entity displayName + \" Report\" in 20pt bold #0f4c75",
+          "contentSection": "binding: \"records\"; one label+value row per field, 24pt high with 4px gap",
+          "footerSection": "height 28; \"Generated by APPWITHAI\" in 9pt #9ca3af centered"
+        }
+      },
+      "adminRoutes": [
+        "GET /admin/reports — lists all entity tables with Designed/New badge",
+        "GET /admin/reports/:tableName — opens AnkaReport designer pre-loaded with the existing layout"
+      ],
+      "backendEndpoints": [
+        "GET /sys/report-designs — list all designs",
+        "GET /sys/report-designs/:tableName — get design by table",
+        "POST /sys/report-designs — create (admin only)",
+        "PUT /sys/report-designs/:tableName — upsert (admin only)",
+        "DELETE /sys/report-designs/:tableName — delete (admin only)"
+      ],
+      "printButton": "Appears in the record toolbar (ADToolbar hasPrintReport prop) only when a design exists for the current entity. Clicking opens ReportPrintModal which renders the report via AnkaReport.render() and offers PDF export.",
+      "authoringNote": "No EML directive controls report designs. The default layout is always seeded automatically from the entity's columns. Customisation is done through the running Admin UI, not through the model."
     }
   },
   "cardinalities": {
@@ -624,7 +756,9 @@
       "start": "[*] --> FirstState",
       "end": "LastState --> [*]",
       "transition": "StateA --> StateB : eventName",
-      "mappingHint": "States are treated as a status enum for the bound entity; transitions define the allowed status changes."
+      "mappingHint": "States are treated as a status enum for the bound entity; transitions define the allowed status changes.",
+      "enforcement": "The edges are enforced, not merely documented. Every transition a diagram draws is compiled into sys_workflow_transitions, and the generated EntityAccessGuard refuses a write that moves a record to a state with no matching edge from the state it is in — answering 403 and leaving the record where it was. This holds for every caller, the master role included: an edge the diagram never drew is not a permission an administrator lacks, it is a move that does not exist, and allowing it would put the record in a state every rule and workflow downstream was written without. Who may cross an edge that does exist is the separate question %%rbac answers, from sys_transition_access, and that one the master role does bypass. Keep the two apart: enforcing topology only where a role rule happens to cover it leaves every unguarded edge open.",
+      "readingTheEdges": "GET /api/workflows/transitions returns the stored edges, optionally narrowed by ?table= and ?from=. A screen offering a status change asks this rather than offering every state and letting the save be refused. A table with no state diagram has no rows and nothing is enforced for it."
     },
     "workflowKinds": {
       "hook": {
@@ -635,7 +769,7 @@
       },
       "state": {
         "form": "%%workflow <name> entity: <Entity> kind: state",
-        "description": "A stateDiagram-v2 whose states map to a status enum for the bound entity. Transitions define allowed status changes; %%guard directives add RBAC checks; %%trigger directives declare external event sources. Fully parsed by the shipped hook-parser.",
+        "description": "A stateDiagram-v2 whose states map to a status enum for the bound entity. Transitions define the allowed status changes and are enforced as the entity's topology — see stateForm.enforcement. %%rbac directives naming a transition event add the role check on top of that; %%trigger directives declare external event sources. Fully parsed by the shipped hook-parser.",
         "diagram": "stateDiagram-v2",
         "shipped": true
       },
@@ -654,10 +788,11 @@
       }
     },
     "stepNodes": {
-      "description": "Executable step types for a `kind: saga` workflow. A %%step directive binds a flowchart node to one of these and supplies its properties; each becomes one bpmn:serviceTask with erdwithai:property extension elements. This table is the single source of truth for the checker, the generator, the EML authoring canvas and the generated Workflow Designer.",
+      "description": "Executable step types for a `kind: saga` workflow. A %%step directive binds a flowchart node to one of these and supplies its properties; each becomes one bpmn:serviceTask with appwithai:property extension elements. This table is the single source of truth for the checker, the generator, the EML authoring canvas and the generated Workflow Designer.",
       "directive": "%%step <nodeId> <stepType> <key>: <value> ...",
       "propertyForm": "Space-separated `key: value` pairs. A value runs to the next `<key>:` token or the end of the line, so it may contain spaces. `fields` is JSON and must be the last key on the line.",
       "variables": "Steps share a context: the triggering record's columns, plus every variable a previous step published. CreateEntity publishes the new row's id under `as`; Formula publishes under `target`. A later step reads one by naming it in `source` or `targetSource`. This is what lets a workflow reach a row it created earlier.",
+      "loopMembership": "`in: <loopId>` joins a step to a %%loop declared in the same section. It is read off every step type alike, before the type is consulted at all, so it belongs to no single contract below and is deliberately absent from their `optional` lists. A reader validating step properties must treat it as known for every type — see automations.loops and the %%loop directive.",
       "types": [
         {
           "name": "UpdateEntity",
@@ -912,8 +1047,8 @@
         },
         {
           "type": "UpdateEntity",
-          "purpose": "Write a field, by default on the triggering record.",
-          "properties": ["entity", "field", "value"],
+          "purpose": "Write a field, by default on the triggering record. To write another entity, name it and say which row: `target: {{id}}` (a value an earlier step published) or `target: <fk_column>` (a column on that entity matched against the triggering record).",
+          "properties": ["entity", "target", "field", "value"],
           "example": "%%step s3 type: UpdateEntity\n%%step s3 field: status\n%%step s3 value: {{tier}}"
         },
         {
@@ -985,12 +1120,13 @@
           "language/composer.ts (section classification and round-trip)",
           "packages/generator/src/eml (section extraction via composer)"
         ],
-        "purpose": "Document/section metadata: name, kind (erd|rules|workflow), version, entity binding, description, stack.",
+        "purpose": "Document/section metadata: name, kind (erd|rules|workflow), version, entity binding, description (application summary seeded into sys_system.APP_DESCRIPTION and the generated manual), stack.",
         "examples": [
           "%%meta name: CRM Core",
           "%%meta kind: rules",
           "%%meta entity: Order",
-          "%%meta version: 1.0.0"
+          "%%meta version: 1.0.0",
+          "%%meta description: This application manages customer relationships, sales pipelines, and support tickets for mid-market B2B companies."
         ]
       },
       {
@@ -1036,12 +1172,14 @@
         "form": "%%entity <Name> <key>: <value>",
         "status": "compiled",
         "consumedBy": [
-          "packages/generator/src/parsers/mermaid.parser.ts (the help: / description: key only; the rest are validated)",
+          "packages/generator/src/parsers/mermaid.parser.ts (help:/description:, icon: and parent: are compiled; prefix:, softDelete:, label: and audited: are validated only)",
           "language/checker.ts (EML160, EML161, EML162)"
         ],
-        "purpose": "Attach entity-level metadata not expressible in the ERD block: the sentence that explains the entity to whoever opens its screen, plus table prefix (bus/sys), soft delete, label, icon, audited.",
+        "iconNaming": "`icon:` is a lucide icon name (https://lucide.dev/icons). PascalCase, kebab-case and snake_case all resolve to the same icon - LayoutGrid, layout-grid and layout_grid are one. A name lucide does not have is NOT a diagnostic (the checker does not carry lucide's catalogue) and renders a placeholder instead: `icon: flask` is the common trap, because lucide has `flask-conical` and no `flask`. Compiled to sys_table.icon, which is what the entity's dashboard card, its window heading and the navigation all draw. An administrator can override it afterwards in Table and Column, including by uploading an image - the same column holds both. In the browser (--standalone) stack the value is carried into model.json and served by /model, but that interface draws a text glyph and does not render it.",
+        "purpose": "Attach entity-level metadata not expressible in the ERD block: the sentence that explains the entity to whoever opens its screen, the icon that represents it, the parent it is a line item of, plus table prefix (bus/sys), soft delete, label, audited.",
         "examples": [
           "%%entity Account help: A company you sell to. One account holds many contacts and every deal you run with them.",
+          "%%entity Patient icon: stethoscope",
           "%%entity Order audited: true",
           "%%entity Account prefix: bus",
           "%%entity Session softDelete: false"
@@ -1075,10 +1213,28 @@
         "form": "%%category name: <Name>; code: <id>; description: <text>; icon: <LucideIcon>; color: <#hex>; seq: <n>; default: true; entities: <A>, <B>",
         "status": "compiled",
         "consumedBy": ["packages/generator/src/parsers/category.parser.ts"],
+        "dashboardScope": "A category block appears on the dashboard only when the reader may read at least one entity in it: the entity list is filtered by `%%rbac ... .read` and line items are excluded, because a child is reached through its parent. The Application Dictionary block beside the categories is the admin windows the reader is granted through sys_access, so it differs by role too.",
+        "iconNaming": "A lucide icon name (https://lucide.dev/icons). PascalCase, kebab-case and snake_case all resolve to the same icon - LayoutGrid, layout-grid and layout_grid are one. A name lucide does not have is NOT a diagnostic (the checker does not carry lucide's catalogue) and renders a placeholder instead: `icon: flask` is the common trap, because lucide has `flask-conical` and no `flask`. Compiled to sys_category.icon and drawn beside the category heading on the dashboard.",
         "purpose": "Group business entities into a named Application Dictionary category. The dashboard renders one block per category, ordered by name; the admin dictionary maintains them. Only `name` is required; the rest are `;`-separated and may appear in any order. `code` is a stable short identifier, slugified from `name` when omitted — it is the dictionary row's key, so setting it explicitly keeps that key stable across a rename. A directive may span several lines by ending each continued line with `\\`. A model that declares none gets a single \"General\" default holding every entity.",
         "examples": [
           "%%category name: Compound Registry; description: Structures and aliases; icon: FlaskConical; color: #6366f1; entities: Compound, CompoundAlias",
           "%%category name: People and Teams; default: true; entities: User, Team"
+        ]
+      },
+      {
+        "keyword": "%%section",
+        "form": "%%section entity: <Entity>; name: <Label>; help: <text>; rows: <column>, <column> | <column> | ...; collapsed: true",
+        "status": "compiled",
+        "consumedBy": [
+          "packages/generator/src/parsers/section.parser.ts -> entity.formSections",
+          "packages/generator/src/generators/dictionary.generator.ts -> sys_field_group, sys_field.sys_field_group_id / is_same_line / x_position / column_span",
+          "templates/common/seeds/sys-dictionary.ts.hbs (NestJS) and generators/wasm/model-bundle.ts (browser)"
+        ],
+        "purpose": "Lay an entity's form out as headed sections of two-column rows. Each directive is one section of one entity: `name` is its heading, `help` the sentence under the heading, and `rows` its fields, rows separated by `|` and the one or two columns of a row by `,`. A row of two puts the columns side by side; a row of one spans the full width, which is where a text or memo column, or a reference worth its whole line, belongs. Sections render in declaration order and fields in row order. Repeating a section's `entity` and `name` continues it, so a long section can be written over several lines; `help` is read from the first. `collapsed: true` closes the section until it is opened. Every column of the entity but its primary key is placed in exactly one section - see applicationDictionary.formLayout. `entity`, `name` and `rows` are required. `help` may contain semicolons; no other value may.",
+        "examples": [
+          "%%section entity: Order; name: Order; help: Who placed the order, when, and where it stands.; rows: order_number, order_date | customer_id, status",
+          "%%section entity: Order; name: Delivery; help: Where the goods go and how they travel there.; rows: shipping_address | carrier, tracking_number",
+          "%%section entity: Order; name: Notes; help: Anything the next person handling this order should know.; rows: notes; collapsed: true"
         ]
       },
       {
@@ -1124,20 +1280,26 @@
         "status": "compiled",
         "consumedBy": [
           "packages/generator/src/rbac/index.ts (compiles both forms)",
+          "packages/generator/src/rbac/roles.ts (derives the roles, one seeded account each, and per-entity visibility)",
           "seeded into sys_operation_access / sys_transition_access",
-          "enforced by the generated EntityAccessGuard on /bus CRUD"
+          "enforced by the generated EntityAccessGuard on /bus CRUD",
+          "app-and-report-with-ai-tanstack: common/build/reporting-pack.ts -> one reporting role per declared role, scoped to the tables that role may read"
         ],
-        "purpose": "Restrict a CRUD operation or a state transition to named roles. It restricts rather than grants: a target no directive mentions is open to any authenticated caller, so a model declaring no %%rbac generates what it always did. A target with one or more directives requires the union of the roles they name. A master role bypasses. Role names are matched case-insensitively, because seeded roles are title-cased (Manager) and directives are written lower-case (role:manager) - an exact match would make such a rule unsatisfiable, locking out exactly the people it was written to admit. Spelled %%guard until that keyword was needed unambiguously for automation conditions.",
+        "purpose": "Restrict a CRUD operation or a state transition to named roles. It restricts rather than grants: a target no directive mentions is open to any authenticated caller, so a model declaring no %%rbac generates what it always did. A target with one or more directives requires the union of the roles they name. A master role bypasses. That bypass is over access — who may do a thing — and not over the shape of the model: a state machine's topology is enforced for the master role too, because an edge the diagram never drew is a move that does not exist rather than a permission anyone is missing (see workflowConstructs.stateForm.enforcement). Role names are matched case-insensitively, because seeded roles are title-cased (Manager) and directives are written lower-case (role:manager) - an exact match would make such a rule unsatisfiable, locking out exactly the people it was written to admit. Spelled %%guard until that keyword was needed unambiguously for automation conditions.",
         "examples": [
           "%%rbac role:admin on Order.delete",
           "%%rbac role:sales|manager on Deal.update",
           "%%rbac role:admin on Customer.*",
-          "%%rbac role:sales_manager on Quote.approve"
+          "%%rbac role:sales_manager on Quote.approve",
+          "%%rbac role:sales_rep|sales_manager|support_agent on Account.read"
         ],
         "notes": {
           "operations": "create | read | update | delete, plus * for all four. Aliases are accepted (insert/add, view/select/list, edit/write/modify, remove/destroy).",
-          "transitions": "A name that is not a CRUD operation is resolved against the entity's stateDiagram-v2 transitions. There is no named-transition endpoint in a generated application - moving a record along an edge is a status update - so the rule is stored as the (from_state, to_state) pair it covers and the guard recognises the move by the states the write crosses. Both ends are kept because one event can sit on several edges and two events can reach the same state.",
-          "notSysAccess": "These rules deliberately do not write sys_access. That is a grant table feeding sys_refresh_dictionary_scope(), where the first row added narrows a window to one role; a restriction on deleting must not become a restriction on looking."
+          "transitions": "A name that is not a CRUD operation is resolved against the entity's stateDiagram-v2 transitions. There is no named-transition endpoint in a generated application - moving a record along an edge is a status update - so the rule is stored as the (from_state, to_state) pair it covers and the guard recognises the move by the states the write crosses. Both ends are kept because one event can sit on several edges and two events can reach the same state. This directive decides *who* may cross an edge; whether the edge exists at all is decided by the state diagram itself and enforced separately, so an edge no %%rbac names is open to any authenticated caller but an edge the diagram omits is refused to everyone.",
+          "notSysAccess": "A restriction on any operation other than read deliberately does not write sys_access. That is a grant table feeding sys_refresh_dictionary_scope(), where the first row added narrows a window to one role; a restriction on deleting must not become a restriction on looking. read is the one exception, and it is the exception on purpose - see functionalRoles.",
+          "functionalRoles": "read is the operation that decides which functional role an entity belongs to, and the only one that changes what a role sees. An entity a role may not read is absent from that role's navigation entirely - no menu entry, no dashboard card, no lookup - because a menu full of entries that answer 403 is a worse application than a shorter one. A model is expected to name every entity on at least one `%%rbac ... .read` directive, so that every entity belongs to somebody. Declaring none leaves every entity visible to every signed-in caller, which is what every model did before this rule existed.",
+          "seededAccounts": "Every role a directive names is created, and one account is seeded holding it, beside the administrator who bypasses everything and a role-less User. An application whose only account is the administrator cannot demonstrate its own access control, because the administrator is exempt from all of it. Both stacks derive the same list from rbac/roles.ts, and both sign-in screens print it with the number of entities each role can see.",
+          "reportingRoles": "Deployed beside the Enterprise Reporting platform (app-and-report-with-ai-tanstack, ./start.sh), the same directive also shapes that platform's roles: one reporting role per declared role, permitted to read exactly the bus_ tables the role's `read` rules admit. It is a mirror, not a shared system. The two products have separate databases, separate user tables and separate sign-in screens, and a role name means different things on each side: in the application it decides what a user may do to a record, in the reporting platform which tables their queries may read. The accounts differ deliberately - sales.manager@<app>.example.com against sales.manager@<app>.reports.example.com - so neither is mistaken for the other, and the front door at / lists both pairs. Only `read` rules narrow a reporting role; create, update and delete restrictions mean nothing to a reader who cannot write through that product at all."
         }
       },
       {
@@ -1164,6 +1326,31 @@
           "%%workflow OrderFulfillment entity: Order kind: state",
           "%%workflow name: Escalate critical deviations"
         ]
+      },
+      {
+        "keyword": "%%report",
+        "form": "%%report <name> title: <Title> [entity: <Entity>] [chart: bar|line|pie|area x: <col> y: <col>] [help: <why it is asked>] sql: <query>",
+        "status": "compiled",
+        "consumedBy": [
+          "packages/generator/src/reports/index.ts -> sys_report (NestJS) and model.json reports (browser)",
+          "common/language/cli/src/parser.ts -> model.reports",
+          "common/build/reporting-pack.ts, over the generator's buildReportingPack (authored reports, listed ahead of the derived ones)",
+          "language/checker.ts (shape only: EML290-EML296)"
+        ],
+        "purpose": "Declare a question the application's users actually ask, as the SQL that answers it. The reporting pack already derives a baseline from structure alone - a register per entity, a breakdown per %%enum-bound column, a lifecycle per state machine, children per oneToMany - and that baseline describes the shape of the data and nothing about the business running on it. Nothing in an ERD says that a dispatcher's first question every morning is which jobs have no engineer assigned. This directive is where that knowledge is written down, so it travels with the model rather than being rebuilt by hand in the reporting tool after every regeneration.",
+        "examples": [
+          "%%report unassigned-jobs title: Jobs with no engineer help: The dispatcher's first question every morning. sql: SELECT reference, scheduled_for FROM bus_job WHERE engineer_id IS NULL AND status = 'scheduled' AND deleted_at IS NULL ORDER BY scheduled_for",
+          "%%report pipeline-by-owner title: Pipeline by owner entity: Opportunity chart: bar x: owner y: total help: What each rep is carrying, for the weekly review. sql: SELECT u.first_name AS owner, SUM(o.amount) AS total FROM bus_opportunity o JOIN bus_user u ON u.id = o.owner_id WHERE o.deleted_at IS NULL GROUP BY 1 ORDER BY total DESC"
+        ],
+        "notes": {
+          "sqlIsLast": "`sql:` takes the rest of the line, because a query contains spaces and colons and would otherwise be shredded by the key scan. Every other key is read from the head, ahead of it.",
+          "readOnly": "A report may only read, and this is refused three times: by the checker at authoring time (EML293), by the compiler before the query can reach a seed file or model.json, and by each runtime before it executes - because sys_report is an ordinary table and model.json an ordinary file, so neither reader trusts what it is handed. A single trailing semicolon is allowed; a second statement behind it is not. Anything that writes belongs in a rule or a hook.",
+          "chartNeedsAxes": "`chart:` without both `x:` and `y:` is an error (EML294) rather than a silent fall back to a table: a chart that cannot say what it plots renders empty, which reads as no data rather than as a missing declaration.",
+          "namesAreKeys": "The name is the pack key, so a duplicate silently replaces the earlier report. Declared twice is an error (EML292).",
+          "againstWhichSchema": "The query runs against the *generated application's* database, so it names `bus_` tables. It is not checked against a live schema at author time - the checker has no database - but `common/scripts/check-reporting-pack.ts` executes every query in the pack against a real generated schema in CI.",
+          "foreignKeysAreUuid": "A foreign key and a primary key are both UUID, in both stacks, so a join is written plainly: ON c.account_id = p.id. Do not cast. `::text` was needed while the browser stack typed a foreign key as VARCHAR; it does not any more, and PostgreSQL has no implicit cast back, so a cast that is no longer needed is now the thing that breaks the query.",
+          "whereItIsCompiled": "Compiled twice, by two readers, and neither replaces the other. Here, packages/generator/src/reports/index.ts puts each report into the generated application itself: a sys_report row served at /sys/reports and shown under Admin > Analysis in the NestJS stack, and a model.json entry served at /api/reports and shown under Reports in the browser application. Separately, businessappwithai/app-and-report-with-ai-tanstack compiles the same directive with common/build/reporting-pack.ts into a saved query, a report definition and, where chart: is set, a chart, seeded into the Enterprise Reporting platform ahead of the derived baseline. The real platform runs beside a deployed application, under the orchestrator's docker-compose or as the report service of the deployable archive's own compose file, and the browser application previews the same pack; see generatorContract.reportingApplication."
+        }
       }
     ],
     "statusVocabulary": {
@@ -1173,7 +1360,7 @@
     }
   },
   "grammar": {
-    "notation": "EBNF-like; see language/grammar/erdwithai.ebnf for the full grammar.",
+    "notation": "EBNF-like; see language/grammar/appwithai.ebnf for the full grammar.",
     "topLevel": "document ::= ( comment | directive | erdSection | ruleSection | workflowSection | blankLine )*",
     "erdSection": "erdSection ::= 'erDiagram' NEWLINE ( entityBlock | relationship | comment )*",
     "entityBlock": "entityBlock ::= IDENT '{' NEWLINE attribute* '}' NEWLINE",
@@ -1186,16 +1373,137 @@
   },
   "generatorContract": {
     "description": "How each section feeds the generator pipeline.",
+    "repositoryLayout": "Every `packages/...` path in this file is relative to a checkout of `businessappwithai/app-with-ai-tanstack`, which is where the shipped generator lives. That is a separate repository, as is `businessappwithai/enterprise_reporting_tanstack`, the reporting and analytics platform that reads the same models. This language folder lives in a third, `businessappwithai/app-and-report-with-ai-tanstack`, which orchestrates the two: its `deps.json` pins the commit of each and `./deps.sh` checks them out beside `common/`, at exactly the paths those `packages/...` paths resolve against. One language, one checker, one set of examples; see generatorContract.targets for what each target actually compiles.",
+    "targets": {
+      "description": "The `eml` CLI's --stack values. They differ in what they write, never in what they understand: all three consume the same parsed model, so a directive that changes meaning changes it for all of them. A target that does not compile a construct still validates it, because the model is one document and the other target does compile it.",
+      "list": [
+        {
+          "id": "node-rest",
+          "default": true,
+          "emits": "A dependency-free node:http application over a JSON-file datastore. Runnable with no install.",
+          "generator": "language/cli/src/generate/app.ts",
+          "standalone": true,
+          "compiles": ["core", "rules (as GoRules JDM under rules/)"],
+          "doesNotCompile": ["workflows", "access", "help"]
+        },
+        {
+          "id": "tanstack-nestjs",
+          "emits": "The whole application: a NestJS + Fastify + Kysely backend and a TanStack Start front end, with migrations, seeds, the Application Dictionary and manual.html. Around 356 files.",
+          "generator": "language/cli/src/generate/tanstack.ts, which drives app-with-ai-tanstack/packages/generator/src/generators/orchestrator.ts",
+          "standalone": true,
+          "compiles": ["core", "rules", "workflows", "access", "help"],
+          "doesNotCompile": []
+        },
+        {
+          "id": "enterprise-reporting",
+          "emits": "TanStack Start server functions, list and detail routes, a Kysely PostgreSQL migration and a Database-interface snippet, shaped to drop into an enterprise_reporting_tanstack checkout.",
+          "generator": "language/cli/src/generate/enterprise-reporting.ts",
+          "standalone": false,
+          "standaloneNote": "It generates less on purpose. That repository already holds auth, two-layer RBAC, the encrypted data-source connection manager, the NL-query pipeline, the Trigger.dev job runner and the UI shell; a generated copy of any of them would be a fork of a moving part. The target emits only what a new entity needs, and its README names the integration steps.",
+          "compiles": [
+            "core",
+            "rules (as GoRules JDM under rules/, not wired up)",
+            "help (as field labels)"
+          ],
+          "doesNotCompile": ["workflows", "access"],
+          "accessNote": "Every generated handler calls requireAuth(), which establishes who is calling. It does not call requirePermission(), because %%rbac is not compiled here - deciding what a role may do is an explicit integration step, and a generated guess at it would be an access-control decision nobody made.",
+          "conventions": {
+            "inputValidator": "createServerFn(...).inputValidator(), never .validator(). The TanStack Start v1 Vite plugin preserves unknown method names verbatim in the client bundle, so .validator() type-checks, builds, and crashes at runtime.",
+            "dataWrapper": "A client call passes { data: input } whenever the server function declares an input validator.",
+            "pagination": "Every list applies LIMIT/OFFSET at the database. Server-side pagination is mandatory in that codebase.",
+            "dialect": "PostgreSQL DDL with double-quoted identifiers: TIMESTAMPTZ, BOOLEAN, JSONB, NUMERIC(10,2), gen_random_uuid(). The config database is Postgres only, whatever the older files under that repository's docs/ still say about MariaDB or SQLite. Postgres has no ON UPDATE CURRENT_TIMESTAMP, so updated_at is set by the update handler rather than by the column.",
+            "foreignKeys": "An attribute marked FK is emitted as UUID, matching the primary keys this target generates. Left as VARCHAR it accepts the value and then refuses the foreign-key constraint.",
+            "routePaths": "_authed is a pathless layout route: createFileRoute is keyed by the file path (/_authed/orders/$id) while a Link addresses the URL (/orders/$id). Putting _authed in the link is the mistake to not make."
+          },
+          "imports": {
+            "db": "getDb from @/lib/db/config",
+            "auth": "requireAuth from @/lib/auth/middleware",
+            "permissions": "requirePermission from @/lib/permissions/permissions (yours to add)"
+          }
+        }
+      ]
+    },
+    "reportingApplication": {
+      "description": "One model generates two applications. The second is the Enterprise Reporting platform (businessappwithai/enterprise_reporting_tanstack): its own server, database, users and sign-in, loaded with a reporting pack derived from the model. Nothing in the pack is written by hand. packages/generator/src/reporting/pack.ts (buildReportingPack) in app-with-ai-tanstack is the single derivation, and every surface that serves reports reads its output, so the surfaces cannot disagree about what reports a model has.",
+      "derivation": "packages/generator/src/reporting/pack.ts -> buildReportingPack(parsedModel, { projectName, databaseName, ... }). Pure: no filesystem, no clock, no database.",
+      "pack": {
+        "dataSource": "The generated application's database, registered as a PostgreSQL data source.",
+        "queries": "Saved SQL over the application's bus_ tables, each carrying the tables it reads.",
+        "reports": "Report definitions over those queries.",
+        "charts": "Chart definitions (bar, line, pie, area) over those queries.",
+        "dashboards": "One overview dashboard: up to four authored charts first, then one tile for each of the six most central entities.",
+        "access": "One reporting role per declared %%rbac role, plus the administrator, each with the bus_ tables it may read."
+      },
+      "derivedFrom": [
+        {
+          "declares": "an entity",
+          "yields": "a register: its display column, up to two enum columns and two numeric columns, newest first"
+        },
+        {
+          "declares": "an %%enum-bound column",
+          "yields": "a breakdown chart and report, pie at six values or fewer, bar above; at most two per entity, status/state first"
+        },
+        {
+          "declares": "created_at",
+          "yields": "volume per month over two years, as a line"
+        },
+        {
+          "declares": "a kind: state workflow over a status or state column",
+          "yields": "a lifecycle over the declared states, in the diagram's order, zeroes included"
+        },
+        {
+          "declares": "integer and decimal columns",
+          "yields": "measures: totals and averages, grouped by the entity's primary enum column"
+        },
+        {
+          "declares": "a oneToMany relationship",
+          "yields": "children per parent, ranked"
+        },
+        {
+          "declares": "%%report",
+          "yields": "the author's own query, report and (with chart:) chart, listed first and placed at the top of the dashboard; a derived item with the same name is dropped in its favour"
+        },
+        {
+          "declares": "%%rbac ... .read",
+          "yields": "the tables each reporting role may read"
+        },
+        {
+          "declares": "%%entity help: / %%field help:",
+          "yields": "the names and descriptions of every report, chart and query"
+        }
+      ],
+      "surfaces": [
+        {
+          "id": "orchestrator",
+          "where": "businessappwithai/app-and-report-with-ai-tanstack: ./start.sh, common/build/reporting-pack.ts",
+          "runs": "the real platform built from its own source, beside the deployed application, behind nginx at /report (the application at /app, both sets of accounts at /)"
+        },
+        {
+          "id": "deployable-archive",
+          "where": "the NestJS stack's reporting/ directory and the report and report-seeder services of its docker-compose.yml",
+          "runs": "the real platform, cloned at REPORT_REF and seeded once from reporting/reporting-pack.json, on port 3100"
+        },
+        {
+          "id": "browser-application",
+          "where": "--standalone: model.json carries the pack; #/report in the running application",
+          "runs": "a preview drawn in the platform's own layout and tokens, labelled as one on every screen; its Administration (users, roles, per-role table grants, data source, activity log) is real, and the screens that need the platform's servers say where the real ones are"
+        }
+      ],
+      "signIn": "Two applications, two sign-ins, never merged. The application's account for a role is <role>@<app>.example.com and the reporting account is <role>@<app>.reports.example.com; the administrator is admin@admin.com on both sides, as two different accounts in two different user tables. Neither password works on the other side. A role in the application decides what a user may do to a record; a reporting role decides which tables their queries may read. Only read rules narrow a reporting role.",
+      "verification": "The checker holds %%report to its shape (EML290-EML296) and cannot see whether a column exists. common/scripts/check-reporting-pack.ts in app-and-report-with-ai-tanstack runs every derived and authored query against a schema the generator actually emitted."
+    },
     "pipeline": [
       "1. ERD section -> MermaidParser -> Entity[] + Relationship[] -> migrations, DTOs, services, controllers, forms, tables. The same pass reads %%index into entity.indexes and %%enum / %%field enum: into bound enums.",
       "2. %%category directives -> category.parser -> resolveCategories -> Application Dictionary groups on the generated dashboard. A model declaring none gets a single 'General' category holding every entity.",
       "3. Rules section -> flowchart-parser -> jdm-converter -> GoRules JDM graph -> seeded into sys_rule_definitions and evaluated by the rules engine.",
       "4. Rules section carrying %%action directives -> compileRules -> a GoRules decision table whose rows carry action/message/ruleId/workflowName outputs, instead of a node graph. This is how a model-declared rule reaches a model-declared saga: the rule's `when` expression decides, and its trigger-workflow action names the workflow.",
       "5. Workflow section, hook form -> compileHooks -> per-entity handler modules under src/modules/hooks/handlers plus a registry the bus service calls around every CRUD operation.",
-      "6. Workflow section, state form -> compileWorkflows -> BPMN seeded into sys_workflow_definitions; the trigger-workflow rules resolve it by name and the run puts a new record into the state machine's starting state.",
+      "6. Workflow section, state form -> compileWorkflows -> BPMN seeded into sys_workflow_definitions; the trigger-workflow rules resolve it by name and the run puts a new record into the state machine's starting state. The same pass writes every edge the diagram draws into sys_workflow_transitions, which EntityAccessGuard reads to refuse a status write the model never allowed for, and which GET /api/workflows/transitions exposes so a screen can offer only the moves that exist.",
       "7. Workflow section, saga form -> compileSagaWorkflows -> one bpmn:serviceTask per %%step, ordered by the flowchart edges, seeded into sys_workflow_definitions with source 'model'. A definition declared in the model is owned by the model: the generated Workflow Designer shows it read-only, and regeneration rewrites it. Definitions authored in the app carry source 'designer' and are never touched by regeneration.",
       "8. The whole document -> language/rag.ts -> retrieval chunks (one per entity, rule, workflow and spec section) -> the pgvector model_context index the assistant searches.",
-      "9. %%rbac directives -> compileRbac -> per-operation rules in sys_operation_access and per-transition rules in sys_transition_access, enforced by EntityAccessGuard on the generated /bus CRUD routes. Restrictive, not granting: a target no directive names stays open."
+      "9. %%rbac directives -> compileRbac -> per-operation rules in sys_operation_access and per-transition rules in sys_transition_access, enforced by EntityAccessGuard on the generated /bus CRUD routes. Restrictive, not granting: a target no directive names stays open.",
+      "10. ERD section -> nestjs-backend.generator -> one default AnkaReport layout per entity seeded into sys_report_designs. The layout renders every non-audit, non-PK field as a two-column (label | value) report. Administrators can customise layouts at Admin → Report Designs. Records get a Print button on their detail view if a design exists for their table.",
+      "11. %%enum and %%workflow kind: state -> the generated test suite's harness/model.ts, which carries the declared values and edges into the suites as data. This is the one consumer that reads the model rather than the dictionary compiled from it, and the distinction is the point: a suite that asserts a running application against the dictionary the same generator wrote proves only that the application is self-consistent, and passes just as happily when a value or an edge was dropped on the way. Asserting against the model's own word is what makes a dropped %%enum value or a missing state-machine edge fail a test rather than ship. Read by suite 02c (references) and suite 06b (state machines)."
     ],
     "referenceFiles": {
       "pipeline": "packages/generator/src/pipeline/generate-application.ts",
@@ -1211,7 +1519,8 @@
       "chunker": "language/rag.ts",
       "checker": "language/checker.ts",
       "orchestrator": "packages/generator/src/generators/orchestrator.ts",
-      "rbacCompiler": "packages/generator/src/rbac/index.ts"
+      "rbacCompiler": "packages/generator/src/rbac/index.ts",
+      "testHarnessModel": "packages/generator/templates/tanstack-start-nestjs/tests/harness/model.ts.hbs"
     },
     "authoringSurface": {
       "description": "The web app keeps its own parsers for the editors, which run in the browser and cannot import the generator. They read the same syntax, but they do not decide what is generated - when the two disagree, the generator's copy is the language and the web copy is the bug.",
@@ -1228,7 +1537,7 @@
       "core": "erDiagram entities, attributes with PK/FK/UK/OPTIONAL/NULL/UNIQUE, and all 8 relationship cardinalities. Plus the directives the same parse pass reads: %%index (real DDL indexes), %%enum and %%field enum: (bound enums), and %%category (dashboard grouping). Fully compiled.",
       "rules": "flowchart decision flows converted to JDM by shape semantics, and %%action directives compiled to a GoRules decision table. Fully compiled.",
       "workflows": "%%hook directives in both forms (all 13 hook types), stateDiagram-v2 state machines, and %%workflow kind: saga with its %%step and %%loop directives. All three forms are compiled and seeded; the automation dialect is the same saga machinery authored through the builder.",
-      "help": "%%field <Entity>.<column> help: and %%entity <Name> help: (or description:). Both are compiled: the parser hangs the text on the attribute and the entity, the dictionary generator writes it to sys_column.description and sys_table.description, and the generated application shows it under the field and beside the table. Fully compiled.",
+      "help": "%%field <Entity>.<column> help: and %%entity <Name> help: (or description:). Both are compiled: the parser hangs the text on the attribute and the entity, the dictionary generator writes it to sys_column.description and sys_table.description, and the generated application shows it under the field and beside the table. It has a second consumer: packages/generator/src/manual/index.ts renders manual.html from the same parsed model, where this text is the entire 'what it is for' column \u2014 a field with no help prints a dash there. Write help on every entity and every column, and write domain knowledge rather than the name again: EML151, EML152 and EML153 report the three ways a model fails to. See applicationDictionary.helpText. Fully compiled.",
       "validated": "%%rule and %%trigger, and the %%entity keys other than help:/description:. No compiler reads these yet, but language/checker.ts enforces their syntax and cross-references, so a malformed one fails validation instead of being silently dropped.",
       "reserved": "The %%field keys other than enum: and help:. Renderer-safe and documented, with no reader. Writing one is legal and inert.",
       "access": "%%rbac, in both its CRUD and state-transition forms. Compiled to sys_operation_access / sys_transition_access and enforced by the generated EntityAccessGuard."
@@ -1259,7 +1568,7 @@
       "EML001-EML099": "Document level: metadata, emptiness, section structure.",
       "EML100-EML119": "Entities and attributes.",
       "EML120-EML129": "Relationships.",
-      "EML130-EML199": "Directives attached to the ERD: %%enum, %%field, %%entity, %%index.",
+      "EML130-EML199": "Directives attached to the ERD: %%enum, %%field, %%entity, %%index, %%category, %%section \u2014 including the line-item pair EML149 and EML150, the help-text codes EML151-EML153 and the form-layout codes EML170-EML177.",
       "EML200-EML299": "Hooks, guards, triggers, workflows and rules as declared by directives.",
       "EML300-EML399": "Business-rule flowcharts.",
       "EML400-EML449": "Workflow sections: hook, state and saga.",
@@ -1267,8 +1576,14 @@
     },
     "autoFixable": {
       "EML001": "Missing %%meta name - inserts one derived from the first entity.",
+      "EML103": "Column is added by the generator anyway - deletes the declared line.",
+      "EML112": "Duplicate attribute - deletes the later line, keeping the stronger constraints.",
       "EML114": "Foreign key not ending in _id - appends the suffix.",
       "EML117": "Entity has no primary key - prepends `string id PK`.",
+      "EML172": "Columns placed in no %%section row - appends them to the entity's last section, two per row.",
+      "EML174": "A %%section row with more than two columns - splits it into rows of two.",
+      "EML175": "A column placed in two %%section rows - removes the later placement.",
+      "EML287": "Rule condition names a camelCase identifier - rewrites it as the snake_case column.",
       "EML421": "State workflow has no initial transition - inserts `[*] --> <firstState>`.",
       "EML422": "State workflow has no terminal state - appends `<lastState> --> [*]`."
     },
