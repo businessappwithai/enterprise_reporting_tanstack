@@ -114,7 +114,7 @@ decision document and written to `<out>/rules/`. Node shapes map to JDM roles
 ```
 .mmd EML ──parser.ts──▶ EmlModel ──validator.ts──▶ (self-corrected) ──generate/*──▶ app
                 ▲
-    language/erdwithai-language.json  (types, cardinalities, directives, …)
+    language/appwithai-language.json  (types, cardinalities, directives, …)
 ```
 
 ## Validation & self-correction

@@ -1,14 +1,12 @@
-// Vendored from businessappwithai/app-with-ai-tanstack at 1c1b492bad13e83f85ed55473c104536e1300bf9
+// Vendored from businessappwithai/app-with-ai-tanstack at e8cd652d44cfc94fb3d766b31a0a92d6057d77b6
 //   packages/web/src/lib/jdm-converter.ts
 //
 // Copied rather than imported across the repository boundary: this repository has
-// no packages/web, and the import that used to reach for one resolved nowhere, so
+// no packages/, and the import that used to reach for one resolved nowhere, so
 // every eml CLI command — validate and info included — died at module load. Both
-// files are dependency-free, which is what makes copying them cheap.
+// files are dependency-free, which is what makes copying them cheap. Re-copy them
+// rather than editing by hand.
 //
-// The generator's copy is upstream. If a rule flow starts compiling differently
-// there, re-copy both files rather than editing these by hand.
-
 // Converts a parsed Mermaid flowchart AST → GoRules JDM JSON
 // Minimal, no AI required.
 

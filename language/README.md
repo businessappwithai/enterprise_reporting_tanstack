@@ -47,7 +47,7 @@ Technology choices match the parent repository:
 The **full language** is defined in one machine-readable file:
 
 ```
-language/erdwithai-language.json
+language/appwithai-language.json
 ```
 
 This JSON is the **single source of truth** for the language: type vocabulary,
@@ -77,14 +77,16 @@ isHookType("beforeCreate");   // true
 ```
 language/
 ├── README.md                     # This file
-├── erdwithai-language.json       # ⭐ Canonical, machine-readable language definition
+├── appwithai-language.json       # ⭐ Canonical, machine-readable language definition
 ├── index.ts                      # Typed loader/accessor
 ├── composer.ts                   # Writes a complete EML document
 ├── rag.ts                        # EML → retrieval chunks for RAG
 ├── checker.ts                    # Validator — `bun language/checker.ts <file.mmd>`
 ├── fixer.ts                      # Auto-fixes the checker's fixable codes
+├── sections.ts                   # The one reading of %%section (checker + fixer)
+├── browser/                      # Entry points a bundler turns into a browser checker/fixer
 ├── grammar/
-│   └── erdwithai.ebnf            # Formal EBNF grammar
+│   └── appwithai.ebnf            # Formal EBNF grammar
 ├── spec/
 │   ├── 00-overview.md            # Concepts, document structure, sections
 │   ├── 01-erd.md                 # ERD reference
@@ -191,7 +193,7 @@ bun language/checker.ts model.mmd          # validates; writes model.mmd.error
 bun language/fixer.ts   model.mmd.error    # auto-fixes fixable codes, re-checks
 ```
 
-See `spec/` for the full language reference and `erdwithai-language.json` for
+See `spec/` for the full language reference and `appwithai-language.json` for
 the machine-readable contract.
 
 For the full enterprise_reporting_tanstack system description — architecture,
