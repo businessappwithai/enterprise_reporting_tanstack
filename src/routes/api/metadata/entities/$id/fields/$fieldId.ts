@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
+import { refuseWithoutPermission } from "@/lib/permissions/resource-guard";
 import { readSessionToken, verifySession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/config";
 
@@ -25,6 +26,9 @@ export const Route = createFileRoute("/api/metadata/entities/$id/fields/$fieldId
           if (!session?.user) {
             return json({ error: { message: "Unauthorized" } }, { status: 401 });
           }
+
+          const denied = refuseWithoutPermission(session.user, "metadata_entity", "edit");
+          if (denied) return denied;
 
           const body = await request.json();
           const {

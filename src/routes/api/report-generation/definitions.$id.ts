@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
+import { refuseUnlessOwnerOrAdmin } from "@/lib/permissions/resource-guard";
 import { readSessionToken, verifySession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/config";
 
@@ -44,6 +45,17 @@ export const Route = createFileRoute("/api/report-generation/definitions/$id")({
       PATCH: async ({ request, params }: { request: Request; params: { id: string } }) => {
         const session = await getSession(request);
         if (!session?.user) return json({ error: "Unauthorized" }, { status: 401 });
+
+        // Same rule GET applies: the owner or an administrator. PATCH and DELETE asked nothing,
+        // so any signed-in account could rewrite or delete anyone's scheduled report.
+        const ownerRow = await (getDb() as any)
+          .selectFrom("nl_report_definitions")
+          .where("id", "=", params.id)
+          .select("created_by")
+          .executeTakeFirst();
+        if (!ownerRow) return json({ error: "Not found" }, { status: 404 });
+        const notYours = refuseUnlessOwnerOrAdmin(session.user, ownerRow.created_by, "report");
+        if (notYours) return notYours;
 
         const db = getDb();
         const { id } = params;
@@ -106,6 +118,17 @@ export const Route = createFileRoute("/api/report-generation/definitions/$id")({
       DELETE: async ({ request, params }: { request: Request; params: { id: string } }) => {
         const session = await getSession(request);
         if (!session?.user) return json({ error: "Unauthorized" }, { status: 401 });
+
+        // Same rule GET applies: the owner or an administrator. PATCH and DELETE asked nothing,
+        // so any signed-in account could rewrite or delete anyone's scheduled report.
+        const ownerRow = await (getDb() as any)
+          .selectFrom("nl_report_definitions")
+          .where("id", "=", params.id)
+          .select("created_by")
+          .executeTakeFirst();
+        if (!ownerRow) return json({ error: "Not found" }, { status: 404 });
+        const notYours = refuseUnlessOwnerOrAdmin(session.user, ownerRow.created_by, "report");
+        if (notYours) return notYours;
 
         const db = getDb();
         const { id } = params;

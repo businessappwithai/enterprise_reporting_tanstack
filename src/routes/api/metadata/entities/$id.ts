@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
+import { refuseWithoutPermission } from "@/lib/permissions/resource-guard";
 import { readSessionToken, verifySession } from "@/lib/auth/session";
 import { EntityService } from "@/lib/metadata/entity-service";
 
@@ -19,6 +20,9 @@ export const Route = createFileRoute("/api/metadata/entities/$id")({
           if (!session?.user) {
             return json({ error: { message: "Unauthorized" } }, { status: 401 });
           }
+
+          const denied = refuseWithoutPermission(session.user, "metadata_entity", "view");
+          if (denied) return denied;
 
           const entity = await EntityService.getById(params.id);
           if (!entity) {
@@ -43,6 +47,9 @@ export const Route = createFileRoute("/api/metadata/entities/$id")({
           if (!session?.user) {
             return json({ error: { message: "Unauthorized" } }, { status: 401 });
           }
+
+          const denied = refuseWithoutPermission(session.user, "metadata_entity", "edit");
+          if (denied) return denied;
 
           const body = await request.json();
           const { description, is_active, is_hidden } = body;
@@ -75,6 +82,9 @@ export const Route = createFileRoute("/api/metadata/entities/$id")({
           if (!session?.user) {
             return json({ error: { message: "Unauthorized" } }, { status: 401 });
           }
+
+          const denied = refuseWithoutPermission(session.user, "metadata_entity", "delete");
+          if (denied) return denied;
 
           const deleted = await EntityService.delete(params.id, session.user.id);
           if (!deleted) {
