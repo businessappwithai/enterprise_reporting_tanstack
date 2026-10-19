@@ -747,6 +747,31 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
     }
   }
 
+  /*
+   * One permission row per (data source, role, entity, schema). `entity_schema` is
+   * nullable and in the common case NULL, and a plain unique index treats NULLs as
+   * distinct — so it would allow the duplicates it exists to prevent. NULLS NOT DISTINCT
+   * is Postgres 15+; on an older server this warns and `upsertDsEntityPermission` still
+   * works, because it no longer relies on the index. Any duplicates already present are
+   * removed first, or the index could not be built.
+   */
+  try {
+    await sql`DELETE FROM ds_entity_permissions a USING ds_entity_permissions b
+      WHERE a.ctid < b.ctid
+        AND a.data_source_id = b.data_source_id
+        AND a.ds_role_id = b.ds_role_id
+        AND a.entity_name = b.entity_name
+        AND a.entity_schema IS NOT DISTINCT FROM b.entity_schema`.execute(db);
+    await sql`CREATE UNIQUE INDEX IF NOT EXISTS ds_entity_permissions_entity_key
+      ON ds_entity_permissions (data_source_id, ds_role_id, entity_name, entity_schema)
+      NULLS NOT DISTINCT`.execute(db);
+  } catch (err) {
+    console.warn(
+      "[bootstrap] ds_entity_permissions unique index warning:",
+      (err as Error).message?.slice(0, 160)
+    );
+  }
+
   // Seed admin user and role
   console.log("[bootstrap] Seeding admin user...");
   const adminRoleId = "admin-role-id";

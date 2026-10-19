@@ -98,7 +98,13 @@ export async function updateDsRole(
  */
 export async function deleteDsRole(roleId: string): Promise<void> {
   const db = getDb();
-  await db.deleteFrom("ds_roles").where("id", "=", roleId).execute();
+  // The tables carry no foreign keys, so nothing cascades by itself: without this the
+  // role's user assignments and entity permissions would be left behind, orphaned.
+  await db.transaction().execute(async (trx) => {
+    await trx.deleteFrom("ds_entity_permissions").where("ds_role_id", "=", roleId).execute();
+    await trx.deleteFrom("ds_user_roles").where("ds_role_id", "=", roleId).execute();
+    await trx.deleteFrom("ds_roles").where("id", "=", roleId).execute();
+  });
 }
 
 /**
@@ -198,50 +204,68 @@ export async function upsertDsEntityPermission(
   createdBy?: string
 ): Promise<DsEntityPermission> {
   const db = getDb();
-  const id = crypto.randomUUID();
   const now = new Date().toISOString();
+  const restrictions = columnRestrictions ? JSON.stringify(columnRestrictions) : null;
 
-  await db
-    .insertInto("ds_entity_permissions")
-    .values({
-      id,
-      data_source_id: dataSourceId,
-      ds_role_id: dsRoleId,
-      entity_name: entityName,
-      entity_type: entityType,
-      entity_schema: entitySchema ? entitySchema : null,
-      permission_level: permissionLevel,
-      column_restrictions: columnRestrictions ? JSON.stringify(columnRestrictions) : null,
-      row_filter: rowFilter ? rowFilter : null,
-      created_by: createdBy ? createdBy : null,
-      created_at: now,
-      updated_at: now,
-    } as any)
-    .onConflict((oc) =>
-      oc.columns(["data_source_id", "ds_role_id", "entity_name", "entity_schema"]).doUpdateSet({
+  /*
+   * Update, then insert if nothing matched — not `INSERT … ON CONFLICT (…)`.
+   *
+   * This used to be an ON CONFLICT on (data_source_id, ds_role_id, entity_name,
+   * entity_schema), and there was no unique index on those columns, so Postgres refused
+   * every call with "there is no unique or exclusion constraint matching the ON CONFLICT
+   * specification". An entity permission could not be created through the application at
+   * all — which is why nothing had ever created a ds_entity_permissions row, and why
+   * everyone but an administrator was denied every table.
+   *
+   * Not depending on an index for correctness also means this works on a database where
+   * the integrity index in bootstrap.ts could not be created (it needs Postgres 15).
+   * `entity_schema` is nullable, so the match is `IS NULL` rather than `= NULL`.
+   */
+  return db.transaction().execute(async (trx) => {
+    const matching = <Q extends { where: (...args: any[]) => Q }>(q: Q): Q => {
+      const keyed = q
+        .where("data_source_id", "=", dataSourceId)
+        .where("ds_role_id", "=", dsRoleId)
+        .where("entity_name", "=", entityName);
+      return entitySchema
+        ? keyed.where("entity_schema", "=", entitySchema)
+        : keyed.where("entity_schema", "is", null);
+    };
+
+    const updated = await matching(
+      trx.updateTable("ds_entity_permissions").set({
+        entity_type: entityType,
         permission_level: permissionLevel,
-        column_restrictions: columnRestrictions ? JSON.stringify(columnRestrictions) : null,
+        column_restrictions: restrictions,
         row_filter: rowFilter || null,
         updated_at: now,
-      })
-    )
-    .execute();
+      } as any) as any
+    ).executeTakeFirst();
 
-  let query = db
-    .selectFrom("ds_entity_permissions")
-    .selectAll()
-    .where("data_source_id", "=", dataSourceId)
-    .where("ds_role_id", "=", dsRoleId)
-    .where("entity_name", "=", entityName);
+    if (Number((updated as { numUpdatedRows?: bigint })?.numUpdatedRows ?? 0) === 0) {
+      await trx
+        .insertInto("ds_entity_permissions")
+        .values({
+          id: crypto.randomUUID(),
+          data_source_id: dataSourceId,
+          ds_role_id: dsRoleId,
+          entity_name: entityName,
+          entity_type: entityType,
+          entity_schema: entitySchema ? entitySchema : null,
+          permission_level: permissionLevel,
+          column_restrictions: restrictions,
+          row_filter: rowFilter ? rowFilter : null,
+          created_by: createdBy ? createdBy : null,
+          created_at: now,
+          updated_at: now,
+        } as any)
+        .execute();
+    }
 
-  if (entitySchema) {
-    query = query.where("entity_schema", "=", entitySchema);
-  } else {
-    query = query.where("entity_schema", "is", null as unknown as any);
-  }
-
-  const perm = await query.executeTakeFirstOrThrow();
-  return perm as unknown as DsEntityPermission;
+    const perm = await matching(trx.selectFrom("ds_entity_permissions").selectAll() as any)
+      .executeTakeFirstOrThrow();
+    return perm as unknown as DsEntityPermission;
+  });
 }
 
 /**
