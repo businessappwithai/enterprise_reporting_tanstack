@@ -60,7 +60,33 @@ export const Route = createFileRoute("/api/admin/users")({
             .orderBy("created_at", "desc")
             .execute();
 
-          return json({ success: true, data: users });
+          /*
+           * Each user's roles, because the Users page needs them for two things.
+           *
+           * It shows them, and it builds the request for "assign" and "remove" from them:
+           * `updateUser` REPLACES a user's whole role set, so the page sends
+           * `[...currentRoleIds, newRoleId]`. This route returned no roles, so
+           * `currentRoleIds` was always empty — assigning one role silently stripped every
+           * other role the user had (including an administrator's own), and removing any
+           * role removed all of them. The contract was already declared by `UserWithRoles`.
+           */
+          const roleRows = await db
+            .selectFrom("user_roles")
+            .innerJoin("roles", "roles.id", "user_roles.role_id")
+            .select(["user_roles.user_id as user_id", "roles.id as role_id", "roles.name as role_name"])
+            .orderBy("roles.name")
+            .execute();
+          const rolesByUser = new Map<string, { id: string; name: string }[]>();
+          for (const row of roleRows) {
+            const list = rolesByUser.get(row.user_id) ?? [];
+            list.push({ id: row.role_id, name: row.role_name });
+            rolesByUser.set(row.user_id, list);
+          }
+
+          return json({
+            success: true,
+            data: users.map((u) => ({ ...u, roles: rolesByUser.get(u.id) ?? [] })),
+          });
         } catch (error) {
           console.error("Error fetching users:", error);
           return json(

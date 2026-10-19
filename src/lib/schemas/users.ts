@@ -1,18 +1,18 @@
 import { z } from "zod";
-import { uuidSchema, emailSchema, passwordSchema, paginationSchema } from "./common";
+import { idSchema, emailSchema, passwordSchema, paginationSchema } from "./common";
 
 export const createUserSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
   displayName: z.string().min(1, "Display name is required").max(255, "Display name too long"),
   isActive: z.boolean().default(true),
-  roleIds: z.array(uuidSchema).optional().default([]),
+  roleIds: z.array(idSchema).optional().default([]),
 });
 
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 
 export const updateUserSchema = z.object({
-  id: uuidSchema,
+  id: idSchema,
   email: emailSchema.optional(),
   displayName: z
     .string()
@@ -20,7 +20,7 @@ export const updateUserSchema = z.object({
     .max(255, "Display name too long")
     .optional(),
   isActive: z.boolean().optional(),
-  roleIds: z.array(uuidSchema).optional(),
+  roleIds: z.array(idSchema).optional(),
 });
 
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
@@ -30,14 +30,14 @@ export const listUsersSchema = paginationSchema;
 export type ListUsersInput = z.infer<typeof listUsersSchema>;
 
 export const getUserSchema = z.object({
-  id: uuidSchema,
+  id: idSchema,
 });
 
 export type GetUserInput = z.infer<typeof getUserSchema>;
 
 export const changePasswordSchema = z
   .object({
-    id: uuidSchema,
+    id: idSchema,
     currentPassword: passwordSchema,
     newPassword: passwordSchema.refine((val) => val.length >= 8, "Password too short"),
   })

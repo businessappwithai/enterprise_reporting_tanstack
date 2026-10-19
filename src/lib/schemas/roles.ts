@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { uuidSchema } from "./common";
+import { idSchema } from "./common";
 
 export const permissionSchema = z.enum([
   "view_dashboard",
@@ -34,7 +34,7 @@ export const createRoleSchema = z.object({
 export type CreateRoleInput = z.infer<typeof createRoleSchema>;
 
 export const updateRoleSchema = z.object({
-  id: uuidSchema,
+  id: idSchema,
   name: z.string().min(1, "Name is required").max(255, "Name too long").optional(),
   description: z.string().max(1000, "Description too long").optional(),
   permissions: z.array(permissionSchema).optional(),
@@ -43,7 +43,7 @@ export const updateRoleSchema = z.object({
 export type UpdateRoleInput = z.infer<typeof updateRoleSchema>;
 
 export const getRoleSchema = z.object({
-  id: uuidSchema,
+  id: idSchema,
 });
 
 export type GetRoleInput = z.infer<typeof getRoleSchema>;

@@ -45,7 +45,7 @@ function UsersManagementPage() {
   const queryClient = useQueryClient();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [assignRoleDialogOpen, setAssignRoleDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [newUserName, setNewUserName] = useState("");
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserPassword, setNewUserPassword] = useState("");
@@ -62,6 +62,11 @@ function UsersManagementPage() {
   });
 
   const users = usersData as UserWithRoles[] | undefined;
+
+  // Looked up in the live list, not copied when the dialog opened. A copy goes stale after
+  // the first assign or remove, and the next one — which sends the user's whole role set —
+  // would then silently undo the one before it.
+  const selectedUser = users?.find((u) => u.id === selectedUserId) ?? null;
 
   // Fetch roles for dropdown
   const { data: roles = [] } = useQuery<Role[]>({
@@ -228,7 +233,7 @@ function UsersManagementPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => {
-                          setSelectedUser(user);
+                          setSelectedUserId(user.id);
                           setAssignRoleDialogOpen(true);
                         }}
                       >
