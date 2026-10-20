@@ -20,6 +20,7 @@
 
 import { schedules } from "@trigger.dev/sdk/v3";
 import { getDb } from "@/lib/db/config";
+import { cronMatchesWithTimezone } from "@/lib/jobs/cron";
 import type { MonitoringRule, MonitoringEvaluatePayload } from "@/types/monitoring";
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -167,98 +168,6 @@ export async function resumeSchedule(triggerScheduleId: string): Promise<boolean
 // ────────────────────────────────────────────────────────────────────────────
 // On-Premise Cron Runner (built-in fallback — zero external dependencies)
 // ────────────────────────────────────────────────────────────────────────────
-
-/**
- * Minimal 5-field cron matcher.
- *
- * Supports: exact values (5), wildcard (*), comma lists (1,3,5),
- *           step expressions (* /15), and ranges (1-5).
- * This is intentionally simple — production deployments with complex cron
- * expressions should use Trigger.dev self-hosted instead.
- */
-function matchesCronField(value: number, field: string): boolean {
-  if (field === "*") return true;
-  for (const part of field.split(",")) {
-    if (part.includes("/")) {
-      const [range, step] = part.split("/");
-      const stepN = parseInt(step, 10);
-      let start = 0;
-      let end = 59;
-      if (range !== "*") {
-        const [s, e] = range.split("-").map(Number);
-        start = s;
-        end = e ?? s;
-      }
-      if (value >= start && value <= end && (value - start) % stepN === 0) return true;
-    } else if (part.includes("-")) {
-      const [lo, hi] = part.split("-").map(Number);
-      if (value >= lo && value <= hi) return true;
-    } else if (parseInt(part, 10) === value) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function cronMatches(cron: string, date: Date): boolean {
-  const parts = cron.trim().split(/\s+/);
-  if (parts.length !== 5) return false;
-  const [minute, hour, dom, month, dow] = parts;
-  return (
-    matchesCronField(date.getUTCMinutes(), minute) &&
-    matchesCronField(date.getUTCHours(), hour) &&
-    matchesCronField(date.getUTCDate(), dom) &&
-    matchesCronField(date.getUTCMonth() + 1, month) &&
-    matchesCronField(date.getUTCDay(), dow)
-  );
-}
-
-/**
- * Timezone-aware cron matching.
- *
- * Converts the current UTC time to the rule's configured timezone using
- * Intl.DateTimeFormat, then evaluates the cron expression against the
- * local time components. Falls back to UTC if the timezone is invalid.
- */
-function cronMatchesWithTimezone(cron: string, dateUtc: Date, timezone: string): boolean {
-  if (!timezone || timezone === "UTC") return cronMatches(cron, dateUtc);
-
-  try {
-    const fmt = new Intl.DateTimeFormat("en-US", {
-      timeZone: timezone,
-      year: "numeric",
-      month: "numeric",
-      day: "numeric",
-      hour: "numeric",
-      minute: "numeric",
-      hour12: false,
-    });
-    const parts = fmt.formatToParts(dateUtc);
-    const get = (type: string) => parseInt(parts.find((p) => p.type === type)?.value ?? "0", 10);
-
-    const localMinute = get("minute");
-    const localHour = get("hour") === 24 ? 0 : get("hour");
-    const localDay = get("day");
-    const localMonth = get("month");
-    // Day of week: reconstruct from the local date
-    const localDate = new Date(get("year"), localMonth - 1, localDay);
-    const localDow = localDate.getDay();
-
-    const cronParts = cron.trim().split(/\s+/);
-    if (cronParts.length !== 5) return false;
-
-    return (
-      matchesCronField(localMinute, cronParts[0]) &&
-      matchesCronField(localHour, cronParts[1]) &&
-      matchesCronField(localDay, cronParts[2]) &&
-      matchesCronField(localMonth, cronParts[3]) &&
-      matchesCronField(localDow, cronParts[4])
-    );
-  } catch {
-    // Invalid timezone — fall back to UTC
-    return cronMatches(cron, dateUtc);
-  }
-}
 
 let _onPremiseRunnerHandle: ReturnType<typeof setInterval> | null = null;
 let _onPremiseRunnerActive = false;
