@@ -72,6 +72,7 @@ import { Route as ApiMetadataEntitiesRouteImport } from './routes/api/metadata/e
 import { Route as ApiLogsUsersRouteImport } from './routes/api/logs/users'
 import { Route as ApiLogsSearchRouteImport } from './routes/api/logs/search'
 import { Route as ApiLogsComponentsRouteImport } from './routes/api/logs/components'
+import { Route as ApiJobsTargetsRouteImport } from './routes/api/jobs/targets'
 import { Route as ApiJobsStatusRouteImport } from './routes/api/jobs/status'
 import { Route as ApiJobsExecutionsRouteImport } from './routes/api/jobs/executions'
 import { Route as ApiIntelligentUiExportRouteImport } from './routes/api/intelligent-ui/export'
@@ -454,6 +455,11 @@ const ApiLogsComponentsRoute = ApiLogsComponentsRouteImport.update({
   id: '/api/logs/components',
   path: '/api/logs/components',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ApiJobsTargetsRoute = ApiJobsTargetsRouteImport.update({
+  id: '/targets',
+  path: '/targets',
+  getParentRoute: () => ApiJobsRoute,
 } as any)
 const ApiJobsStatusRoute = ApiJobsStatusRouteImport.update({
   id: '/status',
@@ -847,6 +853,7 @@ export interface FileRoutesByFullPath {
   '/api/intelligent-ui/export': typeof ApiIntelligentUiExportRoute
   '/api/jobs/executions': typeof ApiJobsExecutionsRoute
   '/api/jobs/status': typeof ApiJobsStatusRoute
+  '/api/jobs/targets': typeof ApiJobsTargetsRoute
   '/api/logs/components': typeof ApiLogsComponentsRoute
   '/api/logs/search': typeof ApiLogsSearchRoute
   '/api/logs/users': typeof ApiLogsUsersRoute
@@ -976,6 +983,7 @@ export interface FileRoutesByTo {
   '/api/intelligent-ui/export': typeof ApiIntelligentUiExportRoute
   '/api/jobs/executions': typeof ApiJobsExecutionsRoute
   '/api/jobs/status': typeof ApiJobsStatusRoute
+  '/api/jobs/targets': typeof ApiJobsTargetsRoute
   '/api/logs/components': typeof ApiLogsComponentsRoute
   '/api/logs/search': typeof ApiLogsSearchRoute
   '/api/logs/users': typeof ApiLogsUsersRoute
@@ -1107,6 +1115,7 @@ export interface FileRoutesById {
   '/api/intelligent-ui/export': typeof ApiIntelligentUiExportRoute
   '/api/jobs/executions': typeof ApiJobsExecutionsRoute
   '/api/jobs/status': typeof ApiJobsStatusRoute
+  '/api/jobs/targets': typeof ApiJobsTargetsRoute
   '/api/logs/components': typeof ApiLogsComponentsRoute
   '/api/logs/search': typeof ApiLogsSearchRoute
   '/api/logs/users': typeof ApiLogsUsersRoute
@@ -1238,6 +1247,7 @@ export interface FileRouteTypes {
     | '/api/intelligent-ui/export'
     | '/api/jobs/executions'
     | '/api/jobs/status'
+    | '/api/jobs/targets'
     | '/api/logs/components'
     | '/api/logs/search'
     | '/api/logs/users'
@@ -1367,6 +1377,7 @@ export interface FileRouteTypes {
     | '/api/intelligent-ui/export'
     | '/api/jobs/executions'
     | '/api/jobs/status'
+    | '/api/jobs/targets'
     | '/api/logs/components'
     | '/api/logs/search'
     | '/api/logs/users'
@@ -1497,6 +1508,7 @@ export interface FileRouteTypes {
     | '/api/intelligent-ui/export'
     | '/api/jobs/executions'
     | '/api/jobs/status'
+    | '/api/jobs/targets'
     | '/api/logs/components'
     | '/api/logs/search'
     | '/api/logs/users'
@@ -2087,6 +2099,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiLogsComponentsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/jobs/targets': {
+      id: '/api/jobs/targets'
+      path: '/targets'
+      fullPath: '/api/jobs/targets'
+      preLoaderRoute: typeof ApiJobsTargetsRouteImport
+      parentRoute: typeof ApiJobsRoute
+    }
     '/api/jobs/status': {
       id: '/api/jobs/status'
       path: '/status'
@@ -2652,11 +2671,13 @@ const AuthedRouteWithChildren =
 interface ApiJobsRouteChildren {
   ApiJobsExecutionsRoute: typeof ApiJobsExecutionsRoute
   ApiJobsStatusRoute: typeof ApiJobsStatusRoute
+  ApiJobsTargetsRoute: typeof ApiJobsTargetsRoute
 }
 
 const ApiJobsRouteChildren: ApiJobsRouteChildren = {
   ApiJobsExecutionsRoute: ApiJobsExecutionsRoute,
   ApiJobsStatusRoute: ApiJobsStatusRoute,
+  ApiJobsTargetsRoute: ApiJobsTargetsRoute,
 }
 
 const ApiJobsRouteWithChildren =

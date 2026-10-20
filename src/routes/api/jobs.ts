@@ -4,19 +4,14 @@ import { auth } from "@/lib/auth/config";
 import { getDb } from "@/lib/db/config";
 import { hasPermission } from "@/lib/permissions/permissions";
 import { refuseWithoutPermission } from "@/lib/permissions/resource-guard";
+import { createJobSchema, resolveJobTarget } from "@/lib/jobs/job-input";
+import { decideQueryRun } from "@/lib/permissions/runnable-query";
 import { logAudit } from "@/lib/security/audit";
 import { json } from "@/lib/server/response";
 
 async function getSession(request: Request) {
   return auth(request);
 }
-
-// What a job's target_id points at, by job_type.
-const TARGET_TABLE = {
-  report: "report_definitions",
-  chart: "chart_definitions",
-  export: "saved_queries",
-} as const;
 
 export const Route = createFileRoute("/api/jobs")({
   server: {
@@ -93,58 +88,42 @@ export const Route = createFileRoute("/api/jobs")({
             );
           }
 
-          const body = (await request.json()) as {
-            name?: string;
-            job_type?: string;
-            target_id?: string;
-            schedule_cron?: string;
-            parameters?: Record<string, unknown>;
-            notification_config?: Record<string, unknown>;
-            is_active?: boolean;
-          };
-
+          let raw: unknown;
+          try {
+            raw = await request.json();
+          } catch {
+            return json(
+              { success: false, error: { code: "INVALID_INPUT", message: "Body must be JSON" } },
+              { status: 400 }
+            );
+          }
+          const parsed = createJobSchema.safeParse(raw);
+          if (!parsed.success) {
+            return json(
+              {
+                success: false,
+                error: {
+                  code: "INVALID_INPUT",
+                  message: parsed.error.issues
+                    .map((i) => `${i.path.join(".") || "body"}: ${i.message}`)
+                    .join("; "),
+                },
+              },
+              { status: 400 }
+            );
+          }
           const {
             name,
-            job_type = "report",
+            job_type,
             target_id,
             schedule_cron,
             parameters,
             notification_config,
-            is_active = true,
-          } = body;
-
-          if (!name || !target_id) {
-            return json(
-              {
-                success: false,
-                error: {
-                  code: "INVALID_INPUT",
-                  message: "Name and target ID are required",
-                },
-              },
-              { status: 400 }
-            );
-          }
-
-          if (!(job_type in TARGET_TABLE)) {
-            return json(
-              {
-                success: false,
-                error: {
-                  code: "INVALID_INPUT",
-                  message: `job_type must be one of: ${Object.keys(TARGET_TABLE).join(", ")}`,
-                },
-              },
-              { status: 400 }
-            );
-          }
+            is_active,
+          } = parsed.data;
 
           const db = getDb();
-          const target = await db
-            .selectFrom(TARGET_TABLE[job_type as keyof typeof TARGET_TABLE])
-            .select("id")
-            .where("id", "=", target_id)
-            .executeTakeFirst();
+          const target = await resolveJobTarget(job_type, target_id);
           if (!target) {
             return json(
               {
@@ -152,6 +131,16 @@ export const Route = createFileRoute("/api/jobs")({
                 error: { code: "NOT_FOUND", message: `No ${job_type} with that target_id` },
               },
               { status: 404 }
+            );
+          }
+
+          // Nobody can schedule what they could not run: the job runs as its creator, and the
+          // worker asks this same question again every time it fires.
+          const decision = await decideQueryRun(user, target.sql_content, target.data_source_id);
+          if (!decision.ok) {
+            return json(
+              { success: false, error: { code: decision.code, message: decision.message } },
+              { status: decision.status }
             );
           }
 
@@ -165,7 +154,7 @@ export const Route = createFileRoute("/api/jobs")({
               name,
               job_type,
               target_id,
-              schedule_cron: schedule_cron ?? null,
+              schedule_cron: schedule_cron || null,
               parameters: parameters ? JSON.stringify(parameters) : null,
               notification_config: notification_config ? JSON.stringify(notification_config) : null,
               is_active,
