@@ -6,6 +6,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
+import { refuseJobQuery } from "@/lib/permissions/actor";
 import { sendEmail } from "@/lib/email/email-service";
 import { logAudit } from "@/lib/security/audit";
 import type { EmailBatchJobData, JobResult } from "../types";
@@ -55,6 +56,14 @@ export async function processEmailBatchJob(data: EmailBatchJobData): Promise<Job
     if (!reportDataSource) {
       throw new Error("Report data source not found");
     }
+
+    // Both queries run as the job's owner, with the access they hold now.
+    const reportRefusal = await refuseJobQuery(
+      userId,
+      reportQuery.sql_content,
+      reportQuery.data_source_id
+    );
+    if (reportRefusal) throw new Error(reportRefusal);
 
     // Execute report query
     const reportConnection = await getConnection(reportDataSource);
@@ -134,6 +143,13 @@ export async function processEmailBatchJob(data: EmailBatchJobData): Promise<Job
     if (!recipientDataSource) {
       throw new Error("Recipient data source not found");
     }
+
+    const recipientRefusal = await refuseJobQuery(
+      userId,
+      recipientQuery.sql_content,
+      recipientQuery.data_source_id
+    );
+    if (recipientRefusal) throw new Error(recipientRefusal);
 
     // Execute recipient query
     const recipientConnection = await getConnection(recipientDataSource);

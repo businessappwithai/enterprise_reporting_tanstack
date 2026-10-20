@@ -6,13 +6,14 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
+import { refuseJobQuery } from "@/lib/permissions/actor";
 import type { ExportJobData, JobResult } from "../types";
 
 const OUTPUT_DIR = process.env.JOB_OUTPUT_PATH || "./job-outputs";
 
 export async function processExportJob(data: ExportJobData): Promise<JobResult> {
   const startTime = Date.now();
-  const { queryId, userId: _userId, format = "csv", parameters: _parameters } = data;
+  const { queryId, userId, format = "csv", parameters: _parameters } = data;
 
   try {
     // Get the saved query
@@ -37,6 +38,10 @@ export async function processExportJob(data: ExportJobData): Promise<JobResult> 
     if (!dataSource) {
       throw new Error("Data source not found");
     }
+
+    // Run as the job's owner, with the access they hold now.
+    const refusal = await refuseJobQuery(userId, query.sql_content, query.data_source_id);
+    if (refusal) throw new Error(refusal);
 
     // Execute the query
     const connection = await getConnection(dataSource);
