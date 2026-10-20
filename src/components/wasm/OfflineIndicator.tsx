@@ -2,21 +2,19 @@
 
 /**
  * Offline indicator component.
- * Shows whether the app is offline/online and displays cached data status.
+ * Shows whether the app is online. There is no offline data cache: datasets are produced for the
+ * signed-in user at load time and are not kept in the browser (see lib/datasets/purge-cache.ts).
  */
 
-import { Database, Wifi, WifiOff } from "lucide-react";
+import { Wifi, WifiOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { useDataset } from "@/hooks/useDataset";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 
 export function OfflineIndicator() {
   const [isOnline, setIsOnline] = useState(
     typeof navigator !== "undefined" ? navigator.onLine : true
   );
-  const { datasets } = useDataset();
-  const [cachedCount, setCachedCount] = useState(0);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -24,22 +22,6 @@ export function OfflineIndicator() {
 
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
-
-    // Count cached datasets
-    const countCached = async () => {
-      try {
-        const { keys } = await import("idb-keyval");
-        const allKeys = await keys();
-        const parquetKeys = allKeys.filter(
-          (k) => typeof k === "string" && k.startsWith("parquet_")
-        );
-        setCachedCount(parquetKeys.length);
-      } catch {
-        // IndexedDB not available
-      }
-    };
-
-    countCached();
 
     return () => {
       window.removeEventListener("online", handleOnline);
@@ -66,17 +48,9 @@ export function OfflineIndicator() {
           </>
         )}
       </div>
-      {cachedCount > 0 && (
-        <div className="flex items-center gap-1.5 text-muted-foreground">
-          <Database className="h-3.5 w-3.5" />
-          <span>
-            {cachedCount} cached dataset{cachedCount !== 1 ? "s" : ""}
-          </span>
-        </div>
-      )}
-      {!isOnline && datasets.length === 0 && (
+      {!isOnline && (
         <Badge variant="outline" className="text-amber-600 border-amber-600">
-          No cached data available
+          Datasets cannot be loaded while offline
         </Badge>
       )}
     </div>

@@ -10,7 +10,7 @@ export interface FeatureFlags {
   echartsEnabled: boolean;
   /** Enable cross-widget filtering on dashboards */
   crossFilterEnabled: boolean;
-  /** Enable offline mode with IndexedDB caching */
+  /** Show the online/offline badge on dashboards (there is no offline data cache) */
   offlineEnabled: boolean;
   /** Enable progressive loading for large datasets */
   progressiveEnabled: boolean;

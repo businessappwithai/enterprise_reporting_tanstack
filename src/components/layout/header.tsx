@@ -17,6 +17,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ThemeSelector } from "@/components/theme/theme-selector";
 import { HelpButton } from "@/components/help/HelpButton";
+import { purgeDatasetCache } from "@/lib/datasets/purge-cache";
 import { logoutFn } from "@/server-fns/auth";
 import {
   fetchNotificationsFn,
@@ -128,6 +129,8 @@ export function Header({ user, onMobileMenuToggle, mobileMenuOpen }: HeaderProps
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
+      // Before the session ends, so a shared browser keeps no dataset rows after sign-out.
+      await purgeDatasetCache();
       return logoutFn();
     },
     onSuccess: () => {

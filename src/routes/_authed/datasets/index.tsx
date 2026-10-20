@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { DatasetManager } from "@/components/datasets/DatasetManager";
 import { NewDatasetDialog } from "@/components/datasets/NewDatasetDialog";
+import { purgeDatasetCache } from "@/lib/datasets/purge-cache";
 import { useDuckDB } from "@/components/duckdb/DuckDBProvider";
 import { Button } from "@/components/ui/button";
 import { useDataset } from "@/hooks/useDataset";
@@ -51,6 +52,11 @@ function DatasetsPage() {
   useEffect(() => {
     fetchDatasets();
   }, [fetchDatasets]);
+
+  // Rows an earlier build cached in this browser; nothing writes that cache any more.
+  useEffect(() => {
+    void purgeDatasetCache();
+  }, []);
 
   const merged: DatasetInfo[] = serverDatasets.map((sd) => {
     const local = datasets.find((d) => d.id === sd.id);

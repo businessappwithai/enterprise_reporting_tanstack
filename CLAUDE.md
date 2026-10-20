@@ -480,7 +480,10 @@ a dataset runs the same check, so nobody saves one they could not download.
   plain numbers (no leading zeros, exactly representable) into numbers so DuckDB can `SUM` it.
   There are no column types to go by, so a text column of digits-only values is converted too.
 - Nothing is cached in IndexedDB: the rows were produced under the caller's permissions at that
-  moment. (`useDatasetEnhanced` has an offline cache that does this; nothing uses it. Think before wiring it up.)
+  moment. Earlier builds did cache them (`parquet_<id>`), so `purgeDatasetCache()` deletes any left
+  behind when the Datasets page opens and on sign-out. `useDatasetEnhanced`, which served that cache
+  back without asking the server, is deleted. Do not reintroduce an offline copy of query results
+  without tying it to the user and to a permission check.
 - `src/lib/export/source-connector.ts` and `parquet-exporter.ts` are gone. The first ran caller-supplied
   SQL against the **config** database. Do not recreate it; run SQL through `getConnection` and `decideQueryRun`.
 - Three defects had made every WASM feature unreachable, found by loading a dataset in a browser:
@@ -516,6 +519,38 @@ Job processing runs on **Trigger.dev** (`@trigger.dev/sdk`), configured in `trig
 - Enqueue via `src/lib/jobs/trigger-queue.ts`; the actual work lives in `src/lib/jobs/workers/`
 - `src/lib/jobs/worker-runner.ts` picks the backend: Trigger.dev when `TRIGGER_API_URL` is set, otherwise it starts the built-in on-premise cron runner (`src/lib/monitoring/monitoring-scheduler.ts`), a pure-Bun interval loop that polls `monitoring_rules` every minute
 - **BullMQ is gone.** `src/lib/queue/` — the dead legacy tree that imported `bullmq` and `ioredis`, neither of which was ever in `package.json` — has been deleted, along with the Bull Board routes it backed. Job payload types now live beside their consumers in `src/lib/jobs/types.ts`, and the workers take their payload directly rather than a BullMQ `Job` wrapper. `/bull-board` is `/trigger-board`
+
+#### Job definitions — created, scheduled and run
+
+A row in `job_definitions` is a scheduled job, and `src/lib/jobs/job-definition-runner.ts` is what
+runs it. Until the second QA pass nothing read those rows: a job created with a cron expression
+never fired, and the only two creators (assistant actions) posted a body the route rejected.
+
+- **Vocabulary:** `job_type` is `report` (target: a report definition) or `export` (target: a saved
+  query) — the two with a worker (`job-vocabulary.ts`). `chart` is typed elsewhere and has no worker, so
+  it is refused. `parameters.format` is `csv` (default), `xlsx` or `pdf`. Types the runner does not own
+  (`monitoring:evaluate`, written by `rule-persist-tool.ts`) are left to whatever wrote them.
+- **Creating:** `POST /api/jobs` validates the body (`job-input.ts`; `schedule_cron` must pass
+  `isValidCron`, because the matcher treats anything it cannot parse as "never" and a job saved with
+  "every monday" would silently never run), and the caller must pass `decideQueryRun` on the target's
+  SQL. The assistant action is defined once in `create-job-client.ts` (`CREATE_JOB_ACTION`,
+  `createJobByName`) and takes the target's *name*, resolved by `GET /api/jobs/targets`.
+- **Running:** UTC, five-field cron (`cron.ts`), polled every 20 s, started by `initializeWorkers()` in
+  **both** modes — Trigger.dev does not schedule these either. Each (job, minute) is claimed by one
+  `INSERT` against a unique index on `job_executions(job_definition_id, scheduled_for)`, so polling
+  twice a minute, a restart, or a second process cannot run it twice. Every outcome is a
+  `job_executions` row (`completed` with the file and row count, or `failed` with the reason).
+- **As the creator, with today's access.** The workers call `refuseJobQuery` (`permissions/actor.ts`),
+  which rebuilds the creator's `SessionUser` and asks `decideQueryRun`. The report, export and
+  email-batch workers ran stored SQL with **no** access check — the one family of paths the "every path
+  that executes SQL gates on `validateQueryAccess`" rule did not reach, because they have no session.
+  A creator who has since lost a table, or been deactivated, gets a failed execution and no file. Do not
+  run stored SQL in a worker without it.
+- **Results:** `GET /api/jobs/:executionId/result` serves the file to the job's owner or an
+  administrator only, and only from inside `JOB_OUTPUT_DIR` (`output-dir.ts`; the stored path is a text
+  column, so it is checked, not trusted). There is no Cancel: an in-process run cannot be interrupted.
+- `mock.module` in `bun:test` is **process-wide**. The runner takes its collaborators as arguments so
+  its test needs none; a mock in one file silently replaces the module for every other.
 
 ### Other Subsystems
 
@@ -575,7 +610,7 @@ meets both should not have to learn two ways to ask for help.
 - `NEXT_PUBLIC_WASM_ENABLED` — DuckDB WASM in-browser SQL
 - `NEXT_PUBLIC_ECHARTS_ENABLED` — ECharts alternative to Recharts
 - `NEXT_PUBLIC_CROSSFILTER_ENABLED` — cross-widget dashboard filtering
-- `NEXT_PUBLIC_OFFLINE_ENABLED` — IndexedDB offline caching
+- `NEXT_PUBLIC_OFFLINE_ENABLED` — the online/offline badge on dashboards (there is no offline data cache)
 - `NEXT_PUBLIC_PROGRESSIVE_ENABLED` — progressive loading for large datasets
 
 **The flags are substituted at build time** (`featureFlagDefines` in `vite.config.ts`), in the client
@@ -762,7 +797,7 @@ Two things to know before you trust them:
 validator is more permissive than the test expects: `SELECT * FROM users;` returns
 two warnings where the test wants zero, and both `SELECT * WHERE id = 1;` and the
 empty string come back `isValid: true` where the test wants `false`. As of this
-writing `bun test src` is 202 pass / 3 fail across 18 files (the three are those). Decide whether the
+writing `bun test src` is 231 pass / 3 fail across 23 files (the three are those). Decide whether the
 validator or the test is right before changing either — and if you fix them, wiring
 `bun test src` into `precommit` is what stops it happening again.
 
