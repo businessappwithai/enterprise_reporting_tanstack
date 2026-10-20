@@ -31,6 +31,7 @@ import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
 import { Route as AuthedAdminRouteImport } from './routes/_authed/admin'
 import { Route as ApiLogsIndexRouteImport } from './routes/api/logs/index'
 import { Route as ApiEmailTemplatesIndexRouteImport } from './routes/api/email-templates/index'
+import { Route as ApiDatasetsIndexRouteImport } from './routes/api/datasets/index'
 import { Route as ApiDataSourcesIndexRouteImport } from './routes/api/data-sources/index'
 import { Route as ApiDashboardsIndexRouteImport } from './routes/api/dashboards/index'
 import { Route as ApiCopilotkitIndexRouteImport } from './routes/api/copilotkit/index'
@@ -76,6 +77,7 @@ import { Route as ApiJobsExecutionsRouteImport } from './routes/api/jobs/executi
 import { Route as ApiIntelligentUiExportRouteImport } from './routes/api/intelligent-ui/export'
 import { Route as ApiHelpArticlesRouteImport } from './routes/api/help/articles'
 import { Route as ApiEmailTemplatesIdRouteImport } from './routes/api/email-templates/$id'
+import { Route as ApiDatasetsIdRouteImport } from './routes/api/datasets/$id'
 import { Route as ApiDataSourcesUploadRouteImport } from './routes/api/data-sources/upload'
 import { Route as ApiDataSourcesTestRouteImport } from './routes/api/data-sources/test'
 import { Route as ApiDataSourcesActiveRouteImport } from './routes/api/data-sources/active'
@@ -112,6 +114,7 @@ import { Route as ApiQueriesIdExecuteRouteImport } from './routes/api/queries/$i
 import { Route as ApiMonitoringRulesIdRouteImport } from './routes/api/monitoring/rules.$id'
 import { Route as ApiMetadataEntitiesIdRouteImport } from './routes/api/metadata/entities/$id'
 import { Route as ApiEmailTemplatesIdPreviewRouteImport } from './routes/api/email-templates/$id/preview'
+import { Route as ApiDatasetsIdDataRouteImport } from './routes/api/datasets/$id/data'
 import { Route as ApiDataSourcesIdUserRolesRouteImport } from './routes/api/data-sources/$id/user-roles'
 import { Route as ApiDataSourcesIdUsageRouteImport } from './routes/api/data-sources/$id/usage'
 import { Route as ApiDataSourcesIdRolesRouteImport } from './routes/api/data-sources/$id/roles'
@@ -242,6 +245,11 @@ const ApiLogsIndexRoute = ApiLogsIndexRouteImport.update({
 const ApiEmailTemplatesIndexRoute = ApiEmailTemplatesIndexRouteImport.update({
   id: '/api/email-templates/',
   path: '/api/email-templates/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDatasetsIndexRoute = ApiDatasetsIndexRouteImport.update({
+  id: '/api/datasets/',
+  path: '/api/datasets/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiDataSourcesIndexRoute = ApiDataSourcesIndexRouteImport.update({
@@ -472,6 +480,11 @@ const ApiEmailTemplatesIdRoute = ApiEmailTemplatesIdRouteImport.update({
   path: '/api/email-templates/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiDatasetsIdRoute = ApiDatasetsIdRouteImport.update({
+  id: '/api/datasets/$id',
+  path: '/api/datasets/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiDataSourcesUploadRoute = ApiDataSourcesUploadRouteImport.update({
   id: '/api/data-sources/upload',
   path: '/api/data-sources/upload',
@@ -663,6 +676,11 @@ const ApiEmailTemplatesIdPreviewRoute =
     path: '/preview',
     getParentRoute: () => ApiEmailTemplatesIdRoute,
   } as any)
+const ApiDatasetsIdDataRoute = ApiDatasetsIdDataRouteImport.update({
+  id: '/data',
+  path: '/data',
+  getParentRoute: () => ApiDatasetsIdRoute,
+} as any)
 const ApiDataSourcesIdUserRolesRoute =
   ApiDataSourcesIdUserRolesRouteImport.update({
     id: '/user-roles',
@@ -823,6 +841,7 @@ export interface FileRoutesByFullPath {
   '/api/data-sources/active': typeof ApiDataSourcesActiveRoute
   '/api/data-sources/test': typeof ApiDataSourcesTestRoute
   '/api/data-sources/upload': typeof ApiDataSourcesUploadRoute
+  '/api/datasets/$id': typeof ApiDatasetsIdRouteWithChildren
   '/api/email-templates/$id': typeof ApiEmailTemplatesIdRouteWithChildren
   '/api/help/articles': typeof ApiHelpArticlesRoute
   '/api/intelligent-ui/export': typeof ApiIntelligentUiExportRoute
@@ -868,6 +887,7 @@ export interface FileRoutesByFullPath {
   '/api/copilotkit/': typeof ApiCopilotkitIndexRoute
   '/api/dashboards/': typeof ApiDashboardsIndexRoute
   '/api/data-sources/': typeof ApiDataSourcesIndexRoute
+  '/api/datasets/': typeof ApiDatasetsIndexRoute
   '/api/email-templates/': typeof ApiEmailTemplatesIndexRoute
   '/api/logs/': typeof ApiLogsIndexRoute
   '/charts/editor/$id': typeof AuthedChartsEditorIdRoute
@@ -884,6 +904,7 @@ export interface FileRoutesByFullPath {
   '/api/data-sources/$id/roles': typeof ApiDataSourcesIdRolesRouteWithChildren
   '/api/data-sources/$id/usage': typeof ApiDataSourcesIdUsageRoute
   '/api/data-sources/$id/user-roles': typeof ApiDataSourcesIdUserRolesRoute
+  '/api/datasets/$id/data': typeof ApiDatasetsIdDataRoute
   '/api/email-templates/$id/preview': typeof ApiEmailTemplatesIdPreviewRoute
   '/api/metadata/entities/$id': typeof ApiMetadataEntitiesIdRouteWithChildren
   '/api/monitoring/rules/$id': typeof ApiMonitoringRulesIdRouteWithChildren
@@ -949,6 +970,7 @@ export interface FileRoutesByTo {
   '/api/data-sources/active': typeof ApiDataSourcesActiveRoute
   '/api/data-sources/test': typeof ApiDataSourcesTestRoute
   '/api/data-sources/upload': typeof ApiDataSourcesUploadRoute
+  '/api/datasets/$id': typeof ApiDatasetsIdRouteWithChildren
   '/api/email-templates/$id': typeof ApiEmailTemplatesIdRouteWithChildren
   '/api/help/articles': typeof ApiHelpArticlesRoute
   '/api/intelligent-ui/export': typeof ApiIntelligentUiExportRoute
@@ -994,6 +1016,7 @@ export interface FileRoutesByTo {
   '/api/copilotkit': typeof ApiCopilotkitIndexRoute
   '/api/dashboards': typeof ApiDashboardsIndexRoute
   '/api/data-sources': typeof ApiDataSourcesIndexRoute
+  '/api/datasets': typeof ApiDatasetsIndexRoute
   '/api/email-templates': typeof ApiEmailTemplatesIndexRoute
   '/api/logs': typeof ApiLogsIndexRoute
   '/charts/editor/$id': typeof AuthedChartsEditorIdRoute
@@ -1010,6 +1033,7 @@ export interface FileRoutesByTo {
   '/api/data-sources/$id/roles': typeof ApiDataSourcesIdRolesRouteWithChildren
   '/api/data-sources/$id/usage': typeof ApiDataSourcesIdUsageRoute
   '/api/data-sources/$id/user-roles': typeof ApiDataSourcesIdUserRolesRoute
+  '/api/datasets/$id/data': typeof ApiDatasetsIdDataRoute
   '/api/email-templates/$id/preview': typeof ApiEmailTemplatesIdPreviewRoute
   '/api/metadata/entities/$id': typeof ApiMetadataEntitiesIdRouteWithChildren
   '/api/monitoring/rules/$id': typeof ApiMonitoringRulesIdRouteWithChildren
@@ -1077,6 +1101,7 @@ export interface FileRoutesById {
   '/api/data-sources/active': typeof ApiDataSourcesActiveRoute
   '/api/data-sources/test': typeof ApiDataSourcesTestRoute
   '/api/data-sources/upload': typeof ApiDataSourcesUploadRoute
+  '/api/datasets/$id': typeof ApiDatasetsIdRouteWithChildren
   '/api/email-templates/$id': typeof ApiEmailTemplatesIdRouteWithChildren
   '/api/help/articles': typeof ApiHelpArticlesRoute
   '/api/intelligent-ui/export': typeof ApiIntelligentUiExportRoute
@@ -1122,6 +1147,7 @@ export interface FileRoutesById {
   '/api/copilotkit/': typeof ApiCopilotkitIndexRoute
   '/api/dashboards/': typeof ApiDashboardsIndexRoute
   '/api/data-sources/': typeof ApiDataSourcesIndexRoute
+  '/api/datasets/': typeof ApiDatasetsIndexRoute
   '/api/email-templates/': typeof ApiEmailTemplatesIndexRoute
   '/api/logs/': typeof ApiLogsIndexRoute
   '/_authed/charts/editor/$id': typeof AuthedChartsEditorIdRoute
@@ -1138,6 +1164,7 @@ export interface FileRoutesById {
   '/api/data-sources/$id/roles': typeof ApiDataSourcesIdRolesRouteWithChildren
   '/api/data-sources/$id/usage': typeof ApiDataSourcesIdUsageRoute
   '/api/data-sources/$id/user-roles': typeof ApiDataSourcesIdUserRolesRoute
+  '/api/datasets/$id/data': typeof ApiDatasetsIdDataRoute
   '/api/email-templates/$id/preview': typeof ApiEmailTemplatesIdPreviewRoute
   '/api/metadata/entities/$id': typeof ApiMetadataEntitiesIdRouteWithChildren
   '/api/monitoring/rules/$id': typeof ApiMonitoringRulesIdRouteWithChildren
@@ -1205,6 +1232,7 @@ export interface FileRouteTypes {
     | '/api/data-sources/active'
     | '/api/data-sources/test'
     | '/api/data-sources/upload'
+    | '/api/datasets/$id'
     | '/api/email-templates/$id'
     | '/api/help/articles'
     | '/api/intelligent-ui/export'
@@ -1250,6 +1278,7 @@ export interface FileRouteTypes {
     | '/api/copilotkit/'
     | '/api/dashboards/'
     | '/api/data-sources/'
+    | '/api/datasets/'
     | '/api/email-templates/'
     | '/api/logs/'
     | '/charts/editor/$id'
@@ -1266,6 +1295,7 @@ export interface FileRouteTypes {
     | '/api/data-sources/$id/roles'
     | '/api/data-sources/$id/usage'
     | '/api/data-sources/$id/user-roles'
+    | '/api/datasets/$id/data'
     | '/api/email-templates/$id/preview'
     | '/api/metadata/entities/$id'
     | '/api/monitoring/rules/$id'
@@ -1331,6 +1361,7 @@ export interface FileRouteTypes {
     | '/api/data-sources/active'
     | '/api/data-sources/test'
     | '/api/data-sources/upload'
+    | '/api/datasets/$id'
     | '/api/email-templates/$id'
     | '/api/help/articles'
     | '/api/intelligent-ui/export'
@@ -1376,6 +1407,7 @@ export interface FileRouteTypes {
     | '/api/copilotkit'
     | '/api/dashboards'
     | '/api/data-sources'
+    | '/api/datasets'
     | '/api/email-templates'
     | '/api/logs'
     | '/charts/editor/$id'
@@ -1392,6 +1424,7 @@ export interface FileRouteTypes {
     | '/api/data-sources/$id/roles'
     | '/api/data-sources/$id/usage'
     | '/api/data-sources/$id/user-roles'
+    | '/api/datasets/$id/data'
     | '/api/email-templates/$id/preview'
     | '/api/metadata/entities/$id'
     | '/api/monitoring/rules/$id'
@@ -1458,6 +1491,7 @@ export interface FileRouteTypes {
     | '/api/data-sources/active'
     | '/api/data-sources/test'
     | '/api/data-sources/upload'
+    | '/api/datasets/$id'
     | '/api/email-templates/$id'
     | '/api/help/articles'
     | '/api/intelligent-ui/export'
@@ -1503,6 +1537,7 @@ export interface FileRouteTypes {
     | '/api/copilotkit/'
     | '/api/dashboards/'
     | '/api/data-sources/'
+    | '/api/datasets/'
     | '/api/email-templates/'
     | '/api/logs/'
     | '/_authed/charts/editor/$id'
@@ -1519,6 +1554,7 @@ export interface FileRouteTypes {
     | '/api/data-sources/$id/roles'
     | '/api/data-sources/$id/usage'
     | '/api/data-sources/$id/user-roles'
+    | '/api/datasets/$id/data'
     | '/api/email-templates/$id/preview'
     | '/api/metadata/entities/$id'
     | '/api/monitoring/rules/$id'
@@ -1572,6 +1608,7 @@ export interface RootRouteChildren {
   ApiDataSourcesActiveRoute: typeof ApiDataSourcesActiveRoute
   ApiDataSourcesTestRoute: typeof ApiDataSourcesTestRoute
   ApiDataSourcesUploadRoute: typeof ApiDataSourcesUploadRoute
+  ApiDatasetsIdRoute: typeof ApiDatasetsIdRouteWithChildren
   ApiEmailTemplatesIdRoute: typeof ApiEmailTemplatesIdRouteWithChildren
   ApiHelpArticlesRoute: typeof ApiHelpArticlesRoute
   ApiIntelligentUiExportRoute: typeof ApiIntelligentUiExportRoute
@@ -1600,6 +1637,7 @@ export interface RootRouteChildren {
   ApiCopilotkitIndexRoute: typeof ApiCopilotkitIndexRoute
   ApiDashboardsIndexRoute: typeof ApiDashboardsIndexRoute
   ApiDataSourcesIndexRoute: typeof ApiDataSourcesIndexRoute
+  ApiDatasetsIndexRoute: typeof ApiDatasetsIndexRoute
   ApiEmailTemplatesIndexRoute: typeof ApiEmailTemplatesIndexRoute
   ApiLogsIndexRoute: typeof ApiLogsIndexRoute
   ApiReportGenerationArtifactsIdRoute: typeof ApiReportGenerationArtifactsIdRoute
@@ -1760,6 +1798,13 @@ declare module '@tanstack/react-router' {
       path: '/api/email-templates'
       fullPath: '/api/email-templates/'
       preLoaderRoute: typeof ApiEmailTemplatesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/datasets/': {
+      id: '/api/datasets/'
+      path: '/api/datasets'
+      fullPath: '/api/datasets/'
+      preLoaderRoute: typeof ApiDatasetsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/data-sources/': {
@@ -2077,6 +2122,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiEmailTemplatesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/datasets/$id': {
+      id: '/api/datasets/$id'
+      path: '/api/datasets/$id'
+      fullPath: '/api/datasets/$id'
+      preLoaderRoute: typeof ApiDatasetsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/data-sources/upload': {
       id: '/api/data-sources/upload'
       path: '/api/data-sources/upload'
@@ -2328,6 +2380,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/email-templates/$id/preview'
       preLoaderRoute: typeof ApiEmailTemplatesIdPreviewRouteImport
       parentRoute: typeof ApiEmailTemplatesIdRoute
+    }
+    '/api/datasets/$id/data': {
+      id: '/api/datasets/$id/data'
+      path: '/data'
+      fullPath: '/api/datasets/$id/data'
+      preLoaderRoute: typeof ApiDatasetsIdDataRouteImport
+      parentRoute: typeof ApiDatasetsIdRoute
     }
     '/api/data-sources/$id/user-roles': {
       id: '/api/data-sources/$id/user-roles'
@@ -2741,6 +2800,18 @@ const ApiDataSourcesIdRouteChildren: ApiDataSourcesIdRouteChildren = {
 const ApiDataSourcesIdRouteWithChildren =
   ApiDataSourcesIdRoute._addFileChildren(ApiDataSourcesIdRouteChildren)
 
+interface ApiDatasetsIdRouteChildren {
+  ApiDatasetsIdDataRoute: typeof ApiDatasetsIdDataRoute
+}
+
+const ApiDatasetsIdRouteChildren: ApiDatasetsIdRouteChildren = {
+  ApiDatasetsIdDataRoute: ApiDatasetsIdDataRoute,
+}
+
+const ApiDatasetsIdRouteWithChildren = ApiDatasetsIdRoute._addFileChildren(
+  ApiDatasetsIdRouteChildren,
+)
+
 interface ApiEmailTemplatesIdRouteChildren {
   ApiEmailTemplatesIdPreviewRoute: typeof ApiEmailTemplatesIdPreviewRoute
 }
@@ -2856,6 +2927,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiDataSourcesActiveRoute: ApiDataSourcesActiveRoute,
   ApiDataSourcesTestRoute: ApiDataSourcesTestRoute,
   ApiDataSourcesUploadRoute: ApiDataSourcesUploadRoute,
+  ApiDatasetsIdRoute: ApiDatasetsIdRouteWithChildren,
   ApiEmailTemplatesIdRoute: ApiEmailTemplatesIdRouteWithChildren,
   ApiHelpArticlesRoute: ApiHelpArticlesRoute,
   ApiIntelligentUiExportRoute: ApiIntelligentUiExportRoute,
@@ -2885,6 +2957,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCopilotkitIndexRoute: ApiCopilotkitIndexRoute,
   ApiDashboardsIndexRoute: ApiDashboardsIndexRoute,
   ApiDataSourcesIndexRoute: ApiDataSourcesIndexRoute,
+  ApiDatasetsIndexRoute: ApiDatasetsIndexRoute,
   ApiEmailTemplatesIndexRoute: ApiEmailTemplatesIndexRoute,
   ApiLogsIndexRoute: ApiLogsIndexRoute,
   ApiReportGenerationArtifactsIdRoute: ApiReportGenerationArtifactsIdRoute,

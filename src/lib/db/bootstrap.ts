@@ -133,6 +133,23 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
       updated_at VARCHAR(255) DEFAULT CURRENT_TIMESTAMP
     )`,
 
+    // A dataset is a saved query the browser loads into DuckDB-WASM. Nothing here is data:
+    // the rows are produced at download time, for the person downloading, through
+    // decideQueryRun. row_count / byte_size / columns are the stats of the last download.
+    sql`CREATE TABLE IF NOT EXISTS datasets (
+      id VARCHAR(255) PRIMARY KEY,
+      name VARCHAR(255) NOT NULL UNIQUE,
+      description TEXT,
+      saved_query_id VARCHAR(255) NOT NULL,
+      row_count BIGINT NOT NULL DEFAULT 0,
+      byte_size BIGINT NOT NULL DEFAULT 0,
+      columns TEXT,
+      last_built_at VARCHAR(255),
+      created_by VARCHAR(255),
+      created_at VARCHAR(255) DEFAULT CURRENT_TIMESTAMP,
+      updated_at VARCHAR(255) DEFAULT CURRENT_TIMESTAMP
+    )`,
+
     sql`CREATE TABLE IF NOT EXISTS report_definitions (
       id VARCHAR(255) PRIMARY KEY,
       name VARCHAR(255) NOT NULL,

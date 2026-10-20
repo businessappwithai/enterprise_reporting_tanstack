@@ -24,6 +24,7 @@ export interface Database {
   logs: LogsTable;
   email_templates: EmailTemplatesTable;
   resource_permissions: ResourcePermissionsTable;
+  datasets: DatasetsTable;
   filter_definitions: FilterDefinitionsTable;
   report_filters: ReportFiltersTable;
   chart_filters: ChartFiltersTable;
@@ -306,6 +307,20 @@ export interface EmailTemplatesTable {
   html_body: string | null;
   column_mappings: string | null;
   query_id: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DatasetsTable {
+  id: string;
+  name: string;
+  description: string | null;
+  saved_query_id: string;
+  row_count: number | string; // BIGINT: pg returns it as a string
+  byte_size: number | string;
+  columns: string | null; // JSON: [{ name, type, nullable }] from the last download
+  last_built_at: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
