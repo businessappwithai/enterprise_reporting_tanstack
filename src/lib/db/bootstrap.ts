@@ -798,6 +798,12 @@ export async function bootstrapSchema(db: Kysely<Database>): Promise<void> {
   for (const stmt of [
     sql`ALTER TABLE email_templates ADD COLUMN IF NOT EXISTS query_id VARCHAR(255)`,
     sql`ALTER TABLE email_templates ADD COLUMN IF NOT EXISTS created_by VARCHAR(255)`,
+    // The minute a scheduled run was for. The unique index makes "claim this minute" a single
+    // INSERT, so two processes (the web server and `jobs:worker`) or a restart mid-minute cannot
+    // run the same job twice. Manual runs leave it NULL, and NULLs are distinct.
+    sql`ALTER TABLE job_executions ADD COLUMN IF NOT EXISTS scheduled_for VARCHAR(255)`,
+    sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_job_executions_claim
+        ON job_executions(job_definition_id, scheduled_for)`,
   ]) {
     try {
       await stmt.execute(db);

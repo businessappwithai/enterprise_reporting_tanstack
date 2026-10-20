@@ -270,6 +270,8 @@ export interface JobExecutionsTable {
   result_location: string | null;
   error_message: string | null;
   execution_metadata: string | null; // JSON
+  /** UTC minute (ISO) a scheduled run was claimed for; null for a manual run. */
+  scheduled_for: string | null;
   created_at: string;
 }
 

@@ -17,6 +17,7 @@ import {
   emailBatchTask,
   scheduledRefreshTask,
 } from "./trigger-tasks";
+import { startJobDefinitionRunner, stopJobDefinitionRunner } from "./job-definition-runner";
 import {
   startOnPremiseCronRunner,
   stopOnPremiseCronRunner,
@@ -35,6 +36,9 @@ export async function initializeWorkers(): Promise<void> {
   console.log(`  - emailBatchTask (concurrency: ${WORKER_CONCURRENCY})`);
   console.log(`  - scheduledRefreshTask (concurrency: ${WORKER_CONCURRENCY})`);
 
+  // Job definitions are scheduled by neither backend below, so this runs in both modes.
+  startJobDefinitionRunner();
+
   if (isTriggerDevConfigured()) {
     console.log("");
     console.log("Jobs are now being processed by Trigger.dev (self-hosted):");
@@ -50,6 +54,7 @@ export async function initializeWorkers(): Promise<void> {
 export async function shutdownWorkers(): Promise<void> {
   console.log("Shutting down workers...");
   stopOnPremiseCronRunner();
+  stopJobDefinitionRunner();
   console.log("✓ Workers stopped");
 }
 
