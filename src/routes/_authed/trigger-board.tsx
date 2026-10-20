@@ -147,7 +147,7 @@ function QueueManagementContent() {
   return (
     <CopilotSidebar
       onError={onCopilotError}
-      instructions="You are a background job scheduling assistant for Trigger.dev.\nHelp users understand the registered task types, create scheduled jobs, and interpret cron schedules.\nWhen the user describes a job they want, call createScheduledJob with the appropriate task type and cron.\nIf they ask about cron syntax, call explainCronSyntax.\nAvailable task types: report:generate, data:export, email:batch, scheduled:refresh."
+      instructions="You are a background job scheduling assistant for Trigger.dev.\nHelp users understand the registered task types, create scheduled jobs, and interpret cron schedules.\nA job runs a report (jobType report) or a saved query (jobType export) on a five-field cron schedule in UTC, as the person who created it, and saves the result as csv, xlsx or pdf.\nWhen the user describes a job they want, call createJob with the report or saved query NAME, the job type and the cron; if it says the name is ambiguous, ask which one they mean.\nIf they ask about cron syntax, call explainCronSyntax.\nAvailable task types: report:generate, data:export, email:batch, scheduled:refresh."
       defaultOpen={false}
       labels={{
         title: "Trigger Board Assistant",

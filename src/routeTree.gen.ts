@@ -114,6 +114,7 @@ import { Route as ApiReportGenerationArtifactsIdRouteImport } from './routes/api
 import { Route as ApiQueriesIdExecuteRouteImport } from './routes/api/queries/$id/execute'
 import { Route as ApiMonitoringRulesIdRouteImport } from './routes/api/monitoring/rules.$id'
 import { Route as ApiMetadataEntitiesIdRouteImport } from './routes/api/metadata/entities/$id'
+import { Route as ApiJobsIdResultRouteImport } from './routes/api/jobs/$id/result'
 import { Route as ApiEmailTemplatesIdPreviewRouteImport } from './routes/api/email-templates/$id/preview'
 import { Route as ApiDatasetsIdDataRouteImport } from './routes/api/datasets/$id/data'
 import { Route as ApiDataSourcesIdUserRolesRouteImport } from './routes/api/data-sources/$id/user-roles'
@@ -676,6 +677,11 @@ const ApiMetadataEntitiesIdRoute = ApiMetadataEntitiesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ApiMetadataEntitiesRoute,
 } as any)
+const ApiJobsIdResultRoute = ApiJobsIdResultRouteImport.update({
+  id: '/$id/result',
+  path: '/$id/result',
+  getParentRoute: () => ApiJobsRoute,
+} as any)
 const ApiEmailTemplatesIdPreviewRoute =
   ApiEmailTemplatesIdPreviewRouteImport.update({
     id: '/preview',
@@ -913,6 +919,7 @@ export interface FileRoutesByFullPath {
   '/api/data-sources/$id/user-roles': typeof ApiDataSourcesIdUserRolesRoute
   '/api/datasets/$id/data': typeof ApiDatasetsIdDataRoute
   '/api/email-templates/$id/preview': typeof ApiEmailTemplatesIdPreviewRoute
+  '/api/jobs/$id/result': typeof ApiJobsIdResultRoute
   '/api/metadata/entities/$id': typeof ApiMetadataEntitiesIdRouteWithChildren
   '/api/monitoring/rules/$id': typeof ApiMonitoringRulesIdRouteWithChildren
   '/api/queries/$id/execute': typeof ApiQueriesIdExecuteRoute
@@ -1043,6 +1050,7 @@ export interface FileRoutesByTo {
   '/api/data-sources/$id/user-roles': typeof ApiDataSourcesIdUserRolesRoute
   '/api/datasets/$id/data': typeof ApiDatasetsIdDataRoute
   '/api/email-templates/$id/preview': typeof ApiEmailTemplatesIdPreviewRoute
+  '/api/jobs/$id/result': typeof ApiJobsIdResultRoute
   '/api/metadata/entities/$id': typeof ApiMetadataEntitiesIdRouteWithChildren
   '/api/monitoring/rules/$id': typeof ApiMonitoringRulesIdRouteWithChildren
   '/api/queries/$id/execute': typeof ApiQueriesIdExecuteRoute
@@ -1175,6 +1183,7 @@ export interface FileRoutesById {
   '/api/data-sources/$id/user-roles': typeof ApiDataSourcesIdUserRolesRoute
   '/api/datasets/$id/data': typeof ApiDatasetsIdDataRoute
   '/api/email-templates/$id/preview': typeof ApiEmailTemplatesIdPreviewRoute
+  '/api/jobs/$id/result': typeof ApiJobsIdResultRoute
   '/api/metadata/entities/$id': typeof ApiMetadataEntitiesIdRouteWithChildren
   '/api/monitoring/rules/$id': typeof ApiMonitoringRulesIdRouteWithChildren
   '/api/queries/$id/execute': typeof ApiQueriesIdExecuteRoute
@@ -1307,6 +1316,7 @@ export interface FileRouteTypes {
     | '/api/data-sources/$id/user-roles'
     | '/api/datasets/$id/data'
     | '/api/email-templates/$id/preview'
+    | '/api/jobs/$id/result'
     | '/api/metadata/entities/$id'
     | '/api/monitoring/rules/$id'
     | '/api/queries/$id/execute'
@@ -1437,6 +1447,7 @@ export interface FileRouteTypes {
     | '/api/data-sources/$id/user-roles'
     | '/api/datasets/$id/data'
     | '/api/email-templates/$id/preview'
+    | '/api/jobs/$id/result'
     | '/api/metadata/entities/$id'
     | '/api/monitoring/rules/$id'
     | '/api/queries/$id/execute'
@@ -1568,6 +1579,7 @@ export interface FileRouteTypes {
     | '/api/data-sources/$id/user-roles'
     | '/api/datasets/$id/data'
     | '/api/email-templates/$id/preview'
+    | '/api/jobs/$id/result'
     | '/api/metadata/entities/$id'
     | '/api/monitoring/rules/$id'
     | '/api/queries/$id/execute'
@@ -2393,6 +2405,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMetadataEntitiesIdRouteImport
       parentRoute: typeof ApiMetadataEntitiesRoute
     }
+    '/api/jobs/$id/result': {
+      id: '/api/jobs/$id/result'
+      path: '/$id/result'
+      fullPath: '/api/jobs/$id/result'
+      preLoaderRoute: typeof ApiJobsIdResultRouteImport
+      parentRoute: typeof ApiJobsRoute
+    }
     '/api/email-templates/$id/preview': {
       id: '/api/email-templates/$id/preview'
       path: '/preview'
@@ -2672,12 +2691,14 @@ interface ApiJobsRouteChildren {
   ApiJobsExecutionsRoute: typeof ApiJobsExecutionsRoute
   ApiJobsStatusRoute: typeof ApiJobsStatusRoute
   ApiJobsTargetsRoute: typeof ApiJobsTargetsRoute
+  ApiJobsIdResultRoute: typeof ApiJobsIdResultRoute
 }
 
 const ApiJobsRouteChildren: ApiJobsRouteChildren = {
   ApiJobsExecutionsRoute: ApiJobsExecutionsRoute,
   ApiJobsStatusRoute: ApiJobsStatusRoute,
   ApiJobsTargetsRoute: ApiJobsTargetsRoute,
+  ApiJobsIdResultRoute: ApiJobsIdResultRoute,
 }
 
 const ApiJobsRouteWithChildren =

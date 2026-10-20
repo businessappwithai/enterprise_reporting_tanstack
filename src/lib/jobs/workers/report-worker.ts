@@ -8,9 +8,9 @@ import { getDb } from "@/lib/db/config";
 import { getConnection } from "@/lib/db/connection-manager";
 import { refuseJobQuery } from "@/lib/permissions/actor";
 import { logAudit } from "@/lib/security/audit";
+import { JOB_OUTPUT_DIR } from "../output-dir";
 import type { JobResult, ReportJobData } from "../types";
 
-const OUTPUT_DIR = process.env.JOB_OUTPUT_PATH || "./job-outputs";
 
 export async function processReportJob(data: ReportJobData): Promise<JobResult> {
   const startTime = Date.now();
@@ -67,11 +67,11 @@ export async function processReportJob(data: ReportJobData): Promise<JobResult> 
     rows = result.rows;
 
     // Ensure output directory exists
-    await fs.mkdir(OUTPUT_DIR, { recursive: true });
+    await fs.mkdir(JOB_OUTPUT_DIR, { recursive: true });
 
     const timestamp = Date.now();
     const filename = `report_${reportId}_${timestamp}.${format}`;
-    const outputPath = path.join(OUTPUT_DIR, filename);
+    const outputPath = path.join(JOB_OUTPUT_DIR, filename);
 
     // Export based on format
     switch (format) {

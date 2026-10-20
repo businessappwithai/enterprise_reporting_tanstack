@@ -9,9 +9,9 @@ import { getConnection } from "@/lib/db/connection-manager";
 import { refuseJobQuery } from "@/lib/permissions/actor";
 import { sendEmail } from "@/lib/email/email-service";
 import { logAudit } from "@/lib/security/audit";
+import { JOB_OUTPUT_DIR } from "../output-dir";
 import type { EmailBatchJobData, JobResult } from "../types";
 
-const OUTPUT_DIR = process.env.JOB_OUTPUT_PATH || "./job-outputs";
 
 export async function processEmailBatchJob(data: EmailBatchJobData): Promise<JobResult> {
   const startTime = Date.now();
@@ -81,12 +81,12 @@ export async function processEmailBatchJob(data: EmailBatchJobData): Promise<Job
     console.info("[email-batch]", `Generated ${reportRows.length} rows for report`);
 
     // Ensure output directory exists
-    await fs.mkdir(OUTPUT_DIR, { recursive: true });
+    await fs.mkdir(JOB_OUTPUT_DIR, { recursive: true });
 
     // Generate export file
     const timestamp = Date.now();
     const filename = `${reportName.replace(/\s+/g, "_")}_${timestamp}.${format}`;
-    attachmentPath = path.join(OUTPUT_DIR, filename);
+    attachmentPath = path.join(JOB_OUTPUT_DIR, filename);
 
     switch (format) {
       case "csv":

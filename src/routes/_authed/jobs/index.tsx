@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   CheckCircle,
@@ -7,10 +7,8 @@ import {
   MoreHorizontal,
   Pause,
   RefreshCw,
-  Trash,
   XCircle,
 } from "lucide-react";
-import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -51,6 +49,17 @@ const statusIcons: Record<string, React.ReactNode> = {
   cancelled: <Pause className="h-4 w-4" />,
 };
 
+/** "123ms", or a dash when the run recorded none (a run that failed before it started has no duration). */
+function formatDuration(metadata: string | undefined): string {
+  if (!metadata) return "-";
+  try {
+    const duration = (JSON.parse(metadata) as { duration?: unknown }).duration;
+    return typeof duration === "number" ? `${duration}ms` : "-";
+  } catch {
+    return "-";
+  }
+}
+
 function JobsContent() {
   const queryClient = useQueryClient();
 
@@ -81,21 +90,6 @@ function JobsContent() {
       return data.data?.items || [];
     },
     refetchInterval: 10000,
-  });
-
-  const cancelMutation = useMutation({
-    mutationFn: async (jobId: string) => {
-      const res = await fetch(`/api/jobs/${jobId}`, { method: "DELETE" });
-      return res.json();
-    },
-    onSuccess: (data) => {
-      if (data.success) {
-        toast.success("Job cancelled");
-        queryClient.invalidateQueries({ queryKey: ["job-executions"] });
-      } else {
-        toast.error(data.error?.message || "Failed to cancel job");
-      }
-    },
   });
 
   // ── CopilotKit ─────────────────────────────────────────────────────────
@@ -150,7 +144,7 @@ function JobsContent() {
   return (
     <CopilotSidebar
       onError={onCopilotError}
-      instructions="You are a background job scheduling assistant.\nHelp users create and understand background jobs.\nWORKFLOW:\n1. When user describes a job, ask: what should it do? how often?\n2. Convert their schedule description to a cron expression.\n3. Call createJobFromNL to create the job.\n4. Use explainCron to explain cron syntax when asked.\nCommon job types: report_export (generates and emails reports), monitoring (checks metric thresholds)."
+      instructions="You are a background job scheduling assistant.\nHelp users create and understand background jobs.\nA job runs a report (jobType report) or a saved query (jobType export) on a cron schedule, in UTC, and saves the result as a CSV, XLSX or PDF file. It runs as the person who created it, with the access they hold when it runs.\nWORKFLOW:\n1. When user describes a job, ask: which report or saved query? how often? which format?\n2. Convert their schedule description to a five-field cron expression in UTC.\n3. Call createJob with the report or query NAME to create the job; if it says the name is ambiguous, ask the user which one.\n4. Use explainCron to explain cron syntax when asked."
       defaultOpen={false}
       labels={{
         title: "Job Scheduler AI",
@@ -162,7 +156,7 @@ function JobsContent() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <PageHeader
             title="Background Jobs"
-            description="Monitor and manage background job processing"
+            description="Scheduled jobs run a report or saved query on a UTC cron schedule, as the person who created them, and save the result as a file."
           />
           <Button variant="outline" onClick={() => refetchStatus()}>
             <RefreshCw className="h-4 w-4 mr-2" />
@@ -279,6 +273,11 @@ function JobsContent() {
                               {statusIcons[execution.status]}
                               {execution.status}
                             </Badge>
+                            {execution.status === "failed" && execution.error_message && (
+                              <p className="mt-1 max-w-xs text-red-600 text-xs">
+                                {execution.error_message}
+                              </p>
+                            )}
                           </TableCell>
                           <TableCell className="text-tremor-content">
                             {execution.started_at ? formatDateTime(execution.started_at) : "-"}
@@ -287,9 +286,7 @@ function JobsContent() {
                             {execution.completed_at ? formatDateTime(execution.completed_at) : "-"}
                           </TableCell>
                           <TableCell>
-                            {execution.execution_metadata
-                              ? `${JSON.parse(execution.execution_metadata).duration}ms`
-                              : "-"}
+                            {formatDuration(execution.execution_metadata)}
                           </TableCell>
                           <TableCell>
                             <DropdownMenu>
@@ -305,16 +302,6 @@ function JobsContent() {
                                       <Download className="h-4 w-4 mr-2" />
                                       Download Result
                                     </a>
-                                  </DropdownMenuItem>
-                                )}
-                                {(execution.status === "pending" ||
-                                  execution.status === "running") && (
-                                  <DropdownMenuItem
-                                    onClick={() => cancelMutation.mutate(execution.id)}
-                                    className="text-destructive"
-                                  >
-                                    <Trash className="h-4 w-4 mr-2" />
-                                    Cancel
                                   </DropdownMenuItem>
                                 )}
                               </DropdownMenuContent>
