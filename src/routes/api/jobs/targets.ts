@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { sql } from "kysely";
 import { auth } from "@/lib/auth/config";
 import { getDb } from "@/lib/db/config";
-import { JOB_TYPES } from "@/lib/jobs/job-input";
+import { JOB_TYPES } from "@/lib/jobs/job-vocabulary";
 import { refuseWithoutPermission } from "@/lib/permissions/resource-guard";
 import { json } from "@/lib/server/response";
 

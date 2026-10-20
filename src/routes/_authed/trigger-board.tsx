@@ -17,6 +17,7 @@ import { PageHeader } from "@/components/layout/page-header";
 
 import { CopilotKit } from "@copilotkit/react-core";
 import { copilotRuntimeUrl, onCopilotError } from "@/lib/copilot/runtime-url";
+import { CREATE_JOB_ACTION, createJobByName } from "@/lib/jobs/create-job-client";
 import { CopilotSidebar } from "@copilotkit/react-ui";
 import { useCopilotAction, useCopilotReadable } from "@copilotkit/react-core";
 import "@copilotkit/react-ui/styles.css";
@@ -91,38 +92,11 @@ function QueueManagementContent() {
   });
 
   useCopilotAction({
-    name: "createScheduledJob",
-    description:
-      "Create a new scheduled job definition. Ask the user for the job name, type (report:generate, data:export, email:batch, scheduled:refresh), and cron schedule if not provided.",
-    parameters: [
-      { name: "name", type: "string", description: "Job name", required: true },
-      {
-        name: "jobType",
-        type: "string",
-        description: "Task type ID (e.g. report:generate, email:batch)",
-        required: true,
-      },
-      {
-        name: "cron",
-        type: "string",
-        description: "Cron schedule expression (e.g. '0 8 * * *' for daily 8am)",
-        required: false,
-      },
-    ],
-    handler: async ({ name, jobType, cron }) => {
-      const res = await fetch("/api/jobs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          job_type: jobType,
-          schedule_cron: cron || null,
-          is_active: true,
-        }),
-      });
-      if (!res.ok) return `Failed to create job: HTTP ${res.status}`;
-      refetch();
-      return `Job "${name}" (${jobType}) created${cron ? ` with schedule: ${cron}` : " as on-demand"}.`;
+    ...CREATE_JOB_ACTION,
+    handler: async ({ name, jobType, targetName, cron, format }) => {
+      const result = await createJobByName({ name, jobType, targetName, cron, format });
+      if (result.ok) refetch();
+      return result.message;
     },
   });
 

@@ -11,11 +11,7 @@
 import { z } from "zod";
 import { getDb } from "@/lib/db/config";
 import { isValidCron } from "./cron";
-
-export const JOB_TYPES = ["report", "export"] as const;
-export type RunnableJobType = (typeof JOB_TYPES)[number];
-
-export const JOB_FORMATS = ["csv", "xlsx", "pdf"] as const;
+import { JOB_FORMATS, JOB_TYPES, type RunnableJobType } from "./job-vocabulary";
 
 export const createJobSchema = z.object({
   name: z.string().trim().min(1, "name is required").max(255),

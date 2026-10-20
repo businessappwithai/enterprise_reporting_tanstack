@@ -35,6 +35,7 @@ import { PageHeader } from "@/components/layout/page-header";
 
 import { CopilotKit } from "@copilotkit/react-core";
 import { copilotRuntimeUrl, onCopilotError } from "@/lib/copilot/runtime-url";
+import { CREATE_JOB_ACTION, createJobByName } from "@/lib/jobs/create-job-client";
 import { CopilotSidebar } from "@copilotkit/react-ui";
 import { useCopilotAction, useCopilotReadable } from "@copilotkit/react-core";
 import "@copilotkit/react-ui/styles.css";
@@ -120,46 +121,11 @@ function JobsContent() {
   });
 
   useCopilotAction({
-    name: "createJobFromNL",
-    description:
-      "Create a new background job from a natural language description. Supports report export and email delivery jobs.",
-    parameters: [
-      { name: "jobName", type: "string", description: "Job name", required: true },
-      {
-        name: "jobType",
-        type: "string",
-        description: "Job type: report_export, email_delivery, data_sync, or monitoring",
-        required: true,
-      },
-      {
-        name: "cronExpression",
-        type: "string",
-        description: "Cron expression (e.g. 0 8 * * 1 for every Monday at 8am)",
-        required: true,
-      },
-      { name: "description", type: "string", description: "What this job does", required: false },
-    ],
-    handler: async ({ jobName, jobType, cronExpression, description }) => {
-      try {
-        const res = await fetch("/api/jobs", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: jobName,
-            description,
-            jobType,
-            scheduleCron: cronExpression,
-          }),
-        });
-        const data = await res.json();
-        if (data.success) {
-          queryClient.invalidateQueries({ queryKey: ["job-definitions"] });
-          return `Job "${jobName}" created with schedule "${cronExpression}".`;
-        }
-        return `Failed to create job: ${data.error?.message || "Unknown error"}`;
-      } catch (err) {
-        return `Error: ${err instanceof Error ? err.message : String(err)}`;
-      }
+    ...CREATE_JOB_ACTION,
+    handler: async ({ name, jobType, targetName, cron, format }) => {
+      const result = await createJobByName({ name, jobType, targetName, cron, format });
+      if (result.ok) queryClient.invalidateQueries({ queryKey: ["job-definitions"] });
+      return result.message;
     },
   });
   useCopilotAction({
