@@ -111,7 +111,7 @@ import { getDb } from "@/lib/db/config";
 
 - Connection via `DATABASE_URL`, else assembled from `POSTGRES_HOST/PORT/DB/USER/PASSWORD` (or `PGHOST`/`PGPORT`/… ), defaulting to `localhost:5432/enterprise_config` as user `enterprise`
 - `getDb()` is synchronous; bootstraps schema on first call via `bootstrapSchema()` in `src/lib/db/bootstrap.ts` — idempotent (`CREATE TABLE IF NOT EXISTS`), safe to run every boot
-- Stores everything: users, roles, user_roles, resource_permissions, data_sources, saved_queries, report_definitions, chart_definitions, dashboard_layouts, dashboard_widgets, job_definitions, job_executions, audit_log, logs, email_templates, filter_definitions, report_filters, chart_filters, ds_roles, ds_user_roles, ds_entity_permissions, schema_table_instructions, schema_field_instructions, metadata_entity_header, metadata_entity_field, error_messages, warning_configs, error_occurrences, app_settings, nl_query_context, nl_query_role_stats, nl_query_feedback, help_articles — plus `auth_sessions`, `auth_accounts` and `auth_verifications` for Better Auth
+- Stores everything: users, roles, user_roles, resource_permissions, data_sources, saved_queries, report_definitions, chart_definitions, dashboard_layouts, dashboard_widgets, job_definitions, job_executions, audit_log, logs, email_templates, filter_definitions, report_filters, chart_filters, ds_roles, ds_user_roles, ds_entity_permissions, schema_table_instructions, schema_field_instructions, metadata_entity_header, metadata_entity_field, error_messages, warning_configs, error_occurrences, app_settings, nl_query_context, nl_query_role_stats, nl_query_feedback, help_articles, datasets — plus `auth_sessions`, `auth_accounts` and `auth_verifications` for Better Auth
 - The `Database` interface in `src/lib/db/kysely-db.ts` is the authoritative type for all config DB tables — add a table there and in `bootstrap.ts` together
 
 **Seven tables exist in `bootstrap.ts` that the `Database` interface does not
@@ -268,6 +268,33 @@ flattens it, handing `better-auth` the hoisted v3 — which fails at runtime on
 `z.looseObject is not a function`: a 500 on every sign-in, from a build that
 succeeded and a typecheck that passed.
 
+#### "Signed out" and "could not check" are different answers
+
+`getSessionFromHeaders` and `verifySession` return `null` **only** when there is no session.
+When the lookup throws — the database is restarting, a pooled connection dropped — they retry
+once and then throw `SessionUnavailableError` (`src/lib/auth/session.ts`). They used to catch
+everything and return `null`, and every caller reads `null` as "signed out": the `_authed` guard
+redirected to `/login`, and `requireAuth` said UNAUTHORIZED. Under load that signed people out
+whose cookies were fine.
+
+- `_authed.tsx` has an `errorComponent`: an outage shows "We couldn't check your sign-in" with
+  **Try again** (`router.invalidate()`), not a redirect. API routes answer it with their existing
+  500. The message constant lives in `session-errors.ts` (no imports) so the component can read it
+  without pulling `pg` and Better Auth into the client bundle.
+- **Do not add a `catch { return null }` around a session lookup.** If a new caller needs to
+  tolerate an outage, catch `SessionUnavailableError` by name.
+- Both `pg` pools (config, graph) have an `error` listener. Without one, the server dropping an idle
+  connection is an unhandled event and the **whole process exits** — stopping PostgreSQL for a
+  second killed the dev server.
+
+**Permissions reach the page with the session.** The `_authed` guard returns
+`{ session, permissions }` (`loadUserPermissions`, `src/lib/auth/user-permissions.ts`) and
+`SessionPermissionsContext` seeds `usePermissions`, so the sidebar renders its full menu on the
+first paint. It used to fetch `/api/auth/permissions` after hydration and hide every gated item
+until it returned. The query key carries the user id (it used to be shared across users in a tab),
+and `/api/auth/permissions` returns the caller's roles' `resource_permissions` rows only — it used
+to return the whole table.
+
 ### NL Query Pipeline
 
 `/_authed/nl-query/` → CopilotKit sidebar → `/api/copilotkit` → Mastra AI server → llama.cpp → pgvector RAG
@@ -358,6 +385,15 @@ Rules that came out of it: **never return `connection_config`** from a data-sour
 a missing row on update or delete is a **404**, not a silent 200; and a role id or permission
 id in a URL is checked against the data source in the same URL.
 
+Also gated, from the second QA pass: `POST /api/jobs` takes `job:create` **or** `job:execute` (the
+Analyst holds the latter), validates `job_type`, checks `target_id` names a real report, chart or saved
+query, and audits; `GET /api/filters` and `GET /api/reports/:id/filters` (which returns each filter's
+`filter_query` SQL) need filter, report or chart view. `POST /api/logs` stays open to any signed-in
+user — the browser logger needs it — but is bounded (`src/lib/logging/client-log.ts`: level, 4 000-char
+message, identifier-shaped component, 8 KB metadata, 60 entries a minute per user), stamped
+`metadata.source = "client"` so it cannot pass for a server log, and takes the user id from the
+session. `json(data, { headers })` **replaces** the default `content-type` header — pass it too.
+
 Two rules follow from the fix:
 
 - **`checkEntityAccess` is the one implementation.** `sql-ast-validator.ts` used
@@ -429,6 +465,29 @@ exist. The Share dialog always shows the link. `PATCH /api/dashboards/:id` and `
 set `is_public` (they did not exist, so the dialog's toggle fell through to the HTML shell and a
 200). An anonymous visitor is offered **Sign in**, which returns to the link via
 `/login?redirect=…`; `safeRedirectTarget` accepts only a path on this site.
+
+### Datasets — a saved query the browser loads into DuckDB
+
+`/datasets` (needs `NEXT_PUBLIC_WASM_ENABLED=true`) lists datasets and loads them into
+DuckDB-WASM. A dataset is a row in `datasets` pointing at a saved query — **no data is stored on the
+server**. `GET /api/datasets/:id/data` runs the query for whoever is downloading, through
+`decideQueryRun` (so entity permissions apply to the download exactly as to the SQL editor), caps it at
+`DATASET_MAX_ROWS` (100 000; `x-dataset-truncated` says when it bit) and returns an **Arrow IPC
+stream**, not Parquet — the page never read Parquet, and `read_parquet` would reject it. Creating
+a dataset runs the same check, so nobody saves one they could not download.
+
+- The driver returns `numeric` and `count(*)` as strings; `coerceNumericColumns` turns a column of
+  plain numbers (no leading zeros, exactly representable) into numbers so DuckDB can `SUM` it.
+  There are no column types to go by, so a text column of digits-only values is converted too.
+- Nothing is cached in IndexedDB: the rows were produced under the caller's permissions at that
+  moment. (`useDatasetEnhanced` has an offline cache that does this; nothing uses it. Think before wiring it up.)
+- `src/lib/export/source-connector.ts` and `parquet-exporter.ts` are gone. The first ran caller-supplied
+  SQL against the **config** database. Do not recreate it; run SQL through `getConnection` and `decideQueryRun`.
+- Three defects had made every WASM feature unreachable, found by loading a dataset in a browser:
+  the `NEXT_PUBLIC_*` flags never reached the client bundle (hydration mismatch, page always "not
+  enabled"); DuckDB's bundles came from jsDelivr, which a browser refuses as a Worker script
+  ("cannot be accessed from origin") so it never started; and a loaded dataset showed 0 B because
+  the transferred buffer's `byteLength` was read after the transfer.
 
 ### Email templates — `/api/email-templates`
 
@@ -518,6 +577,12 @@ meets both should not have to learn two ways to ask for help.
 - `NEXT_PUBLIC_CROSSFILTER_ENABLED` — cross-widget dashboard filtering
 - `NEXT_PUBLIC_OFFLINE_ENABLED` — IndexedDB offline caching
 - `NEXT_PUBLIC_PROGRESSIVE_ENABLED` — progressive loading for large datasets
+
+**The flags are substituted at build time** (`featureFlagDefines` in `vite.config.ts`), in the client
+and the server bundle alike. Vite does not put `process.env` in the browser bundle, so they used to be
+read as unset there while the server saw them set. The value is what the environment (or `.env`) holds
+when `vite dev` / `vite build` runs: a Docker build needs them as build arguments, and changing one
+means rebuilding. Other `NEXT_PUBLIC_` variables are *not* substituted — the server reads them at run time.
 
 ## Environment Variables
 
@@ -697,7 +762,7 @@ Two things to know before you trust them:
 validator is more permissive than the test expects: `SELECT * FROM users;` returns
 two warnings where the test wants zero, and both `SELECT * WHERE id = 1;` and the
 empty string come back `isValid: true` where the test wants `false`. As of this
-writing `bun test src` is 168 pass / 3 fail across 14 files (the three are those). Decide whether the
+writing `bun test src` is 202 pass / 3 fail across 18 files (the three are those). Decide whether the
 validator or the test is right before changing either — and if you fix them, wiring
 `bun test src` into `precommit` is what stops it happening again.
 
