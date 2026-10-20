@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/server/response";
 import { canConfigureReport } from "@/lib/permissions/report-ownership";
+import { refuseWithoutPermission } from "@/lib/permissions/resource-guard";
 
 async function getSession(_request: Request) {
   const { getAuthSession } = await import("@/lib/auth/config");
@@ -17,6 +18,10 @@ export const Route = createFileRoute("/api/reports/$id/filters")({
           if (!session) {
             return json({ error: "Unauthorized" }, { status: 401 });
           }
+
+          // The response carries each filter's `filter_query` SQL.
+          const denied = refuseWithoutPermission(session.user, "report", "view");
+          if (denied) return denied;
 
           const { id: reportId } = params;
           const { getDb } = await import("@/lib/db/config");

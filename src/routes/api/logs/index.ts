@@ -1,16 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { readSessionToken, verifySession } from "@/lib/auth/session";
+import { auth } from "@/lib/auth/config";
 import { getDb } from "@/lib/db/config";
+import { allowClientLog, clientLogSchema, withClientSource } from "@/lib/logging/client-log";
 import { json } from "@/lib/server/response";
 import { refuseWithoutPermission } from "@/lib/permissions/resource-guard";
 import { sqlEditorConfig, validatePageSize } from "@/lib/config/pagination";
 import { generateId } from "@/lib/utils";
 
 async function getSession(request: Request) {
-  const cookie = request.headers.get("cookie") || "";
-  const token = readSessionToken(cookie);
-  if (!token) return null;
-  return verifySession(token);
+  return auth(request);
 }
 
 export const Route = createFileRoute("/api/logs/")({
@@ -26,13 +24,45 @@ export const Route = createFileRoute("/api/logs/")({
             );
           }
 
-          const body = (await request.json()) as {
-            level: "info" | "warn" | "error" | "debug";
-            message: string;
-            component: string;
-            metadata?: Record<string, unknown>;
-            errorStack?: string;
-          };
+          // Any signed-in user may write here (the browser logger does), so the entry is
+          // validated, labelled as client-sourced and rate-limited. See lib/logging/client-log.ts.
+          let raw: unknown;
+          try {
+            raw = await request.json();
+          } catch {
+            return json(
+              { success: false, error: { code: "INVALID_INPUT", message: "Body must be JSON" } },
+              { status: 400 }
+            );
+          }
+          const parsed = clientLogSchema.safeParse(raw);
+          if (!parsed.success) {
+            return json(
+              {
+                success: false,
+                error: {
+                  code: "INVALID_INPUT",
+                  message: parsed.error.issues
+                    .map((i) => `${i.path.join(".") || "body"}: ${i.message}`)
+                    .join("; "),
+                },
+              },
+              { status: 400 }
+            );
+          }
+          if (!allowClientLog(session.user.id)) {
+            return json(
+              {
+                success: false,
+                error: { code: "RATE_LIMITED", message: "Too many log entries; slow down" },
+              },
+              {
+                status: 429,
+                headers: { "content-type": "application/json", "Retry-After": "60" },
+              }
+            );
+          }
+          const body = parsed.data;
 
           const db = getDb();
 
@@ -45,7 +75,7 @@ export const Route = createFileRoute("/api/logs/")({
               message: body.message,
               component: body.component,
               user_id: session.user.id as any,
-              metadata: body.metadata ? JSON.stringify(body.metadata) : null,
+              metadata: JSON.stringify(withClientSource(body.metadata)),
               error_stack: body.errorStack,
             })
             .execute();

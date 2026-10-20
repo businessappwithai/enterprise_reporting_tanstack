@@ -1,18 +1,22 @@
 import { randomUUID } from "node:crypto";
 import { createFileRoute } from "@tanstack/react-router";
-import { readSessionToken, verifySession } from "@/lib/auth/session";
+import { auth } from "@/lib/auth/config";
 import { getDb } from "@/lib/db/config";
+import { hasPermission } from "@/lib/permissions/permissions";
+import { refuseWithoutPermission } from "@/lib/permissions/resource-guard";
+import { logAudit } from "@/lib/security/audit";
 import { json } from "@/lib/server/response";
-import {
-  refuseWithoutPermission,
-} from "@/lib/permissions/resource-guard";
 
 async function getSession(request: Request) {
-  const cookie = request.headers.get("cookie") || "";
-  const token = readSessionToken(cookie);
-  if (!token) return null;
-  return verifySession(token);
+  return auth(request);
 }
+
+// What a job's target_id points at, by job_type.
+const TARGET_TABLE = {
+  report: "report_definitions",
+  chart: "chart_definitions",
+  export: "saved_queries",
+} as const;
 
 export const Route = createFileRoute("/api/jobs")({
   server: {
@@ -72,6 +76,23 @@ export const Route = createFileRoute("/api/jobs")({
             );
           }
 
+          // A job runs unattended on a schedule, so creating one is `job:create` — or
+          // `job:execute`, which is what the seeded Analyst role holds and what let
+          // analysts schedule jobs before this was checked at all.
+          const user = session.user;
+          const mayCreate = ["create", "execute"].some((action) =>
+            hasPermission(user.permissions ?? [], "job", action, user.roles ?? [])
+          );
+          if (!mayCreate) {
+            return json(
+              {
+                success: false,
+                error: { code: "FORBIDDEN", message: "You do not have permission to create jobs" },
+              },
+              { status: 403 }
+            );
+          }
+
           const body = (await request.json()) as {
             name?: string;
             job_type?: string;
@@ -105,7 +126,35 @@ export const Route = createFileRoute("/api/jobs")({
             );
           }
 
+          if (!(job_type in TARGET_TABLE)) {
+            return json(
+              {
+                success: false,
+                error: {
+                  code: "INVALID_INPUT",
+                  message: `job_type must be one of: ${Object.keys(TARGET_TABLE).join(", ")}`,
+                },
+              },
+              { status: 400 }
+            );
+          }
+
           const db = getDb();
+          const target = await db
+            .selectFrom(TARGET_TABLE[job_type as keyof typeof TARGET_TABLE])
+            .select("id")
+            .where("id", "=", target_id)
+            .executeTakeFirst();
+          if (!target) {
+            return json(
+              {
+                success: false,
+                error: { code: "NOT_FOUND", message: `No ${job_type} with that target_id` },
+              },
+              { status: 404 }
+            );
+          }
+
           const jobId = randomUUID();
           const now = new Date().toISOString();
 
@@ -128,6 +177,14 @@ export const Route = createFileRoute("/api/jobs")({
               updated_at: now,
             })
             .execute();
+
+          await logAudit({
+            userId: session.user.id,
+            action: "create",
+            resourceType: "job",
+            resourceId: jobId,
+            details: { job_type, target_id, schedule_cron: schedule_cron ?? null },
+          });
 
           return json({ success: true, data: { id: jobId } }, { status: 201 });
         } catch (error) {
