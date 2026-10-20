@@ -27,9 +27,16 @@ interface DatasetCardProps {
   onRefresh?: (id: string) => void;
   onUnload?: (id: string) => void;
   onLoad?: (id: string) => void;
+  onDelete?: (id: string) => void;
 }
 
-export function DatasetCard({ dataset, onRefresh, onUnload, onLoad }: DatasetCardProps) {
+export function DatasetCard({
+  dataset,
+  onRefresh,
+  onUnload,
+  onLoad,
+  onDelete,
+}: DatasetCardProps) {
   const isLoaded = dataset.memorySize > 0;
   const statusColor =
     dataset.cacheStatus === "cached"
@@ -96,6 +103,16 @@ export function DatasetCard({ dataset, onRefresh, onUnload, onLoad }: DatasetCar
                 Load
               </Button>
             )
+          )}
+          {onDelete && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-auto text-red-600"
+              onClick={() => onDelete(dataset.id)}
+            >
+              Delete
+            </Button>
           )}
         </div>
       </CardContent>

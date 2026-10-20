@@ -12,7 +12,16 @@ export async function fetchParquetBuffer(
 ): Promise<Uint8Array> {
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`Failed to fetch Parquet file from ${url}: ${response.statusText}`);
+    // The server says why (a 403 names the tables the caller may not read); show that
+    // rather than a bare status text.
+    let reason = response.statusText;
+    try {
+      const body = (await response.json()) as { error?: { message?: string } };
+      if (body.error?.message) reason = body.error.message;
+    } catch {
+      // not JSON — keep the status text
+    }
+    throw new Error(`Failed to fetch ${url}: ${reason || `HTTP ${response.status}`}`);
   }
 
   const contentLength = response.headers.get("content-length");

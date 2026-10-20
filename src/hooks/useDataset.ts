@@ -2,8 +2,10 @@
 
 /**
  * Hook for loading and managing datasets in DuckDB-Wasm.
- * Handles fetching Parquet from the server, loading into DuckDB,
- * caching in IndexedDB, and memory tracking.
+ * Fetches a dataset (an Arrow IPC stream built from its saved query, for the signed-in
+ * user) from the server and loads it into DuckDB. Nothing is cached in the browser: the
+ * rows were produced under the caller's permissions at that moment, and a copy left in
+ * IndexedDB would outlive them.
  */
 
 import { useCallback, useState } from "react";
@@ -26,7 +28,7 @@ interface UseDatasetReturn {
 }
 
 export function useDataset(): UseDatasetReturn {
-  const { loadParquetBuffer, dropTable, getTableSchema, status } = useDuckDB();
+  const { loadArrowBuffer, dropTable, getTableSchema, status } = useDuckDB();
   const [datasets, setDatasets] = useState<DatasetInfo[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -58,7 +60,7 @@ export function useDataset(): UseDatasetReturn {
       setDatasets((prev) => [...prev.filter((d) => d.id !== params.id), placeholder]);
 
       try {
-        // Fetch Parquet file
+        // Fetch the dataset
         const buffer = await fetchParquetBuffer(params.url, (loaded, total) => {
           setDatasets((prev) =>
             prev.map((d) =>
@@ -67,8 +69,12 @@ export function useDataset(): UseDatasetReturn {
           );
         });
 
+        // Read the size first: handing the buffer to DuckDB's worker transfers it, which
+        // leaves this view detached with a byteLength of 0.
+        const byteLength = buffer.byteLength;
+
         // Load into DuckDB
-        await loadParquetBuffer(tableName, buffer);
+        await loadArrowBuffer(tableName, buffer);
 
         // Get schema info
         const schema = await getTableSchema(tableName);
@@ -79,8 +85,8 @@ export function useDataset(): UseDatasetReturn {
               ? {
                   ...d,
                   rowCount: schema.rowCount ?? 0,
-                  fileSize: buffer.byteLength,
-                  memorySize: buffer.byteLength,
+                  fileSize: byteLength,
+                  memorySize: byteLength,
                   schema: schema.columns,
                   cacheStatus: "cached" as const,
                   isLoading: false,
@@ -89,14 +95,6 @@ export function useDataset(): UseDatasetReturn {
               : d
           )
         );
-
-        // Try to cache in IndexedDB
-        try {
-          const { set } = await import("idb-keyval");
-          await set(`parquet_${params.id}`, buffer);
-        } catch {
-          // IndexedDB caching is best-effort
-        }
       } catch (err) {
         const e = err instanceof Error ? err : new Error(String(err));
         setError(e);
@@ -105,7 +103,7 @@ export function useDataset(): UseDatasetReturn {
         setIsLoading(false);
       }
     },
-    [status, loadParquetBuffer, getTableSchema]
+    [status, loadArrowBuffer, getTableSchema]
   );
 
   const unloadDataset = useCallback(

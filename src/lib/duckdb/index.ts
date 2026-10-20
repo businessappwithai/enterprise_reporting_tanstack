@@ -8,6 +8,7 @@ export {
   dropTable,
   executeQuery,
   executeQueryArrow,
+  loadArrowFromBuffer,
   loadParquetFromBuffer,
   loadParquetFromUrl,
 } from "./query";

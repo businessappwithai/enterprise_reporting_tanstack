@@ -115,6 +115,28 @@ export async function loadParquetFromBuffer(
 }
 
 /**
+ * Create a table from an Arrow IPC stream (what /api/datasets/:id/data returns),
+ * replacing any table of that name.
+ */
+export async function loadArrowFromBuffer(
+  tableName: string,
+  buffer: Uint8Array,
+  conn?: AsyncDuckDBConnection
+): Promise<void> {
+  const ownConnection = !conn;
+  const connection = conn ?? (await createConnection());
+
+  try {
+    await connection.query(`DROP TABLE IF EXISTS "${tableName}"`);
+    await connection.insertArrowFromIPCStream(buffer, { name: tableName, create: true });
+  } finally {
+    if (ownConnection) {
+      await connection.close();
+    }
+  }
+}
+
+/**
  * Drop a table from DuckDB.
  */
 export async function dropTable(tableName: string, conn?: AsyncDuckDBConnection): Promise<void> {

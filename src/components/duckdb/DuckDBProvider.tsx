@@ -28,6 +28,7 @@ interface DuckDBContextValue {
   executeQuery: (sql: string) => Promise<QueryResult>;
   loadParquet: (tableName: string, url: string) => Promise<void>;
   loadParquetBuffer: (tableName: string, buffer: Uint8Array) => Promise<void>;
+  loadArrowBuffer: (tableName: string, buffer: Uint8Array) => Promise<void>;
   getTableSchema: (tableName: string) => Promise<TableSchema>;
   listTables: () => Promise<string[]>;
   dropTable: (tableName: string) => Promise<void>;
@@ -138,6 +139,12 @@ export function DuckDBProvider({
     await lib.dropTable(tableName);
   }, []);
 
+  const loadArrowBuffer = useCallback(async (tableName: string, buffer: Uint8Array) => {
+    const lib = libRef.current;
+    if (!lib) throw new Error("DuckDB not initialised");
+    await lib.loadArrowFromBuffer(tableName, buffer);
+  }, []);
+
   const getMemoryUsageFn = useCallback((): MemoryUsage => {
     const lib = libRef.current;
     if (!lib) {
@@ -153,6 +160,7 @@ export function DuckDBProvider({
       executeQuery,
       loadParquet,
       loadParquetBuffer,
+      loadArrowBuffer,
       getTableSchema,
       listTables: listTablesFn,
       dropTable: dropTableFn,
@@ -164,6 +172,7 @@ export function DuckDBProvider({
       executeQuery,
       loadParquet,
       loadParquetBuffer,
+      loadArrowBuffer,
       getTableSchema,
       listTablesFn,
       dropTableFn,

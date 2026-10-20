@@ -15,6 +15,7 @@ interface DatasetManagerProps {
   onLoad?: (id: string) => void;
   onUnload?: (id: string) => void;
   onRefresh?: (id: string) => void;
+  onDelete?: (id: string) => void;
   onClearCache?: () => void;
   showMemoryMonitor?: boolean;
 }
@@ -24,6 +25,7 @@ export function DatasetManager({
   onLoad,
   onUnload,
   onRefresh,
+  onDelete,
   onClearCache,
   showMemoryMonitor = true,
 }: DatasetManagerProps) {
@@ -47,7 +49,7 @@ export function DatasetManager({
       {/* Dataset cards */}
       {datasets.length === 0 ? (
         <div className="rounded-md border border-dashed p-8 text-center text-sm text-muted-foreground">
-          No datasets loaded. Use the SQL editor or reports to load data.
+          No datasets yet. Create one from a saved query, then load it to analyse it in your browser.
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
@@ -58,6 +60,7 @@ export function DatasetManager({
               onLoad={onLoad}
               onUnload={onUnload}
               onRefresh={onRefresh}
+              onDelete={onDelete}
             />
           ))}
         </div>

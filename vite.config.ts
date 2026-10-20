@@ -1,9 +1,37 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import viteReact from '@vitejs/plugin-react'
 import path from 'path'
 
-export default defineConfig({
+// The feature flags in src/lib/feature-flags.ts read `process.env.NEXT_PUBLIC_*` in code that
+// also runs in the browser, and Vite does not put process.env in the client bundle. The flags
+// were therefore always false in the browser while the server render saw them set — a
+// hydration mismatch, and no way to switch on anything they gate (the Datasets page said
+// "WASM mode is not enabled" with NEXT_PUBLIC_WASM_ENABLED=true). Substituting the five flags
+// at build time, in the client and server bundles alike, makes both read the same value: the
+// one in the environment (or .env) when `vite dev` / `vite build` runs, so a Docker build
+// needs them as build arguments. Only the flags are substituted: other NEXT_PUBLIC_ variables
+// are read by the server at run time and must stay that way.
+const FEATURE_FLAGS = [
+  'NEXT_PUBLIC_WASM_ENABLED',
+  'NEXT_PUBLIC_ECHARTS_ENABLED',
+  'NEXT_PUBLIC_CROSSFILTER_ENABLED',
+  'NEXT_PUBLIC_OFFLINE_ENABLED',
+  'NEXT_PUBLIC_PROGRESSIVE_ENABLED',
+]
+
+const featureFlagDefines = (mode: string): Record<string, string> => {
+  const fromFiles = loadEnv(mode, process.cwd(), 'NEXT_PUBLIC_')
+  return Object.fromEntries(
+    FEATURE_FLAGS.map((name) => [
+      `process.env.${name}`,
+      JSON.stringify(process.env[name] ?? fromFiles[name] ?? ''),
+    ])
+  )
+}
+
+export default defineConfig(({ mode }) => ({
+  define: featureFlagDefines(mode),
   plugins: [
     tanstackStart(),
     viteReact(),
@@ -36,4 +64,4 @@ export default defineConfig({
     // Leaving it external keeps the nested resolution that works.
     external: ['better-auth'],
   },
-})
+}))
