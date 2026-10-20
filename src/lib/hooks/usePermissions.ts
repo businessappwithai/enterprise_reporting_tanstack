@@ -1,47 +1,39 @@
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { createContext, useContext, useMemo } from "react";
+import type { UserPermissions } from "@/lib/auth/user-permissions";
 import type { ResourceType } from "@/types/database";
 
-interface UserPermissions {
-  userId: string;
-  roles: Array<{
-    id: string;
-    name: string;
-    permissions: string;
-  }>;
-  rolePermissions: string[];
-  resourcePermissions: Array<{
-    id: string;
-    resource_type: ResourceType;
-    resource_id: string;
-    role_id: string;
-    permission_level: string;
-  }>;
-  isAdmin: boolean;
-}
+/**
+ * The signed-in user's permissions as the `_authed` guard resolved them, alongside the
+ * session. Inside the authenticated layout this seeds `usePermissions`, so the first
+ * render — the server render included — already has them.
+ */
+export const SessionPermissionsContext = createContext<UserPermissions | null>(null);
 
 /**
  * Hook to get all permissions for the current user.
- * Fetches from /api/auth/permissions which reads the session cookie server-side.
- * Only fetches once after login and caches indefinitely to prevent sidebar flicker.
+ *
+ * Inside `_authed` the answer is already known: the guard's copy is the query's initial
+ * data and nothing is fetched. It used to fetch on every load and the sidebar hid every
+ * gated item until it returned, so the menu flashed to just "Dashboard".
+ *
+ * The key carries the user id. It used to be `["user-permissions"]` with an infinite
+ * stale time, so the next person to sign in in the same tab got the previous one's
+ * permissions until a reload. `invalidateQueries({ queryKey: ["user-permissions"] })`
+ * still matches every user's entry.
  */
 export function usePermissions() {
+  const seeded = useContext(SessionPermissionsContext);
   return useQuery<UserPermissions>({
-    queryKey: ["user-permissions"],
+    queryKey: ["user-permissions", seeded?.userId ?? null],
     queryFn: async () => {
       const res = await fetch("/api/auth/permissions");
-      if (!res.ok) {
-        // Not authenticated or error — return empty permissions
-        return {
-          userId: "",
-          roles: [],
-          rolePermissions: [],
-          resourcePermissions: [],
-          isAdmin: false,
-        };
-      }
+      // Signed out is a 200 with no permissions. Anything else is a failure to report,
+      // not an empty menu to cache for the rest of the session.
+      if (!res.ok) throw new Error(`Failed to load permissions (HTTP ${res.status})`);
       return res.json();
     },
+    initialData: seeded ?? undefined,
     staleTime: Infinity, // Never refetch automatically
     gcTime: Infinity, // Keep cached indefinitely
   });
