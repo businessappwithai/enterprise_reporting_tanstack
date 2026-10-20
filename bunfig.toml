@@ -1,0 +1,3 @@
+# Applies to `bun test` only.
+[test]
+preload = ["./src/test-setup.ts"]

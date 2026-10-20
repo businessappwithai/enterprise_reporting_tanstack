@@ -788,6 +788,10 @@ Two things to know before you trust them:
 - **There is no `test` script and CI does not run them.** `precommit` is
   the type-check only. Nothing on GitHub executes these files, which is why
   the state below went unnoticed.
+- **They need no `.env`.** `bunfig.toml` preloads `src/test-setup.ts`, which supplies a throwaway
+  `AUTH_SECRET` when none is set (`better-auth.ts` throws at import without one). Without it, three files
+  passed on a developer machine and errored on a fresh checkout. Check a change on a clean worktree
+  with `env -u AUTH_SECRET bun test src`.
 - **Run them as `bun test src`, not `bun test`.** A bare `bun test` also collects
   the ~51 Playwright specs under `e2e/`, which are written against
   `@playwright/test` and error out under Bun's runner — 51 errors that say nothing
