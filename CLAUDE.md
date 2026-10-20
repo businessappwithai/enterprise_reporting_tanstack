@@ -51,7 +51,8 @@ bun run start                 # serve it — listens on :3000, PORT overrides
 
 # Code quality — the type-checker is the whole static check (no linter, no formatter)
 bun run typecheck             # bun check — Bun's own type checker (1.4.3+)
-bun run precommit             # the same
+bun run test                  # bun test src — the unit tests (CI runs this too)
+bun run precommit             # typecheck, then the unit tests
 
 # Database (PostgreSQL — config DB and knowledge graph)
 bun scripts/rebuild-db.ts                  # full schema rebuild (drops + recreates all tables)
@@ -70,7 +71,7 @@ REPORTING_PACK=./pack.json APP_DATABASE_URL=postgresql://… \
 
 # Unit tests (bun:test). Scope to src — see "Testing" below, a bare `bun test`
 # also picks up the Playwright specs under e2e/ and errors on all of them.
-bun test src
+bun test src                                # what `bun run test` runs
 
 # E2E tests (start dev server first — webServer config is commented out in playwright.config.ts)
 playwright test                             # all tests
@@ -770,7 +771,7 @@ scheme a browser will ever honour and is wrong in the unsafe direction.
 
 ## Testing
 
-### Unit tests — real, but wired into nothing
+### Unit tests — run by `bun run test`, by `precommit`, and by CI
 
 Four `bun:test` files existed; ten more were added by QA (the guards, the NL read-only check, the
 Intelligent UI engine and export, share redirects, id schemas, and a static test that no route reads
@@ -785,9 +786,10 @@ a request body inside a `catch`). The original four:
 
 Two things to know before you trust them:
 
-- **There is no `test` script and CI does not run them.** `precommit` is
-  the type-check only. Nothing on GitHub executes these files, which is why
-  the state below went unnoticed.
+- **`bun run test` is the one command** (`bun test src`), and `precommit` and the CI **Unit tests**
+  job both run it. They were run by neither until three assertions had been red for a while without
+  anyone noticing. A failing test is a failing check now; do not skip or delete one to get green —
+  decide whether the code or the test is wrong, as was done below.
 - **They need no `.env`.** `bunfig.toml` preloads `src/test-setup.ts`, which supplies a throwaway
   `AUTH_SECRET` when none is set (`better-auth.ts` throws at import without one). Without it, three files
   passed on a developer machine and errored on a fresh checkout. Check a change on a clean worktree
@@ -797,13 +799,18 @@ Two things to know before you trust them:
   `@playwright/test` and error out under Bun's runner — 51 errors that say nothing
   about the code.
 
-**Three of them currently fail**, all in `validator.test.ts`, and all because the
-validator is more permissive than the test expects: `SELECT * FROM users;` returns
-two warnings where the test wants zero, and both `SELECT * WHERE id = 1;` and the
-empty string come back `isValid: true` where the test wants `false`. As of this
-writing `bun test src` is 231 pass / 3 fail across 23 files (the three are those). Decide whether the
-validator or the test is right before changing either — and if you fix them, wiring
-`bun test src` into `precommit` is what stops it happening again.
+`bun run test` is 238 pass / 0 fail across 23 files. Three of the original `validator.test.ts` assertions
+had been red, and each was decided on its merits rather than silenced:
+
+- `SELECT * FROM users;` expecting **zero warnings** was a stale test. The validator warns on `SELECT *`
+  and on a missing `LIMIT` on purpose, and the editor's validation panel shows them; the test now asserts
+  exactly those two, plus that a query with named columns and a `LIMIT` has none.
+- `SELECT * WHERE id = 1;` and the empty string reported `isValid: true` because `node-sql-parser` is
+  syntactic and parses an empty query as zero statements. That was the validator being too permissive:
+  `validateSQL` now reports "Query is empty" (blank text, a comment, a bare `;`) and "SELECT * requires a
+  FROM clause" (a star in a select list with no FROM, anywhere in the tree, so a subquery counts).
+  `SELECT 1` and `SELECT COUNT(*)` still need no FROM. Execution is gated by `isReadOnlyQuery`, a
+  different function, which these changes do not touch.
 
 ### E2E tests
 
@@ -850,9 +857,9 @@ Two habits are worth keeping from that:
 `tsc` rejects (TS5097) unless `allowImportingTsExtensions` is set — it is, in
 `tsconfig.json`, and it needs the `noEmit` that is already there.
 
-## `bun run precommit` — the type-check, and nothing else
+## `bun run precommit` — the type-check and the unit tests
 
-`precommit` is `bun run typecheck`, which is **`bun check`** — the type checker
+`precommit` is `bun run typecheck && bun run test`. The first is **`bun check`** — the type checker
 built into Bun since 1.4.3. It reads `tsconfig.json`, reports the same errors as
 `tsc`, and runs on every core: about 6 seconds here against 35 for `tsc --noEmit`.
 It reports zero errors. `typescript` stays a dev dependency for editors; nothing
@@ -878,8 +885,7 @@ became `// <reason>` — why an `any`, an index key or a `dangerouslySetInnerHTM
 is acceptable at that spot is still worth reading, even with nothing enforcing
 the rule it once excused.
 
-**`precommit` does not run any tests** — not the four `bun:test` files and not
-Playwright. See **Testing**.
+**`precommit` runs the unit tests (about 3 s) but not Playwright.** See **Testing**.
 
 **`src/routeTree.gen.ts` is written by the TanStack router generator on every
 `vite build`.** Do not edit it by hand; the generator wins, and CI fails a build
@@ -895,11 +901,11 @@ someone last ran it in.
 | Job | What it runs |
 |---|---|
 | **Types** | `bun install --frozen-lockfile`, then `bun run typecheck` (`bun check`) |
+| **Unit tests** | `bun install --frozen-lockfile`, then `bun run test` (`bun test src`). No database and no secrets: the tests stub what they touch and `bunfig.toml` preloads a throwaway `AUTH_SECRET` |
 | **Build** | `bun --bun vite build`, then an assertion that the build left no tracked file modified — the router generator rewrites `routeTree.gen.ts` on every build, and a diff means a route was added without regenerating or the file was edited by hand |
 
-It also does not run the **unit tests**, and that one is an oversight rather than
-a decision — `bun test src` is four files and under a second, and three of its
-assertions are currently red. See **Testing**.
+Whether **Unit tests** is a *required* status is a branch-protection setting in GitHub, not something
+this repository can set; until it is required, a red run is visible but does not block a merge.
 
 Two more things it deliberately does not do. There is **no `paths:` filter**:
 `tsconfig.json` includes `**/*.ts`, so typecheck covers `language/`, `scripts/`,

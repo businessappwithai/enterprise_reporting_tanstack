@@ -9,8 +9,19 @@ describe("SQL Validator", () => {
 
       expect(result.isValid).toBe(true);
       expect(result.errors).toHaveLength(0);
-      expect(result.warnings).toHaveLength(0);
       expect(result.formattedSQL).toBeDefined();
+      // Valid, but the editor advises against both of these on purpose (checkPerformanceIssues).
+      expect(result.warnings.map((w) => w.message)).toEqual([
+        expect.stringContaining("SELECT *"),
+        expect.stringContaining("without LIMIT"),
+      ]);
+    });
+
+    test("a query with named columns and a LIMIT has no warnings", () => {
+      const result = validateSQL("SELECT id, name FROM users LIMIT 10;");
+
+      expect(result.isValid).toBe(true);
+      expect(result.warnings).toHaveLength(0);
     });
 
     test("valid SELECT with specific columns", () => {
@@ -170,6 +181,33 @@ describe("SQL Validator", () => {
       const result = validateSQL(sql);
 
       expect(result.isValid).toBe(false);
+      expect(result.errors[0].message).toBe("Query is empty");
+    });
+
+    test("a query of only whitespace, a comment or a semicolon is empty", () => {
+      for (const sql of ["   \n\t ", ";", "-- just a comment"]) {
+        const result = validateSQL(sql);
+        expect(result.isValid).toBe(false);
+        expect(result.errors[0].message).toBe("Query is empty");
+      }
+    });
+
+    test("SELECT t.* with no FROM is invalid, in a subquery too", () => {
+      for (const sql of [
+        "SELECT t.* WHERE id = 1",
+        "SELECT * FROM (SELECT * WHERE 1 = 1) s",
+        "SELECT * FROM a; SELECT * WHERE x = 1",
+      ]) {
+        const result = validateSQL(sql);
+        expect(result.isValid).toBe(false);
+        expect(result.errors[0].message).toBe("SELECT * requires a FROM clause");
+      }
+    });
+
+    test("a select list without a star needs no FROM", () => {
+      for (const sql of ["SELECT 1", "SELECT COUNT(*) WHERE 1 = 1", "SELECT now()"]) {
+        expect(validateSQL(sql).isValid).toBe(true);
+      }
     });
   });
 

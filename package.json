@@ -22,7 +22,8 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:all": "bun run test:setup && bun run test:e2e",
-    "precommit": "bun run typecheck",
+    "test": "bun test src",
+    "precommit": "bun run typecheck && bun run test",
     "build:check": "bun run typecheck && bun run build"
   },
   "dependencies": {

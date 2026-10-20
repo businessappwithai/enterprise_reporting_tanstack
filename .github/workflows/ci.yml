@@ -8,12 +8,16 @@
 # and `seeder` services — it never runs this project's type-check or build, so
 # a regression in either would reach that pin unnoticed.
 #
-# ── The two jobs ────────────────────────────────────────────────────────────
+# ── The three jobs ──────────────────────────────────────────────────────────
 #
-#   checks   `bun run precommit`, which is `bun check` — Bun's own type
+#   checks   `bun run typecheck`, which is `bun check` — Bun's own type
 #            checker (1.4.3+), reading tsconfig.json and reporting what tsc
 #            does. There is no linter and no formatter: Biome was removed, so
 #            the type-checker is the whole static check.
+#   test     The unit tests, `bun run test` (`bun test src`). No database and
+#            no secrets: they stub what they touch, and bunfig.toml preloads a
+#            throwaway AUTH_SECRET. They were not run here at all until three
+#            of them had been red for a while without anyone noticing.
 #   build    The production build, and then an assertion that it left the tree
 #            unchanged.
 #
@@ -79,6 +83,26 @@ jobs:
 
       - name: Type-check
         run: bun run typecheck
+
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      # `bun run test`, not `bun test`: a bare `bun test` also collects the Playwright specs under
+      # e2e/, which error under Bun's runner. The script scopes it to src/.
+      - name: Unit tests
+        run: bun run test
 
   build:
     name: Build

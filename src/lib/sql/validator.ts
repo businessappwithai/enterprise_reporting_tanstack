@@ -49,6 +49,12 @@ export function validateSQL(sql: string, dialect: string = "pg"): SQLValidationR
     // Parse the SQL to check syntax
     ast = parser.astify(sql, { database: parserDialect }) as unknown;
 
+    // The parser is syntactic. It accepts an empty query (as zero statements) and
+    // `SELECT * WHERE ...`, both of which the database rejects; report them here, where the
+    // editor can show them, rather than at execution.
+    const problem = findSemanticProblem(ast);
+    if (problem) throw new Error(problem);
+
     // Try to format the SQL
     try {
       formattedSQL = formatSQL(sql, {
@@ -92,6 +98,54 @@ export function validateSQL(sql: string, dialect: string = "pg"): SQLValidationR
       warnings,
     };
   }
+}
+
+type AstNode = Record<string, unknown>;
+
+function isStarColumn(column: unknown): boolean {
+  const expr = (column as AstNode | null)?.expr as AstNode | undefined;
+  return expr?.type === "column_ref" && expr.column === "*";
+}
+
+/**
+ * Problems the parser does not raise: no statement at all, and a `SELECT *` (or `t.*`) with no
+ * FROM, which PostgreSQL answers with "SELECT * with no tables specified is not valid". Walks the
+ * whole tree so a subquery or CTE is held to the same rule. `SELECT 1` and `SELECT COUNT(*)` need no
+ * FROM and are not flagged: only a star in the select list is.
+ */
+function findSemanticProblem(ast: unknown): string | null {
+  // No statements at all (blank text, a comment), or only empty ones (a bare `;` is `[[]]`).
+  const statements = Array.isArray(ast) ? ast : [ast];
+  const isEmptyStatement = (s: unknown) => s == null || (Array.isArray(s) && s.length === 0);
+  if (statements.every(isEmptyStatement)) return "Query is empty";
+
+  const seen = new Set<unknown>();
+  const visit = (node: unknown): string | null => {
+    if (node === null || typeof node !== "object" || seen.has(node)) return null;
+    seen.add(node);
+    if (Array.isArray(node)) {
+      for (const item of node) {
+        const found = visit(item);
+        if (found) return found;
+      }
+      return null;
+    }
+    const record = node as AstNode;
+    if (
+      record.type === "select" &&
+      !record.from &&
+      Array.isArray(record.columns) &&
+      record.columns.some(isStarColumn)
+    ) {
+      return "SELECT * requires a FROM clause";
+    }
+    for (const value of Object.values(record)) {
+      const found = visit(value);
+      if (found) return found;
+    }
+    return null;
+  };
+  return visit(ast);
 }
 
 function checkSecurityIssues(sql: string, warnings: SQLWarning[]): void {
