@@ -1026,6 +1026,16 @@ answers it with Reload their version / Overwrite with mine / Keep editing.
 `language/cli/runtime/` is byte-identical to the copies in
 `app-with-ai-tanstack` and the orchestrator — change all three or none.
 
+**The state field is system-managed in `enterprise-reporting` output too.** For an
+entity with a `kind: state` workflow, its state column (`status`, else `state`,
+else `stage` — `language/state-field.ts`) is left out of the create/update zod
+schema and the form, set to the machine's initial state on create, shown
+read-only as a header badge (`data-testid="record-state"`) on the detail page and
+always included as a column of the list. The update server function drops a
+value sent back unchanged and refuses a different one with an error starting
+`STATE_FIELD_SYSTEM_MANAGED`: only background workflows move a state, which is
+what the language now says (`EML215`, `EML178`, `EML507`, `EML508`).
+
 ### The CLI vendors two modules from app-with-ai-tanstack
 
 `language/cli/src/vendor/` holds copies of that repository's
