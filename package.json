@@ -16,6 +16,7 @@
     "db:sample": "bun src/lib/db/sample-data/seed.ts",
     "jobs:worker": "bun src/lib/jobs/worker-runner.ts",
     "typecheck": "bun check",
+    "lint": "bun check",
     "test:setup": "bun tests/setup-data.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
@@ -125,7 +126,7 @@
     "vite": "^7.0.0"
   },
   "engines": {
-    "bun": ">=1.4.3"
+    "bun": ">=1.4.4"
   },
   "trustedDependencies": [
     "esbuild",

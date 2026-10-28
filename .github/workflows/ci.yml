@@ -11,8 +11,8 @@
 # ── The three jobs ──────────────────────────────────────────────────────────
 #
 #   checks   `bun run typecheck`, which is `bun check` — Bun's own type
-#            checker (1.4.3+), reading tsconfig.json and reporting what tsc
-#            does. There is no linter and no formatter: Biome was removed, so
+#            checker, reading tsconfig.json and reporting what tsc
+#            does. `bun run lint` runs the same `bun check`: Biome was removed, so
 #            the type-checker is the whole static check.
 #   test     The unit tests, `bun run test` (`bun test src`). No database and
 #            no secrets: they stub what they touch, and bunfig.toml preloads a
@@ -54,10 +54,10 @@ permissions:
   contents: read
 
 # The version these steps were verified against, including the
-# `--frozen-lockfile` install. package.json asks for `>=1.4.3`; CI pins an exact
+# `--frozen-lockfile` install. package.json asks for `>=1.4.4`; CI pins an exact
 # one so a runner and a developer's tree agree. The Dockerfiles pin the same.
 env:
-  BUN_VERSION: "1.4.3"
+  BUN_VERSION: "1.4.4"
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
