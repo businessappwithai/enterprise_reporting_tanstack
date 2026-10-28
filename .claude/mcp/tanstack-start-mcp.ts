@@ -570,7 +570,7 @@ function getConfiguration() {
       orm: "Kysely 0.29.0",
     },
     tools: {
-      checks: "bun check, Bun 1.4.4 (no linter or formatter)",
+      checks: "bun check, Bun 1.4.4 — also the linter (no other linter or formatter)",
       language: "TypeScript (strict)",
     },
   };
