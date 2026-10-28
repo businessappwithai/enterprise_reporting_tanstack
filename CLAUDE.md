@@ -2,26 +2,32 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Bun 1.4.3, and only Bun 1.4.3
+## Bun 1.4.4, and only Bun 1.4.4
 
-**Every repository in this project uses Bun 1.4.3 and no other version** —
-`app-with-ai-tanstack`, `app-and-report-with-ai-tanstack`,
+**Every repository in this project uses Bun 1.4.4 and no other version** —
+`app-with-ai-tanstack`, `app-and-report-with-ai-rust` (the orchestrator),
 `enterprise_reporting_tanstack` and `businessappwithai.github.io`. That is the
-rule for every runtime, install, build, test and type-check, in CI, in Docker
-images and locally. There are no exceptions: the WASM build and the
-`appwithai-wasm` CLI run on 1.4.3 too (the second 1.3.11 pin they used to have
-is gone).
+rule for every runtime, install, build, test, type-check and lint, in CI, in
+Docker images and locally. There are no exceptions: the WASM build and the
+`appwithai-wasm` CLI run on 1.4.4 too.
 
-- **Never use another Bun.** Not 1.3, not 1.4.0–1.4.2, not a newer release. Bun's
+- **Never use another Bun.** Not 1.3, not 1.4.0–1.4.3, not a newer release. Bun's
   bundler output depends on the exact version, so a committed bundle built on
-  another one is byte-wrong for CI; and `bun check`, the type checker every
-  repository runs, first shipped in 1.4.3 — on 1.4.2, `bun check` silently runs a
-  package script named `check` instead, if there is one.
-- **Never use npm, pnpm or yarn** as the package manager, and never `tsc` as the
-  type checker — `bun check` is the static check, and there is no linter or
-  formatter.
-- **Pin it exactly** wherever a version is stated: `BUN_VERSION: "1.4.3"` in CI,
-  `oven/bun:1.4.3` in Dockerfiles, `"bun": ">=1.4.3"` in `engines`. Moving to a
+  another one is byte-wrong for CI; and a Bun older than 1.4.3 has no type
+  checker behind `bun check` at all.
+- **The linter is `bun check`, and only `bun check`.** Every `lint` and
+  `type-check` script runs it; no repository carries Biome, ESLint, Prettier or
+  any other linter or formatter, and none runs `tsc` as its static check. Style
+  is kept by hand.
+- **No `package.json` may have a script named `check`.** On 1.4.4 as on every
+  earlier Bun, `bun check` in a directory whose manifest has a `check` script
+  runs that script instead of the type checker, silently. Measured in the
+  orchestrator: its `lint` (`bun check`) ran the whole `check` chain, which ran
+  `lint` again. Name an aggregate script `check:all`.
+- **Never use npm, pnpm or yarn** as the package manager.
+- **Pin it exactly** wherever a version is stated: `BUN_VERSION: "1.4.4"` in CI,
+  `bun-version: 1.4.4` in a `setup-bun` step, `oven/bun:1.4.4` in Dockerfiles,
+  `"bun": ">=1.4.4"` in `engines`, `1.4.4` in `.bun-version`. Moving to a
   different Bun is one deliberate change made in all four repositories together,
   never in one alone.
 - **What a generated application runs on is a separate question.** The browser
@@ -30,14 +36,14 @@ is gone).
   produced it.
 
 **Here:** CI (`.github/workflows/ci.yml`), `Dockerfile` and `Dockerfile.mastra`
-pin 1.4.3, and `package.json` asks for `>=1.4.3`. `bun run typecheck` is `bun check`, which does not exist before 1.4.3.
+pin 1.4.4, and `package.json` asks for `>=1.4.4`. `bun run typecheck` and `bun run lint` are both `bun check`.
 
 **Cloud sessions are pinned too.** `.bun-version` is the single statement of the
 version, and the `SessionStart` hook in `.claude/settings.json`
 (`.claude/hooks/session-start.sh`) installs exactly that Bun when the image ships a
 different one, then runs `bun install --frozen-lockfile`. It exits non-zero rather
-than carry on if it cannot get the pinned version, because a session on 1.4.2 can
-report a clean type-check that never ran. It only acts when `CLAUDE_CODE_REMOTE=true`.
+than carry on if it cannot get the pinned version, because a session on another Bun can
+report a check that never ran. It only acts when `CLAUDE_CODE_REMOTE=true`.
 Moving to another Bun means changing `.bun-version`, CI, both Dockerfiles and the other
 three repositories together.
 
@@ -49,8 +55,9 @@ bun --bun vite dev            # dev server at http://localhost:4050
 bun --bun vite build          # production build
 bun run start                 # serve it — listens on :3000, PORT overrides
 
-# Code quality — the type-checker is the whole static check (no linter, no formatter)
-bun run typecheck             # bun check — Bun's own type checker (1.4.3+)
+# Code quality — bun check is the whole static check and the linter (no other linter, no formatter)
+bun run typecheck             # bun check — Bun's own type checker
+bun run lint                  # the same bun check
 bun run test                  # bun test src — the unit tests (CI runs this too)
 bun run precommit             # typecheck, then the unit tests
 
@@ -86,7 +93,7 @@ bun run test:setup && playwright test       # setup test data then run all
 
 ### Framework and Runtime
 
-TanStack Start v1 (`@tanstack/react-start` ^1.167.65) with file-based routing. Requires Bun ≥ 1.4.3 (CI and both Dockerfiles pin 1.4.3). React 19, Vite 7, Tailwind 3, shadcn/ui over Radix. There is no linter or formatter — see **`bun run precommit`** below.
+TanStack Start v1 (`@tanstack/react-start` ^1.167.65) with file-based routing. Requires Bun ≥ 1.4.4 (CI and both Dockerfiles pin 1.4.4). React 19, Vite 7, Tailwind 3, shadcn/ui over Radix. There is no linter or formatter — see **`bun run precommit`** below.
 
 **The dev server and the production server are on different ports.** `vite dev`
 listens on **4050**; `bun run start` serves the build on **3000**, and `PORT`
@@ -916,8 +923,8 @@ Playwright suite**: that needs a dev server on 4050, a PostgreSQL config
 database and a cached signed-in session, and `playwright.config.ts` has its
 `webServer` commented out, so it starts nothing itself.
 
-Bun is pinned to `1.4.3` there and in `Dockerfile` and `Dockerfile.mastra`;
-`package.json` asks for `>=1.4.3`, the first release with `bun check`.
+Bun is pinned to `1.4.4` there and in `Dockerfile` and `Dockerfile.mastra`;
+`package.json` asks for `>=1.4.4`, the first release with `bun check`.
 
 ## Stale documentation
 

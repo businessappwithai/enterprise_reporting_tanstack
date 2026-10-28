@@ -557,7 +557,7 @@ function getConfiguration() {
 
   const config: any = {
     runtime: {
-      bun: ">=1.4.3",
+      bun: ">=1.4.4",
     },
     framework: {
       "tanstack-start": "1.167+",
@@ -570,7 +570,7 @@ function getConfiguration() {
       orm: "Kysely 0.29.0",
     },
     tools: {
-      checks: "bun check, Bun 1.4.3 (no linter or formatter)",
+      checks: "bun check, Bun 1.4.4 (no linter or formatter)",
       language: "TypeScript (strict)",
     },
   };
