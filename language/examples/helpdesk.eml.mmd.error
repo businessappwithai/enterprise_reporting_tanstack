@@ -1,12 +1,21 @@
 {
-  "file": "/home/user/enterprise_reporting_tanstack/language/examples/helpdesk.eml.mmd",
-  "checkedAt": "2026-10-19T09:05:06.928Z",
+  "file": "/home/user/tanstack-enterprise_reporting/language/examples/helpdesk.eml.mmd",
+  "checkedAt": "2026-10-29T10:36:54.982Z",
   "languageVersion": "1.2.0",
   "summary": {
     "errors": 0,
     "warnings": 0,
-    "infos": 0,
+    "infos": 1,
     "ok": true
   },
-  "issues": []
+  "issues": [
+    {
+      "severity": "info",
+      "code": "EML511",
+      "message": "5 moves of \"TicketLifecycle\" are open to anyone who may update Ticket: assign, cancel, resolve, reopen, close.",
+      "line": 116,
+      "hint": "To limit a button to the roles that own it, add  %%rbac role:<role> on Ticket.<move>  — the move is its event, or from->to for an edge with no label.",
+      "autoFixable": false
+    }
+  ]
 }
