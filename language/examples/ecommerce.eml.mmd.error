@@ -1,11 +1,11 @@
 {
-  "file": "/home/user/enterprise_reporting_tanstack/language/examples/ecommerce.eml.mmd",
-  "checkedAt": "2026-10-19T09:05:06.879Z",
+  "file": "/home/user/tanstack-enterprise_reporting/language/examples/ecommerce.eml.mmd",
+  "checkedAt": "2026-10-29T10:36:54.936Z",
   "languageVersion": "1.2.0",
   "summary": {
     "errors": 0,
     "warnings": 0,
-    "infos": 3,
+    "infos": 4,
     "ok": true
   },
   "issues": [
@@ -13,7 +13,7 @@
       "severity": "info",
       "code": "EML125",
       "message": "No FK attribute found in \"Product\" for relationship to \"Category\".",
-      "line": 76,
+      "line": 82,
       "hint": "Add  string category_id FK  to \"Product\".",
       "autoFixable": false
     },
@@ -21,8 +21,16 @@
       "severity": "info",
       "code": "EML123",
       "message": "Self-referential relationship on \"Category\".",
-      "line": 77,
+      "line": 83,
       "hint": "Self-references are valid (e.g. Category ||--o{ Category). Ensure parent_id is modelled.",
+      "autoFixable": false
+    },
+    {
+      "severity": "info",
+      "code": "EML511",
+      "message": "7 moves of \"OrderFulfilment\" are open to anyone who may update Order: place, pay, cancel, pack, ship, deliver, refund.",
+      "line": 182,
+      "hint": "To limit a button to the roles that own it, add  %%rbac role:<role> on Order.<move>  — the move is its event, or from->to for an edge with no label.",
       "autoFixable": false
     },
     {

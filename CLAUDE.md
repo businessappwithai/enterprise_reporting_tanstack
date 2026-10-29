@@ -1033,15 +1033,20 @@ answers it with Reload their version / Overwrite with mine / Keep editing.
 `language/cli/runtime/` is byte-identical to the copies in
 `app-with-ai-tanstack` and the orchestrator — change all three or none.
 
-**The state field is system-managed in `enterprise-reporting` output too.** For an
+**The state field is never typed in `enterprise-reporting` output either.** For an
 entity with a `kind: state` workflow, its state column (`status`, else `state`,
 else `stage` — `language/state-field.ts`) is left out of the create/update zod
 schema and the form, set to the machine's initial state on create, shown
 read-only as a header badge (`data-testid="record-state"`) on the detail page and
 always included as a column of the list. The update server function drops a
 value sent back unchanged and refuses a different one with an error starting
-`STATE_FIELD_SYSTEM_MANAGED`: only background workflows move a state, which is
-what the language now says (`EML215`, `EML178`, `EML507`, `EML508`).
+`STATE_FIELD_SYSTEM_MANAGED`. In the product's stacks that column is the record's
+lifecycle — Draft, its status flow, Final — and moves by **action buttons** along the
+edges the diagram draws, each given to roles by `%%rbac … on E.<event>` (`EML511`
+lists a move no line names, `EML512` the old rule-and-saga move pattern, `EML509` a
+state named `final` or `error`; `EML215` and `EML507` are retired). This target
+compiles neither workflows nor `%%rbac`, so it draws no buttons and nothing on its
+screens moves a state.
 
 ### The CLI vendors two modules from app-with-ai-tanstack
 
